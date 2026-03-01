@@ -1,16 +1,17 @@
-import {Dimensions, StyleSheet} from "react-native";
+import { StyleSheet, Dimensions } from 'react-native';
 import {BLACK, WHITE} from "../../../constants/colors.ts";
-const width = Dimensions.get('window').width;
+
+const { width, height } = Dimensions.get('window');
 
 export default StyleSheet.create({
     buttonContainer: {
-        marginVertical: 12,
+        marginVertical: height * 0.015,
         borderRadius: 20,
         shadowColor: BLACK,
         shadowOffset: { width: 0, height: 6 },
         shadowOpacity: 0.3,
         shadowRadius: 8,
-        elevation: 6, // Android shadow
+        elevation: 6,
         width: width * 0.8,
         overflow: 'hidden',
     },
@@ -18,17 +19,17 @@ export default StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        paddingVertical: 18,
-        paddingHorizontal: 24,
+        paddingVertical: height * 0.022,
+        paddingHorizontal: width * 0.06,
         borderRadius: 20,
     },
     icon: {
-        fontSize: 28,
-        marginRight: 16,
+        fontSize: width * 0.07,
+        marginRight: width * 0.04,
         color: WHITE,
     },
     title: {
-        fontSize: 20,
+        fontSize: width * 0.05,
         fontWeight: '700',
         color: WHITE,
     },

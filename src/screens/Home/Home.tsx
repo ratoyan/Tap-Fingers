@@ -1,5 +1,4 @@
 import React from 'react';
-import {View} from "react-native";
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {RootStackParamList} from '../../types/RootStackParamList';
 import LinearGradient from 'react-native-linear-gradient';
@@ -11,6 +10,7 @@ import {TOP_OFFSET} from "../../constants/uiConstants.ts";
 // components
 import MenuButton from "../../components/ui/MenuButton/MenuButton.tsx";
 import CoinCount from "../../components/ui/CoinCount/CoinCount.tsx";
+import Logo from "../../components/ui/Logo/Logo.tsx";
 
 // styles
 import styles from './Home.style.ts';
@@ -29,9 +29,10 @@ const Home: React.FC<Props> = () => {
             end={{x: 1, y: 1}}
             style={styles.container}
         >
-            <View style={[globalStyles.coinView, {top: insets.top + TOP_OFFSET}]}>
-                <CoinCount count={20}/>
-            </View>
+            <Logo width={150} height={150} viewStyles={[globalStyles.logoView, {top: insets.top + TOP_OFFSET}]}/>
+
+            <CoinCount count={20} viewStyles={[globalStyles.coinView, {top: insets.top + TOP_OFFSET}]}/>
+
             {menus.map((menu: MenuType, index: number) => {
                 return <MenuButton menu={menu} key={index}/>;
             })}

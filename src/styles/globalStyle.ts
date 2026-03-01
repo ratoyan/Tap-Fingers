@@ -4,5 +4,9 @@ export default StyleSheet.create({
     coinView: {
         position: 'absolute',
         right: 10
+    },
+    logoView: {
+        position: 'absolute',
+        left: '30%'
     }
 });

@@ -1,6 +1,8 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import {RootStackParamList} from "../types/RootStackParamList.ts";
+
+// screens
 import Home from "../screens/Home/Home.tsx";
 import Settings from "../screens/Settings/Settings.tsx";
 import Welcome from "../screens/Welcome/Welcome.tsx";

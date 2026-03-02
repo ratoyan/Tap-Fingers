@@ -3,12 +3,17 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import {RootStackParamList} from "../types/RootStackParamList.ts";
 import Home from "../screens/Home/Home.tsx";
 import Settings from "../screens/Settings/Settings.tsx";
+import Welcome from "../screens/Welcome/Welcome.tsx";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 const StackNavigator = () => {
     return (
-        <Stack.Navigator initialRouteName="Home" screenOptions={{headerShown: false}}>
+        <Stack.Navigator initialRouteName="Welcome" screenOptions={{headerShown: false}}>
+            <Stack.Screen
+                name="Welcome"
+                component={Welcome}
+            />
             <Stack.Screen
                 name="Home"
                 component={Home}

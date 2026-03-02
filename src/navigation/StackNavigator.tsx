@@ -2,6 +2,7 @@ import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import {RootStackParamList} from "../types/RootStackParamList.ts";
 import Home from "../screens/Home/Home.tsx";
+import Settings from "../screens/Settings/Settings.tsx";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -11,6 +12,13 @@ const StackNavigator = () => {
             <Stack.Screen
                 name="Home"
                 component={Home}
+            />
+            <Stack.Screen
+                name="Settings"
+                component={Settings}
+                options={{
+                    animation: 'slide_from_right', // 'slide_from_right' | 'slide_from_left' | 'slide_from_bottom' | 'fade'
+                }}
             />
         </Stack.Navigator>
     );

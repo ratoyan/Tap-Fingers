@@ -3,6 +3,7 @@ import {
     View,
     Text, TouchableOpacity,
 } from 'react-native';
+import {LanguageType} from "../../types/language.type.ts";
 
 // components
 import SettingRow from "../../components/ui/SettingRow/SettingRow.tsx";
@@ -14,14 +15,12 @@ import LogoutModal from "../../components/ui/LogoutModal/LogoutModal.tsx";
 import styles from './Settings.style.ts';
 
 function Settings() {
-
     const [music, setMusic] = useState(true);
     const [sound, setSound] = useState(true);
     const [vibration, setVibration] = useState(false);
-    const [language, setLanguage] = useState<'English' | 'Armenian' | 'Russian'>('English');
+    const [language, setLanguage] = useState<LanguageType>({name: 'Armenian', code: 'am'});
     const [langModal, setLangModal] = useState(false);
     const [logoutModal, setLogoutModal] = useState(false);
-
 
     return (
         <View style={styles.container}>
@@ -45,7 +44,7 @@ function Settings() {
                 />
                 <SettingRow
                     label="🌍 Language"
-                    valueText={language}
+                    valueText={language.name}
                     onPress={() => setLangModal(true)}
                     viewStyle={{borderBottomWidth: 0}}
                 />
@@ -66,7 +65,7 @@ function Settings() {
                 visible={langModal}
                 onClose={() => setLangModal(false)}
                 onSelect={(lang) => setLanguage(lang)}
-                selectedLanguage={language}
+                selectedLanguage={language.name}
             />
             <LogoutModal visible={logoutModal} onClose={() => setLogoutModal(false)} onConfirm={() => {
 

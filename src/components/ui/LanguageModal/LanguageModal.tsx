@@ -5,11 +5,11 @@ import {
     Text,
     TouchableOpacity, Pressable,
 } from 'react-native';
+import {languages} from "../../../data/language.ts";
 
 // styles
 import styles from './LanguageModal.style';
 
-const LANGUAGES = ['English', 'Armenian', 'Russian'] as const;
 
 function LanguageModal({
                            visible,
@@ -19,8 +19,8 @@ function LanguageModal({
                        }: {
     visible: boolean;
     onClose: () => void;
-    onSelect: (lang: (typeof LANGUAGES)[number]) => void;
-    selectedLanguage?: (typeof LANGUAGES)[number]; // optional currently selected language
+    onSelect: (val: any) => void;
+    selectedLanguage?: string;
 }) {
     return (
         <Modal transparent animationType="fade" visible={visible}>
@@ -31,12 +31,12 @@ function LanguageModal({
                 <View style={styles.card}>
                     <Text style={styles.title}>Select Language</Text>
 
-                    {LANGUAGES.map(lang => (
+                    {languages.map(lang => (
                         <TouchableOpacity
-                            key={lang}
+                            key={lang.code}
                             style={[
                                 styles.item,
-                                selectedLanguage === lang && styles.selectedItem, // highlight
+                                selectedLanguage === lang.name && styles.selectedItem, // highlight
                             ]}
                             onPress={() => {
                                 onSelect(lang);
@@ -46,10 +46,10 @@ function LanguageModal({
                             <Text
                                 style={[
                                     styles.text,
-                                    selectedLanguage === lang && styles.selectedText,
+                                    selectedLanguage === lang.name && styles.selectedText,
                                 ]}
                             >
-                                {lang}
+                                {lang.name}
                             </Text>
                         </TouchableOpacity>
                     ))}

@@ -3,7 +3,7 @@ import {
     Modal,
     View,
     Text,
-    TouchableOpacity,
+    TouchableOpacity, Pressable,
 } from 'react-native';
 
 // styles
@@ -24,9 +24,8 @@ function LanguageModal({
 }) {
     return (
         <Modal transparent animationType="fade" visible={visible}>
-            <TouchableOpacity
+            <Pressable
                 style={styles.overlay}
-                activeOpacity={1}
                 onPress={onClose}
             >
                 <View style={styles.card}>
@@ -55,7 +54,7 @@ function LanguageModal({
                         </TouchableOpacity>
                     ))}
                 </View>
-            </TouchableOpacity>
+            </Pressable>
         </Modal>
     );
 }

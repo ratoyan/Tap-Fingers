@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, Modal } from 'react-native';
+import {View, Text, TouchableOpacity, Modal, Pressable} from 'react-native';
 
 // styles
 import styles from './LogoutModal.style.ts';
@@ -11,7 +11,7 @@ export default function LogoutModal({ visible, onClose, onConfirm }: any) {
             animationType="fade"
             visible={visible}
         >
-            <TouchableOpacity style={styles.overlay} onPress={onClose}>
+            <Pressable style={styles.overlay} onPress={onClose}>
                 <View style={styles.modalContainer}>
                     <Text style={styles.title}>EXIT GAME</Text>
                     <Text style={styles.message}>Are you sure you want to exit game?</Text>
@@ -26,7 +26,7 @@ export default function LogoutModal({ visible, onClose, onConfirm }: any) {
                         </TouchableOpacity>
                     </View>
                 </View>
-            </TouchableOpacity>
+            </Pressable>
         </Modal>
     );
 }

@@ -10,9 +10,8 @@ export default function LogoutModal({ visible, onClose, onConfirm }: any) {
             transparent
             animationType="fade"
             visible={visible}
-            onRequestClose={onClose}
         >
-            <View style={styles.overlay}>
+            <TouchableOpacity style={styles.overlay} onPress={onClose}>
                 <View style={styles.modalContainer}>
                     <Text style={styles.title}>EXIT GAME</Text>
                     <Text style={styles.message}>Are you sure you want to exit game?</Text>
@@ -27,7 +26,7 @@ export default function LogoutModal({ visible, onClose, onConfirm }: any) {
                         </TouchableOpacity>
                     </View>
                 </View>
-            </View>
+            </TouchableOpacity>
         </Modal>
     );
 }

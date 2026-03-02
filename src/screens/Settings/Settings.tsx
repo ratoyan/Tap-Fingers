@@ -1,22 +1,19 @@
 import React, {useState} from 'react';
 import {
     View,
-    Text, TouchableOpacity, Alert,
+    Text, TouchableOpacity,
 } from 'react-native';
-import {useSafeAreaInsets} from "react-native-safe-area-context";
-import {TOP_OFFSET} from "../../constants/uiConstants.ts";
 
 // components
 import SettingRow from "../../components/ui/SettingRow/SettingRow.tsx";
 import LanguageModal from "../../components/ui/LanguageModal/LanguageModal.tsx";
-
-// styles
-import styles from './Settings.style.ts';
 import BackHeader from "../../components/ui/BackHeader/BackHeader.tsx";
 import LogoutModal from "../../components/ui/LogoutModal/LogoutModal.tsx";
 
+// styles
+import styles from './Settings.style.ts';
+
 function Settings() {
-    const insets = useSafeAreaInsets();
 
     const [music, setMusic] = useState(true);
     const [sound, setSound] = useState(true);

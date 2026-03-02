@@ -14,7 +14,7 @@ interface CoinCountProps {
 function CoinCount({count, viewStyles}: CoinCountProps) {
     return (
         <View style={[styles.container, viewStyles && viewStyles]}>
-            <Coin width={20} height={20}/>
+            <Coin width={22} height={20}/>
             <Text style={styles.text}>{count}</Text>
         </View>
     );

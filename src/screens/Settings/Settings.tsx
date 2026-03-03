@@ -1,9 +1,12 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {
     View,
     Text, TouchableOpacity,
 } from 'react-native';
 import {LanguageType} from "../../types/language.type.ts";
+import {changeAppLanguage} from "../../localization/i18n.ts";
+import {useTranslation} from "react-i18next";
+import {languages} from "../../data/language.ts";
 
 // components
 import SettingRow from "../../components/ui/SettingRow/SettingRow.tsx";
@@ -15,6 +18,9 @@ import LogoutModal from "../../components/ui/LogoutModal/LogoutModal.tsx";
 import styles from './Settings.style.ts';
 
 function Settings() {
+    const {i18n, t} = useTranslation();
+    const currentLang = i18n.language
+
     const [music, setMusic] = useState(true);
     const [sound, setSound] = useState(true);
     const [vibration, setVibration] = useState(false);
@@ -22,28 +28,37 @@ function Settings() {
     const [langModal, setLangModal] = useState(false);
     const [logoutModal, setLogoutModal] = useState(false);
 
+    const getCurrentLanguage = () => {
+        const langObj = languages.find((e: LanguageType) => e.code === currentLang)
+        setLanguage(langObj || languages[2])
+    }
+
+    useEffect(() => {
+        getCurrentLanguage();
+    }, [currentLang])
+
     return (
         <View style={styles.container}>
-            <BackHeader title={'⚙️ SETTINGS'}/>
+            <BackHeader title={`⚙️ ${t('settings')}`}/>
 
             <View style={styles.card}>
                 <SettingRow
-                    label="🎵 Music"
+                    label={`🎵 ${t('music')}`}
                     value={music}
                     onChange={setMusic}
                 />
                 <SettingRow
-                    label="🔊 Sound Effects"
+                    label={`🔊 ${t('soundEffects')}`}
                     value={sound}
                     onChange={setSound}
                 />
                 <SettingRow
-                    label="📳 Vibration"
+                    label={`📳 ${t('vibration')}`}
                     value={vibration}
                     onChange={setVibration}
                 />
                 <SettingRow
-                    label="🌍 Language"
+                    label={`🌍 ${t('language')}`}
                     valueText={language.name}
                     onPress={() => setLangModal(true)}
                     viewStyle={{borderBottomWidth: 0}}
@@ -58,13 +73,16 @@ function Settings() {
             >
                 <Text
                     style={styles.buttonText}>
-                    EXIT GAME
+                    {t('exitGame')}
                 </Text>
             </TouchableOpacity>
             <LanguageModal
                 visible={langModal}
                 onClose={() => setLangModal(false)}
-                onSelect={(lang) => setLanguage(lang)}
+                onSelect={(lang) => {
+                    setLanguage(lang);
+                    changeAppLanguage(lang.code);
+                }}
                 selectedLanguage={language.name}
             />
             <LogoutModal visible={logoutModal} onClose={() => setLogoutModal(false)} onConfirm={() => {

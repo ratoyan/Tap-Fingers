@@ -1,0 +1,15 @@
+{
+  "play": "PLAY",
+  "settings": "SETTINGS",
+  "shop": "SHOP",
+  "progression": "Progression",
+  "challenges": "Challenges",
+  "music": "Music",
+  "soundEffects": "Sound Effects",
+  "vibration": "Vibration",
+  "language": "Language",
+  "exitGame": "EXIT GAME",
+  "exitGameDescription": "Are you sure you want to exit game?",
+  "cancel": "Cancel",
+  "yes": "Yes"
+}

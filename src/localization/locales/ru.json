@@ -1,0 +1,15 @@
+{
+  "play": "ИГРАТЬ",
+  "settings": "НАСТРОЙКИ",
+  "shop": 'МАГАЗИН',
+  "progression": "Прогресс",
+  "challenges": "Проблемы",
+  "music": "Музыка",
+  "soundEffects": "Звуковые эффекты",
+  "vibration": "Вибрация",
+  "language": "Язык",
+  "exitGame": "ВЫХОД ИЗ ИГРЫ",
+  "exitGameDescription": "Вы уверены, что хотите выйти из игры?",
+  "cancel": "Отмена",
+  "yes": "Да"
+}

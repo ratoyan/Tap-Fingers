@@ -25,7 +25,7 @@ export default StyleSheet.create({
     },
     icon: {
         fontSize: width * 0.07,
-        marginRight: width * 0.04,
+        marginRight: width * 0.03,
         color: WHITE,
     },
     title: {

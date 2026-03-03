@@ -1,9 +1,9 @@
 import {MenuType} from "../types/menu.type.ts";
 
 export const menus: MenuType[] = [
-    { title: 'PLAY', icon: '▶️', navigateTo: 'Play' },
-    { title: 'SETTINGS', icon: '⚙️', navigateTo: 'Settings' },
-    { title: 'SHOP', icon: '🛒', navigateTo: 'Shop' },
-    { title: 'Progression', icon: '🏆', navigateTo: 'Progression' },
-    { title: 'Challenges', icon: '🎯', navigateTo: 'Challenges' },
+    { title: 'play', icon: '▶️', navigateTo: 'Play' },
+    { title: 'settings', icon: '⚙️', navigateTo: 'Settings' },
+    { title: 'shop', icon: '🛒', navigateTo: 'Shop' },
+    { title: 'progression', icon: '🏆', navigateTo: 'Progression' },
+    { title: 'challenges', icon: '🎯', navigateTo: 'Challenges' },
 ];

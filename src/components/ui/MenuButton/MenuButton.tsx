@@ -2,6 +2,7 @@ import React from "react";
 import {Animated, Text, TouchableOpacity} from "react-native";
 import {useNavigation} from "@react-navigation/core";
 import {MenuType} from "../../../types/menu.type.ts";
+import {useTranslation} from "react-i18next";
 
 // styles
 import styles from './MenuButton.style.ts';
@@ -13,6 +14,7 @@ interface MenuProps {
 }
 
 function MenuButton({menu}: MenuProps){
+    const {t} = useTranslation();
     const navigation = useNavigation();
     const scale = new Animated.Value(1);
 
@@ -49,7 +51,7 @@ function MenuButton({menu}: MenuProps){
                     style={styles.gradientButton}
                 >
                     <Text style={styles.icon}>{menu.icon}</Text>
-                    <Text style={styles.title}>{menu.title}</Text>
+                    <Text style={styles.title}>{t(menu.title)}</Text>
                 </LinearGradient>
             </TouchableOpacity>
         </Animated.View>

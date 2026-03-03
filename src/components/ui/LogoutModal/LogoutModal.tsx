@@ -3,8 +3,11 @@ import {View, Text, TouchableOpacity, Modal, Pressable} from 'react-native';
 
 // styles
 import styles from './LogoutModal.style.ts';
+import {useTranslation} from "react-i18next";
 
 export default function LogoutModal({ visible, onClose, onConfirm }: any) {
+    const {t} = useTranslation();
+
     return (
         <Modal
             transparent
@@ -13,16 +16,16 @@ export default function LogoutModal({ visible, onClose, onConfirm }: any) {
         >
             <Pressable style={styles.overlay} onPress={onClose}>
                 <View style={styles.modalContainer}>
-                    <Text style={styles.title}>EXIT GAME</Text>
-                    <Text style={styles.message}>Are you sure you want to exit game?</Text>
+                    <Text style={styles.title}>{t('exitGame')}</Text>
+                    <Text style={styles.message}>{t('exitGameDescription')}</Text>
 
                     <View style={styles.buttonContainer}>
                         <TouchableOpacity style={[styles.button, styles.cancelButton]} onPress={onClose}>
-                            <Text style={[styles.buttonText, styles.cancelText]}>Cancel</Text>
+                            <Text style={[styles.buttonText, styles.cancelText]}>{t('cancel')}</Text>
                         </TouchableOpacity>
 
                         <TouchableOpacity style={[styles.button, styles.confirmButton]} onPress={onConfirm}>
-                            <Text style={[styles.buttonText, styles.confirmText]}>Yes</Text>
+                            <Text style={[styles.buttonText, styles.confirmText]}>{t('yes')}</Text>
                         </TouchableOpacity>
                     </View>
                 </View>

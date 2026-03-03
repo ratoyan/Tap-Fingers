@@ -8,11 +8,12 @@ export default StyleSheet.create({
         justifyContent: 'center',
     },
     title: {
+        width: '70%',
         fontSize: 28,
         fontWeight: '900',
         color: WHITE,
         textAlign: 'center',
-        marginLeft: 12
+        marginLeft: 12,
     },
     backPosition: {
         position: 'absolute',

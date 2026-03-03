@@ -12,5 +12,6 @@
   "exitGameDescription": "Вы уверены, что хотите выйти из игры?",
   "cancel": "Отмена",
   "yes": "Да",
-  "level": "Уровень"
+  "level": "Уровень",
+  "selectLanguage": "Выберите язык"
 }

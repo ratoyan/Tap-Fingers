@@ -24,16 +24,18 @@ function BackHeader({title, backPress}: BackHeaderProps) {
         >
 
             <TouchableOpacity style={[styles.backPosition, {top: insets.top + TOP_OFFSET + 5}]} onPress={() => {
-                if(backPress){
+                if (backPress) {
                     backPress();
-                }else {
+                } else {
                     navigation.goBack();
                 }
             }}>
                 <Back/>
             </TouchableOpacity>
 
-            <Text style={styles.title}>{title}</Text>
+            <Text style={styles.title}
+                  numberOfLines={1}
+                  ellipsizeMode="tail">{title}</Text>
         </View>
     );
 }

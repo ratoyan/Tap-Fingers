@@ -6,9 +6,17 @@ import {
     TouchableOpacity, Pressable,
 } from 'react-native';
 import {languages} from "../../../data/language.ts";
+import {useTranslation} from "react-i18next";
 
 // styles
 import styles from './LanguageModal.style';
+
+interface LanguageModalProps {
+    visible: boolean;
+    onClose: () => void;
+    onSelect: (val: any) => void;
+    selectedLanguage?: string;
+}
 
 
 function LanguageModal({
@@ -16,12 +24,9 @@ function LanguageModal({
                            onClose,
                            onSelect,
                            selectedLanguage, // new prop
-                       }: {
-    visible: boolean;
-    onClose: () => void;
-    onSelect: (val: any) => void;
-    selectedLanguage?: string;
-}) {
+                       }: LanguageModalProps) {
+    const {t} = useTranslation();
+
     return (
         <Modal transparent animationType="fade" visible={visible}>
             <Pressable
@@ -29,7 +34,7 @@ function LanguageModal({
                 onPress={onClose}
             >
                 <View style={styles.card}>
-                    <Text style={styles.title}>Select Language</Text>
+                    <Text style={styles.title}>{t('selectLanguage')}</Text>
 
                     {languages.map(lang => (
                         <TouchableOpacity

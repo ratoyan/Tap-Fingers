@@ -7,6 +7,8 @@ import {LanguageType} from "../../types/language.type.ts";
 import {changeAppLanguage} from "../../localization/i18n.ts";
 import {useTranslation} from "react-i18next";
 import {languages} from "../../data/language.ts";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import {useNavigation} from "@react-navigation/core";
 
 // components
 import SettingRow from "../../components/ui/SettingRow/SettingRow.tsx";
@@ -18,6 +20,7 @@ import LogoutModal from "../../components/ui/LogoutModal/LogoutModal.tsx";
 import styles from './Settings.style.ts';
 
 function Settings() {
+    const navigation = useNavigation<any>();
     const {i18n, t} = useTranslation();
     const currentLang = i18n.language
 
@@ -31,6 +34,12 @@ function Settings() {
     const getCurrentLanguage = () => {
         const langObj = languages.find((e: LanguageType) => e.code === currentLang)
         setLanguage(langObj || languages[2])
+    }
+
+    const logOut = async () => {
+        await AsyncStorage.clear();
+        setLogoutModal(false);
+        navigation.navigate('Welcome');
     }
 
     useEffect(() => {
@@ -85,9 +94,7 @@ function Settings() {
                 }}
                 selectedLanguage={language.name}
             />
-            <LogoutModal visible={logoutModal} onClose={() => setLogoutModal(false)} onConfirm={() => {
-
-            }}/>
+            <LogoutModal visible={logoutModal} onClose={() => setLogoutModal(false)} onConfirm={logOut}/>
         </View>
     );
 }

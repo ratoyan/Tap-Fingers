@@ -6,6 +6,7 @@ import {RootStackParamList} from "../types/RootStackParamList.ts";
 import Home from "../screens/Home/Home.tsx";
 import Settings from "../screens/Settings/Settings.tsx";
 import Welcome from "../screens/Welcome/Welcome.tsx";
+import Progression from "../screens/Progression/Progression.tsx";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -24,7 +25,14 @@ const StackNavigator = () => {
                 name="Settings"
                 component={Settings}
                 options={{
-                    animation: 'slide_from_right', // 'slide_from_right' | 'slide_from_left' | 'slide_from_bottom' | 'fade'
+                    animation: 'slide_from_right',
+                }}
+            />
+            <Stack.Screen
+                name="Progression"
+                component={Progression}
+                options={{
+                    animation: 'slide_from_right',
                 }}
             />
         </Stack.Navigator>

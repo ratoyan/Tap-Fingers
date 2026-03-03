@@ -16,7 +16,6 @@ const resources = {
     am: { translation: am },
 }
 
-// 👇 Proper typed language detector
 const languageDetector: any = {
     type: 'languageDetector',
     async: true,
@@ -46,8 +45,8 @@ const languageDetector: any = {
 }
 
 export const changeAppLanguage = async (lang: 'en' | 'ru' | 'am') => {
-    await i18n.changeLanguage(lang)          // 🔹 change language in i18next
-    await AsyncStorage.setItem(STORAGE_KEYS.LANG, lang) // 🔹 save to AsyncStorage
+    await i18n.changeLanguage(lang)
+    await AsyncStorage.setItem(STORAGE_KEYS.LANG, lang)
 }
 
 i18n
@@ -58,12 +57,12 @@ i18n
         compatibilityJSON: 'v3',
         resources,
         fallbackLng,
-        supportedLngs: ['en', 'ru', 'am'], // 🔥 important
+        supportedLngs: ['en', 'ru', 'am'],
         interpolation: {
             escapeValue: false,
         },
         react: {
-            useSuspense: false, // 🔥 React Native-ում պարտադիր
+            useSuspense: false,
         },
     })
 

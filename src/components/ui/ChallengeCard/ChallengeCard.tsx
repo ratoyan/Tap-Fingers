@@ -1,11 +1,13 @@
 import React from "react";
 import {Text, View} from "react-native";
 
+// icons
+import Coin from "../../../assets/icons/Coin.tsx";
+
 // styles
 import styles from './ChallengeCard.style.ts';
 import {GRADIENT_DARK, GRADIENT_LIGHT, GRAY_100, GRAY_50} from "../../../constants/colors.ts";
 import LinearGradient from "react-native-linear-gradient";
-import Coin from "../../../assets/icons/Coin.tsx";
 
 interface ChallengeCardProps {
     item: any

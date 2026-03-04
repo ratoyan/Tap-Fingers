@@ -31,9 +31,7 @@ function Shop() {
                 <Text style={styles.sectionTitle}>{t('cards')}</Text>
                 <View style={styles.grid}>
                     {ITEMS.filter((e: any) => e.type === 'card').map((item: any, index: number) => (
-                        <React.Fragment key={index}>
-                            <ShopItem item={item} key={index}/>
-                        </React.Fragment>
+                        <ShopItem item={item} key={index}/>
                     ))}
                 </View>
 

@@ -37,7 +37,7 @@ export default StyleSheet.create({
     reward: {
         marginTop: 10,
         fontSize: 14,
-        color: 'GOLD',
+        color: GOLD,
         fontWeight: 'bold',
     },
     lockedText: {

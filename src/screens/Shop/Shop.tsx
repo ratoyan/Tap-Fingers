@@ -28,17 +28,15 @@ function Shop() {
             <BackHeader title={`🛍 ${t('shop')}`}/>
 
             <ScrollView contentContainerStyle={{paddingBottom: 20}} showsVerticalScrollIndicator={false}>
-                {/* Cards Section */}
                 <Text style={styles.sectionTitle}>Cards</Text>
                 <View style={styles.grid}>
                     {ITEMS.filter((e: any) => e.type === 'card').map((item: any, index: number) => (
-                        <React.Fragment key={index}> {/* or any unique value */}
+                        <React.Fragment key={index}>
                             <ShopItem item={item} key={index}/>
                         </React.Fragment>
                     ))}
                 </View>
 
-                {/* Backgrounds Section */}
                 <Text style={styles.sectionTitle}>Backgrounds</Text>
                 <View style={styles.grid}>
                     {ITEMS.filter((e: any) => e.type === 'background').map((item: any, index: number) => (

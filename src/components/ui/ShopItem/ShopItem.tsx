@@ -1,11 +1,13 @@
 import {Text, TouchableOpacity, View} from "react-native";
-import LinearGradient from "react-native-linear-gradient";
 import React from "react";
+
+// icons
+import Coin from "../../../assets/icons/Coin.tsx";
 
 // styles
 import styles from './ShopItem.style.ts';
 import {GRADIENT_DARK, GRADIENT_LIGHT, PLUM} from "../../../constants/colors.ts";
-import Coin from "../../../assets/icons/Coin.tsx";
+import LinearGradient from "react-native-linear-gradient";
 
 interface ShopItemProps {
     item: any

@@ -25,7 +25,7 @@ function Shop() {
 
     return (
         <LinearGradient colors={[DARK_PURPLE, PURPLE]} style={styles.container}>
-            <BackHeader title={`🛍 ${t('shop')}`}/>
+            <BackHeader title={`🛒 ${t('shop')}`} isShowCoin={true} textStyle={{marginRight: 25}}/>
 
             <ScrollView contentContainerStyle={{paddingBottom: 20}} showsVerticalScrollIndicator={false}>
                 <Text style={styles.sectionTitle}>{t('cards')}</Text>

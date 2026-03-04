@@ -1,6 +1,7 @@
 export const BLACK = '#000';
 
 export const GRAY = '#333';
+export const GRAY_50 = '#444';
 export const GRAY_100 = '#555';
 
 export const WHITE = '#fff';

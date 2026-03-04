@@ -1,11 +1,12 @@
 import {StyleSheet} from "react-native";
 import {BLACK, DARK_PURPLE, PURPLE, WHITE} from "../../constants/colors.ts";
+import {HORIZONAL_OFFSET} from "../../constants/uiConstants.ts";
 
 export default StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: DARK_PURPLE,
-        paddingHorizontal: 20,
+        paddingHorizontal: HORIZONAL_OFFSET,
     },
     card: {
         backgroundColor: PURPLE,

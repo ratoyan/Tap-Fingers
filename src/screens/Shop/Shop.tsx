@@ -5,11 +5,11 @@ import {useTranslation} from "react-i18next";
 // components
 import BackHeader from "../../components/ui/BackHeader/BackHeader.tsx";
 import ShopItem from "../../components/ui/ShopItem/ShopItem.tsx";
-import LinearGradient from "react-native-linear-gradient";
 
 // styles
 import styles from './Shop.style.ts';
 import {DARK_PURPLE, PURPLE} from "../../constants/colors.ts";
+import LinearGradient from "react-native-linear-gradient";
 
 const ITEMS = [
     {id: "1", title: "50 Coins", price: "0.99$", icon: "🪙", type: 'card'},
@@ -28,7 +28,7 @@ function Shop() {
             <BackHeader title={`🛍 ${t('shop')}`}/>
 
             <ScrollView contentContainerStyle={{paddingBottom: 20}} showsVerticalScrollIndicator={false}>
-                <Text style={styles.sectionTitle}>Cards</Text>
+                <Text style={styles.sectionTitle}>{t('cards')}</Text>
                 <View style={styles.grid}>
                     {ITEMS.filter((e: any) => e.type === 'card').map((item: any, index: number) => (
                         <React.Fragment key={index}>
@@ -37,7 +37,7 @@ function Shop() {
                     ))}
                 </View>
 
-                <Text style={styles.sectionTitle}>Backgrounds</Text>
+                <Text style={styles.sectionTitle}>{t('backgrounds')}</Text>
                 <View style={styles.grid}>
                     {ITEMS.filter((e: any) => e.type === 'background').map((item: any, index: number) => (
                         <ShopItem item={item} key={index}/>

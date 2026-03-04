@@ -1,4 +1,5 @@
 import {StyleSheet} from "react-native";
+import {GOLD, WHITE_100} from "../../../constants/colors.ts";
 
 export default StyleSheet.create({
     card: {
@@ -8,7 +9,7 @@ export default StyleSheet.create({
         elevation: 5,
     },
     title: {
-        fontSize: 18,
+        fontSize: 22,
         fontWeight: 'bold',
         color: 'white',
         marginBottom: 15,
@@ -21,21 +22,26 @@ export default StyleSheet.create({
     },
     progressFill: {
         height: 8,
-        backgroundColor: '#FFD700',
+        backgroundColor: GOLD,
     },
     progressText: {
         marginTop: 8,
         color: 'white',
         fontSize: 13,
     },
+    rewardView: {
+        flexDirection: 'row',
+        alignItems: 'flex-end',
+        gap: 5
+    },
     reward: {
         marginTop: 10,
         fontSize: 14,
-        color: '#FFD700',
+        color: 'GOLD',
         fontWeight: 'bold',
     },
     lockedText: {
-        color: '#ddd',
+        color: WHITE_100,
         fontSize: 13,
     },
 });

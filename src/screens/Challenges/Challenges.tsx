@@ -11,6 +11,7 @@ import ChallengeCard from "../../components/ui/ChallengeCard/ChallengeCard.tsx";
 import styles from './Challenges.style.ts';
 import LinearGradient from 'react-native-linear-gradient';
 import {DARK_PURPLE, PURPLE} from "../../constants/colors.ts";
+import {useTranslation} from "react-i18next";
 
 const challenges = [
     {
@@ -37,13 +38,14 @@ const challenges = [
 ];
 
 function Challenges() {
+    const {t} = useTranslation();
 
     return (
         <LinearGradient
             colors={[DARK_PURPLE, PURPLE]}
             style={styles.container}
         >
-            <BackHeader title={'🎯 CHALLENGES'}/>
+            <BackHeader title={`🎯 ${t('challenges')}`}/>
 
             <FlatList
                 data={challenges}

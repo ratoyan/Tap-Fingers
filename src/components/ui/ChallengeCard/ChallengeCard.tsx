@@ -5,6 +5,7 @@ import {Text, View} from "react-native";
 import styles from './ChallengeCard.style.ts';
 import {GRADIENT_DARK, GRADIENT_LIGHT, GRAY_100, GRAY_50} from "../../../constants/colors.ts";
 import LinearGradient from "react-native-linear-gradient";
+import Coin from "../../../assets/icons/Coin.tsx";
 
 interface ChallengeCardProps {
     item: any
@@ -40,9 +41,12 @@ function ChallengeCard({item}: ChallengeCardProps) {
                         {item.progress}% Completed
                     </Text>
 
-                    <Text style={styles.reward}>
-                        🪙 Reward: {item.reward} coins
-                    </Text>
+                    <View style={styles.rewardView}>
+                        <Coin width={23} height={20}/>
+                        <Text style={styles.reward}>
+                            Reward: {item.reward} coins
+                        </Text>
+                    </View>
                 </>
             )}
 

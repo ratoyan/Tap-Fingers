@@ -39,16 +39,19 @@ export default StyleSheet.create({
         fontWeight: "bold",
         marginBottom: 12,
         textAlign: "center",
+        marginTop: 5
     },
     priceContainer: {
-        backgroundColor: GOLD,
-        paddingHorizontal: 20,
+        flexDirection: 'row',
+        backgroundColor: DARK_PURPLE,
+        columnGap: 5,
+        paddingHorizontal: 10,
         paddingVertical: 8,
         borderRadius: 25,
     },
     price: {
         fontWeight: "bold",
         fontSize: 16,
-        color: DARK_PURPLE,
+        color: GOLD,
     },
 });

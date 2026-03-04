@@ -12,12 +12,12 @@ import {DARK_PURPLE, PURPLE} from "../../constants/colors.ts";
 import LinearGradient from "react-native-linear-gradient";
 
 const ITEMS = [
-    {id: "1", title: "50 Coins", price: "0.99$", icon: "🪙", type: 'card'},
-    {id: "2", title: "150 Coins", price: "2.99$", icon: "💰", type: 'card'},
-    {id: "3", title: "No Ads", price: "1.99$", icon: "🚫", type: 'card'},
-    {id: "4", title: "Golden Skin", price: "4.99$", icon: "👑", type: 'card'},
-    {id: "5", title: "No Ads", price: "1.99$", icon: "🚫", type: 'background'},
-    {id: "6", title: "Golden Skin", price: "4.99$", icon: "👑", type: 'background'},
+    {id: "1", title: "Card 1", price: "100", type: 'card'},
+    {id: "2", title: "Card 2", price: "200", type: 'card'},
+    {id: "3", title: "Card 3", price: "300", type: 'card'},
+    {id: "4", title: "Card 4", price: "100", type: 'card'},
+    {id: "5", title: "Background 1", price: "200", type: 'background'},
+    {id: "6", title: "Background 2", price: "300", type: 'background'},
 ];
 
 function Shop() {

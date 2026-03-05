@@ -64,7 +64,6 @@ function Settings() {
             const musicState = musicData ? JSON.parse(musicData) : false;
             setMusic(musicState);
         } catch (error) {
-            console.log("Failed to load music setting from storage:", error);
             setMusic(false);
         }
     };

@@ -6,7 +6,7 @@ import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {menus} from "../../data/menu.ts";
 import {MenuType} from "../../types/menu.type.ts";
 import {TOP_OFFSET} from "../../constants/uiConstants.ts";
-import Sound from 'react-native-sound';
+import {loadMusic, playMusic, releaseMusic} from "../../utils/helpers.ts";
 
 // components
 import MenuButton from "../../components/ui/MenuButton/MenuButton.tsx";
@@ -24,25 +24,16 @@ const Home: React.FC<Props> = () => {
     const insets = useSafeAreaInsets();
 
     useEffect(() => {
-        const sound = new Sound(
-            "gamemusic2.mp3",
-            Sound.MAIN_BUNDLE,
-            (error) => {
-                if (error) {
-                    console.log("failed to load sound", error);
-                    return;
-                }
+        loadMusic("gamemusic2.mp3");
 
-                sound.setNumberOfLoops(-1); // infinite loop
-                sound.play();
-            }
-        );
+        const timeout = setTimeout(() => {
+            playMusic();
+        }, 200);
 
         return () => {
-            sound.stop();
-            sound.release();
+            clearTimeout(timeout);
+            releaseMusic();
         };
-
     }, []);
 
     return (

@@ -1,6 +1,6 @@
 import React, {useRef, useEffect} from 'react';
 import {Text, TouchableOpacity, Animated, Dimensions} from 'react-native';
-import LinearGradient from 'react-native-linear-gradient';
+import {setStorageSettings} from "../../utils/helpers.ts";
 
 // icons
 import GoogleLogo from "../../assets/icons/GoogleLogo.tsx";
@@ -12,6 +12,7 @@ import Logo from "../../components/ui/Logo/Logo.tsx";
 // styles
 import styles from './Welcome.style.ts';
 import {DARK_PURPLE, MEDIUM_PURPLE, PURPLE} from "../../constants/colors.ts";
+import LinearGradient from 'react-native-linear-gradient';
 
 function Welcome() {
     // Animation refs
@@ -60,6 +61,8 @@ function Welcome() {
                 }),
             ])
         ).start();
+
+        setStorageSettings();
     }, []);
 
     return (
@@ -70,7 +73,7 @@ function Welcome() {
             <Animated.Text
                 style={[
                     styles.title,
-                    {width: '50%',textAlign: 'center'},
+                    {width: '50%', textAlign: 'center'},
                     {
                         opacity: fadeTitle, transform: [{
                             translateY: fadeTitle.interpolate({
@@ -86,7 +89,7 @@ function Welcome() {
             </Animated.Text>
             <Animated.View
                 style={{
-                    transform: [{ translateY: floatAnim }],
+                    transform: [{translateY: floatAnim}],
                     height: Dimensions.get('window').height / 3,
                     alignItems: 'center',
                     justifyContent: 'center',

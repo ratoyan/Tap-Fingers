@@ -9,6 +9,8 @@ import {useTranslation} from "react-i18next";
 import {languages} from "../../data/language.ts";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {useNavigation} from "@react-navigation/core";
+import {loadMusic, playMusic, stopMusic} from "../../utils/helpers.ts";
+import {STORAGE_KEYS} from "../../utils/storageKeys.ts";
 
 // components
 import SettingRow from "../../components/ui/SettingRow/SettingRow.tsx";
@@ -42,6 +44,35 @@ function Settings() {
         navigation.navigate('Welcome');
     }
 
+    const changeMusic = async (val: boolean) => {
+        setMusic(val);
+        if (val) {
+            await AsyncStorage.setItem(STORAGE_KEYS.MUSIC, JSON.stringify(true));
+            loadMusic("gamemusic2.mp3");
+            setTimeout(()=>{
+                playMusic();
+            },200)
+        } else {
+            await AsyncStorage.removeItem(STORAGE_KEYS.MUSIC);
+            stopMusic();
+        }
+    }
+
+    const getStorageData = async () => {
+        try {
+            const musicData = await AsyncStorage.getItem(STORAGE_KEYS.MUSIC);
+            const musicState = musicData ? JSON.parse(musicData) : false;
+            setMusic(musicState);
+        } catch (error) {
+            console.log("Failed to load music setting from storage:", error);
+            setMusic(false);
+        }
+    };
+
+    useEffect(() => {
+        getStorageData();
+    }, []);
+
     useEffect(() => {
         getCurrentLanguage();
     }, [currentLang])
@@ -54,7 +85,7 @@ function Settings() {
                 <SettingRow
                     label={`🎵 ${t('music')}`}
                     value={music}
-                    onChange={setMusic}
+                    onChange={changeMusic}
                 />
                 <SettingRow
                     label={`🔊 ${t('soundEffects')}`}

@@ -17,13 +17,17 @@ import Logo from "../../components/ui/Logo/Logo.tsx";
 import styles from './Home.style.ts';
 import globalStyles from '../../styles/globalStyle.ts';
 import {DARK_PURPLE, PURPLE} from "../../constants/colors.ts";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import {STORAGE_KEYS} from "../../utils/storageKeys.ts";
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Home'>;
 
 const Home: React.FC<Props> = () => {
     const insets = useSafeAreaInsets();
 
-    useEffect(() => {
+    const getMusic = async () => {
+        const music = await AsyncStorage.getItem(STORAGE_KEYS.MUSIC)
+        if (!music) return;
         loadMusic("gamemusic2.mp3");
 
         const timeout = setTimeout(() => {
@@ -34,6 +38,10 @@ const Home: React.FC<Props> = () => {
             clearTimeout(timeout);
             releaseMusic();
         };
+    }
+
+    useEffect(() => {
+        getMusic();
     }, []);
 
     return (

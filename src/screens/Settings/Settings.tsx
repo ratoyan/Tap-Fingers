@@ -44,7 +44,7 @@ function Settings() {
         navigation.navigate('Welcome');
     }
 
-    const changeMusic = async (val: boolean) => {
+    const toggleMusic = async (val: boolean) => {
         setMusic(val);
         if (val) {
             await AsyncStorage.setItem(STORAGE_KEYS.MUSIC, JSON.stringify(true));
@@ -84,7 +84,7 @@ function Settings() {
                 <SettingRow
                     label={`🎵 ${t('music')}`}
                     value={music}
-                    onChange={changeMusic}
+                    onChange={toggleMusic}
                 />
                 <SettingRow
                     label={`🔊 ${t('soundEffects')}`}

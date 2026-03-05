@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useEffect} from 'react';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {RootStackParamList} from '../../types/RootStackParamList';
 import LinearGradient from 'react-native-linear-gradient';
@@ -6,6 +6,7 @@ import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {menus} from "../../data/menu.ts";
 import {MenuType} from "../../types/menu.type.ts";
 import {TOP_OFFSET} from "../../constants/uiConstants.ts";
+import Sound from 'react-native-sound';
 
 // components
 import MenuButton from "../../components/ui/MenuButton/MenuButton.tsx";
@@ -21,6 +22,28 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Home'>;
 
 const Home: React.FC<Props> = () => {
     const insets = useSafeAreaInsets();
+
+    useEffect(() => {
+        const sound = new Sound(
+            "gamemusic2.mp3",
+            Sound.MAIN_BUNDLE,
+            (error) => {
+                if (error) {
+                    console.log("failed to load sound", error);
+                    return;
+                }
+
+                sound.setNumberOfLoops(-1); // infinite loop
+                sound.play();
+            }
+        );
+
+        return () => {
+            sound.stop();
+            sound.release();
+        };
+
+    }, []);
 
     return (
         <LinearGradient

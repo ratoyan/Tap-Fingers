@@ -58,13 +58,41 @@ function Settings() {
         }
     }
 
+    const toggleSound = async (val: boolean)=> {
+        setSound(val);
+        if (val) {
+            await AsyncStorage.setItem(STORAGE_KEYS.SOUND, JSON.stringify(true));
+        } else {
+            await AsyncStorage.removeItem(STORAGE_KEYS.SOUND);
+        }
+    }
+
+    const toggleVibration = async (val: boolean)=> {
+        setVibration(val);
+        if (val) {
+            await AsyncStorage.setItem(STORAGE_KEYS.VIBRATION, JSON.stringify(true));
+        } else {
+            await AsyncStorage.removeItem(STORAGE_KEYS.VIBRATION);
+        }
+    }
+
     const getStorageData = async () => {
         try {
             const musicData = await AsyncStorage.getItem(STORAGE_KEYS.MUSIC);
+            const soundData = await AsyncStorage.getItem(STORAGE_KEYS.SOUND);
+            const vibrationData = await AsyncStorage.getItem(STORAGE_KEYS.VIBRATION);
+
             const musicState = musicData ? JSON.parse(musicData) : false;
+            const soundState = soundData ? JSON.parse(soundData) : false;
+            const vibrationState = vibrationData ? JSON.parse(vibrationData) : false;
+
             setMusic(musicState);
+            setSound(soundState);
+            setVibration(vibrationState);
         } catch (error) {
             setMusic(false);
+            setSound(false);
+            setVibration(false);
         }
     };
 
@@ -89,12 +117,12 @@ function Settings() {
                 <SettingRow
                     label={`🔊 ${t('soundEffects')}`}
                     value={sound}
-                    onChange={setSound}
+                    onChange={toggleSound}
                 />
                 <SettingRow
                     label={`📳 ${t('vibration')}`}
                     value={vibration}
-                    onChange={setVibration}
+                    onChange={toggleVibration}
                 />
                 <SettingRow
                     label={`🌍 ${t('language')}`}

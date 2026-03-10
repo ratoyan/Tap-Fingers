@@ -1,6 +1,5 @@
 import React, {useRef, useEffect} from 'react';
 import {Text, TouchableOpacity, Animated, Dimensions} from 'react-native';
-import {setStorageSettings} from "../../utils/helpers.ts";
 
 // icons
 import GoogleLogo from "../../assets/icons/GoogleLogo.tsx";
@@ -61,8 +60,6 @@ function Welcome() {
                 }),
             ])
         ).start();
-
-        setStorageSettings();
     }, []);
 
     return (

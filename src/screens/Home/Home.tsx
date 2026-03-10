@@ -27,7 +27,7 @@ const Home: React.FC<Props> = () => {
 
     const getMusic = async () => {
         const music = await AsyncStorage.getItem(STORAGE_KEYS.MUSIC)
-        if (!music) return;
+        if (music) return;
         loadMusic("gamemusic2.mp3");
 
         const timeout = setTimeout(() => {

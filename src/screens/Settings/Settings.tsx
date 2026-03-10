@@ -47,30 +47,30 @@ function Settings() {
     const toggleMusic = async (val: boolean) => {
         setMusic(val);
         if (val) {
-            await AsyncStorage.setItem(STORAGE_KEYS.MUSIC, JSON.stringify(true));
-            loadMusic("gamemusic2.mp3");
-            setTimeout(()=>{
-                playMusic();
-            },200)
-        } else {
             await AsyncStorage.removeItem(STORAGE_KEYS.MUSIC);
+            loadMusic("gamemusic2.mp3");
+            setTimeout(() => {
+                playMusic();
+            }, 200)
+        } else {
+            await AsyncStorage.setItem(STORAGE_KEYS.MUSIC, 'STOP');
             stopMusic();
         }
     }
 
-    const toggleSound = async (val: boolean)=> {
+    const toggleSound = async (val: boolean) => {
         setSound(val);
         if (val) {
-            await AsyncStorage.setItem(STORAGE_KEYS.SOUND, JSON.stringify(true));
-        } else {
             await AsyncStorage.removeItem(STORAGE_KEYS.SOUND);
+        } else {
+            await AsyncStorage.setItem(STORAGE_KEYS.SOUND, 'STOP');
         }
     }
 
-    const toggleVibration = async (val: boolean)=> {
+    const toggleVibration = async (val: boolean) => {
         setVibration(val);
         if (val) {
-            await AsyncStorage.setItem(STORAGE_KEYS.VIBRATION, JSON.stringify(true));
+            await AsyncStorage.setItem(STORAGE_KEYS.VIBRATION, 'STOP');
         } else {
             await AsyncStorage.removeItem(STORAGE_KEYS.VIBRATION);
         }
@@ -82,9 +82,9 @@ function Settings() {
             const soundData = await AsyncStorage.getItem(STORAGE_KEYS.SOUND);
             const vibrationData = await AsyncStorage.getItem(STORAGE_KEYS.VIBRATION);
 
-            const musicState = musicData ? JSON.parse(musicData) : false;
-            const soundState = soundData ? JSON.parse(soundData) : false;
-            const vibrationState = vibrationData ? JSON.parse(vibrationData) : false;
+            const musicState = !musicData;
+            const soundState = !soundData;
+            const vibrationState = !vibrationData;
 
             setMusic(musicState);
             setSound(soundState);

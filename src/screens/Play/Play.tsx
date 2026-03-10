@@ -1,14 +1,23 @@
 import React, {useEffect, useState} from 'react';
-import {Dimensions, ImageBackground, Pressable, Text, View} from 'react-native';
+import {Dimensions, Pressable, ImageBackground} from 'react-native';
 import {Canvas} from '@shopify/react-native-skia';
-import PlayBox from "../../components/ui/Play/PlayBox.tsx";
 import {BoxType} from "../../types/play.type.ts";
 import {boxes, colors, images} from "../../data/play.ts";
+import {TOP_OFFSET} from "../../constants/uiConstants.ts";
+import {useSafeAreaInsets} from "react-native-safe-area-context";
+
+// components
+import CoinCount from "../../components/ui/CoinCount/CoinCount.tsx";
+import PlayBox from "../../components/ui/Play/PlayBox.tsx";
+
+// styles
+import styles from './Play.style.ts'
 
 const {width, height} = Dimensions.get('window');
 
-
 export default function Play() {
+    const insets = useSafeAreaInsets();
+
     const [count, setCount] = useState(0);
     const [boxesData, setBoxesData] = useState(
         boxes.map((b: BoxType) => ({
@@ -122,7 +131,8 @@ export default function Play() {
     }, []);
 
     return (
-        <ImageBackground source={{uri: imageBackground(count)}} style={{flex: 1}}>
+        <ImageBackground source={{uri: imageBackground(count)}} style={styles.container}>
+            <CoinCount count={10} viewStyles={[styles.countView, {top: insets.top + TOP_OFFSET}]}/>
             <Canvas style={{flex: 1}}>
                 {boxesData.map((box: BoxType, index: number) => (
                     <PlayBox key={index} box={box}/>

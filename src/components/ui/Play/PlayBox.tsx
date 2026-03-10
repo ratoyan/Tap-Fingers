@@ -1,8 +1,12 @@
 import {Group, Rect} from "@shopify/react-native-skia";
 import React from "react";
+import {BoxType} from "../../../types/play.type.ts";
 
+interface PlayBoxProps {
+    box: BoxType;
+}
 
-function PlayBox({box}: any){
+function PlayBox({box}: PlayBoxProps) {
     return (
         <Group
             key={box.id}

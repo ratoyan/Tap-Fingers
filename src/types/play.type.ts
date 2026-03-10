@@ -4,6 +4,6 @@ export interface BoxType {
     color: string;
     rotation: number;
     x: number;
-    y?: number;
+    y: number;
     duration?: number;
 }

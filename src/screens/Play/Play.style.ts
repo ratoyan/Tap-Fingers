@@ -1,5 +1,12 @@
 import {StyleSheet} from "react-native";
 
 export default StyleSheet.create({
+    container: {
+        flex: 1
+    },
 
+    countView: {
+        position: 'absolute',
+        right: 10
+    }
 });

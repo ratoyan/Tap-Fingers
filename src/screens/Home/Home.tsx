@@ -1,14 +1,13 @@
 import React, {useEffect} from 'react';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {RootStackParamList} from '../../types/RootStackParamList';
-import LinearGradient from 'react-native-linear-gradient';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {menus} from "../../data/menu.ts";
 import {MenuType} from "../../types/menu.type.ts";
 import {TOP_OFFSET} from "../../constants/uiConstants.ts";
+import {STORAGE_KEYS} from "../../utils/storageKeys.ts";
 import {loadMusic, playMusic, releaseMusic} from "../../utils/helpers.ts";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import {STORAGE_KEYS} from "../../utils/storageKeys.ts";
 
 // components
 import MenuButton from "../../components/ui/MenuButton/MenuButton.tsx";
@@ -19,6 +18,7 @@ import Logo from "../../components/ui/Logo/Logo.tsx";
 import styles from './Home.style.ts';
 import globalStyles from '../../styles/globalStyle.ts';
 import {DARK_PURPLE, PURPLE} from "../../constants/colors.ts";
+import LinearGradient from 'react-native-linear-gradient';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Home'>;
 

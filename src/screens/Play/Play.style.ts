@@ -4,9 +4,11 @@ export default StyleSheet.create({
     container: {
         flex: 1
     },
-
     countView: {
         position: 'absolute',
         right: 10
+    },
+    boxItem: {
+        position: 'absolute',
     }
 });

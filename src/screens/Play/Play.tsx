@@ -146,13 +146,12 @@ export default function Play() {
                     <Pressable
                         key={box.id}
                         onPress={() => deleteBoxOnClick(box.id)}
-                        style={{
-                            position: 'absolute',
+                        style={[styles.boxItem, {
                             left: box.x,
                             top: box.y,
                             width: box.size[0],
                             height: box.size[1],
-                        }}
+                        }]}
                     />
                 ))}
         </ImageBackground>

@@ -9,6 +9,7 @@ import Welcome from "../screens/Welcome/Welcome.tsx";
 import Progression from "../screens/Progression/Progression.tsx";
 import Challenges from "../screens/Challenges/Challenges.tsx";
 import Shop from "../screens/Shop/Shop.tsx";
+import Play from "../screens/Play/Play.tsx";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -22,6 +23,13 @@ const StackNavigator = () => {
             <Stack.Screen
                 name="Home"
                 component={Home}
+            />
+            <Stack.Screen
+                name="Play"
+                component={Play}
+                options={{
+                    animation: 'fade',
+                }}
             />
             <Stack.Screen
                 name="Settings"

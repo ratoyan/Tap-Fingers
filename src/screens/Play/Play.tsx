@@ -9,6 +9,8 @@ import {useSafeAreaInsets} from "react-native-safe-area-context";
 // components
 import CoinCount from "../../components/ui/CoinCount/CoinCount.tsx";
 import PlayBox from "../../components/ui/Play/PlayBox.tsx";
+import LevelModalExample from "../../components/ui/Play/LevelModalExample.tsx";
+import Hearts from "../../components/ui/Play/Hearts.tsx";
 
 // styles
 import styles from './Play.style.ts'
@@ -17,8 +19,14 @@ const {width, height} = Dimensions.get('window');
 
 export default function Play() {
     const insets = useSafeAreaInsets();
+    const heartsLength = 7;
 
     const [count, setCount] = useState(0);
+    const [level, setLevel] = useState(1);
+    const [emptyHeartCount, setEmptyHeartCount] = useState(0);
+    const [isPlaying, setIsPlaying] = useState(true);
+    const [isLevelModal, setIsLevelModal] = useState(false);
+
     const [boxesData, setBoxesData] = useState(
         boxes.map((b: BoxType) => ({
             ...b,
@@ -26,26 +34,35 @@ export default function Play() {
             y: Math.random() * -1000,
             tx: Math.random() * (width - b.size[0]),
             ty: 0, // կարող է գնալ ներքև
-            duration: Math.random() * 30,
+            duration: Math.random() * 70,
             color: colors[Math.floor(Math.random() * colors.length)],
         }))
     );
 
     function addRandomBox() {
-        const newId = Math.max(...boxes.map(b => b.id)) + 1; // unique id
-        const randomBoxData = boxes[Math.floor(Math.random() * boxes.length)];
-
-        const newBox = {
-            ...randomBoxData,
-            id: newId,
-            x: Math.random() * (width - randomBoxData.size[0]),
-            y: -200,
-            tx: Math.random() * (width - randomBoxData.size[0]),
-            ty: Math.random() * (height - randomBoxData.size[1]),
-            rotation: randomBoxData.rotation,
-        };
         // @ts-ignore
-        setBoxesData(prev => [...prev, newBox]);
+        setBoxesData((prev: BoxType[]) => {
+            const newId = prev.length ? Math.max(...prev.map(b => b.id)) + 1 : 1;
+
+            const randomBoxData = prev[Math.floor(Math.random() * prev.length)];
+
+            if (!randomBoxData) return prev;
+
+            const newBox: BoxType = {
+                ...randomBoxData,
+                id: newId,
+                x: Math.random() * (width - randomBoxData.size[0]), // X-ը էլ random
+                y: Math.random() * -1000,
+                // @ts-ignore
+                tx: Math.random() * (width - randomBoxData.size[0]),
+                ty: 0, // կարող է գնալ ներքև
+                duration: Math.random() * 70,
+                color: colors[Math.floor(Math.random() * colors.length)],
+                rotation: randomBoxData.rotation,
+            };
+
+            return [...prev, newBox];
+        });
     }
 
     function deleteBoxOnClick(id: number) {
@@ -65,27 +82,33 @@ export default function Play() {
         }
     }
 
-    function durationAdd() {
-        const newDurationBoxes: BoxType[] = boxes.map((e: BoxType) => {
-            return {
+    function durationAdd(val: number = 10) {
+        setLevel(level => level + 1);
+        setIsPlaying(false);
+        setTimeout(() => {
+            setIsLevelModal(true);
+        }, 100)
+        // @ts-ignore
+        setBoxesData((prev: BoxType[]) =>
+            prev.map((e: BoxType) => ({
                 ...e,
                 // @ts-ignore
-                duration: e.duration + 10
-            };
-        });
-        // @ts-ignore
-        setBoxesData(newDurationBoxes);
+                duration: e.duration + val,
+            }))
+        );
     }
 
     useEffect(() => {
-        if (count > 20) {
-            durationAdd()
-        } else if (count > 30) {
-            durationAdd()
+        if ([20, 40, 60, 80, 100].includes(count)) {
+            durationAdd();
+        } else if (count > 100) {
+            durationAdd(50);
         }
     }, [count]);
 
     useEffect(() => {
+        if (!isPlaying) return;
+
         let animationFrameId: number;
 
         const animate = () => {
@@ -99,10 +122,12 @@ export default function Play() {
                     let newY = b.y + dy * 0.05;
                     let newColor = b.color;
 
-                    // եթե հասել է ներքևի սահմանի → վերևից նոր random սկիզբ և նոր color
                     if (newY + b.size[1] > height) {
                         newY = -Math.random() * 500;
                         newColor = colors[Math.floor(Math.random() * colors.length)];
+                        if (emptyHeartCount < heartsLength) {
+                            setEmptyHeartCount(count => count + 1);
+                        }
                     }
 
                     // Reassign new target if close enough
@@ -128,11 +153,21 @@ export default function Play() {
         animationFrameId = requestAnimationFrame(animate);
 
         return () => cancelAnimationFrame(animationFrameId);
-    }, []);
+    }, [isPlaying]);
 
     return (
         <ImageBackground source={{uri: imageBackground(count)}} style={styles.container}>
-            <CoinCount count={10} viewStyles={[styles.countView, {top: insets.top + TOP_OFFSET}]}/>
+            <LevelModalExample visible={isLevelModal} setVisible={(val) => {
+                setIsLevelModal(val);
+                setIsPlaying(true);
+            }} level={level}/>
+            <Hearts length={heartsLength} emptyCount={emptyHeartCount} viewStyle={{
+                position: 'absolute',
+                left: 10,
+                zIndex: 1,
+                top: insets.top + TOP_OFFSET
+            }}/>
+            <CoinCount count={count} viewStyles={[styles.countView, {top: insets.top + TOP_OFFSET}]}/>
             <Canvas style={{flex: 1}}>
                 {boxesData.map((box: BoxType, index: number) => (
                     <PlayBox key={index} box={box}/>
@@ -142,9 +177,9 @@ export default function Play() {
             {boxesData
                 .slice()
                 .reverse()
-                .map((box: BoxType) => (
+                .map((box: BoxType, index: number) => (
                     <Pressable
-                        key={box.id}
+                        key={index}
                         onPress={() => deleteBoxOnClick(box.id)}
                         style={[styles.boxItem, {
                             left: box.x,

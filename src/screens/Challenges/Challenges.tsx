@@ -9,9 +9,9 @@ import ChallengeCard from "../../components/ui/ChallengeCard/ChallengeCard.tsx";
 
 // styles
 import styles from './Challenges.style.ts';
-import LinearGradient from 'react-native-linear-gradient';
 import {DARK_PURPLE, PURPLE} from "../../constants/colors.ts";
 import {useTranslation} from "react-i18next";
+import LinearGradient from 'react-native-linear-gradient';
 
 const challenges = [
     {

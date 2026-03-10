@@ -10,7 +10,6 @@ const {width, height} = Dimensions.get('window');
 
 export default function Play() {
     const [count, setCount] = useState(0);
-
     const [boxesData, setBoxesData] = useState(
         boxes.map((b: BoxType) => ({
             ...b,
@@ -23,7 +22,7 @@ export default function Play() {
         }))
     );
 
-    const addRandomBox = () => {
+    function addRandomBox() {
         const newId = Math.max(...boxes.map(b => b.id)) + 1; // unique id
         const randomBoxData = boxes[Math.floor(Math.random() * boxes.length)];
 
@@ -38,15 +37,15 @@ export default function Play() {
         };
         // @ts-ignore
         setBoxesData(prev => [...prev, newBox]);
-    };
+    }
 
-    const deleteBoxOnClick = (id: number) => {
+    function deleteBoxOnClick(id: number) {
         setBoxesData(prev => prev.filter(b => b.id !== id));
         addRandomBox();
         setCount((count) => count + 1);
-    };
+    }
 
-    const imageBackground = (count: number) => {
+    function imageBackground(count: number) {
         switch (true) {
             case count > 20:
                 return images[2];
@@ -55,9 +54,9 @@ export default function Play() {
             default:
                 return images[0];
         }
-    };
+    }
 
-    const durationAdd = () => {
+    function durationAdd() {
         const newDurationBoxes: BoxType[] = boxes.map((e: BoxType) => {
             return {
                 ...e,
@@ -67,7 +66,7 @@ export default function Play() {
         });
         // @ts-ignore
         setBoxesData(newDurationBoxes);
-    };
+    }
 
     useEffect(() => {
         if (count > 20) {

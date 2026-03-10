@@ -7,10 +7,10 @@ import {LanguageType} from "../../types/language.type.ts";
 import {changeAppLanguage} from "../../localization/i18n.ts";
 import {useTranslation} from "react-i18next";
 import {languages} from "../../data/language.ts";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import {useNavigation} from "@react-navigation/core";
 import {loadMusic, playMusic, stopMusic} from "../../utils/helpers.ts";
 import {STORAGE_KEYS} from "../../utils/storageKeys.ts";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 // components
 import SettingRow from "../../components/ui/SettingRow/SettingRow.tsx";

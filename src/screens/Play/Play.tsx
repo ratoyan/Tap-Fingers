@@ -80,18 +80,6 @@ export default function Play() {
         });
     }
 
-    async function deleteBoxOnClick(id: number) {
-        const cancel = await AsyncStorage.getItem(STORAGE_KEYS.SOUND)
-        if(!cancel){
-            musicJumping.setNumberOfLoops(0);
-            musicJumping.play();
-        }
-
-        setBoxesData(prev => prev.filter(b => b.id !== id));
-        addRandomBox();
-        setCount((count) => count + 1);
-    }
-
     function imageBackground(count: number) {
         switch (true) {
             case count > 20:
@@ -122,6 +110,24 @@ export default function Play() {
     function handleRetry() {
         setIsLevelModal(false);
         navigation.goBack();
+    }
+
+    function gameOver () {
+        setIsPlaying(false);
+        setIsLoseModal(true);
+        releaseMusic();
+    }
+
+    async function deleteBoxOnClick(id: number) {
+        const cancel = await AsyncStorage.getItem(STORAGE_KEYS.SOUND)
+        if(!cancel){
+            musicJumping.setNumberOfLoops(0);
+            musicJumping.play();
+        }
+
+        setBoxesData(prev => prev.filter(b => b.id !== id));
+        addRandomBox();
+        setCount((count) => count + 1);
     }
 
     useFocusEffect(
@@ -173,8 +179,7 @@ export default function Play() {
                             if (count < heartsLength) {
                                 return count + 1;
                             }
-                            setIsPlaying(false);
-                            setIsLoseModal(true);
+                            gameOver();
                             return count;
                         });
                     }

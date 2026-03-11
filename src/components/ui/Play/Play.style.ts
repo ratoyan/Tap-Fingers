@@ -1,5 +1,5 @@
 import {StyleSheet} from "react-native";
-import {BLUISH_PURPLE, PURPLE_LIGHT, WHITE} from "../../../constants/colors.ts";
+import {BLUISH_PURPLE, DARK_PURPLE, PLUM, PURPLE_LIGHT, WHITE} from "../../../constants/colors.ts";
 
 export default StyleSheet.create({
     modalBackground: {
@@ -69,4 +69,40 @@ export default StyleSheet.create({
         textTransform: "uppercase",
         letterSpacing: 1,
     },
+    loseOverlay:{
+        flex:1,
+        justifyContent:'center',
+        alignItems:'center',
+        backgroundColor:'rgba(0,0,0,0.7)'
+    },
+    loseModal:{
+        width:280,
+        padding:28,
+        borderRadius:22,
+        backgroundColor:DARK_PURPLE,
+        alignItems:'center',
+        borderWidth:2,
+        borderColor:PLUM
+    },
+    loseTitle:{
+        fontSize:28,
+        fontWeight:'bold',
+        marginBottom:10
+    },
+    loseText:{
+        color:'#ddd',
+        marginBottom:25,
+        fontSize:16
+    },
+    loseRetry:{
+        paddingVertical:14,
+        paddingHorizontal:40,
+        borderRadius:14,
+        alignItems:'center'
+    },
+    loseBtnText:{
+        color:'white',
+        fontWeight:'bold',
+        fontSize:16
+    }
 });

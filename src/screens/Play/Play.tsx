@@ -1,16 +1,19 @@
 import React, {useEffect, useState} from 'react';
-import {Dimensions, Pressable, ImageBackground, Text} from 'react-native';
+import {Dimensions, Pressable, ImageBackground} from 'react-native';
 import {Canvas} from '@shopify/react-native-skia';
 import {BoxType} from "../../types/play.type.ts";
 import {boxes, colors, images} from "../../data/play.ts";
 import {TOP_OFFSET} from "../../constants/uiConstants.ts";
 import {useSafeAreaInsets} from "react-native-safe-area-context";
+import {useNavigation} from "@react-navigation/core";
+import {RootStackParamList} from "../../types/RootStackParamList.ts";
 
 // components
 import CoinCount from "../../components/ui/CoinCount/CoinCount.tsx";
 import PlayBox from "../../components/ui/Play/PlayBox.tsx";
 import LevelModalExample from "../../components/ui/Play/LevelModalExample.tsx";
 import Hearts from "../../components/ui/Play/Hearts.tsx";
+import LoseModal from "../../components/ui/Play/LoseModal.tsx";
 
 // styles
 import styles from './Play.style.ts'
@@ -18,14 +21,16 @@ import styles from './Play.style.ts'
 const {width, height} = Dimensions.get('window');
 
 export default function Play() {
-    const insets = useSafeAreaInsets();
     const heartsLength = 7;
+    const navigation:RootStackParamList = useNavigation();
+    const insets = useSafeAreaInsets();
 
     const [count, setCount] = useState(0);
     const [level, setLevel] = useState(1);
     const [emptyHeartCount, setEmptyHeartCount] = useState(0);
     const [isPlaying, setIsPlaying] = useState(true);
     const [isLevelModal, setIsLevelModal] = useState(false);
+    const [isLoseModal, setIsLoseModal] = useState(false);
 
     const [boxesData, setBoxesData] = useState(
         boxes.map((b: BoxType) => ({
@@ -98,6 +103,11 @@ export default function Play() {
         );
     }
 
+    function handleRetry () {
+        setIsLevelModal(false);
+        navigation.goBack();
+    }
+
     useEffect(() => {
         if ([20, 40, 60, 80, 100].includes(count)) {
             durationAdd();
@@ -114,7 +124,6 @@ export default function Play() {
         const animate = () => {
             setBoxesData((prev) =>
                 prev.map(b => {
-                    // dx/dy դեպի target
                     const dx = b.tx - b.x;
                     const dy = b.ty - b.y;
 
@@ -129,11 +138,12 @@ export default function Play() {
                             if (count < heartsLength) {
                                 return count + 1;
                             }
+                            setIsPlaying(false);
+                            setIsLoseModal(true);
                             return count;
                         });
                     }
 
-                    // Reassign new target if close enough
                     const newTx = Math.abs(dx) < 1 ? Math.random() * (width - b.size[0]) : b.tx;
                     const newTy = b.y + b.duration;
                     const newRotation = (b.rotation + 2) % 360; // 2 degrees per frame
@@ -164,7 +174,6 @@ export default function Play() {
                 setIsLevelModal(val);
                 setIsPlaying(true);
             }} level={level}/>
-            <Text style={{color: 'red',position: 'absolute',top: 30,right: 30}}>{JSON.stringify(emptyHeartCount)}</Text>
             <Hearts length={heartsLength} emptyCount={emptyHeartCount} viewStyle={{
                 position: 'absolute',
                 left: 10,
@@ -172,6 +181,7 @@ export default function Play() {
                 top: insets.top + TOP_OFFSET
             }}/>
             <CoinCount count={count} viewStyles={[styles.countView, {top: insets.top + TOP_OFFSET}]}/>
+            <LoseModal visible={isLoseModal} onRetry={handleRetry}/>
             <Canvas style={{flex: 1}}>
                 {boxesData.map((box: BoxType, index: number) => (
                     <PlayBox key={index} box={box}/>

@@ -6,7 +6,8 @@ import {boxes, colors, images} from "../../data/play.ts";
 import {TOP_OFFSET} from "../../constants/uiConstants.ts";
 import {useSafeAreaInsets} from "react-native-safe-area-context";
 import {useNavigation} from "@react-navigation/core";
-import {RootStackParamList} from "../../types/RootStackParamList.ts";
+import {loadMusic, playMusic, releaseMusic} from "../../utils/helpers.ts";
+import Sound from "react-native-sound";
 
 // components
 import CoinCount from "../../components/ui/CoinCount/CoinCount.tsx";
@@ -24,6 +25,13 @@ export default function Play() {
     const heartsLength = 7;
     const navigation = useNavigation();
     const insets = useSafeAreaInsets();
+
+    const musicJumping = new Sound('jumping.wav', Sound.MAIN_BUNDLE, (error) => {
+        if (error) {
+            console.log('failed to load game sound', error);
+            return;
+        }
+    });
 
     const [count, setCount] = useState(0);
     const [level, setLevel] = useState(1);
@@ -71,6 +79,8 @@ export default function Play() {
     }
 
     function deleteBoxOnClick(id: number) {
+        musicJumping.setNumberOfLoops(0);
+        musicJumping.play();
         setBoxesData(prev => prev.filter(b => b.id !== id));
         addRandomBox();
         setCount((count) => count + 1);
@@ -103,10 +113,21 @@ export default function Play() {
         );
     }
 
-    function handleRetry () {
+    function handleRetry() {
         setIsLevelModal(false);
         navigation.goBack();
     }
+
+    useEffect(() => {
+        loadMusic('games1.mp3')
+        const timeout = setTimeout(() => {
+            playMusic();
+        }, 200);
+        return () => {
+            clearTimeout(timeout);
+            releaseMusic();
+        };
+    }, []);
 
     useEffect(() => {
         if ([20, 40, 60, 80, 100].includes(count)) {

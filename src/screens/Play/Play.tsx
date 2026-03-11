@@ -52,8 +52,8 @@ export default function Play() {
             x: Math.random() * (width - b.size[0]), // X-ը էլ random
             y: Math.random() * -1000,
             tx: Math.random() * (width - b.size[0]),
-            ty: 0, // կարող է գնալ ներքև
-            duration: Math.random() * 70,
+            ty: 0,
+            duration: Math.random() * 40 + 30,
             color: colors[Math.floor(Math.random() * colors.length)],
         }))
     );

@@ -46,6 +46,8 @@ export default function Play() {
     const [isLevelModal, setIsLevelModal] = useState(false);
     const [isLoseModal, setIsLoseModal] = useState(false);
 
+    const backgroundImg = imageBackground(count);
+
     const [boxesData, setBoxesData] = useState(
         boxes.map((b: BoxType) => ({
             ...b,
@@ -225,7 +227,8 @@ export default function Play() {
     }, [isPlaying]);
 
     return (
-        <ImageBackground source={{uri: imageBackground(count)}} style={styles.container}>
+        // @ts-ignore
+        <ImageBackground source={backgroundImg} style={styles.container}>
             <LevelModalExample visible={isLevelModal} setVisible={(val) => {
                 setIsLevelModal(val);
                 setIsPlaying(true);

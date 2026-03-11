@@ -1,4 +1,6 @@
 import {BoxType} from "../types/play.type.ts";
+// @ts-ignore
+import BackgroundImage from '../assets/images/background1.jpg';
 
 export const boxes: BoxType[] = [
     {id: 1, size: [100, 100], color: 'red', rotation: 130, x: 100, y: 0},
@@ -33,7 +35,8 @@ export const colors: string[] = [
 ];
 
 export const images: string[] = [
-    'https://img.freepik.com/free-vector/trendy-retro-synth-line-perspective-wallpaper-with-smoke-effect_1017-43048.jpg?semt=ais_rp_progressive&w=740&q=80',
-    'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRexZARIZhvDJLG5sNP9CrcCzAfnuPboS1IdA&s',
-    'https://img.freepik.com/free-vector/gradient-hexagonal-background_23-2148954968.jpg?semt=ais_hybrid&w=740&q=80'
+    require('../assets/images/background3.jpg'),
+    require('../assets/images/background2.jpg'),
+    require('../assets/images/background1.jpg'),
+    require('../assets/images/background4.jpg'),
 ]

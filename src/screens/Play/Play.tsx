@@ -202,7 +202,7 @@ export default function Play() {
 
                     const newTx = Math.abs(dx) < 1 ? Math.random() * (width - b.size[0]) : b.tx;
                     const newTy = b.y + b.duration;
-                    const newRotation = (b.rotation + 2) % 360; // 2 degrees per frame
+                    const newRotation = (b.rotation + 4) % 360; // 2 degrees per frame
 
                     return {
                         ...b,

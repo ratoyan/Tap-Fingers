@@ -88,6 +88,8 @@ export default function Play() {
 
     function imageBackground(count: number) {
         switch (true) {
+            case count > 40:
+                return images[3];
             case count > 20:
                 return images[2];
             case count > 10:

@@ -25,6 +25,7 @@ const {width, height} = Dimensions.get('window');
 
 export default function Play() {
     const heartsLength = 7;
+    const milestones = new Set([20, 40, 60, 80, 100, 120, 140]);
     const navigation = useNavigation();
     const insets = useSafeAreaInsets();
 
@@ -94,7 +95,7 @@ export default function Play() {
         }
     }
 
-    function durationAdd(val: number = 10) {
+    function durationAdd(val: number = 30) {
         setLevel(level => level + 1);
         setIsPlaying(false);
         setTimeout(() => {
@@ -132,7 +133,7 @@ export default function Play() {
         setCount((count) => count + 1);
     }
 
-    async function getStorageData () {
+    async function getStorageData() {
         const cancelSound = await AsyncStorage.getItem(STORAGE_KEYS.SOUND)
         const cancelVibration = await AsyncStorage.getItem(STORAGE_KEYS.VIBRATION)
 
@@ -162,9 +163,9 @@ export default function Play() {
     );
 
     useEffect(() => {
-        if ([20, 40, 60, 80, 100].includes(count)) {
+        if (milestones.has(count)) {
             durationAdd();
-        } else if (count > 100) {
+        } else if (count === 160) {
             durationAdd(50);
         }
     }, [count]);
@@ -189,7 +190,7 @@ export default function Play() {
                         newColor = colors[Math.floor(Math.random() * colors.length)];
                         setEmptyHeartCount(count => {
                             if (count < heartsLength) {
-                                if(!cancelVibrationRef.current){
+                                if (!cancelVibrationRef.current) {
                                     Vibration.vibrate(1000);
                                 }
                                 return count + 1;

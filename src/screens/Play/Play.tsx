@@ -22,7 +22,7 @@ const {width, height} = Dimensions.get('window');
 
 export default function Play() {
     const heartsLength = 7;
-    const navigation:RootStackParamList = useNavigation();
+    const navigation = useNavigation();
     const insets = useSafeAreaInsets();
 
     const [count, setCount] = useState(0);

@@ -88,11 +88,11 @@ export default function Play() {
 
     function imageBackground(count: number) {
         switch (true) {
-            case count > 40:
+            case count > 60:
                 return images[3];
-            case count > 20:
+            case count > 40:
                 return images[2];
-            case count > 10:
+            case count > 20:
                 return images[1];
             default:
                 return images[0];
@@ -213,7 +213,7 @@ export default function Play() {
                         x: newX,
                         y: newY,
                         tx: newTx,
-                        ty: newTy + 100,
+                        ty: newTy + 30,
                         rotation: newRotation,
                         color: newColor,
                     };

@@ -1,5 +1,6 @@
 import React, {useEffect, useRef} from "react";
 import {Modal, View, Text, TouchableOpacity, Animated, Easing} from "react-native";
+import {useTranslation} from "react-i18next";
 
 // styles
 import styles from './Play.style.ts'
@@ -13,6 +14,8 @@ interface LevelModalGamingProps {
 }
 
 export default function LevelModalGaming({visible, setVisible, level = 1}: LevelModalGamingProps) {
+
+    const {t} = useTranslation();
 
     const scaleAnim = useRef(new Animated.Value(0)).current;
     const glowAnim = useRef(new Animated.Value(0)).current;
@@ -64,10 +67,10 @@ export default function LevelModalGaming({visible, setVisible, level = 1}: Level
                     </View>
 
                     <Animated.View style={[styles.levelHeader, {backgroundColor: headerGlow}]}>
-                        <Text style={styles.levelText}>LEVEL {level}</Text>
+                        <Text style={styles.levelText}>{t('level')} {level}</Text>
                     </Animated.View>
 
-                    <Text style={styles.messageText}>You’ve leveled up! Keep going!</Text>
+                    <Text style={styles.messageText}>{t('leveledUp')}</Text>
 
                     <TouchableOpacity style={styles.continueButton} onPress={() => setVisible(false)}>
                         <LinearGradient
@@ -76,7 +79,7 @@ export default function LevelModalGaming({visible, setVisible, level = 1}: Level
                             end={{x: 1, y: 1}}
                             style={styles.buttonGradient}
                         >
-                            <Text style={styles.buttonText}>Continue</Text>
+                            <Text style={styles.buttonText}>{t('continue')}</Text>
                         </LinearGradient>
                     </TouchableOpacity>
                 </Animated.View>

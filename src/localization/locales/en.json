@@ -15,5 +15,10 @@
   "level": "Level",
   "selectLanguage": "Select Language",
   "cards": "Cards",
-  "backgrounds": "Backgrounds"
+  "backgrounds": "Backgrounds",
+  "leveledUp": "You’ve leveled up! Keep going!",
+  "continue": "Continue",
+  "gameOver": "Game Over",
+  "lostLevel": "You lost this level",
+  "retry": "Retry"
 }

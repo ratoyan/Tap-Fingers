@@ -7,6 +7,7 @@ import {
     Animated,
     Easing
 } from "react-native";
+import {useTranslation} from "react-i18next";
 
 // styles
 import styles from './Play.style.ts';
@@ -19,6 +20,8 @@ interface LoseModalProps {
 }
 
 export default function LoseModal({visible, onRetry}: LoseModalProps) {
+
+    const {t} = useTranslation();
 
     const scaleAnim = useRef(new Animated.Value(0)).current;
     const glowAnim = useRef(new Animated.Value(0)).current;
@@ -75,21 +78,21 @@ export default function LoseModal({visible, onRetry}: LoseModalProps) {
                             {color: headerGlow}
                         ]}
                     >
-                        Game Over
+                        {t('gameOver')}
                     </Animated.Text>
 
                     <Text style={styles.loseText}>
-                        You lost this level
+                        {t('lostLevel')}
                     </Text>
 
                     <TouchableOpacity onPress={onRetry} activeOpacity={0.8}>
                         <LinearGradient
                             colors={[GRADIENT_LIGHT, GRADIENT_DARK]}
-                            start={{x:0,y:0}}
-                            end={{x:1,y:1}}
+                            start={{x: 0, y: 0}}
+                            end={{x: 1, y: 1}}
                             style={styles.loseRetry}
                         >
-                            <Text style={styles.loseBtnText}>Retry</Text>
+                            <Text style={styles.loseBtnText}>{t('retry')}</Text>
                         </LinearGradient>
                     </TouchableOpacity>
 

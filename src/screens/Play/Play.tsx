@@ -5,7 +5,7 @@ import {BoxType} from "../../types/play.type.ts";
 import {boxes, colors, images} from "../../data/play.ts";
 import {TOP_OFFSET} from "../../constants/uiConstants.ts";
 import {useSafeAreaInsets} from "react-native-safe-area-context";
-import {useNavigation} from "@react-navigation/core";
+import {useFocusEffect, useNavigation} from "@react-navigation/core";
 import {loadMusic, playMusic, releaseMusic} from "../../utils/helpers.ts";
 import Sound from "react-native-sound";
 
@@ -124,22 +124,24 @@ export default function Play() {
         navigation.goBack();
     }
 
-    function getMusic() {
-        loadMusic('games1.mp3');
+    useFocusEffect(
+        React.useCallback(() => {
+            // This runs every time the screen is focused
+            setTimeout(()=>{
+                loadMusic('games1.mp3');
+            },100)
 
-        const timeout = setTimeout(() => {
-            playMusic();
-        }, 200);
+            const timeout = setTimeout(() => {
+                playMusic();
+            }, 300);
 
-        return () => {
-            clearTimeout(timeout);
-            releaseMusic();
-        };
-    }
+            return () => {
+                clearTimeout(timeout);
+                releaseMusic();
+            };
 
-    useEffect(() => {
-        getMusic();
-    }, []);
+        }, [])
+    );
 
     useEffect(() => {
         if ([20, 40, 60, 80, 100].includes(count)) {

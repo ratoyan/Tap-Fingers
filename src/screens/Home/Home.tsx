@@ -1,4 +1,4 @@
-import React, {useEffect} from 'react';
+import React from 'react';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {RootStackParamList} from '../../types/RootStackParamList';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
@@ -6,6 +6,7 @@ import {menus} from "../../data/menu.ts";
 import {MenuType} from "../../types/menu.type.ts";
 import {TOP_OFFSET} from "../../constants/uiConstants.ts";
 import {loadMusic, playMusic, releaseMusic} from "../../utils/helpers.ts";
+import {useFocusEffect} from "@react-navigation/core";
 
 // components
 import MenuButton from "../../components/ui/MenuButton/MenuButton.tsx";
@@ -23,22 +24,23 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Home'>;
 const Home: React.FC<Props> = () => {
     const insets = useSafeAreaInsets();
 
-    const getMusic = async () => {
-        loadMusic("gamemusic2.mp3");
+    useFocusEffect(
+        React.useCallback(() => {
+            // This runs every time the screen is focused
+            loadMusic("gamemusic2.mp3");
 
-        const timeout = setTimeout(() => {
-            playMusic();
-        }, 200);
+            const timeout = setTimeout(() => {
+                playMusic();
+            }, 200);
 
-        return () => {
-            clearTimeout(timeout);
-            releaseMusic();
-        };
-    }
+            return () => {
+                clearTimeout(timeout);
+                releaseMusic();
+            };
 
-    useEffect(() => {
-        getMusic();
-    }, []);
+        }, [])
+    );
+
 
     return (
         <LinearGradient

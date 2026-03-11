@@ -7,6 +7,8 @@ import {TOP_OFFSET} from "../../constants/uiConstants.ts";
 import {useSafeAreaInsets} from "react-native-safe-area-context";
 import {useFocusEffect, useNavigation} from "@react-navigation/core";
 import {loadMusic, playMusic, releaseMusic} from "../../utils/helpers.ts";
+import {STORAGE_KEYS} from "../../utils/storageKeys.ts";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import Sound from "react-native-sound";
 
 // components
@@ -18,8 +20,6 @@ import LoseModal from "../../components/ui/Play/LoseModal.tsx";
 
 // styles
 import styles from './Play.style.ts'
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import {STORAGE_KEYS} from "../../utils/storageKeys.ts";
 
 const {width, height} = Dimensions.get('window');
 

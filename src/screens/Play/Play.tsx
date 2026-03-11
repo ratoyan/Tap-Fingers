@@ -144,6 +144,7 @@ export default function Play() {
             return () => {
                 clearTimeout(timeout);
                 releaseMusic();
+                musicJumping.release();
             };
 
         }, [])

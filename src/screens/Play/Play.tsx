@@ -77,7 +77,7 @@ export default function Play() {
                 // @ts-ignore
                 tx: Math.random() * (width - randomBoxData.size[0]),
                 ty: 0, // կարող է գնալ ներքև
-                duration: Math.random() * 70,
+                duration: Math.random() * 40 + 30,
                 color: colors[Math.floor(Math.random() * colors.length)],
                 rotation: randomBoxData.rotation,
             };
@@ -213,7 +213,7 @@ export default function Play() {
                         x: newX,
                         y: newY,
                         tx: newTx,
-                        ty: newTy,
+                        ty: newTy + 100,
                         rotation: newRotation,
                         color: newColor,
                     };

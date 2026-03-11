@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react';
-import {Dimensions, Pressable, ImageBackground} from 'react-native';
+import {Dimensions, Pressable, ImageBackground, Text} from 'react-native';
 import {Canvas} from '@shopify/react-native-skia';
 import {BoxType} from "../../types/play.type.ts";
 import {boxes, colors, images} from "../../data/play.ts";
@@ -125,9 +125,12 @@ export default function Play() {
                     if (newY + b.size[1] > height) {
                         newY = -Math.random() * 500;
                         newColor = colors[Math.floor(Math.random() * colors.length)];
-                        if (emptyHeartCount < heartsLength) {
-                            setEmptyHeartCount(count => count + 1);
-                        }
+                        setEmptyHeartCount(count => {
+                            if (count < heartsLength) {
+                                return count + 1;
+                            }
+                            return count;
+                        });
                     }
 
                     // Reassign new target if close enough
@@ -161,6 +164,7 @@ export default function Play() {
                 setIsLevelModal(val);
                 setIsPlaying(true);
             }} level={level}/>
+            <Text style={{color: 'red',position: 'absolute',top: 30,right: 30}}>{JSON.stringify(emptyHeartCount)}</Text>
             <Hearts length={heartsLength} emptyCount={emptyHeartCount} viewStyle={{
                 position: 'absolute',
                 left: 10,

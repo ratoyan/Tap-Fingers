@@ -202,7 +202,7 @@ export default function Play() {
 
                     const newTx = Math.abs(dx) < 1 ? Math.random() * (width - b.size[0]) : b.tx;
                     const newTy = b.y + b.duration;
-                    const newRotation = (b.rotation + 4) % 360; // 2 degrees per frame
+                    const newRotation = (b.rotation + 2) % 360; // 2 degrees per frame
 
                     return {
                         ...b,
@@ -238,26 +238,12 @@ export default function Play() {
             }}/>
             <CoinCount count={count} viewStyles={[styles.countView, {top: insets.top + TOP_OFFSET}]}/>
             <LoseModal visible={isLoseModal} onRetry={handleRetry}/>
-            <Canvas style={{flex: 1}}>
-                {boxesData.map((box: BoxType, index: number) => (
-                    <PlayBox key={index} box={box}/>
-                ))}
-            </Canvas>
 
             {boxesData
                 .slice()
                 .reverse()
                 .map((box: BoxType, index: number) => (
-                    <Pressable
-                        key={index}
-                        onPress={() => deleteBoxOnClick(box.id)}
-                        style={[styles.boxItem, {
-                            left: box.x,
-                            top: box.y,
-                            width: box.size[0],
-                            height: box.size[1],
-                        }]}
-                    />
+                    <PlayBox key={index} box={box} handlePress={()=>deleteBoxOnClick(box.id)}/>
                 ))}
         </ImageBackground>
     );

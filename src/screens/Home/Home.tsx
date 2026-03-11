@@ -5,9 +5,7 @@ import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {menus} from "../../data/menu.ts";
 import {MenuType} from "../../types/menu.type.ts";
 import {TOP_OFFSET} from "../../constants/uiConstants.ts";
-import {STORAGE_KEYS} from "../../utils/storageKeys.ts";
 import {loadMusic, playMusic, releaseMusic} from "../../utils/helpers.ts";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 
 // components
 import MenuButton from "../../components/ui/MenuButton/MenuButton.tsx";
@@ -26,8 +24,6 @@ const Home: React.FC<Props> = () => {
     const insets = useSafeAreaInsets();
 
     const getMusic = async () => {
-        const music = await AsyncStorage.getItem(STORAGE_KEYS.MUSIC)
-        if (music) return;
         loadMusic("gamemusic2.mp3");
 
         const timeout = setTimeout(() => {

@@ -1,4 +1,6 @@
 import Sound from "react-native-sound";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import {STORAGE_KEYS} from "./storageKeys.ts";
 
 let music: Sound | null = null;
 let isPlaying = false;
@@ -31,8 +33,9 @@ export const loadMusic = (filename: string) => {
     });
 };
 
-export const playMusic = () => {
-    if (!music || isPlaying) return;
+export const playMusic = async () => {
+    const cancel = await AsyncStorage.getItem(STORAGE_KEYS.MUSIC)
+    if (cancel || !music || isPlaying) return;
     music.play((success) => {
         if (!success) console.log("playback failed");
     });

@@ -18,6 +18,8 @@ import LoseModal from "../../components/ui/Play/LoseModal.tsx";
 
 // styles
 import styles from './Play.style.ts'
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import {STORAGE_KEYS} from "../../utils/storageKeys.ts";
 
 const {width, height} = Dimensions.get('window');
 
@@ -78,9 +80,13 @@ export default function Play() {
         });
     }
 
-    function deleteBoxOnClick(id: number) {
-        musicJumping.setNumberOfLoops(0);
-        musicJumping.play();
+    async function deleteBoxOnClick(id: number) {
+        const cancel = await AsyncStorage.getItem(STORAGE_KEYS.SOUND)
+        if(!cancel){
+            musicJumping.setNumberOfLoops(0);
+            musicJumping.play();
+        }
+
         setBoxesData(prev => prev.filter(b => b.id !== id));
         addRandomBox();
         setCount((count) => count + 1);
@@ -118,15 +124,21 @@ export default function Play() {
         navigation.goBack();
     }
 
-    useEffect(() => {
-        loadMusic('games1.mp3')
+    function getMusic() {
+        loadMusic('games1.mp3');
+
         const timeout = setTimeout(() => {
             playMusic();
         }, 200);
+
         return () => {
             clearTimeout(timeout);
             releaseMusic();
         };
+    }
+
+    useEffect(() => {
+        getMusic();
     }, []);
 
     useEffect(() => {

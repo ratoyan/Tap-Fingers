@@ -1,5 +1,5 @@
-import React, {useEffect, useState} from 'react';
-import {Dimensions, Pressable, ImageBackground} from 'react-native';
+import React, {useEffect, useRef, useState} from 'react';
+import {Dimensions, Pressable, Vibration, ImageBackground} from 'react-native';
 import {Canvas} from '@shopify/react-native-skia';
 import {BoxType} from "../../types/play.type.ts";
 import {boxes, colors, images} from "../../data/play.ts";
@@ -27,6 +27,9 @@ export default function Play() {
     const heartsLength = 7;
     const navigation = useNavigation();
     const insets = useSafeAreaInsets();
+
+    const cancelSoundRef: any = useRef(true);
+    const cancelVibrationRef: any = useRef(true);
 
     const musicJumping = new Sound('jumping.wav', Sound.MAIN_BUNDLE, (error) => {
         if (error) {
@@ -112,15 +115,14 @@ export default function Play() {
         navigation.goBack();
     }
 
-    function gameOver () {
+    function gameOver() {
         setIsPlaying(false);
         setIsLoseModal(true);
         releaseMusic();
     }
 
     async function deleteBoxOnClick(id: number) {
-        const cancel = await AsyncStorage.getItem(STORAGE_KEYS.SOUND)
-        if(!cancel){
+        if (!cancelSoundRef.current) {
             musicJumping.setNumberOfLoops(0);
             musicJumping.play();
         }
@@ -130,12 +132,21 @@ export default function Play() {
         setCount((count) => count + 1);
     }
 
+    async function getStorageData () {
+        const cancelSound = await AsyncStorage.getItem(STORAGE_KEYS.SOUND)
+        const cancelVibration = await AsyncStorage.getItem(STORAGE_KEYS.VIBRATION)
+
+        cancelSoundRef.current = cancelSound ?? false;
+        cancelVibrationRef.current = cancelVibration ?? false;
+    }
+
     useFocusEffect(
         React.useCallback(() => {
             // This runs every time the screen is focused
-            setTimeout(()=>{
+            getStorageData();
+            setTimeout(() => {
                 loadMusic('games1.mp3');
-            },100)
+            }, 100)
 
             const timeout = setTimeout(() => {
                 playMusic();
@@ -178,6 +189,9 @@ export default function Play() {
                         newColor = colors[Math.floor(Math.random() * colors.length)];
                         setEmptyHeartCount(count => {
                             if (count < heartsLength) {
+                                if(!cancelVibrationRef.current){
+                                    Vibration.vibrate(1000);
+                                }
                                 return count + 1;
                             }
                             gameOver();

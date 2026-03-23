@@ -40,6 +40,8 @@ export default function Play() {
     });
 
     const [count, setCount] = useState(0);
+    // level count
+    const [levelCount, setLevelCount] = useState(0);
     const [level, setLevel] = useState(1);
     const [emptyHeartCount, setEmptyHeartCount] = useState(0);
     const [isPlaying, setIsPlaying] = useState(true);
@@ -135,6 +137,7 @@ export default function Play() {
         setBoxesData(prev => prev.filter(b => b.id !== id));
         addRandomBox();
         setCount((count) => count + 1);
+        setLevelCount((count) => count + 1);
     }
 
     async function getStorageData() {
@@ -167,10 +170,12 @@ export default function Play() {
     );
 
     useEffect(() => {
-        if (milestones.has(count)) {
+
+        if (levelCount >= 20) {
+            setLevelCount(0);
+        }
+        if (levelCount >= 20) {
             durationAdd();
-        } else if (count === 160) {
-            durationAdd(50);
         }
     }, [count]);
 
@@ -248,7 +253,7 @@ export default function Play() {
                 .slice()
                 .reverse()
                 .map((box: BoxType, index: number) => (
-                    <PlayBox key={index} box={box} handlePress={()=>deleteBoxOnClick(box.id)}/>
+                    <PlayBox key={index} box={box} handlePress={() => deleteBoxOnClick(box.id)}/>
                 ))}
         </ImageBackground>
     );

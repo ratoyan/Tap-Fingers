@@ -25,7 +25,6 @@ const {width, height} = Dimensions.get('window');
 
 export default function Play() {
     const heartsLength = 7;
-    const milestones = new Set([20, 40, 60, 80, 100, 120, 140]);
     const navigation = useNavigation();
     const insets = useSafeAreaInsets();
 

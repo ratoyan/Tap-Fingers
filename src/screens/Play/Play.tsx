@@ -196,15 +196,15 @@ export default function Play() {
                     if (newY + b.size[1] > height) {
                         newY = -Math.random() * 500;
                         newColor = colors[Math.floor(Math.random() * colors.length)];
-                        setEmptyHeartCount(count => {
-                            if (count < heartsLength) {
+                        setEmptyHeartCount(heartCount => {
+                            if (heartCount < heartsLength) {
                                 if (!cancelVibrationRef.current) {
                                     Vibration.vibrate(1000);
                                 }
-                                return count + 1;
+                                return heartCount + 1;
                             }
                             gameOver();
-                            return count;
+                            return heartCount;
                         });
                     }
 

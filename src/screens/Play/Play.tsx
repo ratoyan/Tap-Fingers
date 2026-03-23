@@ -39,7 +39,6 @@ export default function Play() {
     });
 
     const [count, setCount] = useState(0);
-    // level count
     const [levelCount, setLevelCount] = useState(0);
     const [level, setLevel] = useState(1);
     const [emptyHeartCount, setEmptyHeartCount] = useState(0);

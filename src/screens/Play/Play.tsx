@@ -77,7 +77,7 @@ export default function Play() {
                 // @ts-ignore
                 tx: Math.random() * (width - randomBoxData.size[0]),
                 ty: 0,
-                duration: 30,
+                duration: 50,
                 color: colors[Math.floor(Math.random() * colors.length)],
                 rotation: randomBoxData.rotation,
             };

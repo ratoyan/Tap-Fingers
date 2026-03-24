@@ -1,5 +1,5 @@
 import React from 'react';
-import {View, Text, TouchableOpacity, Modal, Pressable} from 'react-native';
+import {View, Text, TouchableOpacity, Pressable} from 'react-native';
 
 // styles
 import styles from './LogoutModal.style.ts';

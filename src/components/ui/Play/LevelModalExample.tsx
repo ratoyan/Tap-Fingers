@@ -1,5 +1,5 @@
 import React, {useEffect, useRef} from "react";
-import {Modal, View, Text, TouchableOpacity, Animated, Easing} from "react-native";
+import {View, Text, TouchableOpacity, Animated, Easing} from "react-native";
 import {useTranslation} from "react-i18next";
 
 // styles

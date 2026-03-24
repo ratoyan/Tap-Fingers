@@ -5,7 +5,7 @@ import {View, Text, TouchableOpacity, Modal, Pressable} from 'react-native';
 import styles from './LogoutModal.style.ts';
 import {useTranslation} from "react-i18next";
 
-export default function LogoutModal({ visible, onClose, onConfirm }: any) {
+export default function LogoutModal({visible, onClose, onConfirm}: any) {
     const {t} = useTranslation();
 
     return (
@@ -13,19 +13,53 @@ export default function LogoutModal({ visible, onClose, onConfirm }: any) {
             transparent
             animationType="fade"
             visible={visible}
+            accessible={true}
+            accessibilityViewIsModal={true}
         >
-            <Pressable style={styles.overlay} onPress={onClose}>
+            <Pressable style={styles.overlay}
+                       onPress={onClose}
+                       accessible={false}
+            >
                 <View style={styles.modalContainer}>
-                    <Text style={styles.title}>{t('exitGame')}</Text>
-                    <Text style={styles.message}>{t('exitGameDescription')}</Text>
+                    <Text style={styles.title}
+                          accessibilityRole="header"
+                    >
+                        {t('exitGame')}
+                    </Text>
+                    <Text style={styles.message}
+                          accessible={true}
+                          accessibilityLabel={t('exitGameDescription')}
+                    >
+                        {t('exitGameDescription')}
+                    </Text>
 
                     <View style={styles.buttonContainer}>
-                        <TouchableOpacity style={[styles.button, styles.cancelButton]} onPress={onClose}>
-                            <Text style={[styles.buttonText, styles.cancelText]}>{t('cancel')}</Text>
+                        <TouchableOpacity style={[styles.button, styles.cancelButton]}
+                                          onPress={onClose}
+                                          accessible={true}
+                                          accessibilityRole="button"
+                                          accessibilityLabel={t('cancel')}
+                                          accessibilityHint={t('cancelExitHint') || "Cancel exiting the game"}
+                        >
+                            <Text style={[styles.buttonText, styles.cancelText]}
+                                  importantForAccessibility="no-hide-descendants"
+                            >
+                                {t('cancel')}
+                            </Text>
                         </TouchableOpacity>
 
-                        <TouchableOpacity style={[styles.button, styles.confirmButton]} onPress={onConfirm}>
-                            <Text style={[styles.buttonText, styles.confirmText]}>{t('yes')}</Text>
+                        <TouchableOpacity style={[styles.button, styles.confirmButton]}
+                                          onPress={onConfirm}
+                                          accessible={true}
+                                          accessibilityRole="button"
+                                          accessibilityLabel={t('yes')}
+                                          accessibilityHint={t('confirmExitHint') || "Confirm exiting the game"}
+                        >
+                            <Text style={[styles.buttonText, styles.confirmText]}
+                                  importantForAccessibility="no-hide-descendants"
+                            >
+                                {t('yes')}
+                            </Text>
                         </TouchableOpacity>
                     </View>
                 </View>

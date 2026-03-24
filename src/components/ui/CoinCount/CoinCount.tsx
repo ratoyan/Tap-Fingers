@@ -13,9 +13,15 @@ interface CoinCountProps {
 
 function CoinCount({count, viewStyles}: CoinCountProps) {
     return (
-        <View style={[styles.container, viewStyles && viewStyles]}>
-            <Coin width={22} height={20}/>
-            <Text style={styles.text}>{count}</Text>
+        <View style={[styles.container, viewStyles && viewStyles]}
+              accessible={true}
+              accessibilityRole="text"
+              accessibilityLabel={`${count} coins`}
+        >
+            <View importantForAccessibility="no-hide-descendants">
+                <Coin width={22} height={20}/>
+                <Text style={styles.text}>{count}</Text>
+            </View>
         </View>
     );
 }

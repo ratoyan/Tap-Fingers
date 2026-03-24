@@ -24,15 +24,35 @@ interface PressRow {
 type SettingRowProps = ToggleRow | PressRow;
 
 function SettingRow(props: SettingRowProps) {
+    const isPress = 'onPress' in props;
+    const isToggle = 'value' in props;
+
     return (
         <TouchableOpacity
-            onPress={'onPress' in props ? props.onPress : undefined}
-            disabled={!('onPress' in props)}
+            onPress={
+                isToggle
+                    ? () => props.onChange(!props.value) // ամբողջ row-ը clickable է toggle-ի համար
+                    : isPress
+                        ? props.onPress
+                        : undefined
+            }
+            disabled={!isPress && !isToggle}
+            accessible={true}
+            accessibilityRole={isToggle ? "switch" : "button"}
+            accessibilityLabel={props.label}
+            accessibilityState={isToggle ? { checked: props.value } : undefined}
+            accessibilityHint={
+                isToggle
+                    ? "Double tap to toggle"
+                    : isPress
+                        ? "Double tap to open"
+                        : undefined
+            }
         >
-            <View style={[styles.row, props.viewStyle && props.viewStyle]}>
+            <View style={[styles.row, props.viewStyle && props.viewStyle]} importantForAccessibility="no-hide-descendants">
                 <Text style={styles.label}>{props.label}</Text>
 
-                {'value' in props && (
+                {isToggle && (
                     <GameSwitch value={props.value} onChange={props.onChange}/>
                 )}
 

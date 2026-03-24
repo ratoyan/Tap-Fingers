@@ -37,6 +37,12 @@ function GameSwitch({
                 styles.track,
                 {backgroundColor: value ? PLUM : DARK_PURPLE},
             ]}
+
+            accessible={true}
+            accessibilityRole="switch"
+            accessibilityState={{ checked: value }}
+            accessibilityLabel="Sound"
+            accessibilityHint="Double tap to toggle sound on or off"
         >
             <Animated.View
                 style={[
@@ -46,6 +52,7 @@ function GameSwitch({
                         backgroundColor: value ? PURPLE : ORCHID,
                     },
                 ]}
+                importantForAccessibility="no-hide-descendants"
             />
         </TouchableOpacity>
     );

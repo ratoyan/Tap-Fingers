@@ -30,9 +30,10 @@ function Ballon(props: any) {
                     L34 80
                     L30 84
                     L34 88
-                    L32 206
+                    L32 96
                   "
-            /> </Svg>
+            />
+        </Svg>
     )
 }
 

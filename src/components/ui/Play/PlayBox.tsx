@@ -34,7 +34,7 @@ function PlayBox({box, handlePress}: PlayBoxProps) {
                        transform: [
                            {translateX: box.x + box.size[0] / 2},
                            {translateY: box.y + box.size[1] / 2},
-                           {rotate: `${box.rotation + 30}deg`}, // rotation in degrees
+                           // {rotate: `${box.rotation + 30}deg`}, // rotation in degrees
                            {translateX: -box.size[0] / 2},
                            {translateY: -box.size[1] / 2},
                        ],

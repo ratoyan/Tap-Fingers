@@ -3,10 +3,15 @@ import {BLUISH_PURPLE, DARK_PURPLE, PLUM, PURPLE_LIGHT, WHITE} from "../../../co
 
 export default StyleSheet.create({
     modalBackground: {
-        flex: 1,
-        backgroundColor: "rgba(0,0,0,0.85)",
-        justifyContent: "center",
-        alignItems: "center",
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        zIndex: 10,
+        width: '111%',
+        height: '100%',
+        backgroundColor: 'rgba(0,0,0,0.6)',
+        justifyContent: 'center',
+        alignItems: 'center',
     },
     modalContainer: {
         width: 320,
@@ -71,10 +76,15 @@ export default StyleSheet.create({
         letterSpacing: 1,
     },
     loseOverlay:{
-        flex:1,
-        justifyContent:'center',
-        alignItems:'center',
-        backgroundColor:'rgba(0,0,0,0.7)'
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        zIndex: 10,
+        width: '111%',
+        height: '100%',
+        backgroundColor: 'rgba(0,0,0,0.6)',
+        justifyContent: 'center',
+        alignItems: 'center',
     },
     loseModal:{
         width:280,

@@ -27,53 +27,46 @@ function LanguageModal({
                        }: LanguageModalProps) {
     const {t} = useTranslation();
 
-    return (
-        <Modal transparent
-               animationType="fade"
-               visible={visible}
-               accessible={true}
-               accessibilityViewIsModal={true}
-        >
-            <Pressable
-                style={styles.overlay}
-                onPress={onClose}
-                accessible={false}
-            >
-                <View style={styles.card}>
-                    <Text style={styles.title} accessibilityRole="header">{t('selectLanguage')}</Text>
+    if (!visible) return null;
 
-                    {languages.map(lang => (
-                        <TouchableOpacity
-                            key={lang.code}
-                            style={[
-                                styles.item,
-                                selectedLanguage === lang.name && styles.selectedItem, // highlight
-                            ]}
-                            onPress={() => {
-                                onSelect(lang);
-                                onClose();
-                            }}
-                            accessible={true}
-                            accessibilityRole="button"
-                            accessibilityState={{selected: selectedLanguage === lang.name}}
-                            accessibilityLabel={lang.name}
-                            accessibilityHint="Double tap to select this language"
-                        >
-                            <Text
-                                style={[
-                                    styles.text,
-                                    selectedLanguage === lang.name && styles.selectedText,
-                                ]}
-                                importantForAccessibility="no-hide-descendants"
-                            >
-                                {lang.name}
-                            </Text>
-                        </TouchableOpacity>
-                    ))}
-                </View>
-            </Pressable>
-        </Modal>
-    );
+    return <Pressable
+        style={styles.overlay}
+        onPress={onClose}
+        accessible={false}
+    >
+        <View style={styles.card}>
+            <Text style={styles.title} accessibilityRole="header">{t('selectLanguage')}</Text>
+
+            {languages.map(lang => (
+                <TouchableOpacity
+                    key={lang.code}
+                    style={[
+                        styles.item,
+                        selectedLanguage === lang.name && styles.selectedItem, // highlight
+                    ]}
+                    onPress={() => {
+                        onSelect(lang);
+                        onClose();
+                    }}
+                    accessible={true}
+                    accessibilityRole="button"
+                    accessibilityState={{selected: selectedLanguage === lang.name}}
+                    accessibilityLabel={lang.name}
+                    accessibilityHint="Double tap to select this language"
+                >
+                    <Text
+                        style={[
+                            styles.text,
+                            selectedLanguage === lang.name && styles.selectedText,
+                        ]}
+                        importantForAccessibility="no-hide-descendants"
+                    >
+                        {lang.name}
+                    </Text>
+                </TouchableOpacity>
+            ))}
+        </View>
+    </Pressable>
 }
 
 export default LanguageModal;

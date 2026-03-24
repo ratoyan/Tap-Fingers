@@ -53,37 +53,32 @@ export default function LevelModalGaming({visible, setVisible, level = 1}: Level
         outputRange: [PURPLE, GRADIENT_LIGHT]
     });
 
+    if (!visible) return null;
+
     return (
-        <Modal
-            animationType="fade"
-            transparent={true}
-            visible={visible}
-            onRequestClose={() => setVisible(false)}
-        >
-            <View style={styles.modalBackground}>
-                <Animated.View style={[styles.modalContainer, {transform: [{scale: scaleAnim}]}]}>
-                    <View style={styles.confettiPlaceholder}>
-                        <Text style={{color: WHITE, fontSize: 32}}>🎉✨🎊</Text>
-                    </View>
+        <View style={styles.modalBackground}>
+            <Animated.View style={[styles.modalContainer, {transform: [{scale: scaleAnim}]}]}>
+                <View style={styles.confettiPlaceholder}>
+                    <Text style={{color: WHITE, fontSize: 32}}>🎉✨🎊</Text>
+                </View>
 
-                    <Animated.View style={[styles.levelHeader, {backgroundColor: headerGlow}]}>
-                        <Text style={styles.levelText}>{t('level')} {level}</Text>
-                    </Animated.View>
-
-                    <Text style={styles.messageText}>{t('leveledUp')}</Text>
-
-                    <TouchableOpacity style={styles.continueButton} onPress={() => setVisible(false)}>
-                        <LinearGradient
-                            colors={[PURPLE_LIGHT, GRADIENT_DARK]}
-                            start={{x: 0, y: 0}}
-                            end={{x: 1, y: 1}}
-                            style={styles.buttonGradient}
-                        >
-                            <Text style={styles.buttonText}>{t('continue')}</Text>
-                        </LinearGradient>
-                    </TouchableOpacity>
+                <Animated.View style={[styles.levelHeader, {backgroundColor: headerGlow}]}>
+                    <Text style={styles.levelText}>{t('level')} {level}</Text>
                 </Animated.View>
-            </View>
-        </Modal>
+
+                <Text style={styles.messageText}>{t('leveledUp')}</Text>
+
+                <TouchableOpacity style={styles.continueButton} onPress={() => setVisible(false)}>
+                    <LinearGradient
+                        colors={[PURPLE_LIGHT, GRADIENT_DARK]}
+                        start={{x: 0, y: 0}}
+                        end={{x: 1, y: 1}}
+                        style={styles.buttonGradient}
+                    >
+                        <Text style={styles.buttonText}>{t('continue')}</Text>
+                    </LinearGradient>
+                </TouchableOpacity>
+            </Animated.View>
+        </View>
     );
 }

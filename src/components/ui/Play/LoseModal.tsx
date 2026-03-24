@@ -59,46 +59,46 @@ export default function LoseModal({visible, onRetry}: LoseModalProps) {
         outputRange: [PURPLE, GRADIENT_LIGHT]
     });
 
-    return (
-        <Modal transparent animationType="fade" visible={visible}>
-            <View style={styles.loseOverlay}>
+    if (!visible) return null;
 
-                <Animated.View
+    return (
+        <View style={styles.loseOverlay}>
+
+            <Animated.View
+                style={[
+                    styles.loseModal,
+                    {transform: [{scale: scaleAnim}]}
+                ]}
+            >
+                <Text style={{color: WHITE, fontSize: 32}}>😞 😢 😭</Text>
+
+
+                <Animated.Text
                     style={[
-                        styles.loseModal,
-                        {transform: [{scale: scaleAnim}]}
+                        styles.loseTitle,
+                        {color: headerGlow}
                     ]}
                 >
-                    <Text style={{color: WHITE, fontSize: 32}}>😞 😢 😭</Text>
+                    {t('gameOver')}
+                </Animated.Text>
 
+                <Text style={styles.loseText}>
+                    {t('lostLevel')}
+                </Text>
 
-                    <Animated.Text
-                        style={[
-                            styles.loseTitle,
-                            {color: headerGlow}
-                        ]}
+                <TouchableOpacity onPress={onRetry} activeOpacity={0.8}>
+                    <LinearGradient
+                        colors={[GRADIENT_LIGHT, GRADIENT_DARK]}
+                        start={{x: 0, y: 0}}
+                        end={{x: 1, y: 1}}
+                        style={styles.loseRetry}
                     >
-                        {t('gameOver')}
-                    </Animated.Text>
+                        <Text style={styles.loseBtnText}>{t('retry')}</Text>
+                    </LinearGradient>
+                </TouchableOpacity>
 
-                    <Text style={styles.loseText}>
-                        {t('lostLevel')}
-                    </Text>
+            </Animated.View>
 
-                    <TouchableOpacity onPress={onRetry} activeOpacity={0.8}>
-                        <LinearGradient
-                            colors={[GRADIENT_LIGHT, GRADIENT_DARK]}
-                            start={{x: 0, y: 0}}
-                            end={{x: 1, y: 1}}
-                            style={styles.loseRetry}
-                        >
-                            <Text style={styles.loseBtnText}>{t('retry')}</Text>
-                        </LinearGradient>
-                    </TouchableOpacity>
-
-                </Animated.View>
-
-            </View>
-        </Modal>
+        </View>
     );
 }

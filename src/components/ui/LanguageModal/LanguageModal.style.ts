@@ -3,7 +3,12 @@ import { PURPLE, WHITE} from "../../../constants/colors.ts";
 
 export default StyleSheet.create({
     overlay: {
-        flex: 1,
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        zIndex: 10,
+        width: '111%',
+        height: '100%',
         backgroundColor: 'rgba(0,0,0,0.6)',
         justifyContent: 'center',
         alignItems: 'center',

@@ -18,11 +18,10 @@ function CoinCount({count, viewStyles}: CoinCountProps) {
               accessibilityRole="text"
               accessibilityLabel={`${count} coins`}
         >
-            <View importantForAccessibility="no-hide-descendants">
-                <Coin width={22} height={20}/>
-                <Text style={styles.text}>{count}</Text>
-            </View>
+            <Coin width={22} height={20}/>
+            <Text style={styles.text}>{count}</Text>
         </View>
     );
 }
+
 export default CoinCount;

@@ -55,7 +55,7 @@ export default function Play() {
             y: Math.random() * -1000,
             tx: Math.random() * (width - b.size[0]),
             ty: 0,
-            duration: Math.random() * 40 + 30,
+            duration: 10,
             color: colors[Math.floor(Math.random() * colors.length)],
         }))
     );
@@ -76,7 +76,7 @@ export default function Play() {
                 y: Math.random() * -1000,
                 // @ts-ignore
                 tx: Math.random() * (width - randomBoxData.size[0]),
-                ty: 0, // կարող է գնալ ներքև
+                ty: 0,
                 duration: Math.random() * 40 + 30,
                 color: colors[Math.floor(Math.random() * colors.length)],
                 rotation: randomBoxData.rotation,

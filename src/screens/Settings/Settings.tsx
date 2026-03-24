@@ -137,6 +137,10 @@ function Settings() {
                 onPress={() => {
                     setLogoutModal(true);
                 }}
+                accessible={true}
+                accessibilityRole="button"
+                accessibilityLabel={t('exitGame')}
+                accessibilityHint="Opens exit confirmation dialog"
             >
                 <Text
                     style={styles.buttonText}>

@@ -20,12 +20,24 @@ function ShopItem({item, disabled = false}: ShopItemProps) {
             activeOpacity={0.8}
             style={styles.cardWrapper}
             disabled={disabled} // disables the touch
+
+            accessible={true}
+            accessibilityRole="button"
+            accessibilityLabel={item.title}
+            accessibilityHint={
+                disabled
+                    ? "Item is locked"
+                    : "Double tap to purchase"
+            }
+            accessibilityState={{ disabled }}
         >
             <LinearGradient
                 colors={disabled ? [MEDIUM_PURPLE, MEDIUM_PURPLE] : [GRADIENT_LIGHT, GRADIENT_DARK]} // gray out if disabled
                 start={{x: 0, y: 0}}
                 end={{x: 1, y: 1}}
                 style={styles.card}
+
+                importantForAccessibility="no-hide-descendants"
             >
                 <View
                     style={{

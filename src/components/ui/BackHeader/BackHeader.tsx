@@ -27,20 +27,29 @@ function BackHeader({title, backPress, isShowCoin = false, textStyle}: BackHeade
         <View
             style={[styles.backView, {paddingTop: insets.top + TOP_OFFSET}]}
         >
-
-            <TouchableOpacity style={[styles.backPosition, {top: insets.top + TOP_OFFSET + 5}]} onPress={() => {
-                if (backPress) {
-                    backPress();
-                } else {
-                    navigation.goBack();
-                }
-            }}>
+            <TouchableOpacity
+                style={[styles.backPosition, {top: insets.top + TOP_OFFSET + 5}]}
+                onPress={() => {
+                    if (backPress) {
+                        backPress();
+                    } else {
+                        navigation.goBack();
+                    }
+                }}
+                accessible={true}
+                accessibilityRole="button"
+                accessibilityLabel="Go back"
+                accessibilityHint="Navigates to previous screen"
+            >
                 <Back/>
             </TouchableOpacity>
 
             <Text style={[styles.title, textStyle && textStyle]}
                   numberOfLines={1}
-                  ellipsizeMode="tail">{title}</Text>
+                  ellipsizeMode="tail"
+                  accessible={true}
+                  accessibilityRole="header"
+            >{title}</Text>
 
             {
                 isShowCoin && (

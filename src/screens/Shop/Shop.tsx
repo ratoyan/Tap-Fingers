@@ -27,16 +27,30 @@ function Shop() {
         <LinearGradient colors={[DARK_PURPLE, PURPLE]} style={styles.container}>
             <BackHeader title={`🛒 ${t('shop')}`} isShowCoin={true} textStyle={{marginRight: 25}}/>
 
-            <ScrollView contentContainerStyle={{paddingBottom: 20}} showsVerticalScrollIndicator={false}>
-                <Text style={styles.sectionTitle}>{t('cards')}</Text>
-                <View style={styles.grid}>
+            <ScrollView contentContainerStyle={{paddingBottom: 20}}
+                        showsVerticalScrollIndicator={false}
+                        accessible={true}
+                        accessibilityLabel={t('shop')}
+            >
+                <Text style={styles.sectionTitle}
+                      accessibilityRole="header"
+                >{t('cards')}</Text>
+                <View style={styles.grid}
+                      accessible={true}
+                      accessibilityLabel={t('cards')}
+                >
                     {ITEMS.filter((e: any) => e.type === 'card').map((item: any, index: number) => (
                         <ShopItem item={item} key={index}/>
                     ))}
                 </View>
 
-                <Text style={styles.sectionTitle}>{t('backgrounds')}</Text>
-                <View style={styles.grid}>
+                <Text style={styles.sectionTitle}
+                      accessibilityRole="header"
+                >{t('backgrounds')}</Text>
+                <View style={styles.grid}
+                      accessible={true}
+                      accessibilityLabel={t('backgrounds')}
+                >
                     {ITEMS.filter((e: any) => e.type === 'background').map((item: any, index: number) => (
                         <ShopItem item={item} key={index}/>
                     ))}

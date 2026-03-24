@@ -43,6 +43,9 @@ function MenuButton({menu}: MenuProps){
                 onPressIn={handlePressIn}
                 onPressOut={handlePressOut}
                 style={styles.buttonContainer}
+                accessible={true}
+                accessibilityRole="button"
+                accessibilityLabel={t(menu.title)}
             >
                 <LinearGradient
                     colors={[PURPLE, ORCHID]}

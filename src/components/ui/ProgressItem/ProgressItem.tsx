@@ -18,15 +18,30 @@ interface ProgressItemProps {
 function ProgressItem({item, trophy}: ProgressItemProps) {
     const {t} = useTranslation();
 
+    const levelText = trophy
+        ? `${trophy} ${t('level')} ${item.level}`
+        : `${t('level')} ${item.level}`;
+
     return (
         <LinearGradient
             colors={[GRADIENT_LIGHT, GRADIENT_DARK]}
             start={{x: 0, y: 0}}
             end={{x: 1, y: 1}}
             style={styles.progressItem}
+
+            accessible={true}
+            accessibilityRole="summary"
+            accessibilityLabel={`${levelText}. ${t('score')} ${item.score}. ${t('progress')} ${Math.round(item.progress * 100)}%`}
         >
-            <Image source={{uri: item.avatar}} style={styles.avatar}/>
-            <View style={styles.info}>
+            <Image source={{uri: item.avatar}}
+                   style={styles.avatar}
+                   accessible={true}
+                   accessibilityRole="image"
+                   accessibilityLabel={`${t('avatar')}`}
+            />
+            <View style={styles.info}
+                  importantForAccessibility="no-hide-descendants"
+            >
                 <Text style={styles.level}>
                     {trophy ? `${trophy} ${t('level')} ${item.level}` : `${t('level')} ${item.level}`}
                 </Text>

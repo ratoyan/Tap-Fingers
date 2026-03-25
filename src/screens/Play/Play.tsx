@@ -251,7 +251,7 @@ export default function Play() {
     return (
         // @ts-ignore
         <ImageBackground source={backgroundImg} style={styles.container}>
-            <Level/>
+            <Level level={level}/>
             <LevelModalExample visible={isLevelModal} setVisible={(val) => {
                 setIsLevelModal(val);
                 setIsPlaying(true);

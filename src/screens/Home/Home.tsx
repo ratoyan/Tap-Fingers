@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useEffect} from 'react';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {RootStackParamList} from '../../types/RootStackParamList';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
@@ -18,6 +18,7 @@ import styles from './Home.style.ts';
 import globalStyles from '../../styles/globalStyle.ts';
 import {DARK_PURPLE, PURPLE} from "../../constants/colors.ts";
 import LinearGradient from 'react-native-linear-gradient';
+import {AppState} from "react-native";
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Home'>;
 
@@ -41,6 +42,20 @@ const Home: React.FC<Props> = () => {
 
         }, [])
     );
+
+    useEffect(() => {
+        const sub = AppState.addEventListener('change', (state) => {
+            if(state === 'inactive'){
+                releaseMusic();
+            }
+
+            if(state === 'active'){
+                playMusic();
+            }
+        });
+
+        return () => sub.remove();
+    }, []);
 
 
     return (

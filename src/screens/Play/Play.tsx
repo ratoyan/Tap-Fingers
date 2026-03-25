@@ -1,5 +1,5 @@
 import React, {useEffect, useRef, useState} from 'react';
-import {Dimensions, Vibration, ImageBackground, View, TouchableOpacity} from 'react-native';
+import {Dimensions, Vibration, ImageBackground, View, TouchableOpacity, AppState} from 'react-native';
 import {BoxType} from "../../types/play.type.ts";
 import {boxes, colors, images} from "../../data/play.ts";
 import {TOP_OFFSET} from "../../constants/uiConstants.ts";
@@ -233,6 +233,20 @@ export default function Play() {
 
         return () => cancelAnimationFrame(animationFrameId);
     }, [isPlaying]);
+
+    useEffect(() => {
+        const sub = AppState.addEventListener('change', (state) => {
+            if(state === 'inactive'){
+                releaseMusic();
+            }
+
+            if(state === 'active'){
+                playMusic();
+            }
+        });
+
+        return () => sub.remove();
+    }, []);
 
     return (
         // @ts-ignore

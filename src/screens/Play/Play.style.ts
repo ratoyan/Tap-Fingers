@@ -11,5 +11,12 @@ export default StyleSheet.create({
     },
     boxItem: {
         position: 'absolute',
+    },
+    headerLeftView: {
+        position: 'absolute',
+        left: 10,
+        zIndex: 1,
+        flexDirection: 'column',
+        gap: 10
     }
 });

@@ -1,6 +1,5 @@
 import React, {useEffect, useRef, useState} from 'react';
-import {Dimensions, Pressable, Vibration, ImageBackground} from 'react-native';
-import {Canvas} from '@shopify/react-native-skia';
+import {Dimensions, Vibration, ImageBackground, View, TouchableOpacity} from 'react-native';
 import {BoxType} from "../../types/play.type.ts";
 import {boxes, colors, images} from "../../data/play.ts";
 import {TOP_OFFSET} from "../../constants/uiConstants.ts";
@@ -11,16 +10,20 @@ import {STORAGE_KEYS} from "../../utils/storageKeys.ts";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Sound from "react-native-sound";
 
+// icons
+import Back from "../../assets/icons/Back.tsx";
+
 // components
 import CoinCount from "../../components/ui/CoinCount/CoinCount.tsx";
 import PlayBox from "../../components/ui/Play/PlayBox.tsx";
 import LevelModalExample from "../../components/ui/Play/LevelModalExample.tsx";
 import Hearts from "../../components/ui/Play/Hearts.tsx";
 import LoseModal from "../../components/ui/Play/LoseModal.tsx";
+import Level from "../../components/ui/Play/Level.tsx";
 
 // styles
 import styles from './Play.style.ts'
-import Level from "../../components/ui/Play/Level.tsx";
+import {GRADIENT_DARK, GRADIENT_LIGHT, MEDIUM_PURPLE, PURPLE, PURPLE_DARK} from "../../constants/colors.ts";
 
 const {width, height} = Dimensions.get('window');
 
@@ -239,15 +242,13 @@ export default function Play() {
                 setIsLevelModal(val);
                 setIsPlaying(true);
             }} level={level}/>
-            <Hearts length={heartsLength} emptyCount={emptyHeartCount}
-                    viewStyle={{
-                        position: 'absolute',
-                        left: 10,
-                        zIndex: 1,
-                        top: insets.top + TOP_OFFSET
-                    }}
-            />
-            <CoinCount count={count} viewStyles={[styles.countView, {top: insets.top + TOP_OFFSET}]}/>
+            <View style={[styles.headerLeftView, {top: insets.top}]}>
+                <TouchableOpacity onPress={() => navigation.goBack()}>
+                    <Back color={GRADIENT_LIGHT}/>
+                </TouchableOpacity>
+                <Hearts length={heartsLength} emptyCount={emptyHeartCount}/>
+            </View>
+            <CoinCount count={count} viewStyles={[styles.countView, {top: insets.top}]}/>
             <LoseModal visible={isLoseModal} onRetry={handleRetry}/>
 
             {boxesData

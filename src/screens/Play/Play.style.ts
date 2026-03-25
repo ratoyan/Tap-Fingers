@@ -6,7 +6,8 @@ export default StyleSheet.create({
     },
     countView: {
         position: 'absolute',
-        right: 10
+        right: 10,
+        zIndex: 1
     },
     boxItem: {
         position: 'absolute',

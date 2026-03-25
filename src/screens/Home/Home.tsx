@@ -27,6 +27,8 @@ const Home: React.FC<Props> = () => {
     useFocusEffect(
         React.useCallback(() => {
             // This runs every time the screen is focused
+            releaseMusic();
+
             loadMusic("gamemusic2.mp3");
 
             const timeout = setTimeout(() => {

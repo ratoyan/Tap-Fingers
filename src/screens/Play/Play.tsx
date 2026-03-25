@@ -1,8 +1,7 @@
 import React, {useEffect, useRef, useState} from 'react';
-import {Dimensions, Vibration, ImageBackground, View, TouchableOpacity, AppState} from 'react-native';
+import {AppState, Dimensions, ImageBackground, TouchableOpacity, Vibration, View} from 'react-native';
 import {BoxType} from "../../types/play.type.ts";
 import {boxes, colors, images} from "../../data/play.ts";
-import {TOP_OFFSET} from "../../constants/uiConstants.ts";
 import {useSafeAreaInsets} from "react-native-safe-area-context";
 import {useFocusEffect, useNavigation} from "@react-navigation/core";
 import {loadMusic, playMusic, releaseMusic} from "../../utils/helpers.ts";
@@ -23,7 +22,7 @@ import Level from "../../components/ui/Play/Level.tsx";
 
 // styles
 import styles from './Play.style.ts'
-import {GRADIENT_DARK, GRADIENT_LIGHT, MEDIUM_PURPLE, PURPLE, PURPLE_DARK} from "../../constants/colors.ts";
+import {GRADIENT_LIGHT} from "../../constants/colors.ts";
 
 const {width, height} = Dimensions.get('window');
 
@@ -236,11 +235,11 @@ export default function Play() {
 
     useEffect(() => {
         const sub = AppState.addEventListener('change', (state) => {
-            if(state === 'inactive'){
+            if (state === 'inactive') {
                 releaseMusic();
             }
 
-            if(state === 'active'){
+            if (state === 'active') {
                 playMusic();
             }
         });
@@ -252,17 +251,23 @@ export default function Play() {
         // @ts-ignore
         <ImageBackground source={backgroundImg} style={styles.container}>
             <Level level={level}/>
-            <LevelModalExample visible={isLevelModal} setVisible={(val) => {
-                setIsLevelModal(val);
-                setIsPlaying(true);
-            }} level={level}/>
+
+            <LevelModalExample visible={isLevelModal}
+                               setVisible={(val) => {
+                                   setIsLevelModal(val);
+                                   setIsPlaying(true);
+                               }}
+                               level={level}
+            />
             <View style={[styles.headerLeftView, {top: insets.top}]}>
                 <TouchableOpacity onPress={() => navigation.goBack()}>
                     <Back color={GRADIENT_LIGHT}/>
                 </TouchableOpacity>
                 <Hearts length={heartsLength} emptyCount={emptyHeartCount}/>
             </View>
+
             <CoinCount count={count} viewStyles={[styles.countView, {top: insets.top}]}/>
+
             <LoseModal visible={isLoseModal} onRetry={handleRetry}/>
 
             {boxesData

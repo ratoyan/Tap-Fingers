@@ -149,6 +149,7 @@ export default function Play() {
     useFocusEffect(
         React.useCallback(() => {
             // This runs every time the screen is focused
+            releaseMusic();
             getStorageData();
             setTimeout(() => {
                 loadMusic('games1.mp3');

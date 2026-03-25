@@ -7,7 +7,7 @@ export default StyleSheet.create({
         top: 0,
         left: 0,
         zIndex: 10,
-        width: '111%',
+        width: '100%',
         height: '100%',
         backgroundColor: 'rgba(0,0,0,0.6)',
         justifyContent: 'center',

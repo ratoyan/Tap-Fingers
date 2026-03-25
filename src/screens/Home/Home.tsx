@@ -35,7 +35,6 @@ const Home: React.FC<Props> = () => {
 
             return () => {
                 clearTimeout(timeout);
-                releaseMusic();
             };
 
         }, [])

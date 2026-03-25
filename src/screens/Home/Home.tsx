@@ -7,6 +7,7 @@ import {MenuType} from "../../types/menu.type.ts";
 import {TOP_OFFSET} from "../../constants/uiConstants.ts";
 import {loadMusic, playMusic, releaseMusic} from "../../utils/helpers.ts";
 import {useFocusEffect} from "@react-navigation/core";
+import {AppState} from "react-native";
 
 // components
 import MenuButton from "../../components/ui/MenuButton/MenuButton.tsx";
@@ -18,7 +19,6 @@ import styles from './Home.style.ts';
 import globalStyles from '../../styles/globalStyle.ts';
 import {DARK_PURPLE, PURPLE} from "../../constants/colors.ts";
 import LinearGradient from 'react-native-linear-gradient';
-import {AppState} from "react-native";
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Home'>;
 

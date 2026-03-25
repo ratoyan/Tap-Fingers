@@ -45,7 +45,7 @@ export default function Play() {
     const [isPlaying, setIsPlaying] = useState(true);
     const [isLevelModal, setIsLevelModal] = useState(false);
     const [isLoseModal, setIsLoseModal] = useState(false);
-
+    const [duration, setDuration] = useState(5);
     const backgroundImg = imageBackground(count);
 
     const [boxesData, setBoxesData] = useState(
@@ -55,7 +55,6 @@ export default function Play() {
             y: Math.random() * -1000,
             tx: Math.random() * (width - b.size[0]),
             ty: 0,
-            duration: 10,
             color: colors[Math.floor(Math.random() * colors.length)],
         }))
     );
@@ -77,7 +76,6 @@ export default function Play() {
                 // @ts-ignore
                 tx: Math.random() * (width - randomBoxData.size[0]),
                 ty: 0,
-                duration: 50,
                 color: colors[Math.floor(Math.random() * colors.length)],
                 rotation: randomBoxData.rotation,
             };
@@ -99,7 +97,7 @@ export default function Play() {
         }
     }
 
-    function durationAdd(val: number = 30) {
+    function durationAdd(val: number = 10) {
         setLevel(level => level + 1);
         setIsPlaying(false);
         setTimeout(() => {
@@ -113,6 +111,7 @@ export default function Play() {
                 duration: e.duration + val,
             }))
         );
+        setDuration((olValue)=> olValue + val);
     }
 
     function handleRetry() {
@@ -169,7 +168,6 @@ export default function Play() {
     );
 
     useEffect(() => {
-
         if (levelCount >= 20) {
             setLevelCount(0);
         }
@@ -209,7 +207,7 @@ export default function Play() {
                     }
 
                     const newTx = Math.abs(dx) < 1 ? Math.random() * (width - b.size[0]) : b.tx;
-                    const newTy = b.y + b.duration;
+                    const newTy = b.y + duration;
                     const newRotation = (b.rotation + 2) % 360; // 2 degrees per frame
 
                     return {
@@ -217,7 +215,7 @@ export default function Play() {
                         x: newX,
                         y: newY,
                         tx: newTx,
-                        ty: newTy + 30,
+                        ty: newTy + 10,
                         rotation: newRotation,
                         color: newColor,
                     };

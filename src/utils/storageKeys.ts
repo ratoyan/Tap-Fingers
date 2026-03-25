@@ -3,5 +3,6 @@ export const STORAGE_KEYS = {
     LANG: 'lang',
     MUSIC: 'music',
     SOUND: 'sound',
-    VIBRATION: 'vibration'
+    VIBRATION: 'vibration',
+    COIN: 'coin'
 };

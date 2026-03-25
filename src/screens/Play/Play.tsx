@@ -28,6 +28,7 @@ const {width, height} = Dimensions.get('window');
 
 export default function Play() {
     const heartsLength = 7;
+    const levelLength = 50;
     const navigation = useNavigation();
     const insets = useSafeAreaInsets();
 
@@ -61,6 +62,11 @@ export default function Play() {
             color: colors[Math.floor(Math.random() * colors.length)],
         }))
     );
+
+    function backHandler() {
+        setCoinStorage();
+        navigation.goBack();
+    }
 
     function addRandomBox() {
         // @ts-ignore
@@ -100,7 +106,31 @@ export default function Play() {
         }
     }
 
-    function durationAdd(val: number = 10) {
+    function handleRetry() {
+        setIsLevelModal(false);
+        backHandler();
+    }
+
+    function gameOver() {
+        setIsPlaying(false);
+        setIsLoseModal(true);
+        releaseMusic();
+    }
+
+    async function setCoinStorage() {
+        let coin = await AsyncStorage.getItem(STORAGE_KEYS.COIN);
+        let currentCoin = coin ? JSON.parse(coin) : 0;
+        const updatedCoin = currentCoin + count;
+
+        await AsyncStorage.setItem(
+            STORAGE_KEYS.COIN,
+            JSON.stringify(updatedCoin)
+        );
+    }
+
+    async function durationAdd(val: number = 10) {
+        setCoinStorage();
+
         setLevel(level => level + 1);
         setIsPlaying(false);
         setTimeout(() => {
@@ -115,17 +145,6 @@ export default function Play() {
             }))
         );
         setDuration((olValue) => olValue + val);
-    }
-
-    function handleRetry() {
-        setIsLevelModal(false);
-        navigation.goBack();
-    }
-
-    function gameOver() {
-        setIsPlaying(false);
-        setIsLoseModal(true);
-        releaseMusic();
     }
 
     async function deleteBoxOnClick(id: number) {
@@ -171,10 +190,10 @@ export default function Play() {
     );
 
     useEffect(() => {
-        if (levelCount >= 50) {
+        if (levelCount >= levelLength) {
             setLevelCount(0);
         }
-        if (levelCount >= 50) {
+        if (levelCount >= levelLength) {
             durationAdd();
         }
     }, [count]);
@@ -260,7 +279,7 @@ export default function Play() {
                                level={level}
             />
             <View style={[styles.headerLeftView, {top: insets.top}]}>
-                <TouchableOpacity onPress={() => navigation.goBack()}>
+                <TouchableOpacity onPress={backHandler}>
                     <Back color={GRADIENT_LIGHT}/>
                 </TouchableOpacity>
                 <Hearts length={heartsLength} emptyCount={emptyHeartCount}/>

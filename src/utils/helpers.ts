@@ -55,3 +55,8 @@ export const stopMusic = () => {
     music.stop();
     isPlaying = false;
 };
+
+export const getCoin = async (): Promise<number> => {
+    const coin = await AsyncStorage.getItem(STORAGE_KEYS.COIN);
+    return coin ? JSON.parse(coin) : 0;
+};

@@ -111,7 +111,7 @@ export default function Play() {
                 duration: e.duration + val,
             }))
         );
-        setDuration((olValue)=> olValue + val);
+        setDuration((olValue) => olValue + val);
     }
 
     function handleRetry() {
@@ -237,12 +237,14 @@ export default function Play() {
                 setIsLevelModal(val);
                 setIsPlaying(true);
             }} level={level}/>
-            <Hearts length={heartsLength} emptyCount={emptyHeartCount} viewStyle={{
-                position: 'absolute',
-                left: 10,
-                zIndex: 1,
-                top: insets.top + TOP_OFFSET
-            }}/>
+            <Hearts length={heartsLength} emptyCount={emptyHeartCount}
+                    viewStyle={{
+                        position: 'absolute',
+                        left: 10,
+                        zIndex: 1,
+                        top: insets.top + TOP_OFFSET
+                    }}
+            />
             <CoinCount count={count} viewStyles={[styles.countView, {top: insets.top + TOP_OFFSET}]}/>
             <LoseModal visible={isLoseModal} onRetry={handleRetry}/>
 

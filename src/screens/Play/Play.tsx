@@ -45,7 +45,7 @@ export default function Play() {
     const [isPlaying, setIsPlaying] = useState(true);
     const [isLevelModal, setIsLevelModal] = useState(false);
     const [isLoseModal, setIsLoseModal] = useState(false);
-    const [duration, setDuration] = useState(5);
+    const [duration, setDuration] = useState(10);
     const backgroundImg = imageBackground(count);
 
     const [boxesData, setBoxesData] = useState(

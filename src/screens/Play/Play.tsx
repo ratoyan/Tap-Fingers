@@ -20,6 +20,7 @@ import LoseModal from "../../components/ui/Play/LoseModal.tsx";
 
 // styles
 import styles from './Play.style.ts'
+import Level from "../../components/ui/Play/Level.tsx";
 
 const {width, height} = Dimensions.get('window');
 
@@ -45,7 +46,7 @@ export default function Play() {
     const [isPlaying, setIsPlaying] = useState(true);
     const [isLevelModal, setIsLevelModal] = useState(false);
     const [isLoseModal, setIsLoseModal] = useState(false);
-    const [duration, setDuration] = useState(10);
+    const [duration, setDuration] = useState(15);
     const backgroundImg = imageBackground(count);
 
     const [boxesData, setBoxesData] = useState(
@@ -168,10 +169,10 @@ export default function Play() {
     );
 
     useEffect(() => {
-        if (levelCount >= 20) {
+        if (levelCount >= 50) {
             setLevelCount(0);
         }
-        if (levelCount >= 20) {
+        if (levelCount >= 50) {
             durationAdd();
         }
     }, [count]);
@@ -233,6 +234,7 @@ export default function Play() {
     return (
         // @ts-ignore
         <ImageBackground source={backgroundImg} style={styles.container}>
+            <Level/>
             <LevelModalExample visible={isLevelModal} setVisible={(val) => {
                 setIsLevelModal(val);
                 setIsPlaying(true);

@@ -115,5 +115,40 @@ export default StyleSheet.create({
         color:'white',
         fontWeight:'bold',
         fontSize:16
-    }
+    },
+    levelContainer: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
+
+        position: "absolute",
+        top: 0,
+        left: "50%",
+
+        transform: [{ translateX: -50 }],
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 999,
+
+        shadowOpacity: 0.8,
+        shadowRadius: 10,
+        elevation: 8,
+        zIndex: 1
+    },
+    levelIcon: {
+        fontSize: 16,
+        marginRight: 6,
+    },
+    levelLabel: {
+        color: WHITE,
+        fontSize: 10,
+        marginRight: 6,
+        fontWeight: "600",
+        letterSpacing: 1,
+    },
+    level: {
+        color: WHITE,
+        fontSize: 16,
+        fontWeight: "bold",
+    },
 });

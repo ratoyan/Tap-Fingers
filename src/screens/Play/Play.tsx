@@ -271,6 +271,7 @@ export default function Play() {
         // @ts-ignore
         <ImageBackground source={backgroundImg} style={styles.container}>
             <Level level={level}/>
+
             <Progress length={levelLength} coin={levelCount}/>
 
             <LevelModalExample visible={isLevelModal}

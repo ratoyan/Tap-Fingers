@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState} from 'react';
+import React, {useEffect, useMemo, useRef, useState} from 'react';
 import {AppState, Dimensions, ImageBackground, TouchableOpacity, Vibration, View} from 'react-native';
 import {BoxType} from "../../types/play.type.ts";
 import {boxes, colors, images} from "../../data/play.ts";
@@ -19,11 +19,11 @@ import LevelModalExample from "../../components/ui/Play/LevelModalExample.tsx";
 import Hearts from "../../components/ui/Play/Hearts.tsx";
 import LoseModal from "../../components/ui/Play/LoseModal.tsx";
 import Level from "../../components/ui/Play/Level.tsx";
+import Progress from "../../components/ui/Play/Progress.tsx";
 
 // styles
 import styles from './Play.style.ts'
 import {GRADIENT_LIGHT} from "../../constants/colors.ts";
-import Progress from "../../components/ui/Play/Progress.tsx";
 
 const {width, height} = Dimensions.get('window');
 
@@ -45,12 +45,12 @@ export default function Play() {
     const [isLevelModal, setIsLevelModal] = useState(false);
     const [isLoseModal, setIsLoseModal] = useState(false);
     const [duration, setDuration] = useState(30);
-    const backgroundImg = imageBackground(count);
+    const backgroundImg = useMemo(() => imageBackground(count), [count]);
 
     const [boxesData, setBoxesData] = useState(
         boxes.map((b: BoxType) => ({
             ...b,
-            x: Math.random() * (width - b.size[0]), // X-ը էլ random
+            x: Math.random() * (width - b.size[0]),
             y: Math.random() * -1000,
             tx: Math.random() * (width - b.size[0]),
             ty: 0,
@@ -177,7 +177,7 @@ export default function Play() {
             return () => {
                 clearTimeout(timeout);
                 releaseMusic();
-                musicJumpingRef.current.release();
+                musicJumpingRef.current?.release();
             };
 
         }, [])
@@ -188,7 +188,7 @@ export default function Play() {
             setLevelCount(0);
             durationAdd();
         }
-    }, [count]);
+    }, [levelCount]);
 
     useEffect(() => {
         if (!isPlaying) return;
@@ -246,13 +246,8 @@ export default function Play() {
 
     useEffect(() => {
         const sub = AppState.addEventListener('change', (state) => {
-            if (state === 'inactive') {
-                releaseMusic();
-            }
-
-            if (state === 'active') {
-                playMusic();
-            }
+            if (state === 'inactive' || state === 'background') releaseMusic();
+            if (state === 'active') playMusic();
         });
 
         return () => sub.remove();

@@ -1,9 +1,9 @@
 import React from 'react';
 import {View, Text, TouchableOpacity, Pressable} from 'react-native';
+import {useTranslation} from "react-i18next";
 
 // styles
 import styles from './LogoutModal.style.ts';
-import {useTranslation} from "react-i18next";
 
 export default function LogoutModal({visible, onClose, onConfirm}: any) {
     const {t} = useTranslation();

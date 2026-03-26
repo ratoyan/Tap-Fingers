@@ -1,5 +1,5 @@
 import {StyleSheet} from "react-native";
-import {BLUISH_PURPLE, DARK_PURPLE, GOLD, PLUM, PURPLE_LIGHT, WHITE} from "../../../constants/colors.ts";
+import {BLUISH_PURPLE, DARK_PURPLE, GOLD, PLUM, PURPLE_LIGHT, WHITE, WHITE_100} from "../../../constants/colors.ts";
 
 export default StyleSheet.create({
     modalBackground: {
@@ -20,7 +20,7 @@ export default StyleSheet.create({
         borderRadius: 25,
         alignItems: "center",
         shadowColor: PURPLE_LIGHT,
-        shadowOffset: { width: 0, height: 15 },
+        shadowOffset: {width: 0, height: 15},
         shadowOpacity: 0.9,
         shadowRadius: 25,
         elevation: 20,
@@ -38,7 +38,7 @@ export default StyleSheet.create({
         alignItems: "center",
         marginBottom: 20,
         shadowColor: PURPLE_LIGHT,
-        shadowOffset: { width: 0, height: 0 },
+        shadowOffset: {width: 0, height: 0},
         shadowOpacity: 0.9,
         shadowRadius: 20,
         marginTop: 50
@@ -48,7 +48,7 @@ export default StyleSheet.create({
         fontWeight: "bold",
         color: WHITE,
         textShadowColor: "#ff6a00",
-        textShadowOffset: { width: 0, height: 0 },
+        textShadowOffset: {width: 0, height: 0},
         textShadowRadius: 15,
         textTransform: 'uppercase'
     },
@@ -75,7 +75,7 @@ export default StyleSheet.create({
         textTransform: "uppercase",
         letterSpacing: 1,
     },
-    loseOverlay:{
+    loseOverlay: {
         position: 'absolute',
         top: 0,
         left: 0,
@@ -86,35 +86,37 @@ export default StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
     },
-    loseModal:{
-        width:280,
-        padding:28,
-        borderRadius:22,
-        backgroundColor:DARK_PURPLE,
-        alignItems:'center',
-        borderWidth:2,
-        borderColor:PLUM
+    loseModal: {
+        width: 280,
+        padding: 28,
+        borderRadius: 22,
+        backgroundColor: DARK_PURPLE,
+        alignItems: 'center',
+        borderWidth: 2,
+        borderColor: PLUM
     },
-    loseTitle:{
-        fontSize:28,
-        fontWeight:'bold',
-        marginBottom:10
+    loseTitle: {
+        fontSize: 28,
+        fontWeight: 'bold',
+        marginBottom: 10,
+        textAlign: 'center'
     },
-    loseText:{
-        color:'#ddd',
-        marginBottom:25,
-        fontSize:16
+    loseText: {
+        color: WHITE_100,
+        marginBottom: 25,
+        fontSize: 16,
+        textAlign: 'center'
     },
-    loseRetry:{
-        paddingVertical:14,
-        paddingHorizontal:40,
-        borderRadius:14,
-        alignItems:'center'
+    loseRetry: {
+        paddingVertical: 14,
+        paddingHorizontal: 40,
+        borderRadius: 14,
+        alignItems: 'center'
     },
-    loseBtnText:{
-        color:'white',
-        fontWeight:'bold',
-        fontSize:16
+    loseBtnText: {
+        color: 'white',
+        fontWeight: 'bold',
+        fontSize: 16
     },
     levelContainer: {
         flexDirection: "row",
@@ -125,7 +127,7 @@ export default StyleSheet.create({
         top: 0,
         left: "50%",
 
-        transform: [{ translateX: -50 }],
+        transform: [{translateX: -50}],
         paddingHorizontal: 12,
         paddingVertical: 6,
         borderRadius: 999,

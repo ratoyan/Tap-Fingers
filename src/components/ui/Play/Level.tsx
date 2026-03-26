@@ -19,7 +19,7 @@ function Level({level = 1}: LevelProps) {
             colors={[PURPLE_DARK, GRADIENT_LIGHT]}
             start={{x: 0, y: 0}}
             end={{x: 1, y: 1}}
-            style={[styles.levelContainer, {top: insets.top}]}
+            style={[styles.levelContainer, {top: insets.top + 30}]}
         >
             <Text style={styles.levelIcon}>⚡</Text>
             <Text style={styles.levelLabel}>LVL</Text>

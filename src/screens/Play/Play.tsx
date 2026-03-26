@@ -23,6 +23,7 @@ import Level from "../../components/ui/Play/Level.tsx";
 // styles
 import styles from './Play.style.ts'
 import {GRADIENT_LIGHT} from "../../constants/colors.ts";
+import Progress from "../../components/ui/Play/Progress.tsx";
 
 const {width, height} = Dimensions.get('window');
 
@@ -49,7 +50,7 @@ export default function Play() {
     const [isPlaying, setIsPlaying] = useState(true);
     const [isLevelModal, setIsLevelModal] = useState(false);
     const [isLoseModal, setIsLoseModal] = useState(false);
-    const [duration, setDuration] = useState(15);
+    const [duration, setDuration] = useState(30);
     const backgroundImg = imageBackground(count);
 
     const [boxesData, setBoxesData] = useState(
@@ -270,6 +271,7 @@ export default function Play() {
         // @ts-ignore
         <ImageBackground source={backgroundImg} style={styles.container}>
             <Level level={level}/>
+            <Progress length={levelLength} coin={levelCount}/>
 
             <LevelModalExample visible={isLevelModal}
                                setVisible={(val) => {

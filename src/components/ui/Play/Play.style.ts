@@ -1,5 +1,5 @@
 import {StyleSheet} from "react-native";
-import {BLUISH_PURPLE, DARK_PURPLE, PLUM, PURPLE_LIGHT, WHITE} from "../../../constants/colors.ts";
+import {BLUISH_PURPLE, DARK_PURPLE, GOLD, PLUM, PURPLE_LIGHT, WHITE} from "../../../constants/colors.ts";
 
 export default StyleSheet.create({
     modalBackground: {
@@ -150,5 +150,23 @@ export default StyleSheet.create({
         color: WHITE,
         fontSize: 16,
         fontWeight: "bold",
+    },
+    progressBarFill: {
+        backgroundColor: GOLD,
+    },
+    progressBarEmpty: {
+        backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    },
+    progressBarBackground: {
+        position: 'absolute',
+        width: '60%',
+        flexDirection: 'row',
+        height: 10,
+        borderRadius: 5,
+        overflow: 'hidden',
+        marginBottom: 8,
+        zIndex: 1,
+        top: 100,
+        left: "17%",
     },
 });

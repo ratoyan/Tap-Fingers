@@ -143,11 +143,10 @@ export default function Play() {
     }
 
     async function deleteBoxOnClick(id: number) {
-        if (!cancelSoundRef.current) {
+        if (!cancelSoundRef.current && musicJumpingRef.current) {
             musicJumpingRef.current.setNumberOfLoops(0);
             musicJumpingRef.current.play();
         }
-
         setBoxesData(prev => prev.filter(b => b.id !== id));
         addRandomBox();
         setCount((count) => count + 1);
@@ -178,7 +177,7 @@ export default function Play() {
             return () => {
                 clearTimeout(timeout);
                 releaseMusic();
-                musicJumpingRef.release();
+                musicJumpingRef.current.release();
             };
 
         }, [])

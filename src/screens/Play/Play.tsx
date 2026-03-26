@@ -35,13 +35,7 @@ export default function Play() {
 
     const cancelSoundRef: any = useRef(true);
     const cancelVibrationRef: any = useRef(true);
-
-    const musicJumping = new Sound('jumping.wav', Sound.MAIN_BUNDLE, (error) => {
-        if (error) {
-            console.log('failed to load game sound', error);
-            return;
-        }
-    });
+    const musicJumpingRef: any = useRef<Sound | null>(null);
 
     const [count, setCount] = useState(0);
     const [levelCount, setLevelCount] = useState(0);
@@ -150,8 +144,8 @@ export default function Play() {
 
     async function deleteBoxOnClick(id: number) {
         if (!cancelSoundRef.current) {
-            musicJumping.setNumberOfLoops(0);
-            musicJumping.play();
+            musicJumpingRef.current.setNumberOfLoops(0);
+            musicJumpingRef.current.play();
         }
 
         setBoxesData(prev => prev.filter(b => b.id !== id));
@@ -184,7 +178,7 @@ export default function Play() {
             return () => {
                 clearTimeout(timeout);
                 releaseMusic();
-                musicJumping.release();
+                musicJumpingRef.release();
             };
 
         }, [])
@@ -265,6 +259,20 @@ export default function Play() {
         });
 
         return () => sub.remove();
+    }, []);
+
+    useEffect(() => {
+        const sound = new Sound('jumping.wav', Sound.MAIN_BUNDLE, (error) => {
+            if (error) {
+                console.log('failed to load game sound', error);
+            }
+        });
+
+        musicJumpingRef.current = sound;
+
+        return () => {
+            sound.release();
+        };
     }, []);
 
     return (

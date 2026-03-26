@@ -187,8 +187,6 @@ export default function Play() {
     useEffect(() => {
         if (levelCount >= levelLength) {
             setLevelCount(0);
-        }
-        if (levelCount >= levelLength) {
             durationAdd();
         }
     }, [count]);
@@ -302,8 +300,8 @@ export default function Play() {
             {boxesData
                 .slice()
                 .reverse()
-                .map((box: BoxType, index: number) => (
-                    <PlayBox key={index} box={box} handlePress={() => deleteBoxOnClick(box.id)}/>
+                .map((box: BoxType) => (
+                    <PlayBox key={box.id} box={box} handlePress={() => deleteBoxOnClick(box.id)}/>
                 ))}
         </ImageBackground>
     );

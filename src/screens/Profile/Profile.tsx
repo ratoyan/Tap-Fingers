@@ -14,7 +14,7 @@ import BackHeader from "../../components/ui/BackHeader/BackHeader.tsx";
 
 // styles
 import styles from './Profile.style.ts'
-import {GRADIENT_DARK, GRADIENT_LIGHT, VIOLET} from "../../constants/colors.ts";
+import {GRADIENT_DARK, GRADIENT_LIGHT, PURPLE, VIOLET} from "../../constants/colors.ts";
 import LinearGradient from 'react-native-linear-gradient';
 
 function Profile() {
@@ -23,7 +23,7 @@ function Profile() {
 
     return (
         <LinearGradient
-            colors={[GRADIENT_LIGHT, GRADIENT_DARK]}
+            colors={[GRADIENT_LIGHT, PURPLE]}
             style={styles.container}
         >
             <BackHeader title={`👨‍🎓 ${t('profile')}`} />

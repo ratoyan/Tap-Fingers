@@ -18,7 +18,7 @@ export default StyleSheet.create({
         shadowOpacity: 0.5,
         shadowRadius: 10,
         elevation: 8,
-        borderRadius: 70,
+        borderRadius: 40,
         marginBottom: 20,
     },
     avatar: {
@@ -29,9 +29,9 @@ export default StyleSheet.create({
         borderColor: PURPLE_DARK,
     },
     input: {
-        width: '80%',
+        width: '90%',
         padding: 14,
-        borderRadius: 25,
+        borderRadius: 20,
         backgroundColor: 'rgba(255,255,255,0.2)',
         color: 'white',
         fontSize: 16,

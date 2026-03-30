@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from 'react';
 import {
     View,
-    Text, TouchableOpacity,
+    Text, TouchableOpacity, Image,
 } from 'react-native';
 import {LanguageType} from "../../types/language.type.ts";
 import {changeAppLanguage} from "../../localization/i18n.ts";
@@ -107,7 +107,16 @@ function Settings() {
     return (
         <View style={styles.container}>
             <BackHeader title={`⚙️ ${t('settings')}`}/>
-
+            <View style={styles.profileContainer}>
+                <View style={styles.avatarWrapper}>
+                    <Image
+                        source={{ uri: 'https://i.pravatar.cc/150?img=3' }}
+                        style={styles.avatar}
+                    />
+                    <View style={styles.avatarRing} />
+                </View>
+                <Text style={styles.greeting}>Hello, Rob!</Text>
+            </View>
             <View style={styles.card}>
                 <SettingRow
                     label={`🎵 ${t('music')}`}

@@ -1,6 +1,7 @@
 import React from "react";
 import {View, Text, ScrollView} from "react-native";
 import {useTranslation} from "react-i18next";
+import {useGlobalStore} from "../../store/globalStore.ts";
 
 // components
 import BackHeader from "../../components/ui/BackHeader/BackHeader.tsx";
@@ -22,10 +23,11 @@ const ITEMS = [
 
 function Shop() {
     const {t} = useTranslation();
+    const {coins} = useGlobalStore();
 
     return (
         <LinearGradient colors={[DARK_PURPLE, PURPLE]} style={styles.container}>
-            <BackHeader title={`🛒 ${t('shop')}`} isShowCoin={true} textStyle={{marginRight: 25}}/>
+            <BackHeader title={`🛒 ${t('shop')}`} isShowCoin={true} textStyle={{marginRight: 25}} coins={coins}/>
 
             <ScrollView contentContainerStyle={{paddingBottom: 20}}
                         showsVerticalScrollIndicator={false}

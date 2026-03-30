@@ -7,7 +7,7 @@ import Coin from "../../../assets/icons/Coin.tsx";
 import styles from './CoinCount.style.ts';
 
 interface CoinCountProps {
-    count: number;
+    count?: number;
     viewStyles?: StyleProp<any>;
 }
 

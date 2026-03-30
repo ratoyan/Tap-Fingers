@@ -4,7 +4,7 @@ import {BoxType} from "../../types/play.type.ts";
 import {boxes, colors, images} from "../../data/play.ts";
 import {useSafeAreaInsets} from "react-native-safe-area-context";
 import {useFocusEffect, useNavigation} from "@react-navigation/core";
-import {loadMusic, playMusic, releaseMusic} from "../../utils/helpers.ts";
+import {loadMusic, pauceMusic, playMusic, releaseMusic} from "../../utils/helpers.ts";
 import {STORAGE_KEYS} from "../../utils/storageKeys.ts";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Sound from "react-native-sound";
@@ -144,7 +144,7 @@ export default function Play() {
 
     async function deleteBoxOnClick(id: number) {
         if (!cancelSoundRef.current && musicJumpingRef.current) {
-            musicJumpingRef.current.setNumberOfLoops(0);
+            musicJumpingRef.current.setCurrentTime(0);
             musicJumpingRef.current.play();
         }
         setBoxesData(prev => prev.filter(b => b.id !== id));
@@ -176,7 +176,7 @@ export default function Play() {
 
             return () => {
                 clearTimeout(timeout);
-                releaseMusic();
+                pauceMusic();
                 musicJumpingRef.current?.release();
             };
 
@@ -246,7 +246,7 @@ export default function Play() {
 
     useEffect(() => {
         const sub = AppState.addEventListener('change', (state) => {
-            if (state === 'inactive' || state === 'background') releaseMusic();
+            if (state === 'inactive' || state === 'background') pauceMusic();
             if (state === 'active') playMusic();
         });
 

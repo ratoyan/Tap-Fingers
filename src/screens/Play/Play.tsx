@@ -29,7 +29,7 @@ const {width, height} = Dimensions.get('window');
 
 export default function Play() {
     const heartsLength = 7;
-    const levelLength = 50;
+    const levelLength = 40;
     const navigation = useNavigation();
     const insets = useSafeAreaInsets();
 

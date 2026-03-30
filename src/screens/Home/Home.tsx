@@ -8,6 +8,7 @@ import {TOP_OFFSET} from "../../constants/uiConstants.ts";
 import {getCoin, loadMusic, playMusic, releaseMusic} from "../../utils/helpers.ts";
 import {useFocusEffect} from "@react-navigation/core";
 import {AppState} from "react-native";
+import {useGlobalStore} from "../../store/globalStore.ts";
 
 // components
 import MenuButton from "../../components/ui/MenuButton/MenuButton.tsx";
@@ -24,8 +25,7 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Home'>;
 
 const Home: React.FC<Props> = () => {
     const insets = useSafeAreaInsets();
-
-    const [coin, setCoin] = useState(0);
+    const {coins, setCoins} = useGlobalStore();
 
     useFocusEffect(
         React.useCallback(() => {
@@ -49,7 +49,7 @@ const Home: React.FC<Props> = () => {
         useCallback(() => {
             const fetchCoin = async () => {
                 const value = await getCoin();
-                setCoin(value);
+                setCoins(value);
             };
 
             const timeout = setTimeout(() => {
@@ -85,7 +85,7 @@ const Home: React.FC<Props> = () => {
         >
             <Logo width={150} height={150} viewStyles={[globalStyles.logoView, {top: insets.top + TOP_OFFSET}]}/>
 
-            <CoinCount count={coin} viewStyles={[globalStyles.coinView, {top: insets.top + TOP_OFFSET}]}/>
+            <CoinCount count={coins} viewStyles={[globalStyles.coinView, {top: insets.top + TOP_OFFSET}]}/>
 
             {menus.map((menu: MenuType, index: number) => {
                 return <MenuButton menu={menu} key={index}/>;

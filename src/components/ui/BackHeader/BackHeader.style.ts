@@ -28,5 +28,27 @@ export default StyleSheet.create({
         right: 0,
         flexDirection: 'row',
         alignItems: 'center'
-    }
+    },
+    avatarWrapper: {
+        position: 'absolute',
+        right: 0,
+        top: 0
+    },
+    avatar: {
+        width: 35,
+        height: 35,
+        borderRadius: 55,
+        borderWidth: 4,
+        borderColor: '#fff',
+    },
+    avatarRing: {
+        position: 'absolute',
+        top: -6,
+        left: -6,
+        right: -6,
+        bottom: -6,
+        borderRadius: 61,
+        borderWidth: 3,
+        borderColor: 'rgba(255,255,255,0.3)',
+    },
 });

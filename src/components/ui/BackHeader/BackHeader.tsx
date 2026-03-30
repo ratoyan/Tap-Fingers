@@ -1,4 +1,4 @@
-import {Text, TouchableOpacity, View, ViewStyle} from "react-native";
+import {Image, Text, TouchableOpacity, View, ViewStyle} from "react-native";
 import {useSafeAreaInsets} from "react-native-safe-area-context";
 import {useNavigation} from "@react-navigation/core";
 import {TOP_OFFSET} from "../../../constants/uiConstants.ts";
@@ -11,16 +11,18 @@ import CoinCount from "../CoinCount/CoinCount.tsx";
 
 // styles
 import styles from './BackHeader.style.ts'
+import React from "react";
 
 interface BackHeaderProps {
     title: string;
     backPress?: () => void;
     isShowCoin?: boolean;
-    textStyle?: ViewStyle
-    coins?: number
+    textStyle?: ViewStyle;
+    coins?: number;
+    isProfile?: boolean;
 }
 
-function BackHeader({title, backPress, isShowCoin = false, textStyle, coins}: BackHeaderProps) {
+function BackHeader({title, backPress, isShowCoin = false, textStyle, coins, isProfile = false}: BackHeaderProps) {
     const insets = useSafeAreaInsets();
     const navigation = useNavigation();
 
@@ -45,7 +47,7 @@ function BackHeader({title, backPress, isShowCoin = false, textStyle, coins}: Ba
                 <Back/>
             </TouchableOpacity>
 
-            <Text style={[styles.title, textStyle && textStyle]}
+            <Text style={[styles.title, textStyle && textStyle, isProfile && {marginLeft: 0}]}
                   numberOfLines={1}
                   ellipsizeMode="tail"
                   accessible={true}
@@ -55,6 +57,17 @@ function BackHeader({title, backPress, isShowCoin = false, textStyle, coins}: Ba
             {
                 isShowCoin && (
                     <CoinCount count={coins} viewStyles={[styles.coinPosition, {top: insets.top + TOP_OFFSET + 5}]}/>
+                )
+            }
+            {
+                isProfile && (
+                    <View style={[styles.avatarWrapper, {top: insets.top + TOP_OFFSET + 5}]}>
+                        <Image
+                            source={{uri: 'https://i.pravatar.cc/150?img=3'}}
+                            style={styles.avatar}
+                        />
+                        <View style={styles.avatarRing}/>
+                    </View>
                 )
             }
         </View>

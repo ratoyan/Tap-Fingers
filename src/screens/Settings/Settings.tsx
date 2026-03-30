@@ -106,17 +106,7 @@ function Settings() {
 
     return (
         <View style={styles.container}>
-            <BackHeader title={`⚙️ ${t('settings')}`}/>
-            <View style={styles.profileContainer}>
-                <View style={styles.avatarWrapper}>
-                    <Image
-                        source={{ uri: 'https://i.pravatar.cc/150?img=3' }}
-                        style={styles.avatar}
-                    />
-                    <View style={styles.avatarRing} />
-                </View>
-                <Text style={styles.greeting}>Hello, Rob!</Text>
-            </View>
+            <BackHeader title={`⚙️ ${t('settings')}`} isProfile={true}/>
             <View style={styles.card}>
                 <SettingRow
                     label={`🎵 ${t('music')}`}

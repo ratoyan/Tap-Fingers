@@ -16,6 +16,7 @@ export default StyleSheet.create({
         shadowOpacity: 0.4,
         shadowRadius: 10,
         elevation: 10,
+        marginTop: 20
     },
     button: {
         marginTop: 22,

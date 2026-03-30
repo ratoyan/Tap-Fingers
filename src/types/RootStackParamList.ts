@@ -7,4 +7,5 @@ export type RootStackParamList = {
     Progression: undefined;
     Challenges: undefined;
     Shop: undefined;
+    Profile: undefined;
 };

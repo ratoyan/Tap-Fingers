@@ -20,5 +20,6 @@
   "continue": "Continue",
   "gameOver": "Game Over",
   "lostLevel": "You lost this level",
-  "retry": "Retry"
+  "retry": "Retry",
+  "profile": "Profile"
 }

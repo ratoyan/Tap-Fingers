@@ -20,9 +20,18 @@ interface BackHeaderProps {
     textStyle?: ViewStyle;
     coins?: number;
     isProfile?: boolean;
+    handleProfilePress?: () => void;
 }
 
-function BackHeader({title, backPress, isShowCoin = false, textStyle, coins, isProfile = false}: BackHeaderProps) {
+function BackHeader({
+                        title,
+                        backPress,
+                        isShowCoin = false,
+                        textStyle,
+                        coins,
+                        isProfile = false,
+                        handleProfilePress
+                    }: BackHeaderProps) {
     const insets = useSafeAreaInsets();
     const navigation = useNavigation();
 
@@ -61,13 +70,14 @@ function BackHeader({title, backPress, isShowCoin = false, textStyle, coins, isP
             }
             {
                 isProfile && (
-                    <View style={[styles.avatarWrapper, {top: insets.top + TOP_OFFSET + 5}]}>
+                    <TouchableOpacity style={[styles.avatarWrapper, {top: insets.top + TOP_OFFSET + 5}]}
+                                      onPress={handleProfilePress}>
                         <Image
                             source={{uri: 'https://i.pravatar.cc/150?img=3'}}
                             style={styles.avatar}
                         />
                         <View style={styles.avatarRing}/>
-                    </View>
+                    </TouchableOpacity>
                 )
             }
         </View>

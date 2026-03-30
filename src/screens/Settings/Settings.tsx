@@ -106,7 +106,8 @@ function Settings() {
 
     return (
         <View style={styles.container}>
-            <BackHeader title={`⚙️ ${t('settings')}`} isProfile={true}/>
+            <BackHeader title={`⚙️ ${t('settings')}`} isProfile={true}
+                        handleProfilePress={() => navigation.navigate('Profile')}/>
             <View style={styles.card}>
                 <SettingRow
                     label={`🎵 ${t('music')}`}

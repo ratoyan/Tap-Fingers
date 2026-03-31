@@ -6,7 +6,7 @@ import Coin from "../../../assets/icons/Coin.tsx";
 
 // styles
 import styles from './ChallengeCard.style.ts';
-import {DARK_PURPLE, GOLD, GRADIENT_DARK, GRADIENT_LIGHT, MEDIUM_PURPLE} from "../../../constants/colors.ts";
+import {GRADIENT_DARK, GRADIENT_LIGHT, MEDIUM_PURPLE} from "../../../constants/colors.ts";
 import LinearGradient from "react-native-linear-gradient";
 
 interface ChallengeCardProps {
@@ -68,7 +68,11 @@ function ChallengeCard({item}: ChallengeCardProps) {
                 )}
                 {
                     item.taken && (
-                        <View style={styles.takenChallengeCard}>
+                        <View style={styles.takenChallengeCard}
+                              accessible={true}
+                              accessibilityRole="text"
+                              accessibilityLabel="Challenge already taken"
+                        >
                             <Text style={{marginRight: 6}}>✅</Text>
                             <Text style={styles.takenChallengeText}>Taken</Text>
                         </View>
@@ -78,7 +82,11 @@ function ChallengeCard({item}: ChallengeCardProps) {
                 {
                     item.finished && (
                         <View style={styles.coinBackground}>
-                            <TouchableOpacity style={styles.coinActionButton}>
+                            <TouchableOpacity style={styles.coinActionButton}
+                                              accessible={true}
+                                              accessibilityRole="button"
+                                              accessibilityLabel={`Collect ${item.reward} coins`}
+                            >
                                 <Coin width={25} height={25}/>
                                 <Text style={styles.coinText}>
                                     100

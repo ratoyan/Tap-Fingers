@@ -21,22 +21,34 @@ const challenges = [
         reward: 50,
         locked: false,
         taken: false,
+        finished: false
     },
     {
         id: '2',
+        title: 'Tap 100 Times',
+        progress: 70,
+        reward: 50,
+        locked: false,
+        taken: true,
+        finished: false
+    },
+    {
+        id: '3',
         title: 'Win 5 Games',
         progress: 30,
         reward: 100,
         locked: false,
-        taken: true,
+        taken: false,
+        finished: true
     },
     {
-        id: '3',
+        id: '4',
         title: 'Score 1000 Points',
         progress: 0,
         reward: 200,
         locked: true,
         taken: false,
+        finished: false
     },
 ];
 

@@ -1,5 +1,5 @@
 import {StyleSheet} from "react-native";
-import {BLACK, GOLD, MEDIUM_PURPLE, WHITE, WHITE_100} from "../../../constants/colors.ts";
+import {BLACK, DARK_PURPLE, GOLD, MEDIUM_PURPLE, WHITE, WHITE_100} from "../../../constants/colors.ts";
 
 export default StyleSheet.create({
     card: {
@@ -63,5 +63,31 @@ export default StyleSheet.create({
         color: WHITE,
         fontWeight: '700',
         fontSize: 14
+    },
+    coinBackground: {
+        width: '100%',
+        height: '100%',
+        backgroundColor: 'rgba(0, 0, 0, 0.6)',
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        borderRadius: 10,
+        justifyContent: 'center',
+        alignItems: 'center',
+        zIndex: 10
+    },
+    coinActionButton: {
+        backgroundColor: GOLD,
+        paddingVertical: 8,
+        paddingHorizontal: 16,
+        borderRadius: 20,
+        flexDirection: 'row',
+        alignItems: 'center',
+        columnGap: 5
+    },
+    coinText: {
+        color: DARK_PURPLE,
+        fontWeight: '700',
+        fontSize: 16,
     }
 });

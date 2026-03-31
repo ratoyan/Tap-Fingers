@@ -6,7 +6,7 @@ import Coin from "../../../assets/icons/Coin.tsx";
 
 // styles
 import styles from './ChallengeCard.style.ts';
-import {GRADIENT_DARK, GRADIENT_LIGHT, GRAY_100, GRAY_50, MEDIUM_PURPLE, VIOLET} from "../../../constants/colors.ts";
+import {GRADIENT_DARK, GRADIENT_LIGHT, MEDIUM_PURPLE} from "../../../constants/colors.ts";
 import LinearGradient from "react-native-linear-gradient";
 
 interface ChallengeCardProps {

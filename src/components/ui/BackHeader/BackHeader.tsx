@@ -1,3 +1,4 @@
+import React from "react";
 import {Image, Text, TouchableOpacity, View, ViewStyle} from "react-native";
 import {useSafeAreaInsets} from "react-native-safe-area-context";
 import {useNavigation} from "@react-navigation/core";
@@ -11,7 +12,6 @@ import CoinCount from "../CoinCount/CoinCount.tsx";
 
 // styles
 import styles from './BackHeader.style.ts'
-import React from "react";
 
 interface BackHeaderProps {
     title: string;

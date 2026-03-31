@@ -92,17 +92,10 @@ const Home: React.FC<Props> = () => {
 
             />
 
-            <View
-                accessible={true}
-                accessibilityRole="text"
-                accessibilityLiveRegion="polite"
-                accessibilityLabel={`Total coins ${coins}`}
-            >
-                <CoinCount
-                    count={coins}
-                    viewStyles={[globalStyles.coinView, {top: insets.top + TOP_OFFSET}]}
-                />
-            </View>
+            <CoinCount
+                count={coins}
+                viewStyles={[globalStyles.coinView, {top: insets.top + TOP_OFFSET}]}
+            />
 
             <View accessible={true} accessibilityLabel="Main menu options">
                 {menus.map((menu: MenuType, index: number) => {

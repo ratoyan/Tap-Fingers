@@ -105,48 +105,64 @@ function Settings() {
     }, [currentLang])
 
     return (
-        <View style={styles.container}>
-            <BackHeader title={`⚙️ ${t('settings')}`} isProfile={true}
-                        handleProfilePress={() => navigation.navigate('Profile')}/>
-            <View style={styles.card}>
+        <View
+            style={styles.container}
+            accessible={true}
+            accessibilityLabel="Settings screen"
+        >
+            <BackHeader
+                title={`⚙️ ${t('settings')}`}
+                isProfile={true}
+                handleProfilePress={() => navigation.navigate('Profile')}
+            />
+
+            <View
+                style={styles.card}
+                accessible={true}
+                accessibilityRole="menu"
+                accessibilityLabel="Settings options"
+            >
                 <SettingRow
                     label={`🎵 ${t('music')}`}
                     value={music}
                     onChange={toggleMusic}
                 />
+
                 <SettingRow
                     label={`🔊 ${t('soundEffects')}`}
                     value={sound}
                     onChange={toggleSound}
                 />
+
                 <SettingRow
                     label={`📳 ${t('vibration')}`}
                     value={vibration}
                     onChange={toggleVibration}
                 />
+
                 <SettingRow
                     label={`🌍 ${t('language')}`}
                     valueText={language.name}
                     onPress={() => setLangModal(true)}
-                    viewStyle={{borderBottomWidth: 0}}
+                    viewStyle={{ borderBottomWidth: 0 }}
                 />
             </View>
 
+            {/* Exit Button */}
             <TouchableOpacity
                 style={styles.button}
                 onPress={() => {
                     setLogoutModal(true);
                 }}
-                accessible={true}
                 accessibilityRole="button"
                 accessibilityLabel={t('exitGame')}
                 accessibilityHint="Opens exit confirmation dialog"
             >
-                <Text
-                    style={styles.buttonText}>
+                <Text style={styles.buttonText}>
                     {t('exitGame')}
                 </Text>
             </TouchableOpacity>
+
             <LanguageModal
                 visible={langModal}
                 onClose={() => setLangModal(false)}
@@ -156,7 +172,12 @@ function Settings() {
                 }}
                 selectedLanguage={language.name}
             />
-            <LogoutModal visible={logoutModal} onClose={() => setLogoutModal(false)} onConfirm={logOut}/>
+
+            <LogoutModal
+                visible={logoutModal}
+                onClose={() => setLogoutModal(false)}
+                onConfirm={logOut}
+            />
         </View>
     );
 }

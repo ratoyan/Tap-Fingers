@@ -7,7 +7,7 @@ import {MenuType} from "../../types/menu.type.ts";
 import {TOP_OFFSET} from "../../constants/uiConstants.ts";
 import {getCoin, loadMusic, playMusic, releaseMusic} from "../../utils/helpers.ts";
 import {useFocusEffect} from "@react-navigation/core";
-import {AppState} from "react-native";
+import {AppState, View} from "react-native";
 import {useGlobalStore} from "../../store/globalStore.ts";
 
 // components
@@ -82,14 +82,38 @@ const Home: React.FC<Props> = () => {
             start={{x: 0, y: 0}}
             end={{x: 1, y: 1}}
             style={styles.container}
+            accessible={true}
+            accessibilityLabel="Main menu screen"
         >
-            <Logo width={150} height={150} viewStyles={[globalStyles.logoView, {top: insets.top + TOP_OFFSET}]}/>
+            <Logo
+                width={150}
+                height={150}
+                viewStyles={[globalStyles.logoView, {top: insets.top + TOP_OFFSET}]}
 
-            <CoinCount count={coins} viewStyles={[globalStyles.coinView, {top: insets.top + TOP_OFFSET}]}/>
+            />
 
-            {menus.map((menu: MenuType, index: number) => {
-                return <MenuButton menu={menu} key={index}/>;
-            })}
+            <View
+                accessible={true}
+                accessibilityRole="text"
+                accessibilityLiveRegion="polite"
+                accessibilityLabel={`Total coins ${coins}`}
+            >
+                <CoinCount
+                    count={coins}
+                    viewStyles={[globalStyles.coinView, {top: insets.top + TOP_OFFSET}]}
+                />
+            </View>
+
+            <View accessible={true} accessibilityLabel="Main menu options">
+                {menus.map((menu: MenuType, index: number) => {
+                    return (
+                        <MenuButton
+                            menu={menu}
+                            key={index}
+                        />
+                    );
+                })}
+            </View>
         </LinearGradient>
     );
 };

@@ -21,16 +21,30 @@ function Progression() {
     const {t} = useTranslation();
 
     return (
-        <View style={styles.container}>
-            <BackHeader title={`🏆 ${t('progression')}`}/>
+        <View
+            style={styles.container}
+            accessible={true}
+            accessibilityLabel="Progression screen"
+        >
+            <BackHeader title={`🏆 ${t('progression')}`} />
+
             <FlatList
                 data={userProgress}
-                style={{marginTop: 20}}
-                keyExtractor={(item) => item.id}
+                style={{ marginTop: 20 }}
+                keyExtractor={(item) => item.id.toString()}
                 renderItem={({ item, index }) => {
                     const trophy = getTrophyEmoji(index);
-                    return <ProgressItem item={item} trophy={trophy} key={index}/>;
+
+                    return (
+                        <ProgressItem
+                            item={item}
+                            trophy={trophy}
+                        />
+                    );
                 }}
+                accessibilityRole="list"
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={{ paddingBottom: 40 }}
             />
         </View>
     );

@@ -26,36 +26,69 @@ function Shop() {
     const {coins} = useGlobalStore();
 
     return (
-        <LinearGradient colors={[DARK_PURPLE, PURPLE]} style={styles.container}>
-            <BackHeader title={`🛒 ${t('shop')}`} isShowCoin={true} textStyle={{marginRight: 25}} coins={coins}/>
+        <LinearGradient
+            colors={[DARK_PURPLE, PURPLE]}
+            style={styles.container}
+            accessible={true}
+            accessibilityLabel="Shop screen"
+        >
+            <BackHeader
+                title={`🛒 ${t('shop')}`}
+                isShowCoin={true}
+                textStyle={{marginRight: 25}}
+                coins={coins}
+            />
 
-            <ScrollView contentContainerStyle={{paddingBottom: 20}}
-                        showsVerticalScrollIndicator={false}
-                        accessible={true}
-                        accessibilityLabel={t('shop')}
+            <ScrollView
+                contentContainerStyle={{paddingBottom: 20}}
+                showsVerticalScrollIndicator={false}
+                accessibilityRole="scrollbar"
+                accessibilityHint="Swipe up or down to browse shop items"
             >
-                <Text style={styles.sectionTitle}
-                      accessibilityRole="header"
-                >{t('cards')}</Text>
-                <View style={styles.grid}
-                      accessible={true}
-                      accessibilityLabel={t('cards')}
+                <Text
+                    style={styles.sectionTitle}
+                    accessibilityRole="header"
                 >
-                    {ITEMS.filter((e: any) => e.type === 'card').map((item: any, index: number) => (
-                        <ShopItem item={item} key={index}/>
-                    ))}
+                    {t('cards')}
+                </Text>
+
+                <View
+                    style={styles.grid}
+                    accessible={true}
+                    accessibilityRole="list"
+                    accessibilityLabel={`${t('cards')} list`}
+                >
+                    {ITEMS
+                        .filter((e: any) => e.type === 'card')
+                        .map((item: any) => (
+                            <ShopItem
+                                key={item.id}
+                                item={item}
+                            />
+                        ))}
                 </View>
 
-                <Text style={styles.sectionTitle}
-                      accessibilityRole="header"
-                >{t('backgrounds')}</Text>
-                <View style={styles.grid}
-                      accessible={true}
-                      accessibilityLabel={t('backgrounds')}
+                <Text
+                    style={styles.sectionTitle}
+                    accessibilityRole="header"
                 >
-                    {ITEMS.filter((e: any) => e.type === 'background').map((item: any, index: number) => (
-                        <ShopItem item={item} key={index}/>
-                    ))}
+                    {t('backgrounds')}
+                </Text>
+
+                <View
+                    style={styles.grid}
+                    accessible={true}
+                    accessibilityRole="list"
+                    accessibilityLabel={`${t('backgrounds')} list`}
+                >
+                    {ITEMS
+                        .filter((e: any) => e.type === 'background')
+                        .map((item: any) => (
+                            <ShopItem
+                                key={item.id}
+                                item={item}
+                            />
+                        ))}
                 </View>
             </ScrollView>
         </LinearGradient>

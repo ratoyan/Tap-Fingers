@@ -44,14 +44,20 @@ function Challenges() {
         <LinearGradient
             colors={[DARK_PURPLE, PURPLE]}
             style={styles.container}
+            accessible={true}
+            accessibilityLabel="Challenges screen"
         >
             <BackHeader title={`🎯 ${t('challenges')}`}/>
 
             <FlatList
                 data={challenges}
-                keyExtractor={(item) => item.id}
-                renderItem={ChallengeCard}
-                contentContainerStyle={{paddingBottom: 40, marginTop: 20}}
+                keyExtractor={(item) => item.id.toString()}
+                renderItem={({ item }) => (
+                    <ChallengeCard item={item} />
+                )}
+                contentContainerStyle={{ paddingBottom: 40, marginTop: 20 }}
+                showsVerticalScrollIndicator={false}
+                accessibilityRole="list"
             />
         </LinearGradient>
     );

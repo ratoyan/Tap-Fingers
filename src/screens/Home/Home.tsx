@@ -89,7 +89,6 @@ const Home: React.FC<Props> = () => {
                 width={150}
                 height={150}
                 viewStyles={[globalStyles.logoView, {top: insets.top + TOP_OFFSET}]}
-
             />
 
             <CoinCount

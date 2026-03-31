@@ -1,5 +1,7 @@
 import React from "react";
 import {View, ViewStyle} from "react-native";
+
+// icons
 import FullHeart from "../../../assets/icons/FullHeart.tsx";
 import EmptyHeart from "../../../assets/icons/EmptyHeart.tsx";
 

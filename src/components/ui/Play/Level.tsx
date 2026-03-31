@@ -1,11 +1,11 @@
 import React from "react";
 import {Text} from "react-native";
-import LinearGradient from "react-native-linear-gradient";
-import {GRADIENT_LIGHT, PURPLE_DARK} from "../../../constants/colors.ts";
 import {useSafeAreaInsets} from "react-native-safe-area-context";
 
 // styles
 import styles from './Play.style.ts';
+import {GRADIENT_LIGHT, PURPLE_DARK} from "../../../constants/colors.ts";
+import LinearGradient from "react-native-linear-gradient";
 
 interface LevelProps {
     level?: number;

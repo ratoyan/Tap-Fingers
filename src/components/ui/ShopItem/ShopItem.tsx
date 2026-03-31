@@ -1,12 +1,12 @@
-import {Text, TouchableOpacity, View} from "react-native";
 import React from "react";
+import {Text, TouchableOpacity, View} from "react-native";
 
 // icons
 import Coin from "../../../assets/icons/Coin.tsx";
 
 // styles
 import styles from './ShopItem.style.ts';
-import {GRADIENT_DARK, GRADIENT_LIGHT, PLUM, GRAY, GRAY_100, MEDIUM_PURPLE, ORCHID} from "../../../constants/colors.ts";
+import {GRADIENT_DARK, GRADIENT_LIGHT, PLUM, MEDIUM_PURPLE, ORCHID} from "../../../constants/colors.ts";
 import LinearGradient from "react-native-linear-gradient";
 
 interface ShopItemProps {
@@ -29,7 +29,7 @@ function ShopItem({item, disabled = false}: ShopItemProps) {
                     ? "Item is locked"
                     : "Double tap to purchase"
             }
-            accessibilityState={{ disabled }}
+            accessibilityState={{disabled}}
         >
             <LinearGradient
                 colors={disabled ? [MEDIUM_PURPLE, MEDIUM_PURPLE] : [GRADIENT_LIGHT, GRADIENT_DARK]} // gray out if disabled

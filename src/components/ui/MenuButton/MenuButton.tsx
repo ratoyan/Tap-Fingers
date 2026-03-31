@@ -1,8 +1,8 @@
 import React from "react";
 import {Animated, Text, TouchableOpacity} from "react-native";
-import {useNavigation} from "@react-navigation/core";
 import {MenuType} from "../../../types/menu.type.ts";
 import {useTranslation} from "react-i18next";
+import {useNavigation} from "@react-navigation/core";
 
 // styles
 import styles from './MenuButton.style.ts';

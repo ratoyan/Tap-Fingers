@@ -4,10 +4,11 @@ import {BoxType} from "../../types/play.type.ts";
 import {boxes, colors, images} from "../../data/play.ts";
 import {useSafeAreaInsets} from "react-native-safe-area-context";
 import {useFocusEffect, useNavigation} from "@react-navigation/core";
-import {loadMusic, pauceMusic, playMusic, releaseMusic} from "../../utils/helpers.ts";
+import {loadMusic, pauceMusic, playMusic, releaseMusic, stopMusic} from "../../utils/helpers.ts";
 import {STORAGE_KEYS} from "../../utils/storageKeys.ts";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Sound from "react-native-sound";
+import useMusicAppState from "../../hooks/useMusicAppState.tsx";
 
 // icons
 import Back from "../../assets/icons/Back.tsx";
@@ -32,6 +33,7 @@ export default function Play() {
     const levelLength = 40;
     const navigation = useNavigation();
     const insets = useSafeAreaInsets();
+    useMusicAppState(playMusic, stopMusic);
 
     const cancelSoundRef: any = useRef(true);
     const cancelVibrationRef: any = useRef(true);
@@ -109,7 +111,7 @@ export default function Play() {
     function gameOver() {
         setIsPlaying(false);
         setIsLoseModal(true);
-        releaseMusic();
+        stopMusic();
     }
 
     async function setCoinStorage() {
@@ -243,15 +245,6 @@ export default function Play() {
 
         return () => cancelAnimationFrame(animationFrameId);
     }, [isPlaying]);
-
-    useEffect(() => {
-        const sub = AppState.addEventListener('change', (state) => {
-            if (state === 'inactive' || state === 'background') pauceMusic();
-            if (state === 'active') playMusic();
-        });
-
-        return () => sub.remove();
-    }, []);
 
     useEffect(() => {
         const sound = new Sound('jumping.wav', Sound.MAIN_BUNDLE, (error) => {

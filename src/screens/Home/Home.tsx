@@ -1,14 +1,15 @@
-import React, {useCallback, useEffect, useState} from 'react';
+import React, {useCallback} from 'react';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {RootStackParamList} from '../../types/RootStackParamList';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {menus} from "../../data/menu.ts";
 import {MenuType} from "../../types/menu.type.ts";
 import {TOP_OFFSET} from "../../constants/uiConstants.ts";
-import {getCoin, loadMusic, playMusic, releaseMusic} from "../../utils/helpers.ts";
+import {getCoin, loadMusic, playMusic, releaseMusic, stopMusic} from "../../utils/helpers.ts";
 import {useFocusEffect} from "@react-navigation/core";
-import {AppState, View} from "react-native";
+import {View} from "react-native";
 import {useGlobalStore} from "../../store/globalStore.ts";
+import useMusicAppState from "../../hooks/useMusicAppState.tsx";
 
 // components
 import MenuButton from "../../components/ui/MenuButton/MenuButton.tsx";
@@ -26,6 +27,7 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Home'>;
 const Home: React.FC<Props> = () => {
     const insets = useSafeAreaInsets();
     const {coins, setCoins} = useGlobalStore();
+    useMusicAppState(playMusic, stopMusic);
 
     useFocusEffect(
         React.useCallback(() => {
@@ -61,20 +63,6 @@ const Home: React.FC<Props> = () => {
             };
         }, [])
     );
-
-    useEffect(() => {
-        const sub = AppState.addEventListener('change', (state) => {
-            if (state === 'inactive') {
-                releaseMusic();
-            }
-
-            if (state === 'active') {
-                playMusic();
-            }
-        });
-
-        return () => sub.remove();
-    }, []);
 
     return (
         <LinearGradient

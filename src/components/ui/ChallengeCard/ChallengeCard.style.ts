@@ -1,5 +1,5 @@
 import {StyleSheet} from "react-native";
-import {GOLD, WHITE_100} from "../../../constants/colors.ts";
+import {BLACK, GOLD, MEDIUM_PURPLE, WHITE, WHITE_100} from "../../../constants/colors.ts";
 
 export default StyleSheet.create({
     card: {
@@ -44,4 +44,24 @@ export default StyleSheet.create({
         color: WHITE_100,
         fontSize: 13,
     },
+    takenChallengeCard: {
+        marginTop: 12,
+        alignSelf: 'flex-start',
+        backgroundColor: MEDIUM_PURPLE,
+        paddingVertical: 5,
+        paddingHorizontal: 14,
+        borderRadius: 12,
+        flexDirection: 'row',
+        alignItems: 'center',
+        shadowColor: BLACK,
+        shadowOffset: {width: 0, height: 2},
+        shadowOpacity: 0.3,
+        shadowRadius: 3,
+        elevation: 4,
+    },
+    takenChallengeText: {
+        color: WHITE,
+        fontWeight: '700',
+        fontSize: 14
+    }
 });

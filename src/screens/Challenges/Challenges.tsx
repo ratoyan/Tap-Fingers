@@ -20,6 +20,7 @@ const challenges = [
         progress: 70,
         reward: 50,
         locked: false,
+        taken: false,
     },
     {
         id: '2',
@@ -27,6 +28,7 @@ const challenges = [
         progress: 30,
         reward: 100,
         locked: false,
+        taken: true,
     },
     {
         id: '3',
@@ -34,6 +36,7 @@ const challenges = [
         progress: 0,
         reward: 200,
         locked: true,
+        taken: false,
     },
 ];
 

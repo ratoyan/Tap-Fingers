@@ -66,6 +66,15 @@ function ChallengeCard({item}: ChallengeCardProps) {
                         Complete previous challenge to unlock
                     </Text>
                 )}
+                {
+                    item.taken && (
+                        <View style={styles.takenChallengeCard}>
+                            <Text style={{marginRight: 6}}>✅</Text>
+                            <Text style={styles.takenChallengeText}>Taken</Text>
+                        </View>
+                    )
+                }
+
             </View>
         </LinearGradient>
     )

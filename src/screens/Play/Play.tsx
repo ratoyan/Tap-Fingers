@@ -269,10 +269,28 @@ export default function Play() {
 
     return (
         // @ts-ignore
-        <ImageBackground source={backgroundImg} style={styles.container}>
-            <Level level={level}/>
+        <ImageBackground source={backgroundImg}
+                         style={styles.container}
+                         accessible={true}
+                         accessibilityLabel="Game screen. Tap boxes to score points and avoid losing hearts"
+        >
+            <View
+                style={styles.zIndexStyle}
+                accessible={true}
+                accessibilityRole="text"
+                accessibilityLabel={`Level ${level}`}
+            >
+                <Level level={level}/>
+            </View>
 
-            <Progress length={levelLength} coin={levelCount}/>
+            <View
+                style={styles.zIndexStyle}
+                accessible={true}
+                accessibilityRole="progressbar"
+                accessibilityLabel={`Progress ${levelCount} out of ${levelLength}`}
+            >
+                <Progress length={levelLength} coin={levelCount}/>
+            </View>
 
             <LevelModalExample visible={isLevelModal}
                                setVisible={(val) => {
@@ -282,13 +300,31 @@ export default function Play() {
                                level={level}
             />
             <View style={[styles.headerLeftView, {top: insets.top}]}>
-                <TouchableOpacity onPress={backHandler}>
+                <TouchableOpacity onPress={backHandler}
+                                  accessibilityRole="button"
+                                  accessibilityLabel="Go back"
+                                  accessibilityHint="Returns to previous screen"
+                >
                     <Back color={GRADIENT_LIGHT}/>
                 </TouchableOpacity>
-                <Hearts length={heartsLength} emptyCount={emptyHeartCount}/>
+                <View
+                    accessible={true}
+                    accessibilityRole="text"
+                    accessibilityLabel={`Lives remaining ${heartsLength - emptyHeartCount}`}
+                >
+                    <Hearts length={heartsLength} emptyCount={emptyHeartCount}/>
+                </View>
             </View>
 
-            <CoinCount count={count} viewStyles={[styles.countView, {top: insets.top}]}/>
+            <View
+                style={styles.zIndexStyle}
+                accessible={true}
+                accessibilityRole="text"
+                accessibilityLiveRegion="polite"
+                accessibilityLabel={`Score ${count}`}
+            >
+                <CoinCount count={count} viewStyles={[styles.countView, {top: insets.top}]}/>
+            </View>
 
             <LoseModal visible={isLoseModal} onRetry={handleRetry}/>
 
@@ -296,7 +332,10 @@ export default function Play() {
                 .slice()
                 .reverse()
                 .map((box: BoxType) => (
-                    <PlayBox key={box.id} box={box} handlePress={() => deleteBoxOnClick(box.id)}/>
+                    <PlayBox key={box.id}
+                             box={box}
+                             handlePress={() => deleteBoxOnClick(box.id)}
+                    />
                 ))}
         </ImageBackground>
     );

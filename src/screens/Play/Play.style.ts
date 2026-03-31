@@ -18,5 +18,8 @@ export default StyleSheet.create({
         zIndex: 1,
         flexDirection: 'column',
         gap: 10
+    },
+    zIndexStyle: {
+        zIndex: 1
     }
 });

@@ -26,7 +26,6 @@ function ChallengeCard({item}: ChallengeCardProps) {
                     : [GRADIENT_LIGHT, GRADIENT_DARK]
             }
             style={styles.card}
-
             accessible={true}
             accessibilityRole="summary"
             accessibilityLabel={label}

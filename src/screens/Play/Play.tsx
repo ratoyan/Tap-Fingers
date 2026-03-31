@@ -209,7 +209,7 @@ export default function Play() {
                         newY = -Math.random() * 500;
                         newColor = colors[Math.floor(Math.random() * colors.length)];
                         setEmptyHeartCount(heartCount => {
-                            if (heartCount + 1 < heartsLength) {
+                            if (heartCount < heartsLength) {
                                 if (!cancelVibrationRef.current) {
                                     Vibration.vibrate(1000);
                                 }

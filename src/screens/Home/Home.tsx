@@ -1,14 +1,16 @@
 import React, {useCallback} from 'react';
+import {View} from "react-native";
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {RootStackParamList} from '../../types/RootStackParamList';
-import {useSafeAreaInsets} from 'react-native-safe-area-context';
-import {menus} from "../../data/menu.ts";
 import {MenuType} from "../../types/menu.type.ts";
-import {TOP_OFFSET} from "../../constants/uiConstants.ts";
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {getCoin, loadMusic, playMusic, releaseMusic, stopMusic} from "../../utils/helpers.ts";
 import {useFocusEffect} from "@react-navigation/core";
-import {View} from "react-native";
+import {menus} from "../../data/menu.ts";
+import {TOP_OFFSET} from "../../constants/uiConstants.ts";
 import {useGlobalStore} from "../../store/globalStore.ts";
+
+// hooks
 import useMusicAppState from "../../hooks/useMusicAppState.tsx";
 
 // components

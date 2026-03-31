@@ -1,17 +1,19 @@
 import React, {useEffect, useMemo, useRef, useState} from 'react';
-import {AppState, Dimensions, ImageBackground, TouchableOpacity, Vibration, View} from 'react-native';
 import {BoxType} from "../../types/play.type.ts";
-import {boxes, colors, images} from "../../data/play.ts";
+import Sound from "react-native-sound";
 import {useSafeAreaInsets} from "react-native-safe-area-context";
 import {useFocusEffect, useNavigation} from "@react-navigation/core";
 import {loadMusic, pauceMusic, playMusic, releaseMusic, stopMusic} from "../../utils/helpers.ts";
+import {Dimensions, ImageBackground, TouchableOpacity, Vibration, View} from 'react-native';
+import {boxes, colors, images} from "../../data/play.ts";
 import {STORAGE_KEYS} from "../../utils/storageKeys.ts";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import Sound from "react-native-sound";
-import useMusicAppState from "../../hooks/useMusicAppState.tsx";
 
 // icons
 import Back from "../../assets/icons/Back.tsx";
+
+// hooks
+import useMusicAppState from "../../hooks/useMusicAppState.tsx";
 
 // components
 import CoinCount from "../../components/ui/CoinCount/CoinCount.tsx";

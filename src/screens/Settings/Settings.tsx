@@ -1,14 +1,14 @@
 import React, {useEffect, useState} from 'react';
 import {
     View,
-    Text, TouchableOpacity, Image,
+    Text, TouchableOpacity,
 } from 'react-native';
 import {LanguageType} from "../../types/language.type.ts";
 import {changeAppLanguage} from "../../localization/i18n.ts";
-import {useTranslation} from "react-i18next";
-import {languages} from "../../data/language.ts";
 import {useNavigation} from "@react-navigation/core";
 import {loadMusic, playMusic, stopMusic} from "../../utils/helpers.ts";
+import {useTranslation} from "react-i18next";
+import {languages} from "../../data/language.ts";
 import {STORAGE_KEYS} from "../../utils/storageKeys.ts";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 

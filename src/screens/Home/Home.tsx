@@ -10,9 +10,6 @@ import {menus} from "../../data/menu.ts";
 import {TOP_OFFSET} from "../../constants/uiConstants.ts";
 import {useGlobalStore} from "../../store/globalStore.ts";
 
-// hooks
-import useMusicAppState from "../../hooks/useMusicAppState.tsx";
-
 // components
 import MenuButton from "../../components/ui/MenuButton/MenuButton.tsx";
 import CoinCount from "../../components/ui/CoinCount/CoinCount.tsx";
@@ -29,7 +26,6 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Home'>;
 const Home: React.FC<Props> = () => {
     const insets = useSafeAreaInsets();
     const {coins, setCoins} = useGlobalStore();
-    useMusicAppState(playMusic, stopMusic);
 
     useFocusEffect(
         React.useCallback(() => {

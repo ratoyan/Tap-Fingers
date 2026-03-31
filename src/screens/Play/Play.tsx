@@ -12,9 +12,6 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 // icons
 import Back from "../../assets/icons/Back.tsx";
 
-// hooks
-import useMusicAppState from "../../hooks/useMusicAppState.tsx";
-
 // components
 import CoinCount from "../../components/ui/CoinCount/CoinCount.tsx";
 import PlayBox from "../../components/ui/Play/PlayBox.tsx";
@@ -35,7 +32,6 @@ export default function Play() {
     const levelLength = 40;
     const navigation = useNavigation();
     const insets = useSafeAreaInsets();
-    useMusicAppState(playMusic, stopMusic);
 
     const cancelSoundRef: any = useRef(true);
     const cancelVibrationRef: any = useRef(true);

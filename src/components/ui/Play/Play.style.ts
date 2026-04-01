@@ -116,7 +116,8 @@ export default StyleSheet.create({
     loseBtnText: {
         color: 'white',
         fontWeight: 'bold',
-        fontSize: 16
+        fontSize: 16,
+        textAlign: 'center'
     },
     levelContainer: {
         flexDirection: "row",

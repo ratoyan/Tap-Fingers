@@ -1,6 +1,7 @@
 import React, {useRef, useEffect} from 'react';
 import {Text, TouchableOpacity, Animated, Dimensions} from 'react-native';
 import {useFocusEffect, useNavigation} from "@react-navigation/core";
+import {loadMusic, playMusic, releaseMusic} from "../../utils/helpers.ts";
 
 // icons
 import GoogleLogo from "../../assets/icons/GoogleLogo.tsx";
@@ -13,7 +14,6 @@ import Logo from "../../components/ui/Logo/Logo.tsx";
 import styles from './Welcome.style.ts';
 import {DARK_PURPLE, MEDIUM_PURPLE, PURPLE} from "../../constants/colors.ts";
 import LinearGradient from 'react-native-linear-gradient';
-import {loadMusic, playMusic, releaseMusic} from "../../utils/helpers.ts";
 
 function Welcome() {
     const navigation = useNavigation<any>();

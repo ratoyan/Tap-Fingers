@@ -102,6 +102,27 @@ export default function Play() {
     }
 
     function handleRetry() {
+        setCount(0);
+        setLevelCount(0);
+        setLevel(1);
+        setEmptyHeartCount(0);
+        setIsPlaying(true);
+        setIsLevelModal(false);
+        setIsLoseModal(false);
+        setDuration(15);
+        setBoxesData(
+            boxes.map((b: BoxType) => ({
+                ...b,
+                x: Math.random() * (width - b.size[0]),
+                y: Math.random() * -1000,
+                tx: Math.random() * (width - b.size[0]),
+                ty: 0,
+                color: colors[Math.floor(Math.random() * colors.length)],
+            }))
+        )
+    }
+
+    function handleBack() {
         setIsLevelModal(false);
         backHandler();
     }
@@ -317,7 +338,7 @@ export default function Play() {
                 <CoinCount count={count} viewStyles={[styles.countView, {top: insets.top}]}/>
             </View>
 
-            <LoseModal visible={isLoseModal} onRetry={handleRetry}/>
+            <LoseModal visible={isLoseModal} onRetry={handleRetry} onBack={handleBack}/>
 
             {boxesData
                 .slice()

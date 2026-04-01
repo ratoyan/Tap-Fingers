@@ -16,9 +16,10 @@ import LinearGradient from "react-native-linear-gradient";
 interface LoseModalProps {
     visible: boolean;
     onRetry: () => void;
+    onBack: () => void;
 }
 
-export default function LoseModal({visible, onRetry}: LoseModalProps) {
+export default function LoseModal({visible, onRetry, onBack}: LoseModalProps) {
 
     const {t} = useTranslation();
 
@@ -71,7 +72,6 @@ export default function LoseModal({visible, onRetry}: LoseModalProps) {
             >
                 <Text style={{color: WHITE, fontSize: 32}}>😞 😢 😭</Text>
 
-
                 <Animated.Text
                     style={[
                         styles.loseTitle,
@@ -85,16 +85,24 @@ export default function LoseModal({visible, onRetry}: LoseModalProps) {
                     {t('lostLevel')}
                 </Text>
 
-                <TouchableOpacity onPress={onRetry} activeOpacity={0.8}>
-                    <LinearGradient
-                        colors={[GRADIENT_LIGHT, GRADIENT_DARK]}
-                        start={{x: 0, y: 0}}
-                        end={{x: 1, y: 1}}
-                        style={styles.loseRetry}
-                    >
-                        <Text style={styles.loseBtnText}>{t('retry')}</Text>
-                    </LinearGradient>
-                </TouchableOpacity>
+                <View style={styles.loseModalActions}>
+                    <TouchableOpacity onPress={onBack}
+                                      activeOpacity={0.8} style={styles.loseModalBackAction}>
+                        <Text style={{color: WHITE, fontSize: 16}}>
+                            {t('back')}
+                        </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={onRetry} activeOpacity={0.8}>
+                        <LinearGradient
+                            colors={[GRADIENT_LIGHT, GRADIENT_DARK]}
+                            start={{x: 0, y: 0}}
+                            end={{x: 1, y: 1}}
+                            style={styles.loseRetry}
+                        >
+                            <Text style={styles.loseBtnText}>{t('retry')}</Text>
+                        </LinearGradient>
+                    </TouchableOpacity>
+                </View>
 
             </Animated.View>
 

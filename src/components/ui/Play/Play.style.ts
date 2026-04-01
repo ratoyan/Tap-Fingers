@@ -1,5 +1,14 @@
 import {StyleSheet} from "react-native";
-import {BLUISH_PURPLE, DARK_PURPLE, GOLD, PLUM, PURPLE_LIGHT, WHITE, WHITE_100} from "../../../constants/colors.ts";
+import {
+    BLUISH_PURPLE,
+    DARK_PURPLE,
+    GOLD,
+    PLUM,
+    PURPLE,
+    PURPLE_LIGHT,
+    WHITE,
+    WHITE_100
+} from "../../../constants/colors.ts";
 
 export default StyleSheet.create({
     modalBackground: {
@@ -87,13 +96,27 @@ export default StyleSheet.create({
         alignItems: 'center',
     },
     loseModal: {
-        width: 280,
-        padding: 28,
+        paddingVertical: 30,
+        paddingHorizontal: 20,
         borderRadius: 22,
         backgroundColor: DARK_PURPLE,
         alignItems: 'center',
         borderWidth: 2,
         borderColor: PLUM
+    },
+    loseModalActions: {
+        maxWidth: '90%',
+        flexDirection: 'row',
+        justifyContent: 'center',
+        gap: 15,
+        flexWrap: 'wrap',
+    },
+    loseModalBackAction: {
+        paddingVertical: 12,
+        paddingHorizontal: 40,
+        borderRadius: 15,
+        borderWidth: 1,
+        borderColor: PURPLE
     },
     loseTitle: {
         fontSize: 28,

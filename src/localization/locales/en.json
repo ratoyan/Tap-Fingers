@@ -21,5 +21,6 @@
   "gameOver": "Game Over",
   "lostLevel": "You lost this level",
   "retry": "Retry",
-  "profile": "Profile"
+  "profile": "Profile",
+  "back": "Back"
 }

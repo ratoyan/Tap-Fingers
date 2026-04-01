@@ -1,6 +1,6 @@
 import React, {useRef, useEffect} from 'react';
 import {Text, TouchableOpacity, Animated, Dimensions} from 'react-native';
-import {useNavigation} from "@react-navigation/core";
+import {useFocusEffect, useNavigation} from "@react-navigation/core";
 
 // icons
 import GoogleLogo from "../../assets/icons/GoogleLogo.tsx";
@@ -13,6 +13,7 @@ import Logo from "../../components/ui/Logo/Logo.tsx";
 import styles from './Welcome.style.ts';
 import {DARK_PURPLE, MEDIUM_PURPLE, PURPLE} from "../../constants/colors.ts";
 import LinearGradient from 'react-native-linear-gradient';
+import {loadMusic, playMusic, releaseMusic} from "../../utils/helpers.ts";
 
 function Welcome() {
     const navigation = useNavigation<any>();
@@ -21,6 +22,25 @@ function Welcome() {
     const fadeTitle = useRef(new Animated.Value(0)).current;
     const slideButtons = useRef(new Animated.Value(50)).current;
     const floatAnim = useRef(new Animated.Value(0)).current;
+
+    useFocusEffect(
+        React.useCallback(() => {
+            // This runs every time the screen is focused
+            releaseMusic();
+
+            loadMusic("gamemusic.wav");
+
+            const timeout = setTimeout(() => {
+                playMusic();
+            }, 200);
+
+            return () => {
+                clearTimeout(timeout);
+            };
+
+        }, [])
+    );
+
 
     useEffect(() => {
         // Animate title

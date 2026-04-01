@@ -81,7 +81,6 @@ function Welcome() {
                     }
                 ]}
             >
-                Welcome
                 Tap Fingers
             </Animated.Text>
             <Animated.View

@@ -1,5 +1,6 @@
 import React, {useRef, useEffect} from 'react';
 import {Text, TouchableOpacity, Animated, Dimensions} from 'react-native';
+import {useNavigation} from "@react-navigation/core";
 
 // icons
 import GoogleLogo from "../../assets/icons/GoogleLogo.tsx";
@@ -14,6 +15,8 @@ import {DARK_PURPLE, MEDIUM_PURPLE, PURPLE} from "../../constants/colors.ts";
 import LinearGradient from 'react-native-linear-gradient';
 
 function Welcome() {
+    const navigation = useNavigation<any>();
+
     // Animation refs
     const fadeTitle = useRef(new Animated.Value(0)).current;
     const slideButtons = useRef(new Animated.Value(50)).current;
@@ -108,7 +111,9 @@ function Welcome() {
                     outputRange: [1, 0]
                 })
             }}>
-                <TouchableOpacity style={styles.button}>
+                <TouchableOpacity style={styles.button} onPress={()=>{
+                    navigation.navigate('Home')
+                }}>
                     <LinearGradient
                         colors={['#FF5F6D', '#FFC371']}
                         start={{x: 0, y: 0}}
@@ -131,7 +136,9 @@ function Welcome() {
                     outputRange: [1, 0]
                 })
             }}>
-                <TouchableOpacity style={styles.button}>
+                <TouchableOpacity style={styles.button} onPress={()=>{
+                    navigation.navigate('Home')
+                }}>
                     <LinearGradient
                         colors={['#333', '#000']}
                         start={{x: 0, y: 0}}

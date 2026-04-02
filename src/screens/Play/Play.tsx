@@ -63,31 +63,6 @@ export default function Play() {
         navigation.goBack();
     }
 
-    function addRandomBox() {
-        // @ts-ignore
-        setBoxesData((prev: BoxType[]) => {
-            const newId = prev.length ? Math.max(...prev.map(b => b.id)) + 1 : 1;
-
-            const randomBoxData = prev[Math.floor(Math.random() * prev.length)];
-
-            if (!randomBoxData) return prev;
-
-            const newBox: BoxType = {
-                ...randomBoxData,
-                id: newId,
-                x: Math.random() * (width - randomBoxData.size[0]), // X-ը էլ random
-                y: Math.random() * -1000,
-                // @ts-ignore
-                tx: Math.random() * (width - randomBoxData.size[0]),
-                ty: 0,
-                color: colors[Math.floor(Math.random() * colors.length)],
-                rotation: randomBoxData.rotation,
-            };
-
-            return [...prev, newBox];
-        });
-    }
-
     function imageBackground(count: number) {
         switch (true) {
             case count > 60:
@@ -163,14 +138,77 @@ export default function Play() {
         setDuration((olValue) => olValue + val);
     }
 
-    async function deleteBoxOnClick(id: number) {
+    function addRandomBox() {
+        // @ts-ignore
+        setBoxesData((prev: BoxType[]) => {
+            const newId = prev.length ? Math.max(...prev.map(b => b.id)) + 1 : 1;
+
+            const randomBoxData = prev[Math.floor(Math.random() * prev.length)];
+
+            if (!randomBoxData) return prev;
+
+            const newBox: BoxType = {
+                ...randomBoxData,
+                id: newId,
+                x: Math.random() * (width - randomBoxData.size[0]), // X-ը էլ random
+                y: Math.random() * -1000,
+                // @ts-ignore
+                tx: Math.random() * (width - randomBoxData.size[0]),
+                ty: 0,
+                color: colors[Math.floor(Math.random() * colors.length)],
+                rotation: randomBoxData.rotation,
+            };
+
+            return [...prev, newBox];
+        });
+    }
+
+    function gmpBox(box: any) {
+        setBoxesData((prev: any) => {
+            const newId = prev.length ? Math.max(...prev.map((b: any) => b.id)) + 1 : 1;
+
+            const randomBoxData = prev[Math.floor(Math.random() * prev.length)];
+            if (!randomBoxData) return prev;
+
+            const newBox: BoxType = {
+                ...randomBoxData,
+                id: newId,
+                x: box.x,
+                y: box.y,
+                tx: Math.random() * (width - randomBoxData.size[0]),
+                ty: 0,
+                color: box.color,
+                rotation: randomBoxData.rotation,
+                isGmp: true
+            };
+
+            // ⬇️ ADD TIMEOUT DELETE
+            setTimeout(() => {
+                setBoxesData((current: any) =>
+                    current.filter((b: any) => b.id !== newId)
+                );
+            }, 2000); // 2 վայրկյան հետո կջնջվի
+
+            return [...prev, newBox];
+        });
+    }
+
+    async function gmpAndAddClick(box: any) {
         if (!cancelSoundRef.current && musicJumpingRef.current) {
             musicJumpingRef.current.setCurrentTime(0);
             musicJumpingRef.current.play();
         }
-        setBoxesData(prev => prev.filter(b => b.id !== id));
+
+        if(box.isGmp) return;
+
+        setBoxesData(prev => prev.filter(b => b.id !== box.id));
+
         addRandomBox();
+
+        gmpBox(box);
+
         setCount((count) => count + 1);
+
         setLevelCount((count) => count + 1);
     }
 
@@ -218,7 +256,9 @@ export default function Play() {
 
         const animate = () => {
             setBoxesData((prev) =>
-                prev.map(b => {
+                prev.map((b: any) => {
+                    if(b.isGmp) return b;
+
                     const dx = b.tx - b.x;
                     const dy = b.ty - b.y;
 
@@ -346,7 +386,7 @@ export default function Play() {
                 .map((box: BoxType) => (
                     <PlayBox key={box.id}
                              box={box}
-                             handlePress={() => deleteBoxOnClick(box.id)}
+                             handlePress={() => gmpAndAddClick(box)}
                     />
                 ))}
         </ImageBackground>

@@ -15,7 +15,7 @@ import Back from "../../assets/icons/Back.tsx";
 // components
 import CoinCount from "../../components/ui/CoinCount/CoinCount.tsx";
 import PlayBox from "../../components/ui/Play/PlayBox.tsx";
-import LevelModalExample from "../../components/ui/Play/LevelModalExample.tsx";
+// import LevelModalExample from "../../components/ui/Play/LevelModalExample.tsx";
 import Hearts from "../../components/ui/Play/Hearts.tsx";
 import LoseModal from "../../components/ui/Play/LoseModal.tsx";
 import Level from "../../components/ui/Play/Level.tsx";

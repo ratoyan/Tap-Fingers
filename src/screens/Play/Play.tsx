@@ -158,35 +158,35 @@ export default function Play() {
         });
     }
 
-    // function gmpBox(box: any) {
-    //     setBoxesData((prev: any) => {
-    //         const newId = prev.length ? Math.max(...prev.map((b: any) => b.id)) + 1 : 1;
-    //
-    //         const randomBoxData = prev[Math.floor(Math.random() * prev.length)];
-    //         if (!randomBoxData) return prev;
-    //
-    //         const newBox: BoxType = {
-    //             ...randomBoxData,
-    //             id: newId,
-    //             x: box.x,
-    //             y: box.y,
-    //             tx: Math.random() * (width - randomBoxData.size[0]),
-    //             ty: 0,
-    //             color: box.color,
-    //             rotation: randomBoxData.rotation,
-    //             isGmp: true
-    //         };
-    //
-    //         // ⬇️ ADD TIMEOUT DELETE
-    //         setTimeout(() => {
-    //             setBoxesData((current: any) =>
-    //                 current.filter((b: any) => b.id !== newId)
-    //             );
-    //         }, 2000); // 2 վայրկյան հետո կջնջվի
-    //
-    //         return [...prev, newBox];
-    //     });
-    // }
+    function gmpBox(box: any) {
+        setBoxesData((prev: any) => {
+            const newId = prev.length ? Math.max(...prev.map((b: any) => b.id)) + 1 : 1;
+
+            const randomBoxData = prev[Math.floor(Math.random() * prev.length)];
+            if (!randomBoxData) return prev;
+
+            const newBox: BoxType = {
+                ...randomBoxData,
+                id: newId,
+                x: box.x,
+                y: box.y,
+                tx: Math.random() * (width - randomBoxData.size[0]),
+                ty: 0,
+                color: box.color,
+                rotation: randomBoxData.rotation,
+                isGmp: true
+            };
+
+            // ⬇️ ADD TIMEOUT DELETE
+            setTimeout(() => {
+                setBoxesData((current: any) =>
+                    current.filter((b: any) => b.id !== newId)
+                );
+            }, 2000); // 2 վայրկյան հետո կջնջվի
+
+            return [...prev, newBox];
+        });
+    }
 
     async function gmpAndAddClick(box: any) {
         if (!cancelSoundRef.current && musicJumpingRef.current) {
@@ -200,7 +200,7 @@ export default function Play() {
 
         addRandomBox();
 
-        // gmpBox(box);
+        gmpBox(box);
 
         setCount((count) => count + 1);
 

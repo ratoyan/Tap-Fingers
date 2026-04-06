@@ -4,6 +4,7 @@ import {Pressable} from "react-native";
 // icons
 import Card1 from "../../../assets/icons/Card1.tsx";
 import Ballon from "../../../assets/icons/Ballon.tsx";
+import TrackIcon from "../../../assets/icons/TrackIcon.tsx";
 
 interface PlayBoxProps {
     box: any;
@@ -40,7 +41,14 @@ function PlayBox({box, handlePress}: PlayBoxProps) {
                        ],
                    }}>
             {/*<Card1 width={80} height={80}/>*/}
-            <Ballon color={box.color}/>
+            {  box.isGmp ? (
+                    <TrackIcon width={130} height={130} color={box.color}/>
+                )
+                :
+                (
+                    <Ballon color={box.color}/>
+                )
+            }
         </Pressable>
     )
 }

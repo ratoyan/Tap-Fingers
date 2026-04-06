@@ -205,7 +205,7 @@ export default function Play() {
 
         addRandomBox();
 
-        gmpBox(box);
+        // gmpBox(box);
 
         setCount((count) => count + 1);
 

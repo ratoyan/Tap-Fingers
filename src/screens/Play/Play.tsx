@@ -42,7 +42,7 @@ export default function Play() {
     const [level, setLevel] = useState(1);
     const [emptyHeartCount, setEmptyHeartCount] = useState(0);
     const [isPlaying, setIsPlaying] = useState(true);
-    const [isLevelModal, setIsLevelModal] = useState(false);
+    // const [isLevelModal, setIsLevelModal] = useState(false);
     const [isLoseModal, setIsLoseModal] = useState(false);
     const [duration, setDuration] = useState(15);
     const backgroundImg = useMemo(() => imageBackground(count), [count]);
@@ -82,7 +82,7 @@ export default function Play() {
         setLevel(1);
         setEmptyHeartCount(0);
         setIsPlaying(true);
-        setIsLevelModal(false);
+        // setIsLevelModal(false);
         setIsLoseModal(false);
         setDuration(15);
         setBoxesData(
@@ -98,7 +98,7 @@ export default function Play() {
     }
 
     function handleBack() {
-        setIsLevelModal(false);
+        // setIsLevelModal(false);
         backHandler();
     }
 
@@ -121,12 +121,7 @@ export default function Play() {
 
     async function durationAdd(val: number = 10) {
         setCoinStorage();
-
         setLevel(level => level + 1);
-        setIsPlaying(false);
-        setTimeout(() => {
-            setIsLevelModal(true);
-        }, 100)
         // @ts-ignore
         setBoxesData((prev: BoxType[]) =>
             prev.map((e: BoxType) => ({
@@ -163,35 +158,35 @@ export default function Play() {
         });
     }
 
-    function gmpBox(box: any) {
-        setBoxesData((prev: any) => {
-            const newId = prev.length ? Math.max(...prev.map((b: any) => b.id)) + 1 : 1;
-
-            const randomBoxData = prev[Math.floor(Math.random() * prev.length)];
-            if (!randomBoxData) return prev;
-
-            const newBox: BoxType = {
-                ...randomBoxData,
-                id: newId,
-                x: box.x,
-                y: box.y,
-                tx: Math.random() * (width - randomBoxData.size[0]),
-                ty: 0,
-                color: box.color,
-                rotation: randomBoxData.rotation,
-                isGmp: true
-            };
-
-            // ⬇️ ADD TIMEOUT DELETE
-            setTimeout(() => {
-                setBoxesData((current: any) =>
-                    current.filter((b: any) => b.id !== newId)
-                );
-            }, 2000); // 2 վայրկյան հետո կջնջվի
-
-            return [...prev, newBox];
-        });
-    }
+    // function gmpBox(box: any) {
+    //     setBoxesData((prev: any) => {
+    //         const newId = prev.length ? Math.max(...prev.map((b: any) => b.id)) + 1 : 1;
+    //
+    //         const randomBoxData = prev[Math.floor(Math.random() * prev.length)];
+    //         if (!randomBoxData) return prev;
+    //
+    //         const newBox: BoxType = {
+    //             ...randomBoxData,
+    //             id: newId,
+    //             x: box.x,
+    //             y: box.y,
+    //             tx: Math.random() * (width - randomBoxData.size[0]),
+    //             ty: 0,
+    //             color: box.color,
+    //             rotation: randomBoxData.rotation,
+    //             isGmp: true
+    //         };
+    //
+    //         // ⬇️ ADD TIMEOUT DELETE
+    //         setTimeout(() => {
+    //             setBoxesData((current: any) =>
+    //                 current.filter((b: any) => b.id !== newId)
+    //             );
+    //         }, 2000); // 2 վայրկյան հետո կջնջվի
+    //
+    //         return [...prev, newBox];
+    //     });
+    // }
 
     async function gmpAndAddClick(box: any) {
         if (!cancelSoundRef.current && musicJumpingRef.current) {
@@ -344,13 +339,13 @@ export default function Play() {
                 <Progress length={levelLength} coin={levelCount}/>
             </View>
 
-            <LevelModalExample visible={isLevelModal}
-                               setVisible={(val) => {
-                                   setIsLevelModal(val);
-                                   setIsPlaying(true);
-                               }}
-                               level={level}
-            />
+            {/*<LevelModalExample visible={isLevelModal}*/}
+            {/*                   setVisible={(val) => {*/}
+            {/*                       setIsLevelModal(val);*/}
+            {/*                       setIsPlaying(true);*/}
+            {/*                   }}*/}
+            {/*                   level={level}*/}
+            {/*/>*/}
             <View style={[styles.headerLeftView, {top: insets.top}]}>
                 <TouchableOpacity onPress={backHandler}
                                   accessibilityRole="button"

@@ -44,7 +44,7 @@ export default function Play() {
     const [isPlaying, setIsPlaying] = useState(true);
     // const [isLevelModal, setIsLevelModal] = useState(false);
     const [isLoseModal, setIsLoseModal] = useState(false);
-    const [duration, setDuration] = useState(15);
+    const [duration, setDuration] = useState(55);
     const backgroundImg = useMemo(() => imageBackground(count), [count]);
 
     const [boxesData, setBoxesData] = useState(
@@ -159,11 +159,13 @@ export default function Play() {
     }
 
     function gmpBox(box: any) {
-        setBoxesData((prev: any) => {
-            const newId = prev.length ? Math.max(...prev.map((b: any) => b.id)) + 1 : 1;
+        setBoxesData((prev: any[]) => {
+            if (!prev.length) return prev; // եթե դատարկ է, մի անում
 
+            const newId = Date.now();
             const randomBoxData = prev[Math.floor(Math.random() * prev.length)];
-            if (!randomBoxData) return prev;
+
+            if (!randomBoxData || !randomBoxData.size) return prev;
 
             const newBox: BoxType = {
                 ...randomBoxData,
@@ -172,17 +174,16 @@ export default function Play() {
                 y: box.y,
                 tx: Math.random() * (width - randomBoxData.size[0]),
                 ty: 0,
-                color: box.color,
-                rotation: randomBoxData.rotation,
+                color: box.color || randomBoxData.color,
+                rotation: randomBoxData.rotation || 0,
                 isGmp: true
             };
 
-            // ⬇️ ADD TIMEOUT DELETE
             setTimeout(() => {
-                setBoxesData((current: any) =>
+                setBoxesData((current: any[]) =>
                     current.filter((b: any) => b.id !== newId)
                 );
-            }, 3000); // 2 վայրկյան հետո կջնջվի
+            }, 3000);
 
             return [...prev, newBox];
         });

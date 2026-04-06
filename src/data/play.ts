@@ -49,8 +49,8 @@ export const colors: string[] = [
 ];
 
 export const images: string[] = [
+    require('../assets/images/background4.jpg'),
     require('../assets/images/background3.jpg'),
     require('../assets/images/background2.jpg'),
     require('../assets/images/background1.jpg'),
-    require('../assets/images/background4.jpg'),
 ]

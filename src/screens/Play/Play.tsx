@@ -182,7 +182,7 @@ export default function Play() {
                 setBoxesData((current: any) =>
                     current.filter((b: any) => b.id !== newId)
                 );
-            }, 2000); // 2 վայրկյան հետո կջնջվի
+            }, 3000); // 2 վայրկյան հետո կջնջվի
 
             return [...prev, newBox];
         });

@@ -68,7 +68,7 @@ export default StyleSheet.create({
         textAlign: "center",
     },
     continueButton: {
-        width: "80%",
+        width: "48%",
         borderRadius: 20,
         overflow: "hidden",
     },

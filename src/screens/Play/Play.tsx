@@ -15,7 +15,6 @@ import Back from "../../assets/icons/Back.tsx";
 // components
 import CoinCount from "../../components/ui/CoinCount/CoinCount.tsx";
 import PlayBox from "../../components/ui/Play/PlayBox.tsx";
-// import LevelModalExample from "../../components/ui/Play/LevelModalExample.tsx";
 import Hearts from "../../components/ui/Play/Hearts.tsx";
 import LoseModal from "../../components/ui/Play/LoseModal.tsx";
 import Level from "../../components/ui/Play/Level.tsx";
@@ -42,7 +41,6 @@ export default function Play() {
     const [level, setLevel] = useState(1);
     const [emptyHeartCount, setEmptyHeartCount] = useState(0);
     const [isPlaying, setIsPlaying] = useState(true);
-    // const [isLevelModal, setIsLevelModal] = useState(false);
     const [isLoseModal, setIsLoseModal] = useState(false);
     const [duration, setDuration] = useState(30);
     const backgroundImg = useMemo(() => imageBackground(count), [count]);
@@ -82,7 +80,6 @@ export default function Play() {
         setLevel(1);
         setEmptyHeartCount(0);
         setIsPlaying(true);
-        // setIsLevelModal(false);
         setIsLoseModal(false);
         setDuration(15);
         setBoxesData(
@@ -340,13 +337,6 @@ export default function Play() {
                 <Progress length={levelLength} coin={levelCount}/>
             </View>
 
-            {/*<LevelModalExample visible={isLevelModal}*/}
-            {/*                   setVisible={(val) => {*/}
-            {/*                       setIsLevelModal(val);*/}
-            {/*                       setIsPlaying(true);*/}
-            {/*                   }}*/}
-            {/*                   level={level}*/}
-            {/*/>*/}
             <View style={[styles.headerLeftView, {top: insets.top}]}>
                 <TouchableOpacity onPress={backHandler}
                                   accessibilityRole="button"

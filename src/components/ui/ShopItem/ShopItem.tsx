@@ -3,12 +3,12 @@ import {Text, TouchableOpacity, View} from "react-native";
 
 // icons
 import Coin from "../../../assets/icons/Coin.tsx";
+import Ballon from "../../../assets/icons/Ballon.tsx";
 
 // styles
 import styles from './ShopItem.style.ts';
 import {GRADIENT_DARK, GRADIENT_LIGHT, MEDIUM_PURPLE, ORCHID, PLUM} from "../../../constants/colors.ts";
 import LinearGradient from "react-native-linear-gradient";
-import Ballon from "../../../assets/icons/Ballon.tsx";
 
 interface ShopItemProps {
     item: any;

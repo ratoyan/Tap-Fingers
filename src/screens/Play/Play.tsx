@@ -29,7 +29,7 @@ const {width, height} = Dimensions.get('window');
 
 export default function Play() {
     const heartsLength = 7;
-    const levelLength = 10;
+    const levelLength = 40;
     const navigation = useNavigation();
     const insets = useSafeAreaInsets();
 
@@ -44,7 +44,7 @@ export default function Play() {
     const [isPlaying, setIsPlaying] = useState(true);
     // const [isLevelModal, setIsLevelModal] = useState(false);
     const [isLoseModal, setIsLoseModal] = useState(false);
-    const [duration, setDuration] = useState(55);
+    const [duration, setDuration] = useState(30);
     const backgroundImg = useMemo(() => imageBackground(count), [count]);
 
     const [boxesData, setBoxesData] = useState(
@@ -160,7 +160,7 @@ export default function Play() {
 
     function gmpBox(box: any) {
         setBoxesData((prev: any[]) => {
-            if (!prev.length) return prev; // եթե դատարկ է, մի անում
+            if (!prev.length) return prev;
 
             const newId = Date.now();
             const randomBoxData = prev[Math.floor(Math.random() * prev.length)];
@@ -201,7 +201,7 @@ export default function Play() {
 
         addRandomBox();
 
-        gmpBox(box);
+        // gmpBox(box);
 
         setCount((count) => count + 1);
 

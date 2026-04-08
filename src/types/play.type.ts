@@ -1,5 +1,5 @@
 export interface BoxType {
-    id: number;
+    id: number | any;
     size: [number, number];
     color: string;
     rotation: number;

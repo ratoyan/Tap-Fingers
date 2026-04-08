@@ -12,10 +12,11 @@ import LinearGradient from "react-native-linear-gradient";
 
 interface ShopItemProps {
     item: any;
+    handlePress?: () => void;
     disabled?: boolean; // optional prop
 }
 
-function ShopItem({item, disabled = false}: ShopItemProps) {
+function ShopItem({item, handlePress, disabled = false}: ShopItemProps) {
 
     const getIcon = () => {
         switch (item.typeName) {
@@ -40,6 +41,7 @@ function ShopItem({item, disabled = false}: ShopItemProps) {
 
     return (
         <TouchableOpacity
+            onPress={handlePress}
             activeOpacity={0.8}
             style={styles.cardWrapper}
             disabled={disabled} // disables the touch
@@ -78,7 +80,7 @@ function ShopItem({item, disabled = false}: ShopItemProps) {
                 </View>
                 <Text style={styles.title}>{item.title}</Text>
                 <View style={[styles.priceContainer, disabled && {backgroundColor: ORCHID}]}>
-                    <Text style={styles.price}>{item.price}</Text>
+                    <Text style={styles.price}>{item.coins}</Text>
                     <Coin width={22} height={20}/>
                 </View>
             </LinearGradient>

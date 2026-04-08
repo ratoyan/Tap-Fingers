@@ -2,6 +2,8 @@ import React from "react";
 import {View, Text, ScrollView} from "react-native";
 import {useTranslation} from "react-i18next";
 import {useGlobalStore} from "../../store/globalStore.ts";
+import {STORAGE_KEYS} from "../../utils/storageKeys.ts";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 // components
 import BackHeader from "../../components/ui/BackHeader/BackHeader.tsx";
@@ -13,15 +15,22 @@ import {DARK_PURPLE, PURPLE} from "../../constants/colors.ts";
 import LinearGradient from "react-native-linear-gradient";
 
 const ITEMS = [
-    {id: "1", title: "Card 1", price: "100", type: 'card', typeName: 'ballon'},
-    {id: "2", title: "Card 2", price: "200", type: 'card',typeName: 'card'},
-    {id: "5", title: "Background 1", price: "200", type: 'background',typeName: 'background'},
-    {id: "6", title: "Background 2", price: "300", type: 'background',typeName: 'background'},
+    {id: "1", title: "Card 1", coins: "500", type: 'card', typeName: 'ballon'},
+    {id: "2", title: "Card 2", coins: "800", type: 'card', typeName: 'card'},
+    {id: "5", title: "Background 1", coins: "200", type: 'background', typeName: 'background'},
+    {id: "6", title: "Background 2", coins: "300", type: 'background', typeName: 'background'},
 ];
 
 function Shop() {
     const {t} = useTranslation();
-    const {coins} = useGlobalStore();
+    const {coins, minusCoins} = useGlobalStore();
+
+    async function payBoxData(box: any) {
+        if (coins >= box.coins) {
+            minusCoins(box.coins);
+            await AsyncStorage.setItem(STORAGE_KEYS.COIN, JSON.stringify(coins))
+        }
+    }
 
     return (
         <LinearGradient
@@ -61,6 +70,7 @@ function Shop() {
                         .map((item: any) => (
                             <ShopItem
                                 key={item.id}
+                                handlePress={() => payBoxData(item)}
                                 item={item}
                             />
                         ))}
@@ -84,6 +94,7 @@ function Shop() {
                         .map((item: any) => (
                             <ShopItem
                                 key={item.id}
+                                handlePress={() => payBoxData(item)}
                                 item={item}
                             />
                         ))}

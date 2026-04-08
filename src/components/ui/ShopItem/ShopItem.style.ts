@@ -64,5 +64,11 @@ export default StyleSheet.create({
     typeCardItem: {
         width: '33%',
         height: 30
+    },
+    successIconView: {
+        position: 'absolute',
+        top: 5,
+        right: 5,
+        zIndex: 10
     }
 });

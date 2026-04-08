@@ -27,8 +27,9 @@ function Shop() {
 
     async function payBoxData(box: any) {
         if (coins >= box.coins) {
+            const newCoins = coins - box.coins;
             minusCoins(box.coins);
-            await AsyncStorage.setItem(STORAGE_KEYS.COIN, JSON.stringify(coins))
+            await AsyncStorage.setItem(STORAGE_KEYS.COIN, JSON.stringify(newCoins));
         }
     }
 

@@ -15,8 +15,6 @@ import LinearGradient from "react-native-linear-gradient";
 const ITEMS = [
     {id: "1", title: "Card 1", price: "100", type: 'card', typeName: 'ballon'},
     {id: "2", title: "Card 2", price: "200", type: 'card',typeName: 'card'},
-    {id: "3", title: "Card 3", price: "300", type: 'card',typeName: 'card'},
-    {id: "4", title: "Card 4", price: "100", type: 'card',typeName: 'card'},
     {id: "5", title: "Background 1", price: "200", type: 'background',typeName: 'background'},
     {id: "6", title: "Background 2", price: "300", type: 'background',typeName: 'background'},
 ];

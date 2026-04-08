@@ -6,8 +6,9 @@ import Coin from "../../../assets/icons/Coin.tsx";
 
 // styles
 import styles from './ShopItem.style.ts';
-import {GRADIENT_DARK, GRADIENT_LIGHT, PLUM, MEDIUM_PURPLE, ORCHID} from "../../../constants/colors.ts";
+import {GRADIENT_DARK, GRADIENT_LIGHT, MEDIUM_PURPLE, ORCHID, PLUM} from "../../../constants/colors.ts";
 import LinearGradient from "react-native-linear-gradient";
+import Ballon from "../../../assets/icons/Ballon.tsx";
 
 interface ShopItemProps {
     item: any;
@@ -15,6 +16,28 @@ interface ShopItemProps {
 }
 
 function ShopItem({item, disabled = false}: ShopItemProps) {
+
+    const getIcon = () => {
+        switch (item.typeName) {
+            case 'card':
+                const colors = ['red', 'blue', 'green', 'yellow'];
+                return (
+                    <View style={styles.typeCardView}>
+                        {colors.map((color, index) => (
+                            <View
+                                key={index}
+                                style={[styles.typeCardItem, {backgroundColor: color}]}
+                            />
+                        ))}
+                    </View>
+                );
+            case 'ballon':
+                return <Ballon width={100} height={100}/>;
+            default:
+                return null;
+        }
+    };
+
     return (
         <TouchableOpacity
             activeOpacity={0.8}
@@ -46,8 +69,13 @@ function ShopItem({item, disabled = false}: ShopItemProps) {
                         backgroundColor: PLUM,
                         borderRadius: 10,
                         opacity: disabled ? 0.5 : 1, // optional: fade content if disabled
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        alignContent: 'center'
                     }}
-                />
+                >
+                    {getIcon()}
+                </View>
                 <Text style={styles.title}>{item.title}</Text>
                 <View style={[styles.priceContainer, disabled && {backgroundColor: ORCHID}]}>
                     <Text style={styles.price}>{item.price}</Text>

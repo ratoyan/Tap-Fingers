@@ -54,4 +54,15 @@ export default StyleSheet.create({
         fontSize: 16,
         color: GOLD,
     },
+    typeCardView: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        justifyContent: 'center',
+        alignItems: 'center',
+        gap: 5
+    },
+    typeCardItem: {
+        width: '33%',
+        height: 30
+    }
 });

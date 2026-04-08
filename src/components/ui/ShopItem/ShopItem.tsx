@@ -14,10 +14,11 @@ import SuccessIcon from "../../../assets/icons/SuccessIcon.tsx";
 interface ShopItemProps {
     item: any;
     handlePress?: () => void;
+    selected?: boolean;
     disabled?: boolean; // optional prop
 }
 
-function ShopItem({item, handlePress, disabled = false}: ShopItemProps) {
+function ShopItem({item, handlePress, selected = false, disabled = false}: ShopItemProps) {
 
     const getIcon = () => {
         switch (item.typeName) {
@@ -57,9 +58,13 @@ function ShopItem({item, handlePress, disabled = false}: ShopItemProps) {
             }
             accessibilityState={{disabled}}
         >
-            <View style={styles.successIconView}>
-                <SuccessIcon width={35} height={35}/>
-            </View>
+            {
+                selected && (
+                    <View style={styles.successIconView}>
+                        <SuccessIcon width={35} height={35}/>
+                    </View>
+                )
+            }
             <LinearGradient
                 colors={disabled ? [MEDIUM_PURPLE, MEDIUM_PURPLE] : [GRADIENT_LIGHT, GRADIENT_DARK]} // gray out if disabled
                 start={{x: 0, y: 0}}

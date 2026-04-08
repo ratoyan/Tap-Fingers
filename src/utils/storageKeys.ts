@@ -4,5 +4,7 @@ export const STORAGE_KEYS = {
     MUSIC: 'music',
     SOUND: 'sound',
     VIBRATION: 'vibration',
-    COIN: 'coin'
+    COIN: 'coin',
+    CARDID: 'cardId',
+    BACKGROUNDID: 'backgroundId'
 };

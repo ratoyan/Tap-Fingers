@@ -4,11 +4,12 @@ import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {RootStackParamList} from '../../types/RootStackParamList';
 import {MenuType} from "../../types/menu.type.ts";
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
-import {getCoin, loadMusic, playMusic, releaseMusic} from "../../utils/helpers.ts";
+import {getBackground, getCard, getCoin, loadMusic, playMusic, releaseMusic} from "../../utils/helpers.ts";
 import {useFocusEffect} from "@react-navigation/core";
 import {menus} from "../../data/menu.ts";
 import {TOP_OFFSET} from "../../constants/uiConstants.ts";
 import {useGlobalStore} from "../../store/globalStore.ts";
+import {useShopStore} from "../../store/shopStore.ts";
 
 // components
 import MenuButton from "../../components/ui/MenuButton/MenuButton.tsx";
@@ -26,6 +27,7 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Home'>;
 const Home: React.FC<Props> = () => {
     const insets = useSafeAreaInsets();
     const {coins, setCoins} = useGlobalStore();
+    const {setCard, setBackground} = useShopStore();
 
     useFocusEffect(
         React.useCallback(() => {
@@ -49,7 +51,12 @@ const Home: React.FC<Props> = () => {
         useCallback(() => {
             const fetchCoin = async () => {
                 const value = await getCoin();
+                const card = await getCard();
+                const background = await getBackground();
+
                 setCoins(value);
+                setCard(card);
+                setBackground(background);
             };
 
             const timeout = setTimeout(() => {

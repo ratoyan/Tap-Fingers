@@ -67,8 +67,8 @@ export default StyleSheet.create({
     },
     successIconView: {
         position: 'absolute',
-        top: 5,
-        right: 5,
+        top: -15,
+        right: 10,
         zIndex: 10
     }
 });

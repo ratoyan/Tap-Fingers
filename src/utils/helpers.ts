@@ -1,6 +1,8 @@
 import Sound from "react-native-sound";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {STORAGE_KEYS} from "./storageKeys.ts";
+import {shops} from "../data/shop.ts";
+import {ShopType} from "../types/shop.type.ts";
 
 let music: Sound | null = null;
 let isPlaying = false;
@@ -66,4 +68,28 @@ export const pauceMusic = () => {
 export const getCoin = async (): Promise<number> => {
     const coin = await AsyncStorage.getItem(STORAGE_KEYS.COIN);
     return coin ? JSON.parse(coin) : 0;
+};
+
+export const getCard = async (): Promise<ShopType | null> => {
+    let cardId = await AsyncStorage.getItem(STORAGE_KEYS.CARDID);
+
+    if (!cardId) return null;
+
+    cardId = JSON.parse(cardId);
+
+    const selected = shops.find((shop) => shop.id == cardId);
+
+    return selected || null;
+};
+
+export const getBackground = async (): Promise<ShopType | null> => {
+    let cardId = await AsyncStorage.getItem(STORAGE_KEYS.BACKGROUNDID);
+
+    if (!cardId) return null;
+
+    cardId = JSON.parse(cardId);
+
+    const selected = shops.find((shop) => shop.id == cardId);
+
+    return selected || null;
 };

@@ -6,5 +6,7 @@ export const STORAGE_KEYS = {
     VIBRATION: 'vibration',
     COIN: 'coin',
     CARDID: 'cardId',
-    BACKGROUNDID: 'backgroundId'
+    BACKGROUNDID: 'backgroundId',
+    CARDSID: 'cardsId',
+    BACKGROUNDSID: 'backgroundsId',
 };

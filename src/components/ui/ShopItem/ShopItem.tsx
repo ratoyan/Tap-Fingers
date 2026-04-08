@@ -15,10 +15,11 @@ interface ShopItemProps {
     item: any;
     handlePress?: () => void;
     selected?: boolean;
+    purchased?: boolean;
     disabled?: boolean; // optional prop
 }
 
-function ShopItem({item, handlePress, selected = false, disabled = false}: ShopItemProps) {
+function ShopItem({item, handlePress, selected = false, purchased = false, disabled = false}: ShopItemProps) {
 
     const getIcon = () => {
         switch (item.typeName) {
@@ -88,10 +89,20 @@ function ShopItem({item, handlePress, selected = false, disabled = false}: ShopI
                     {getIcon()}
                 </View>
                 <Text style={styles.title}>{item.title}</Text>
-                <View style={[styles.priceContainer, disabled && {backgroundColor: ORCHID}]}>
-                    <Text style={styles.price}>{item.coins}</Text>
-                    <Coin width={22} height={20}/>
-                </View>
+                {
+                    !purchased ? (
+                            <View style={[styles.priceContainer, disabled && {backgroundColor: ORCHID}]}>
+                                <Text style={styles.price}>{item.coins}</Text>
+                                <Coin width={22} height={20}/>
+                            </View>
+                        )
+                        :
+                        (
+                            <View style={[styles.priceContainer, disabled && {backgroundColor: ORCHID}]}>
+                                <Text style={styles.price}>Purchase</Text>
+                            </View>
+                        )
+                }
             </LinearGradient>
         </TouchableOpacity>
     );

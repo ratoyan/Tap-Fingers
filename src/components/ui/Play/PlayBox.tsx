@@ -1,5 +1,5 @@
 import React, {useMemo} from "react";
-import { Pressable, ViewStyle } from "react-native";
+import {Pressable, ViewStyle} from "react-native";
 import {BoxType} from "../../../types/play.type.ts";
 import {ShopType} from "../../../types/shop.type.ts";
 
@@ -14,16 +14,16 @@ interface PlayBoxProps {
     handlePress: () => void;
 }
 
-function PlayBox({ box, card, handlePress }: PlayBoxProps) {
+function PlayBox({box, card, handlePress}: PlayBoxProps) {
 
     const typeName = card?.typeName?.toLowerCase?.() ?? "";
 
     const baseTransform: ViewStyle["transform"] = [
-        { translateX: box.x + box.size[0] / 2 },
-        { translateY: box.y + box.size[1] / 2 },
-        ...((card?.rotation && box.rotation) ? [{ rotate: `${box.rotation}deg` }] : []),
-        { translateX: -box.size[0] / 2 },
-        { translateY: -box.size[1] / 2 },
+        {translateX: box.x + box.size[0] / 2},
+        {translateY: box.y + box.size[1] / 2},
+        ...((card?.rotation && box.rotation) ? [{rotate: `${box.rotation}deg`}] : []),
+        {translateX: -box.size[0] / 2},
+        {translateY: -box.size[1] / 2},
     ];
 
     const commonStyle: ViewStyle = {
@@ -36,9 +36,9 @@ function PlayBox({ box, card, handlePress }: PlayBoxProps) {
         return (
             <Pressable onPress={handlePress} style={commonStyle}>
                 {box.isBoom ? (
-                    <TrackIcon width={130} height={130} color={box.color} />
+                    <TrackIcon width={130} height={130} color={box.color}/>
                 ) : (
-                    <Ballon color={box.color} />
+                    <Ballon color={box.color}/>
                 )}
             </Pressable>
         );
@@ -69,7 +69,7 @@ function PlayBox({ box, card, handlePress }: PlayBoxProps) {
     // 🃏 Default (Card)
     return (
         <Pressable onPress={handlePress} style={commonStyle}>
-            <Card1 width={80} height={80} />
+            <Card1 width={80} height={80}/>
         </Pressable>
     );
 }

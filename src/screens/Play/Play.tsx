@@ -155,7 +155,7 @@ export default function Play() {
         });
     }
 
-    function gmpBox(box: any) {
+    function boomBox(box: any) {
         setBoxesData((prev: any[]) => {
             if (!prev.length) return prev;
 
@@ -173,7 +173,7 @@ export default function Play() {
                 ty: 0,
                 color: box.color || randomBoxData.color,
                 rotation: randomBoxData.rotation || 0,
-                isGmp: true
+                isBoom: true
             };
 
             setTimeout(() => {
@@ -186,13 +186,13 @@ export default function Play() {
         });
     }
 
-    async function gmpAndAddClick(box: any) {
+    async function boomAndAddClick(box: any) {
         if (!cancelSoundRef.current && musicJumpingRef.current) {
             musicJumpingRef.current.setCurrentTime(0);
             musicJumpingRef.current.play();
         }
 
-        if(box.isGmp) return;
+        if(box.isBoom) return;
 
         setBoxesData(prev => prev.filter(b => b.id !== box.id));
 
@@ -250,7 +250,7 @@ export default function Play() {
         const animate = () => {
             setBoxesData((prev) =>
                 prev.map((b: any) => {
-                    if(b.isGmp) return b;
+                    if(b.isBoom) return b;
 
                     const dx = b.tx - b.x;
                     const dy = b.ty - b.y;
@@ -372,7 +372,7 @@ export default function Play() {
                 .map((box: BoxType) => (
                     <PlayBox key={box.id}
                              box={box}
-                             handlePress={() => gmpAndAddClick(box)}
+                             handlePress={() => boomAndAddClick(box)}
                     />
                 ))}
         </ImageBackground>

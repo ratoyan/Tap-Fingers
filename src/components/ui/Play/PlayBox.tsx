@@ -41,7 +41,7 @@ function PlayBox({box, handlePress}: PlayBoxProps) {
                        ],
                    }}>
             {/*<Card1 width={80} height={80}/>*/}
-            {  box.isGmp ? (
+            {  box.isBoom ? (
                     <TrackIcon width={130} height={130} color={box.color}/>
                 )
                 :

@@ -6,4 +6,5 @@ export interface BoxType {
     x: number;
     y: number;
     duration?: number;
+    isBoom?: boolean
 }

@@ -1,29 +1,22 @@
-import React from "react";
+import React, {useMemo} from "react";
 import { Pressable, ViewStyle } from "react-native";
+import {BoxType} from "../../../types/play.type.ts";
+import {ShopType} from "../../../types/shop.type.ts";
 
 // icons
 import Card1 from "../../../assets/icons/Card1";
 import Ballon from "../../../assets/icons/Ballon";
 import TrackIcon from "../../../assets/icons/TrackIcon";
 
-interface BoxType {
-    x: number;
-    y: number;
-    size: [number, number];
-    rotation?: number;
-    color?: string;
-    isBoom?: boolean;
-}
-
 interface PlayBoxProps {
     box: BoxType;
-    card: any,
+    card: ShopType,
     handlePress: () => void;
 }
 
 function PlayBox({ box, card, handlePress }: PlayBoxProps) {
 
-    let typeName = card?.typeName ?? ''
+    const typeName = card?.typeName?.toLowerCase?.() ?? "";
 
     const baseTransform: ViewStyle["transform"] = [
         { translateX: box.x + box.size[0] / 2 },
@@ -53,14 +46,19 @@ function PlayBox({ box, card, handlePress }: PlayBoxProps) {
 
     // 🟦 Square
     if (typeName === "square") {
+        const size = useMemo(() => {
+            const random = Math.floor(Math.random() * 50) + 101;
+            return [random, random];
+        }, []);
+
         return (
             <Pressable
                 onPress={handlePress}
                 style={[
                     commonStyle,
                     {
-                        width: box.size[0],
-                        height: box.size[1],
+                        width: size[0],
+                        height: size[1],
                         backgroundColor: box.color || "blue",
                     },
                 ]}

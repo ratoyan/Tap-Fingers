@@ -2,6 +2,9 @@ import React, {useRef, useEffect} from 'react';
 import {Text, TouchableOpacity, Animated, Dimensions} from 'react-native';
 import {useFocusEffect, useNavigation} from "@react-navigation/core";
 import {loadMusic, playMusic, releaseMusic} from "../../utils/helpers.ts";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import {STORAGE_KEYS} from "../../utils/storageKeys.ts";
+import {shops} from "../../data/shop.ts";
 
 // icons
 import GoogleLogo from "../../assets/icons/GoogleLogo.tsx";
@@ -23,9 +26,31 @@ function Welcome() {
     const slideButtons = useRef(new Animated.Value(50)).current;
     const floatAnim = useRef(new Animated.Value(0)).current;
 
+    async function saveCardAndBackground() {
+        try {
+            if (!shops || shops.length === 0) return;
+
+            const firstCardId = shops[0].id;
+
+            await AsyncStorage.setItem(
+                STORAGE_KEYS.CARDSID,
+                JSON.stringify([firstCardId])
+            );
+
+            await AsyncStorage.setItem(
+                STORAGE_KEYS.CARDID,
+                JSON.stringify(firstCardId)
+            );
+
+        } catch (error) {
+            console.log("Save error:", error);
+        }
+    }
+
     useFocusEffect(
         React.useCallback(() => {
-            // This runs every time the screen is focused
+            saveCardAndBackground();
+
             releaseMusic();
 
             loadMusic("gamemusic.wav");
@@ -40,7 +65,6 @@ function Welcome() {
 
         }, [])
     );
-
 
     useEffect(() => {
         // Animate title

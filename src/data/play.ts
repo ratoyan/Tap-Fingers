@@ -18,7 +18,7 @@ import BackgroundImage from '../assets/images/background1.jpg';
 
 export const boxes: BoxType[] = [
     {id: 1, size: [154, 156], color: 'red', rotation: 130, x: 100, y: 0},
-    {id: 2, size: [154, 156], color: 'red', rotation: 130, x: 100, y: 0},
+    {id: 2, size: [154, 156], color: 'red', rotation: 150, x: 100, y: 0},
     {id: 3, size: [154, 156], color: 'blue', rotation: 0, x: 200, y: 0},
     {id: 4, size: [154, 156], color: 'blue', rotation: 0, x: 200, y: 0},
     {id: 5, size: [154, 156], color: 'green', rotation: 60, x: 250, y: 0},

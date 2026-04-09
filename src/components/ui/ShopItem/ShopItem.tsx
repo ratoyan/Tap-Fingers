@@ -4,12 +4,13 @@ import {Text, TouchableOpacity, View} from "react-native";
 // icons
 import Coin from "../../../assets/icons/Coin.tsx";
 import Ballon from "../../../assets/icons/Ballon.tsx";
+import Card1 from "../../../assets/icons/Card1.tsx";
+import SuccessIcon from "../../../assets/icons/SuccessIcon.tsx";
 
 // styles
 import styles from './ShopItem.style.ts';
 import {GRADIENT_DARK, GRADIENT_LIGHT, MEDIUM_PURPLE, ORCHID, PLUM} from "../../../constants/colors.ts";
 import LinearGradient from "react-native-linear-gradient";
-import SuccessIcon from "../../../assets/icons/SuccessIcon.tsx";
 
 interface ShopItemProps {
     item: any;
@@ -23,7 +24,7 @@ function ShopItem({item, handlePress, selected = false, purchased = false, disab
 
     const getIcon = () => {
         switch (item.typeName) {
-            case 'card':
+            case 'square':
                 const colors = ['red', 'blue', 'green', 'yellow'];
                 return (
                     <View style={styles.typeCardView}>
@@ -37,6 +38,8 @@ function ShopItem({item, handlePress, selected = false, purchased = false, disab
                 );
             case 'ballon':
                 return <Ballon width={100} height={100}/>;
+            case 'card':
+                return <Card1 width={80} height={80}/>;
             default:
                 return null;
         }

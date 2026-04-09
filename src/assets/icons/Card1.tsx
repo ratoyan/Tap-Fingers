@@ -7,6 +7,7 @@ import Svg, {
     LinearGradient,
     Stop
 } from "react-native-svg"
+import SvgImage from "react-native-svg/src/elements/Image.tsx";
 
 function Card1(props: any) {
     return (
@@ -35,6 +36,13 @@ function Card1(props: any) {
                 width={200}
                 height={160}
                 preserveAspectRatio="xMidYMid slice"
+            />
+            <SvgImage
+                href={require('../../assets/images/logo.png')}
+                x={40}
+                y={20}
+                width={200}
+                height={200}
             />
             <Text x={130} y={240} textAnchor="middle" fill="#fff" fontSize={20}>
                 {"Tap Fingers"}

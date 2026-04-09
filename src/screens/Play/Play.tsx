@@ -8,6 +8,7 @@ import {Dimensions, ImageBackground, TouchableOpacity, Vibration, View} from 're
 import {boxes, colors, images} from "../../data/play.ts";
 import {STORAGE_KEYS} from "../../utils/storageKeys.ts";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import {useShopStore} from "../../store/shopStore.ts";
 
 // icons
 import Back from "../../assets/icons/Back.tsx";
@@ -31,6 +32,8 @@ export default function Play() {
     const levelLength = 40;
     const navigation = useNavigation();
     const insets = useSafeAreaInsets();
+
+    const {card} = useShopStore();
 
     const cancelSoundRef: any = useRef(true);
     const cancelVibrationRef: any = useRef(true);
@@ -192,7 +195,7 @@ export default function Play() {
             musicJumpingRef.current.play();
         }
 
-        if(box.isBoom) return;
+        if (box.isBoom) return;
 
         setBoxesData(prev => prev.filter(b => b.id !== box.id));
 
@@ -250,7 +253,7 @@ export default function Play() {
         const animate = () => {
             setBoxesData((prev) =>
                 prev.map((b: any) => {
-                    if(b.isBoom) return b;
+                    if (b.isBoom) return b;
 
                     const dx = b.tx - b.x;
                     const dy = b.ty - b.y;
@@ -299,6 +302,7 @@ export default function Play() {
     }, [isPlaying]);
 
     useEffect(() => {
+        console.log(card,'card')
         const sound = new Sound('jumping.wav', Sound.MAIN_BUNDLE, (error) => {
             if (error) {
                 console.log('failed to load game sound', error);
@@ -372,6 +376,7 @@ export default function Play() {
                 .map((box: BoxType) => (
                     <PlayBox key={box.id}
                              box={box}
+                             card={card}
                              handlePress={() => boomAndAddClick(box)}
                     />
                 ))}

@@ -3,5 +3,6 @@ export interface ShopType {
     title: string,
     coins: string,
     type: string,
-    typeName: string
+    typeName: string,
+    rotation?: boolean
 }

@@ -29,7 +29,7 @@ import {GRADIENT_LIGHT} from "../../constants/colors.ts";
 const {width, height} = Dimensions.get('window');
 
 const HEARTS_LENGTH = 7;
-const LEVEL_LENGTH = 5;
+const LEVEL_LENGTH = 40;
 const MAX_ITEMS = 15;
 
 export default function Play() {

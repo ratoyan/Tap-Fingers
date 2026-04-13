@@ -29,7 +29,7 @@ import {GRADIENT_LIGHT} from "../../constants/colors.ts";
 const {width, height} = Dimensions.get('window');
 
 const HEARTS_LENGTH = 7;
-const LEVEL_LENGTH = 40;
+const LEVEL_LENGTH = 5;
 const MAX_ITEMS = 15;
 
 export default function Play() {
@@ -40,15 +40,16 @@ export default function Play() {
 
     const cancelSoundRef: any = useRef(true);
     const cancelVibrationRef: any = useRef(true);
+    const durationRef = useRef(30 as number);
     const musicJumpingRef: any = useRef<Sound | null>(null);
 
-    const [count, setCount] = useState(0);
-    const [levelCount, setLevelCount] = useState(0);
-    const [level, setLevel] = useState(1);
-    const [emptyHeartCount, setEmptyHeartCount] = useState(0);
-    const [isPlaying, setIsPlaying] = useState(true);
-    const [isLoseModal, setIsLoseModal] = useState(false);
-    const [duration, setDuration] = useState(30);
+    const [count, setCount] = useState<number>(0);
+    const [levelCount, setLevelCount] = useState<number>(0);
+    const [level, setLevel] = useState<number>(1);
+    const [emptyHeartCount, setEmptyHeartCount] = useState<number>(0);
+    const [isPlaying, setIsPlaying] = useState<boolean>(true);
+    const [isLoseModal, setIsLoseModal] = useState<boolean>(false);
+    const [duration, setDuration] = useState<number | any>(30);
     const [boxesData, setBoxesData] = useState<BoxType[]>(
         boxes.map((b: BoxType) => ({
             ...b,
@@ -135,7 +136,7 @@ export default function Play() {
         }
     }
 
-    async function durationAdd(val: number = 10) {
+    async function durationAdd(val: number = 40) {
         setCoinStorage();
         setLevel(level => level + 1);
         // @ts-ignore
@@ -146,7 +147,7 @@ export default function Play() {
                 duration: e.duration + val,
             }))
         );
-        setDuration((olValue) => olValue + val);
+        setDuration((olValue: number) => olValue + val);
     }
 
     async function boomAndAddClick(box: any) {
@@ -248,7 +249,8 @@ export default function Play() {
                     }
 
                     const newTx = Math.abs(dx) < 1 ? Math.random() * (width - b.size[0] + 70) : b.tx;
-                    const newTy = b.y + duration;
+                    const newTy = b.y + durationRef.current;
+                    console.log(durationRef.current,'durationRef.current')
                     const newRotation = (b.rotation + 2) % 360; // 2 degrees per frame
 
                     return {
@@ -287,6 +289,7 @@ export default function Play() {
                     size: [50, 50],
                     rotation: 0,
                     color: colors[Math.floor(Math.random() * colors.length)],
+                    duration: durationRef.current,
                     isBoom: false,
                 };
 
@@ -302,6 +305,10 @@ export default function Play() {
 
         return () => clearInterval(interval);
     }, [isPlaying]);
+
+    useEffect(()=>{
+        durationRef.current = duration;
+    },[duration])
 
     return (
         // @ts-ignore

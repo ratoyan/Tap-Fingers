@@ -7,8 +7,8 @@ import {loadMusic, pauceMusic, playMusic, releaseMusic, stopMusic} from "../../u
 import {Dimensions, ImageBackground, TouchableOpacity, Vibration, View} from 'react-native';
 import {boxes, colors, images} from "../../data/play.ts";
 import {STORAGE_KEYS} from "../../utils/storageKeys.ts";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import {useShopStore} from "../../store/shopStore.ts";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import uuId from 'react-native-uuid';
 
 // icons
@@ -49,9 +49,7 @@ export default function Play() {
     const [isPlaying, setIsPlaying] = useState(true);
     const [isLoseModal, setIsLoseModal] = useState(false);
     const [duration, setDuration] = useState(30);
-    const backgroundImg = useMemo(() => imageBackground(count), [count]);
-
-    const [boxesData, setBoxesData] = useState(
+    const [boxesData, setBoxesData] = useState<BoxType[]>(
         boxes.map((b: BoxType) => ({
             ...b,
             x: Math.random() * (width - b.size[0]),
@@ -62,22 +60,18 @@ export default function Play() {
         }))
     );
 
+    const backgroundImg = useMemo(() => imageBackground(count), [count]);
+
     function backHandler() {
         setCoinStorage();
         navigation.goBack();
     }
 
     function imageBackground(count: number) {
-        switch (true) {
-            case count > 40:
-                return images[3];
-            case count > 80:
-                return images[2];
-            case count > 120:
-                return images[1];
-            default:
-                return images[0];
-        }
+        if (count > 120) return images[3];
+        if (count > 80) return images[2];
+        if (count > 40) return images[1];
+        return images[0];
     }
 
     function handleRetry() {
@@ -111,15 +105,34 @@ export default function Play() {
         stopMusic();
     }
 
-    async function setCoinStorage() {
-        let coin = await AsyncStorage.getItem(STORAGE_KEYS.COIN);
-        let currentCoin = coin ? JSON.parse(coin) : 0;
-        const updatedCoin = currentCoin + count;
-
-        await AsyncStorage.setItem(
-            STORAGE_KEYS.COIN,
-            JSON.stringify(updatedCoin)
+    function boomBox(box: any) {
+        setBoxesData((prev: any[]) =>
+            prev.map((b) =>
+                b.id === box.id ? {...b, isBoom: true} : b
+            )
         );
+
+        setTimeout(() => {
+            setBoxesData((prev: any[]) =>
+                prev.filter((b) => b.id !== box.id)
+            );
+        }, 2000);
+    }
+
+    async function setCoinStorage() {
+        try {
+            const coin = await AsyncStorage.getItem(STORAGE_KEYS.COIN);
+            const currentCoin = coin ? JSON.parse(coin) : 0;
+
+            const updatedCoin = currentCoin + count;
+
+            await AsyncStorage.setItem(
+                STORAGE_KEYS.COIN,
+                JSON.stringify(updatedCoin)
+            );
+        } catch (error) {
+            console.log("Coin storage error:", error);
+        }
     }
 
     async function durationAdd(val: number = 10) {
@@ -134,20 +147,6 @@ export default function Play() {
             }))
         );
         setDuration((olValue) => olValue + val);
-    }
-
-    function boomBox(box: any) {
-        setBoxesData((prev: any[]) =>
-            prev.map((b) =>
-                b.id === box.id ? {...b, isBoom: true} : b
-            )
-        );
-
-        setTimeout(() => {
-            setBoxesData((prev: any[]) =>
-                prev.filter((b) => b.id !== box.id)
-            );
-        }, 2000);
     }
 
     async function boomAndAddClick(box: any) {
@@ -166,11 +165,16 @@ export default function Play() {
     }
 
     async function getStorageData() {
-        const cancelSound = await AsyncStorage.getItem(STORAGE_KEYS.SOUND)
-        const cancelVibration = await AsyncStorage.getItem(STORAGE_KEYS.VIBRATION)
+        try {
+            const cancelSound = await AsyncStorage.getItem(STORAGE_KEYS.SOUND);
+            const cancelVibration = await AsyncStorage.getItem(STORAGE_KEYS.VIBRATION);
 
-        cancelSoundRef.current = cancelSound ?? false;
-        cancelVibrationRef.current = cancelVibration ?? false;
+            cancelSoundRef.current = cancelSound === "true";
+            cancelVibrationRef.current = cancelVibration === "true";
+        } catch (e) {
+            cancelSoundRef.current = false;
+            cancelVibrationRef.current = false;
+        }
     }
 
     useFocusEffect(

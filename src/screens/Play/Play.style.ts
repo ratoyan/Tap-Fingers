@@ -20,6 +20,6 @@ export default StyleSheet.create({
         gap: 10
     },
     zIndexStyle: {
-        zIndex: 1
+        zIndex: 2
     }
 });

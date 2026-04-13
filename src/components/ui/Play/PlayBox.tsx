@@ -1,5 +1,5 @@
 import React, {useMemo} from "react";
-import {Pressable, ViewStyle} from "react-native";
+import {Pressable, View, ViewStyle} from "react-native";
 import {BoxType} from "../../../types/play.type.ts";
 import {ShopType} from "../../../types/shop.type.ts";
 
@@ -33,13 +33,13 @@ function PlayBox({box, card, handlePress}: PlayBoxProps) {
 
     // 🎈 Ballon
     if (typeName === "ballon") {
-        return (
-            <Pressable onPress={handlePress} style={commonStyle}>
-                {box.isBoom ? (
-                    <TrackIcon width={130} height={130} color={box.color}/>
-                ) : (
-                    <Ballon color={box.color}/>
-                )}
+        return box.isBoom ? (
+            <View style={commonStyle}>
+                <TrackIcon width={130} height={130} color={box.color} />
+            </View>
+        ) : (
+            <Pressable onPress={handlePress} style={[commonStyle,{zIndex: 1}]}>
+                <Ballon color={box.color} />
             </Pressable>
         );
     }

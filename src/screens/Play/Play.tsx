@@ -9,6 +9,7 @@ import {boxes, colors, images} from "../../data/play.ts";
 import {STORAGE_KEYS} from "../../utils/storageKeys.ts";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {useShopStore} from "../../store/shopStore.ts";
+import uuId from 'react-native-uuid';
 
 // icons
 import Back from "../../assets/icons/Back.tsx";
@@ -30,6 +31,7 @@ const {width, height} = Dimensions.get('window');
 export default function Play() {
     const heartsLength = 7;
     const levelLength = 40;
+    const MAX_ITEMS = 15;
     const navigation = useNavigation();
     const insets = useSafeAreaInsets();
 
@@ -133,60 +135,18 @@ export default function Play() {
         setDuration((olValue) => olValue + val);
     }
 
-    function addRandomBox() {
-        // @ts-ignore
-        setBoxesData((prev: BoxType[]) => {
-            const newId = prev.length ? Math.max(...prev.map(b => b.id)) + 1 : 1;
-
-            const randomBoxData = prev[Math.floor(Math.random() * prev.length)];
-
-            if (!randomBoxData) return prev;
-
-            const newBox: BoxType = {
-                ...randomBoxData,
-                id: newId,
-                x: Math.random() * (width - randomBoxData.size[0]), // X-ը էլ random
-                y: Math.random() * -1000,
-                // @ts-ignore
-                tx: Math.random() * (width - randomBoxData.size[0]),
-                ty: 0,
-                color: colors[Math.floor(Math.random() * colors.length)],
-                rotation: randomBoxData.rotation,
-            };
-
-            return [...prev, newBox];
-        });
-    }
-
     function boomBox(box: any) {
-        setBoxesData((prev: any[]) => {
-            if (!prev.length) return prev;
+        setBoxesData((prev: any[]) =>
+            prev.map((b) =>
+                b.id === box.id ? {...b, isBoom: true} : b
+            )
+        );
 
-            const newId = Date.now();
-            const randomBoxData = prev[Math.floor(Math.random() * prev.length)];
-
-            if (!randomBoxData || !randomBoxData.size) return prev;
-
-            const newBox: BoxType = {
-                ...randomBoxData,
-                id: newId,
-                x: box.x,
-                y: box.y,
-                tx: Math.random() * (width - randomBoxData.size[0]),
-                ty: 0,
-                color: box.color || randomBoxData.color,
-                rotation: randomBoxData.rotation || 0,
-                isBoom: true
-            };
-
-            setTimeout(() => {
-                setBoxesData((current: any[]) =>
-                    current.filter((b: any) => b.id !== newId)
-                );
-            }, 3000);
-
-            return [...prev, newBox];
-        });
+        setTimeout(() => {
+            setBoxesData((prev: any[]) =>
+                prev.filter((b) => b.id !== box.id)
+            );
+        }, 2000);
     }
 
     async function boomAndAddClick(box: any) {
@@ -197,11 +157,7 @@ export default function Play() {
 
         if (box.isBoom) return;
 
-        setBoxesData(prev => prev.filter(b => b.id !== box.id));
-
-        addRandomBox();
-
-        // gmpBox(box);
+        boomBox(box);
 
         setCount((count) => count + 1);
 
@@ -237,6 +193,20 @@ export default function Play() {
 
         }, [])
     );
+
+    useEffect(() => {
+        const sound = new Sound('jumping.wav', Sound.MAIN_BUNDLE, (error) => {
+            if (error) {
+                console.log('failed to load game sound', error);
+            }
+        });
+
+        musicJumpingRef.current = sound;
+
+        return () => {
+            sound.release();
+        };
+    }, []);
 
     useEffect(() => {
         if (levelCount >= levelLength) {
@@ -302,18 +272,37 @@ export default function Play() {
     }, [isPlaying]);
 
     useEffect(() => {
-        const sound = new Sound('jumping.wav', Sound.MAIN_BUNDLE, (error) => {
-            if (error) {
-                console.log('failed to load game sound', error);
-            }
-        });
+        if (!isPlaying) return;
 
-        musicJumpingRef.current = sound;
+        const interval = setInterval(() => {
+            setBoxesData((prev: any) => {
+                const randomBoxData = prev[Math.floor(Math.random() * prev.length)];
 
-        return () => {
-            sound.release();
-        };
-    }, []);
+                const newItem = {
+                    id: uuId.v4(),
+                    x: Math.random() * (width - randomBoxData.size[0]),
+                    y: Math.random() * -1000,
+                    tx: Math.random() * (width - randomBoxData.size[0]),
+                    ty: 0,
+                    size: [50, 50],
+                    rotation: 0,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    isBoom: false,
+                };
+
+                const updated = [...prev, newItem];
+
+                if (updated.length > MAX_ITEMS) {
+                    return updated.slice(-MAX_ITEMS);
+                }
+
+                return updated;
+            });
+        }, 1000);
+
+        return () => clearInterval(interval);
+    }, [isPlaying]);
+
 
     return (
         // @ts-ignore

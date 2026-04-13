@@ -28,10 +28,11 @@ import {GRADIENT_LIGHT} from "../../constants/colors.ts";
 
 const {width, height} = Dimensions.get('window');
 
+const HEARTS_LENGTH = 7;
+const LEVEL_LENGTH = 40;
+const MAX_ITEMS = 15;
+
 export default function Play() {
-    const heartsLength = 7;
-    const levelLength = 40;
-    const MAX_ITEMS = 15;
     const navigation = useNavigation();
     const insets = useSafeAreaInsets();
 
@@ -209,7 +210,7 @@ export default function Play() {
     }, []);
 
     useEffect(() => {
-        if (levelCount >= levelLength) {
+        if (levelCount >= LEVEL_LENGTH) {
             setLevelCount(0);
             durationAdd();
         }
@@ -236,7 +237,7 @@ export default function Play() {
                         newY = -Math.random() * 500;
                         newColor = colors[Math.floor(Math.random() * colors.length)];
                         setEmptyHeartCount(heartCount => {
-                            if (heartCount < heartsLength) {
+                            if (heartCount < HEARTS_LENGTH) {
                                 if (!cancelVibrationRef.current) {
                                     Vibration.vibrate(1000);
                                 }
@@ -303,7 +304,6 @@ export default function Play() {
         return () => clearInterval(interval);
     }, [isPlaying]);
 
-
     return (
         // @ts-ignore
         <ImageBackground source={backgroundImg}
@@ -324,9 +324,9 @@ export default function Play() {
                 style={styles.zIndexStyle}
                 accessible={true}
                 accessibilityRole="progressbar"
-                accessibilityLabel={`Progress ${levelCount} out of ${levelLength}`}
+                accessibilityLabel={`Progress ${levelCount} out of ${LEVEL_LENGTH}`}
             >
-                <Progress length={levelLength} coin={levelCount}/>
+                <Progress length={LEVEL_LENGTH} coin={levelCount}/>
             </View>
 
             <View style={[styles.headerLeftView, {top: insets.top}]}>
@@ -340,9 +340,9 @@ export default function Play() {
                 <View
                     accessible={true}
                     accessibilityRole="text"
-                    accessibilityLabel={`Lives remaining ${heartsLength - emptyHeartCount}`}
+                    accessibilityLabel={`Lives remaining ${HEARTS_LENGTH - emptyHeartCount}`}
                 >
-                    <Hearts length={heartsLength} emptyCount={emptyHeartCount}/>
+                    <Hearts length={HEARTS_LENGTH} emptyCount={emptyHeartCount}/>
                 </View>
             </View>
 

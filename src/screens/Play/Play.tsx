@@ -137,8 +137,10 @@ export default function Play() {
     }
 
     async function durationAdd(val: number = 40) {
-        setCoinStorage();
+        await setCoinStorage();
+
         setLevel(level => level + 1);
+
         // @ts-ignore
         setBoxesData((prev: BoxType[]) =>
             prev.map((e: BoxType) => ({
@@ -147,6 +149,7 @@ export default function Play() {
                 duration: e.duration + val,
             }))
         );
+
         setDuration((olValue: number) => olValue + val);
     }
 
@@ -177,7 +180,9 @@ export default function Play() {
         React.useCallback(() => {
             // This runs every time the screen is focused
             releaseMusic();
+
             getStorageData();
+
             setTimeout(() => {
                 loadMusic('games1.mp3');
             }, 100)

@@ -17,6 +17,7 @@ import Logo from "../../components/ui/Logo/Logo.tsx";
 import styles from './Welcome.style.ts';
 import {DARK_PURPLE, MEDIUM_PURPLE, PURPLE} from "../../constants/colors.ts";
 import LinearGradient from 'react-native-linear-gradient';
+import SocialAuthButton from "../../components/ui/SocialAuthButton/SocialAuthButton.tsx";
 
 function Welcome() {
     const navigation = useNavigation<any>();
@@ -155,19 +156,7 @@ function Welcome() {
                     outputRange: [1, 0]
                 })
             }}>
-                <TouchableOpacity style={styles.button} onPress={()=>{
-                    navigation.navigate('Home')
-                }}>
-                    <LinearGradient
-                        colors={['#FF5F6D', '#FFC371']}
-                        start={{x: 0, y: 0}}
-                        end={{x: 1, y: 0}}
-                        style={styles.gradientButton}
-                    >
-                        <GoogleLogo/>
-                        <Text style={styles.buttonTextLarge}>Sign in with Google</Text>
-                    </LinearGradient>
-                </TouchableOpacity>
+                <SocialAuthButton type='google' handlePress={() => navigation.navigate('Home')}/>
             </Animated.View>
 
             {/* Apple Sign In */}
@@ -180,19 +169,7 @@ function Welcome() {
                     outputRange: [1, 0]
                 })
             }}>
-                <TouchableOpacity style={styles.button} onPress={()=>{
-                    navigation.navigate('Home')
-                }}>
-                    <LinearGradient
-                        colors={['#333', '#000']}
-                        start={{x: 0, y: 0}}
-                        end={{x: 1, y: 0}}
-                        style={[styles.gradientButton, {paddingBottom: 20}]}
-                    >
-                        <AppleLogo/>
-                        <Text style={[styles.buttonTextLarge, {marginBottom: -5}]}>Sign in with Apple</Text>
-                    </LinearGradient>
-                </TouchableOpacity>
+                <SocialAuthButton type='apple' handlePress={() => navigation.navigate('Home')}/>
             </Animated.View>
         </LinearGradient>
     );

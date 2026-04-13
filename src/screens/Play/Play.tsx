@@ -302,7 +302,6 @@ export default function Play() {
     }, [isPlaying]);
 
     useEffect(() => {
-        console.log(card,'card')
         const sound = new Sound('jumping.wav', Sound.MAIN_BUNDLE, (error) => {
             if (error) {
                 console.log('failed to load game sound', error);

@@ -9,6 +9,7 @@ interface GlobalState {
 
 export const useGlobalStore = create<GlobalState>((set) => ({
     coins: 0,
+
     addCoins: (amount: number) =>
         set((state) => ({
             coins: state.coins + amount,

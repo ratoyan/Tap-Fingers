@@ -165,16 +165,11 @@ export default function Play() {
     }
 
     async function getStorageData() {
-        try {
-            const cancelSound = await AsyncStorage.getItem(STORAGE_KEYS.SOUND);
-            const cancelVibration = await AsyncStorage.getItem(STORAGE_KEYS.VIBRATION);
+        const cancelSound = await AsyncStorage.getItem(STORAGE_KEYS.SOUND)
+        const cancelVibration = await AsyncStorage.getItem(STORAGE_KEYS.VIBRATION)
 
-            cancelSoundRef.current = cancelSound === "true";
-            cancelVibrationRef.current = cancelVibration === "true";
-        } catch (e) {
-            cancelSoundRef.current = false;
-            cancelVibrationRef.current = false;
-        }
+        cancelSoundRef.current = cancelSound ?? false;
+        cancelVibrationRef.current = cancelVibration ?? false;
     }
 
     useFocusEffect(

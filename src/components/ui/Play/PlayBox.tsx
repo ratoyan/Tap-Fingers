@@ -21,7 +21,7 @@ function PlayBox({box, card, handlePress}: PlayBoxProps) {
     const baseTransform: ViewStyle["transform"] = [
         {translateX: box.x + box.size[0] / 2},
         {translateY: box.y + box.size[1] / 2},
-        ...((card?.rotation && box.rotation) ? [{rotate: `${box.rotation}deg`}] : []),
+        // ...((card?.rotation) ? [{rotate: `${box.rotation}deg`}] : []),
         {translateX: -box.size[0] / 2},
         {translateY: -box.size[1] / 2},
     ];

@@ -1,23 +1,23 @@
 import React, {useRef, useEffect} from 'react';
-import {Text, TouchableOpacity, Animated, Dimensions} from 'react-native';
+import {Alert, Animated, Dimensions} from 'react-native';
 import {useFocusEffect, useNavigation} from "@react-navigation/core";
 import {loadMusic, playMusic, releaseMusic} from "../../utils/helpers.ts";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {STORAGE_KEYS} from "../../utils/storageKeys.ts";
 import {shops} from "../../data/shop.ts";
-
-// icons
-import GoogleLogo from "../../assets/icons/GoogleLogo.tsx";
-import AppleLogo from "../../assets/icons/AppleLogo.tsx";
+import {
+    GoogleSignin,
+    statusCodes,
+} from '@react-native-google-signin/google-signin';
 
 // components
 import Logo from "../../components/ui/Logo/Logo.tsx";
+import SocialAuthButton from "../../components/ui/SocialAuthButton/SocialAuthButton.tsx";
 
 // styles
 import styles from './Welcome.style.ts';
 import {DARK_PURPLE, MEDIUM_PURPLE, PURPLE} from "../../constants/colors.ts";
 import LinearGradient from 'react-native-linear-gradient';
-import SocialAuthButton from "../../components/ui/SocialAuthButton/SocialAuthButton.tsx";
 
 function Welcome() {
     const navigation = useNavigation<any>();
@@ -47,6 +47,31 @@ function Welcome() {
             console.log("Save error:", error);
         }
     }
+
+    async function signInWithGoogle() {
+        try {
+            await GoogleSignin.hasPlayServices();
+
+            const userInfo: any = await GoogleSignin.signIn();
+
+            Alert.alert(
+                'Success',
+                `Welcome ${userInfo.user.name}`,
+            );
+        } catch (error: any) {
+            if (error.code === statusCodes.SIGN_IN_CANCELLED) {
+                Alert.alert('Cancelled', 'User cancelled login');
+            } else if (error.code === statusCodes.IN_PROGRESS) {
+                Alert.alert('Loading', 'Login already in progress');
+            } else if (
+                error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE
+            ) {
+                Alert.alert('Error', 'Google Play Services not available');
+            } else {
+                Alert.alert('Error', error.message);
+            }
+        }
+    };
 
     useFocusEffect(
         React.useCallback(() => {
@@ -110,6 +135,14 @@ function Welcome() {
         ).start();
     }, []);
 
+    useEffect(() => {
+        GoogleSignin.configure({
+            webClientId:
+                'YOUR_WEB_CLIENT_ID.apps.googleusercontent.com',
+            offlineAccess: true,
+        });
+    }, []);
+
     return (
         <LinearGradient
             colors={[DARK_PURPLE, PURPLE, MEDIUM_PURPLE]}
@@ -156,7 +189,7 @@ function Welcome() {
                     outputRange: [1, 0]
                 })
             }}>
-                <SocialAuthButton type='google' handlePress={() => navigation.navigate('Home')}/>
+                <SocialAuthButton type='google' handlePress={() => signInWithGoogle()}/>
             </Animated.View>
 
             {/* Apple Sign In */}

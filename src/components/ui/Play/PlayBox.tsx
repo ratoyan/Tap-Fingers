@@ -69,7 +69,7 @@ function PlayBox({box, card, handlePress}: PlayBoxProps) {
     // 🃏 Default (Card)
     return (
         <Pressable onPress={handlePress} style={commonStyle}>
-            <Card1 width={80} height={80}/>
+            <Card1 width={100} height={100}/>
         </Pressable>
     );
 }

@@ -35,11 +35,11 @@ function PlayBox({box, card, handlePress}: PlayBoxProps) {
     if (typeName === "ballon") {
         return box.isBoom ? (
             <View style={commonStyle}>
-                <TrackIcon width={130} height={130} color={box.color} />
+                <TrackIcon width={130} height={130} color={box.color}/>
             </View>
         ) : (
-            <Pressable onPress={handlePress} style={[commonStyle,{zIndex: 1}]}>
-                <Ballon color={box.color} />
+            <Pressable onPress={handlePress} style={[commonStyle, {zIndex: 1}]}>
+                <Ballon color={box.color}/>
             </Pressable>
         );
     }
@@ -67,11 +67,17 @@ function PlayBox({box, card, handlePress}: PlayBoxProps) {
     }
 
     // 🃏 Default (Card)
-    return (
-        <Pressable onPress={handlePress} style={commonStyle}>
-            <Card1 width={100} height={100}/>
-        </Pressable>
-    );
+    return box.isBoom ? (
+            <View style={commonStyle}>
+                <TrackIcon width={100} height={100} color={'#0f0f1a'}/>
+            </View>
+        )
+        :
+        (
+            <Pressable onPress={handlePress} style={[commonStyle, {zIndex: 1}]}>
+                <Card1 width={100} height={100}/>
+            </Pressable>
+        )
 }
 
 export default PlayBox;

@@ -51,19 +51,26 @@ function PlayBox({box, card, handlePress}: PlayBoxProps) {
             return [random, random];
         }, []);
 
-        return (
-            <Pressable
-                onPress={handlePress}
-                style={[
-                    commonStyle,
-                    {
-                        width: size[0],
-                        height: size[1],
-                        backgroundColor: box.color || "blue",
-                    },
-                ]}
-            />
-        );
+        return box.isBoom ? (
+                <View style={commonStyle}>
+                    <TrackIcon width={size[0]} height={size[1]} color={box.color || "blue"}/>
+                </View>
+            )
+            :
+            (
+                <Pressable
+                    onPress={handlePress}
+                    style={[
+                        commonStyle,
+                        {
+                            width: size[0],
+                            height: size[1],
+                            backgroundColor: box.color || "blue",
+                            zIndex: 1
+                        },
+                    ]}
+                />
+            )
     }
 
     // 🃏 Default (Card)

@@ -253,9 +253,8 @@ export default function Play() {
                         });
                     }
 
-                    const newTx = Math.abs(dx) < 1 ? Math.random() * (width - b.size[0] + 70) : b.tx;
+                    const newTx = Math.abs(dx) < 1 ? Math.random() * (width - 100) : b.tx;
                     const newTy = b.y + durationRef.current;
-                    console.log(durationRef.current,'durationRef.current')
                     const newRotation = (b.rotation + 2) % 360; // 2 degrees per frame
 
                     return {

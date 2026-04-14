@@ -29,7 +29,7 @@ import {GRADIENT_LIGHT} from "../../constants/colors.ts";
 const {width, height} = Dimensions.get('window');
 
 const HEARTS_LENGTH = 7;
-const LEVEL_LENGTH = 40;
+const LEVEL_LENGTH = 30;
 const MAX_ITEMS = 15;
 
 export default function Play() {
@@ -49,7 +49,7 @@ export default function Play() {
     const [emptyHeartCount, setEmptyHeartCount] = useState<number>(0);
     const [isPlaying, setIsPlaying] = useState<boolean>(true);
     const [isLoseModal, setIsLoseModal] = useState<boolean>(false);
-    const [duration, setDuration] = useState<number | any>(30);
+    const [duration, setDuration] = useState<number | any>(20);
     const [boxesData, setBoxesData] = useState<BoxType[]>(
         boxes.map((b: BoxType) => ({
             ...b,

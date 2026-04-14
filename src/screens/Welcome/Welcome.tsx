@@ -71,7 +71,7 @@ function Welcome() {
                 Alert.alert('Error', error.message);
             }
         }
-    };
+    }
 
     useFocusEffect(
         React.useCallback(() => {

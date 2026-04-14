@@ -283,7 +283,12 @@ export default function Play() {
 
         const interval = setInterval(() => {
             setBoxesData((prev: any) => {
-                const randomBoxData = prev[Math.floor(Math.random() * prev.length)];
+                if (prev.length >= MAX_ITEMS) {
+                    return prev;
+                }
+
+                const randomBoxData =
+                    prev[Math.floor(Math.random() * prev.length)];
 
                 const newItem = {
                     id: uuId.v4(),
@@ -298,13 +303,7 @@ export default function Play() {
                     isBoom: false,
                 };
 
-                const updated = [...prev, newItem];
-
-                if (updated.length > MAX_ITEMS) {
-                    return updated.slice(-MAX_ITEMS);
-                }
-
-                return updated;
+                return [...prev, newItem];
             });
         }, 1000);
 

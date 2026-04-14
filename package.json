@@ -9,7 +9,7 @@
     "start": "react-native start",
     "test": "jest",
     "clean": "cd android && gradlew clean",
-    "publish": "cd android && gradlew assembleRelease",
+    "publish": "cd android && gradlew assembleRelease && cd app/build/outputs/apk/release && ren app-release.apk TapFingers.apk && start .",
     "log:android": "react-native log-android",
     "log:ios": "react-native log-ios",
     "start:reset": "react-native start --reset-cache"

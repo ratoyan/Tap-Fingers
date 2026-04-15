@@ -165,6 +165,7 @@ function Shop() {
                                 index={index}
                                 selected={card?.id === item.id}
                                 purchased={cardsId.includes(item.id)}
+                                // @ts-ignore
                                 disabled={!cardsId.includes(item.id) && coins <= item.coins}
                                 handlePress={() => payBoxData(item, 'card')}
                                 item={item}
@@ -185,6 +186,7 @@ function Shop() {
                                 index={index}
                                 selected={background?.id === item.id}
                                 purchased={backgroundsId.includes(item.id)}
+                                // @ts-ignore
                                 disabled={!backgroundsId.includes(item.id) && coins <= item.coins}
                                 handlePress={() => payBoxData(item, 'background')}
                                 item={item}

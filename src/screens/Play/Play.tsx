@@ -300,7 +300,7 @@ export default function Play() {
                 <Progress length={LEVEL_LENGTH} coin={levelCount}/>
             </View>
 
-            <View style={[styles.headerLeftView, {top: insets.top}]}>
+            <View style={[styles.headerLeftView, {top: insets.top, zIndex: 2}]}>
                 <TouchableOpacity onPress={backHandler}>
                     <Back color={GRADIENT_LIGHT}/>
                 </TouchableOpacity>

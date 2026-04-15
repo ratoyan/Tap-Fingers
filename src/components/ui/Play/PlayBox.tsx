@@ -69,7 +69,8 @@ function PlayBox({box, handlePress}: PlayBoxProps) {
                             width: size[0],
                             height: size[1],
                             backgroundColor: box.color || "blue",
-                            zIndex: 1
+                            zIndex: 1,
+                            borderRadius: 10
                         },
                     ]}
                 />

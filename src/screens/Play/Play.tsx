@@ -5,7 +5,7 @@ import {useSafeAreaInsets} from "react-native-safe-area-context";
 import {useFocusEffect, useNavigation} from "@react-navigation/core";
 import {loadMusic, pauceMusic, playMusic, releaseMusic, stopMusic} from "../../utils/helpers.ts";
 import {Dimensions, ImageBackground, TouchableOpacity, Vibration, View} from 'react-native';
-import {boxes, colors, images} from "../../data/play.ts";
+import {colors, images} from "../../data/play.ts";
 import {STORAGE_KEYS} from "../../utils/storageKeys.ts";
 import {useShopStore} from "../../store/shopStore.ts";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -50,17 +50,6 @@ export default function Play() {
     const [isPlaying, setIsPlaying] = useState<boolean>(true);
     const [isLoseModal, setIsLoseModal] = useState<boolean>(false);
     const [duration, setDuration] = useState<number | any>(20);
-    // const [boxesData, setBoxesData] = useState<BoxType[]>(
-    //     boxes.map((b: BoxType) => ({
-    //         ...b,
-    //         x: Math.random() * (width - b.size[0]),
-    //         y: Math.random() * -1000,
-    //         tx: Math.random() * (width - b.size[0]),
-    //         ty: 0,
-    //         color: colors[Math.floor(Math.random() * colors.length)],
-    //     }))
-    // );
-
     const [boxesData, setBoxesData] = useState<BoxType[]>(
         Array.from({ length: 15 }, (_, index) => ({
             ...card,

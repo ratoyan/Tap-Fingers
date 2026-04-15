@@ -287,7 +287,9 @@ export default function Play() {
                 }
 
                 const randomBoxData =
-                    prev[Math.floor(Math.random() * prev.length)];
+                    prev.length > 0
+                        ? prev[Math.floor(Math.random() * prev.length)]
+                        : { size: [50, 50] };
 
                 const newItem = {
                     id: uuId.v4(),

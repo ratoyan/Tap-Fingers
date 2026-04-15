@@ -136,7 +136,7 @@ export default function Play() {
         }
     }
 
-    async function durationAdd(val: number = 40) {
+    async function durationAdd(val: number = 20) {
         await setCoinStorage();
 
         setLevel(level => level + 1);

@@ -7,6 +7,10 @@ import {ShopType} from "../../../types/shop.type.ts";
 import Card1 from "../../../assets/icons/Card1";
 import Ballon from "../../../assets/icons/Ballon";
 import TrackIcon from "../../../assets/icons/TrackIcon";
+import StarCard from "../../../assets/icons/StarCard";
+import DiamondCard from "../../../assets/icons/DiamondCard";
+import HeartCard from "../../../assets/icons/HeartCard";
+import BombCard from "../../../assets/icons/BombCard";
 
 interface PlayBoxProps {
     box: any;
@@ -70,6 +74,58 @@ function PlayBox({box, handlePress}: PlayBoxProps) {
                     ]}
                 />
             )
+    }
+
+    // ⭐ Star
+    if (typeName === "star") {
+        return box.isBoom ? (
+            <View style={commonStyle}>
+                <TrackIcon width={100} height={100} color="#FFD700"/>
+            </View>
+        ) : (
+            <Pressable onPress={handlePress} style={[commonStyle, {zIndex: 1}]}>
+                <StarCard width={100} height={100}/>
+            </Pressable>
+        );
+    }
+
+    // 💎 Diamond
+    if (typeName === "diamond") {
+        return box.isBoom ? (
+            <View style={commonStyle}>
+                <TrackIcon width={100} height={100} color="#00E5FF"/>
+            </View>
+        ) : (
+            <Pressable onPress={handlePress} style={[commonStyle, {zIndex: 1}]}>
+                <DiamondCard width={100} height={100}/>
+            </Pressable>
+        );
+    }
+
+    // ❤️ Heart
+    if (typeName === "heart") {
+        return box.isBoom ? (
+            <View style={commonStyle}>
+                <TrackIcon width={100} height={100} color="#FF69B4"/>
+            </View>
+        ) : (
+            <Pressable onPress={handlePress} style={[commonStyle, {zIndex: 1}]}>
+                <HeartCard width={100} height={100}/>
+            </Pressable>
+        );
+    }
+
+    // 💣 Bomb
+    if (typeName === "bomb") {
+        return box.isBoom ? (
+            <View style={commonStyle}>
+                <TrackIcon width={100} height={100} color="#FF6600"/>
+            </View>
+        ) : (
+            <Pressable onPress={handlePress} style={[commonStyle, {zIndex: 1}]}>
+                <BombCard width={100} height={100}/>
+            </Pressable>
+        );
     }
 
     // 🃏 Default (Card)

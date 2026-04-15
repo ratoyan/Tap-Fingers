@@ -1,93 +1,121 @@
 import {StyleSheet} from "react-native";
-import {BLACK, DARK_PURPLE, GOLD, MEDIUM_PURPLE, WHITE, WHITE_100} from "../../../constants/colors.ts";
+import {DARK_PURPLE, GOLD, MEDIUM_PURPLE, PURPLE_DARK, WHITE, WHITE_100} from "../../../constants/colors.ts";
 
 export default StyleSheet.create({
     card: {
-        padding: 20,
-        borderRadius: 20,
-        marginBottom: 20,
-        elevation: 5,
+        marginHorizontal: 10,
+        marginBottom: 16,
+        borderRadius: 22,
+        overflow: 'hidden',
+        elevation: 10,
+        shadowColor: '#000',
+        shadowOffset: {width: 0, height: 6},
+        shadowOpacity: 0.35,
+        shadowRadius: 10,
+    },
+    cardInner: {
+        padding: 18,
+    },
+    // ── Header row ──────────────────────────────
+    header: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 14,
+        gap: 12,
+    },
+    iconBox: {
+        width: 48,
+        height: 48,
+        borderRadius: 14,
+        backgroundColor: 'rgba(255,255,255,0.12)',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    iconText: {
+        fontSize: 24,
+    },
+    headerText: {
+        flex: 1,
     },
     title: {
-        fontSize: 22,
-        fontWeight: 'bold',
-        color: 'white',
-        marginBottom: 15,
+        fontSize: 16,
+        fontWeight: '800',
+        color: WHITE,
+        letterSpacing: 0.2,
     },
-    progressBar: {
-        height: 8,
-        backgroundColor: 'rgba(255,255,255,0.3)',
+    subtitle: {
+        fontSize: 12,
+        color: 'rgba(255,255,255,0.6)',
+        marginTop: 2,
+    },
+    // ── Status badge ────────────────────────────
+    badge: {
+        paddingHorizontal: 10,
+        paddingVertical: 5,
+        borderRadius: 12,
+    },
+    badgeText: {
+        fontSize: 11,
+        fontWeight: '800',
+        letterSpacing: 0.4,
+    },
+    // ── Progress bar ────────────────────────────
+    progressTrack: {
+        height: 10,
+        backgroundColor: 'rgba(255,255,255,0.15)',
         borderRadius: 10,
         overflow: 'hidden',
+        marginBottom: 6,
     },
     progressFill: {
-        height: 8,
-        backgroundColor: GOLD,
+        height: '100%',
+        borderRadius: 10,
+    },
+    progressLabel: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginBottom: 14,
     },
     progressText: {
-        marginTop: 8,
-        color: 'white',
-        fontSize: 13,
+        fontSize: 11,
+        color: 'rgba(255,255,255,0.6)',
     },
-    rewardView: {
+    // ── Footer ──────────────────────────────────
+    footer: {
         flexDirection: 'row',
-        alignItems: 'flex-end',
-        gap: 5
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginTop: 4,
     },
-    reward: {
-        marginTop: 10,
-        fontSize: 14,
+    rewardRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 5,
+    },
+    rewardText: {
         color: GOLD,
-        fontWeight: 'bold',
-    },
-    lockedText: {
-        color: WHITE_100,
+        fontWeight: '700',
         fontSize: 13,
     },
-    takenChallengeCard: {
-        marginTop: 12,
-        alignSelf: 'flex-start',
-        backgroundColor: MEDIUM_PURPLE,
-        paddingVertical: 5,
+    // collect button
+    collectBtn: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 5,
         paddingHorizontal: 14,
-        borderRadius: 12,
-        flexDirection: 'row',
-        alignItems: 'center',
-        shadowColor: BLACK,
-        shadowOffset: {width: 0, height: 2},
-        shadowOpacity: 0.3,
-        shadowRadius: 3,
-        elevation: 4,
-    },
-    takenChallengeText: {
-        color: WHITE,
-        fontWeight: '700',
-        fontSize: 14
-    },
-    coinBackground: {
-        width: '100%',
-        height: '100%',
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        borderRadius: 10,
-        justifyContent: 'center',
-        alignItems: 'center',
-        zIndex: 10
-    },
-    coinActionButton: {
-        backgroundColor: GOLD,
         paddingVertical: 8,
-        paddingHorizontal: 16,
-        borderRadius: 20,
-        flexDirection: 'row',
-        alignItems: 'center',
-        columnGap: 5
+        borderRadius: 16,
+        backgroundColor: GOLD,
     },
-    coinText: {
+    collectText: {
         color: DARK_PURPLE,
-        fontWeight: '700',
-        fontSize: 16,
-    }
+        fontWeight: '900',
+        fontSize: 13,
+    },
+    // locked
+    lockedSubtitle: {
+        color: 'rgba(255,255,255,0.45)',
+        fontSize: 12,
+        marginTop: 6,
+    },
 });

@@ -5,5 +5,7 @@ export interface ShopType {
     type: string,
     typeName: string,
     isRotation?: boolean,
-    size?: number
+    size?: number,
+    images?: any[],
+    colors?: string[],
 }

@@ -1,8 +1,9 @@
-import React, {useEffect, useState} from "react";
-import {View, Text, ScrollView} from "react-native";
+import React, {useEffect, useRef, useState} from "react";
+import {Animated, ScrollView, Text, TouchableOpacity, View} from "react-native";
 import {useTranslation} from "react-i18next";
 import {useGlobalStore} from "../../store/globalStore.ts";
 import {STORAGE_KEYS} from "../../utils/storageKeys.ts";
+import {HORIZONAL_OFFSET} from "../../constants/uiConstants.ts";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {useShopStore} from "../../store/shopStore.ts";
 import {shops} from "../../data/shop.ts";
@@ -13,18 +14,33 @@ import ShopItem from "../../components/ui/ShopItem/ShopItem.tsx";
 
 // styles
 import styles from './Shop.style.ts';
-import {DARK_PURPLE, PURPLE} from "../../constants/colors.ts";
+import {DARK_PURPLE, GRADIENT_DARK, GRADIENT_LIGHT, PURPLE} from "../../constants/colors.ts";
 import LinearGradient from "react-native-linear-gradient";
+
+type TabType = 'card' | 'background';
 
 function Shop() {
     const {t} = useTranslation();
     const {coins, minusCoins} = useGlobalStore();
     const {card, setCard, setBackground, background} = useShopStore();
 
+    const [activeTab, setActiveTab] = useState<TabType>('card');
     const [cardsId, setCardsId] = useState<number[]>([]);
     const [backgroundsId, setBackgroundsId] = useState<number[]>([]);
 
-    async function payBoxData(box: any, type: 'card' | 'background') {
+    const tabAnim = useRef(new Animated.Value(0)).current;
+
+    function switchTab(tab: TabType) {
+        setActiveTab(tab);
+        Animated.spring(tabAnim, {
+            toValue: tab === 'card' ? 0 : 1,
+            friction: 7,
+            tension: 80,
+            useNativeDriver: false,
+        }).start();
+    }
+
+    async function payBoxData(box: any, type: TabType) {
         try {
             const isCard = type === 'card';
             const currentIds = isCard ? cardsId : backgroundsId;
@@ -35,7 +51,6 @@ function Shop() {
 
             const alreadyPurchased = box.id != null && currentIds.includes(box.id);
 
-            // Purchase logic
             if (coins >= box.coins && !alreadyPurchased) {
                 const newCoins = coins - box.coins;
                 minusCoins(box.coins);
@@ -48,9 +63,7 @@ function Shop() {
                     await AsyncStorage.setItem(storageKeyIds, JSON.stringify(updatedIds));
                     await AsyncStorage.setItem(storageKeyCurrent, JSON.stringify(box.id));
                 }
-            }
-            // Already purchased: just set current
-            else if (alreadyPurchased && box.id != null) {
+            } else if (alreadyPurchased && box.id != null) {
                 currentBoxSetter(box);
                 await AsyncStorage.setItem(storageKeyCurrent, JSON.stringify(box.id));
             }
@@ -63,10 +76,9 @@ function Shop() {
         try {
             const purchaseCardsId = await AsyncStorage.getItem(STORAGE_KEYS.CARDSID);
             const purchaseBackgroundsId = await AsyncStorage.getItem(STORAGE_KEYS.BACKGROUNDSID);
-
             setCardsId(purchaseCardsId ? JSON.parse(purchaseCardsId) : []);
             setBackgroundsId(purchaseBackgroundsId ? JSON.parse(purchaseBackgroundsId) : []);
-        } catch (error) {
+        } catch {
             setCardsId([]);
             setBackgroundsId([]);
         }
@@ -74,46 +86,83 @@ function Shop() {
 
     useEffect(() => {
         getStorageData();
-    }, [])
+    }, []);
+
+    const cardItems = shops
+        .filter(e => e.type === 'card')
+        .sort((a, b) => (cardsId.includes(a.id) ? 0 : 1) - (cardsId.includes(b.id) ? 0 : 1));
+
+    const backgroundItems = shops
+        .filter(e => e.type === 'background')
+        .sort((a, b) => (backgroundsId.includes(a.id) ? 0 : 1) - (backgroundsId.includes(b.id) ? 0 : 1));
+
+    const tabIndicatorLeft = tabAnim.interpolate({
+        inputRange: [0, 1],
+        outputRange: ['0%', '50%'],
+    });
 
     return (
         <LinearGradient
             colors={[DARK_PURPLE, PURPLE]}
             style={styles.container}
-            accessible={true}
-            accessibilityLabel="Shop screen"
         >
-            <BackHeader
-                title={`🛒 ${t('shop')}`}
-                isShowCoin={true}
-                textStyle={{marginRight: 25}}
-                coins={coins}
-            />
+            <View style={{paddingHorizontal: HORIZONAL_OFFSET, marginBottom: 15}}>
+                <BackHeader
+                    title={`🛒 ${t('shop')}`}
+                    isShowCoin={true}
+                    textStyle={{marginRight: 25}}
+                    coins={coins}
+                />
+            </View>
 
-            <ScrollView
-                contentContainerStyle={{paddingBottom: 20}}
-                showsVerticalScrollIndicator={false}
-                accessibilityRole="scrollbar"
-                accessibilityHint="Swipe up or down to browse shop items"
-            >
-                <Text
-                    style={styles.sectionTitle}
-                    accessibilityRole="header"
+            {/* Tabs */}
+            <View style={styles.tabRow}>
+                <Animated.View
+                    style={[
+                        styles.tab,
+                        styles.tabActive,
+                        {
+                            position: 'absolute',
+                            width: '50%',
+                            height: '100%',
+                            left: tabIndicatorLeft,
+                        },
+                    ]}
+                    pointerEvents="none"
                 >
-                    {t('cards')}
-                </Text>
+                    <LinearGradient
+                        colors={[GRADIENT_LIGHT, GRADIENT_DARK]}
+                        start={{x: 0, y: 0}}
+                        end={{x: 1, y: 1}}
+                        style={{flex: 1, borderRadius: 14, width: '100%'}}
+                    />
+                </Animated.View>
 
-                <View
-                    style={styles.grid}
-                    accessible={true}
-                    accessibilityRole="list"
-                    accessibilityLabel={`${t('cards')} list`}
+                <TouchableOpacity style={styles.tab} onPress={() => switchTab('card')} activeOpacity={0.8}>
+                    <Text style={[styles.tabText, activeTab === 'card' && styles.tabTextActive]}>
+                        🃏 {t('cards')}
+                    </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity style={styles.tab} onPress={() => switchTab('background')} activeOpacity={0.8}>
+                    <Text style={[styles.tabText, activeTab === 'background' && styles.tabTextActive]}>
+                        🖼 {t('backgrounds')}
+                    </Text>
+                </TouchableOpacity>
+            </View>
+
+            {/* Content */}
+            {activeTab === 'card' ? (
+                <ScrollView
+                    key="cards"
+                    contentContainerStyle={{paddingBottom: 30, marginTop: 20, paddingHorizontal: HORIZONAL_OFFSET}}
+                    showsVerticalScrollIndicator={false}
                 >
-                    {shops
-                        .filter((e: any) => e.type === 'card')
-                        .map((item: any) => (
+                    <View style={styles.grid}>
+                        {cardItems.map((item, index) => (
                             <ShopItem
                                 key={item.id}
+                                index={index}
                                 selected={card?.id === item.id}
                                 purchased={cardsId.includes(item.id)}
                                 disabled={!cardsId.includes(item.id) && coins <= item.coins}
@@ -121,26 +170,19 @@ function Shop() {
                                 item={item}
                             />
                         ))}
-                </View>
-
-                <Text
-                    style={styles.sectionTitle}
-                    accessibilityRole="header"
+                    </View>
+                </ScrollView>
+            ) : (
+                <ScrollView
+                    key="backgrounds"
+                    contentContainerStyle={{paddingBottom: 30, marginTop: 20, paddingHorizontal: HORIZONAL_OFFSET}}
+                    showsVerticalScrollIndicator={false}
                 >
-                    {t('backgrounds')}
-                </Text>
-
-                <View
-                    style={styles.grid}
-                    accessible={true}
-                    accessibilityRole="list"
-                    accessibilityLabel={`${t('backgrounds')} list`}
-                >
-                    {shops
-                        .filter((e: any) => e.type === 'background')
-                        .map((item: any) => (
+                    <View style={styles.grid}>
+                        {backgroundItems.map((item, index) => (
                             <ShopItem
                                 key={item.id}
+                                index={index}
                                 selected={background?.id === item.id}
                                 purchased={backgroundsId.includes(item.id)}
                                 disabled={!backgroundsId.includes(item.id) && coins <= item.coins}
@@ -148,8 +190,9 @@ function Shop() {
                                 item={item}
                             />
                         ))}
-                </View>
-            </ScrollView>
+                    </View>
+                </ScrollView>
+            )}
         </LinearGradient>
     );
 }

@@ -9,21 +9,20 @@ import Ballon from "../../../assets/icons/Ballon";
 import TrackIcon from "../../../assets/icons/TrackIcon";
 
 interface PlayBoxProps {
-    box: BoxType;
-    card: ShopType,
+    box: any;
     handlePress: () => void;
 }
 
-function PlayBox({box, card, handlePress}: PlayBoxProps) {
+function PlayBox({box, handlePress}: PlayBoxProps) {
 
-    const typeName = card?.typeName?.toLowerCase?.() ?? "";
+    const typeName = box?.typeName?.toLowerCase?.() ?? "";
 
     const baseTransform: ViewStyle["transform"] = [
-        {translateX: box.x + box.size[0] / 2},
-        {translateY: box.y + box.size[1] / 2},
-        // ...((card?.rotation) ? [{rotate: `${box.rotation}deg`}] : []),
-        {translateX: -box.size[0] / 2},
-        {translateY: -box.size[1] / 2},
+        {translateX: box.x + box.size / 2},
+        {translateY: box.y + box.size / 2},
+        ...((box?.isRotation && box?.rotation) ? [{rotate: `${box.rotation}deg`}] : []),
+        {translateX: -box.size / 2},
+        {translateY: -box.size / 2},
     ];
 
     const commonStyle: ViewStyle = {

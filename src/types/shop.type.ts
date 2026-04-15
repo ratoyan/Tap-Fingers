@@ -4,6 +4,6 @@ export interface ShopType {
     coins: string,
     type: string,
     typeName: string,
-    rotation?: boolean,
+    isRotation?: boolean,
     size?: number
 }

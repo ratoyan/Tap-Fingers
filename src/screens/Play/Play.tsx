@@ -50,14 +50,28 @@ export default function Play() {
     const [isPlaying, setIsPlaying] = useState<boolean>(true);
     const [isLoseModal, setIsLoseModal] = useState<boolean>(false);
     const [duration, setDuration] = useState<number | any>(20);
+    // const [boxesData, setBoxesData] = useState<BoxType[]>(
+    //     boxes.map((b: BoxType) => ({
+    //         ...b,
+    //         x: Math.random() * (width - b.size[0]),
+    //         y: Math.random() * -1000,
+    //         tx: Math.random() * (width - b.size[0]),
+    //         ty: 0,
+    //         color: colors[Math.floor(Math.random() * colors.length)],
+    //     }))
+    // );
+
     const [boxesData, setBoxesData] = useState<BoxType[]>(
-        boxes.map((b: BoxType) => ({
-            ...b,
-            x: Math.random() * (width - b.size[0]),
+        Array.from({ length: 15 }, (_, index) => ({
+            ...card,
+            id: uuId.v4(),
+            x: Math.random() * (width - card.size),
             y: Math.random() * -1000,
-            tx: Math.random() * (width - b.size[0]),
+            tx: Math.random() * (width - card.size),
             ty: 0,
             color: colors[Math.floor(Math.random() * colors.length)],
+            duration: durationRef.current,
+            isBoom: false,
         }))
     );
 
@@ -84,13 +98,16 @@ export default function Play() {
         setIsLoseModal(false);
         setDuration(15);
         setBoxesData(
-            boxes.map((b: BoxType) => ({
-                ...b,
-                x: Math.random() * (width - b.size[0]),
+            Array.from({ length: 15 }, (_, index) => ({
+                ...card,
+                id: uuId.v4(),
+                x: Math.random() * (width - card.size),
                 y: Math.random() * -1000,
-                tx: Math.random() * (width - b.size[0]),
+                tx: Math.random() * (width - card.size),
                 ty: 0,
                 color: colors[Math.floor(Math.random() * colors.length)],
+                duration: durationRef.current,
+                isBoom: false,
             }))
         )
     }
@@ -238,7 +255,7 @@ export default function Play() {
                     let newY = b.y + dy * 0.05;
                     let newColor = b.color;
 
-                    if (newY + b.size[1] > height) {
+                    if (newY + b.size > height) {
                         newY = -Math.random() * 500;
                         newColor = colors[Math.floor(Math.random() * colors.length)];
                         setEmptyHeartCount(heartCount => {
@@ -253,9 +270,9 @@ export default function Play() {
                         });
                     }
 
-                    const newTx = Math.abs(dx) < 1 ? Math.random() * (width - 100) : b.tx;
+                    const newTx = Math.abs(dx) < 1 ? Math.random() * (width - b.size) : b.tx;
                     const newTy = b.y + durationRef.current;
-                    const newRotation = (b.rotation + 2) % 360; // 2 degrees per frame
+                    const newRotation = b.isRotation && (30 + 2) % 360; // 2 degrees per frame
 
                     return {
                         ...b,
@@ -292,13 +309,12 @@ export default function Play() {
                         : { size: [50, 50] };
 
                 const newItem = {
+                    ...card,
                     id: uuId.v4(),
                     x: Math.random() * (width - randomBoxData.size[0]),
                     y: Math.random() * -1000,
                     tx: Math.random() * (width - randomBoxData.size[0]),
                     ty: 0,
-                    size: [50, 50],
-                    rotation: 0,
                     color: colors[Math.floor(Math.random() * colors.length)],
                     duration: durationRef.current,
                     isBoom: false,
@@ -375,7 +391,6 @@ export default function Play() {
                 .map((box: BoxType) => (
                     <PlayBox key={box.id}
                              box={box}
-                             card={card}
                              handlePress={() => boomAndAddClick(box)}
                     />
                 ))}

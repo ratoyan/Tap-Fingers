@@ -32,7 +32,7 @@ const HEARTS_LENGTH = 7;
 const LEVEL_LENGTH = 30;
 const MAX_ITEMS = 15;
 const INITIAL_DURATION = 20;
-const DURATION_STEP = 20;
+const DURATION_STEP = 30;
 
 // Pure helper — outside component to avoid recreation on every render
 function getDefaultBackground(level: number) {
@@ -170,6 +170,25 @@ export default function Play() {
         countRef.current += 1;
         setCount(c => c + 1);
         setLevelCount(c => c + 1);
+
+        // Spawn a new box on every tap
+        setBoxesData(prev => {
+            if (prev.length >= MAX_ITEMS) return prev;
+            return [
+                ...prev,
+                {
+                    ...card,
+                    id: uuId.v4(),
+                    x: Math.random() * (width - card.size),
+                    y: Math.random() * -1000,
+                    tx: Math.random() * (width - card.size),
+                    ty: 0,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    duration: durationRef.current,
+                    isBoom: false,
+                },
+            ];
+        });
     }
 
     function levelUp() {
@@ -280,32 +299,6 @@ export default function Play() {
         return () => cancelAnimationFrame(animationFrameId);
     }, [isPlaying]);
 
-    // Spawn new boxes while playing
-    useEffect(() => {
-        if (!isPlaying) return;
-
-        const interval = setInterval(() => {
-            setBoxesData(prev => {
-                if (prev.length >= MAX_ITEMS) return prev;
-                return [
-                    ...prev,
-                    {
-                        ...card,
-                        id: uuId.v4(),
-                        x: Math.random() * (width - card.size),
-                        y: Math.random() * -1000,
-                        tx: Math.random() * (width - card.size),
-                        ty: 0,
-                        color: colors[Math.floor(Math.random() * colors.length)],
-                        duration: durationRef.current,
-                        isBoom: false,
-                    },
-                ];
-            });
-        }, 1000);
-
-        return () => clearInterval(interval);
-    }, [isPlaying]);
 
     // ─── Render ───────────────────────────────────────────────────────────────
 

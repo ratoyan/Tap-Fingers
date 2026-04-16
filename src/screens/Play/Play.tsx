@@ -127,6 +127,12 @@ export default function Play() {
         setEmptyHeartCount(prev => Math.max(0, prev - 1));
         setIsLoseModal(false);
         setIsPlaying(true);
+
+        setBoxesData([]);
+
+        setTimeout(() => {
+            setBoxesData(createBoxes(card, durationRef.current));
+        }, 0);
     }
 
     function handleRetry() {

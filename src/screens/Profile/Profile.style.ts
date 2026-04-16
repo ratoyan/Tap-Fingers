@@ -67,6 +67,57 @@ export default StyleSheet.create({
         textAlign: 'center',
     },
 
+    /* ── Guest view ─────────────────────────────────── */
+    guestSection: {
+        alignItems: 'center',
+        paddingTop: 10,
+    },
+    ghostAvatarWrap: {
+        shadowColor: '#fff',
+        shadowOffset: {width: 0, height: 0},
+        shadowOpacity: 0.25,
+        shadowRadius: 20,
+        elevation: 10,
+        marginBottom: 16,
+    },
+    guestName: {
+        fontSize: 26,
+        fontWeight: '800',
+        color: 'white',
+        marginBottom: 12,
+        letterSpacing: 0.5,
+    },
+    guestHint: {
+        color: 'rgba(255,255,255,0.55)',
+        fontSize: 14,
+        textAlign: 'center',
+        lineHeight: 22,
+        marginBottom: 24,
+    },
+    dividerRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        width: '100%',
+        marginBottom: 4,
+        gap: 10,
+    },
+    dividerLine: {
+        flex: 1,
+        height: 1,
+        backgroundColor: 'rgba(255,255,255,0.2)',
+    },
+    dividerText: {
+        color: 'rgba(255,255,255,0.45)',
+        fontSize: 13,
+        fontWeight: '600',
+        letterSpacing: 0.5,
+    },
+    authButtons: {
+        width: '100%',
+        alignItems: 'center',
+        marginTop: 4,
+    },
+
     /* ── Input card ─────────────────────────────────── */
     inputCard: {
         width: '100%',

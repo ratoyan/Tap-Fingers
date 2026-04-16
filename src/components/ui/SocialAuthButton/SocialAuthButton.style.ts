@@ -22,9 +22,12 @@ export default StyleSheet.create({
         fontWeight: 'bold',
         color: WHITE,
     },
-    ghostButton: {
-        borderWidth: 1,
-        borderColor: "#ccc",
-        backgroundColor: "transparent",
-    }
+    ghostBorder: {
+        borderWidth: 1.5,
+        borderColor: 'rgba(255,255,255,0.35)',
+    },
+    ghostText: {
+        color: 'rgba(255,255,255,0.75)',
+        fontWeight: '600',
+    },
 });

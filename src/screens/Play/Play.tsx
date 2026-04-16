@@ -18,6 +18,7 @@ import CoinCount from '../../components/ui/CoinCount/CoinCount.tsx';
 import PlayBox from '../../components/ui/Play/PlayBox.tsx';
 import Hearts from '../../components/ui/Play/Hearts.tsx';
 import LoseModal from '../../components/ui/Play/LoseModal.tsx';
+import ExitModal from '../../components/ui/Play/ExitModal.tsx';
 import Level from '../../components/ui/Play/Level.tsx';
 import Progress from '../../components/ui/Play/Progress.tsx';
 
@@ -74,6 +75,7 @@ export default function Play() {
     const [emptyHeartCount, setEmptyHeartCount] = useState(0);
     const [isPlaying, setIsPlaying] = useState(true);
     const [isLoseModal, setIsLoseModal] = useState(false);
+    const [isExitModal, setIsExitModal] = useState(false);
     const [boxesData, setBoxesData] = useState(() => createBoxes(card, durationRef.current));
 
     const levelIndex = Math.min(level - 1, 4);
@@ -100,14 +102,31 @@ export default function Play() {
     // ─── Game actions ─────────────────────────────────────────────────────────
 
     function backHandler() {
+        setIsPlaying(false);
+        setIsExitModal(true);
+    }
+
+    function handleExitConfirm() {
         saveCoinStorage();
+        setIsExitModal(false);
         navigation.goBack();
+    }
+
+    function handleExitCancel() {
+        setIsExitModal(false);
+        setIsPlaying(true);
     }
 
     function gameOver() {
         setIsPlaying(false);
         setIsLoseModal(true);
         stopMusic();
+    }
+
+    function handleWatchAd() {
+        setEmptyHeartCount(prev => Math.max(0, prev - 1));
+        setIsLoseModal(false);
+        setIsPlaying(true);
     }
 
     function handleRetry() {
@@ -311,7 +330,14 @@ export default function Play() {
                 <CoinCount count={count} viewStyles={[styles.countView, {top: insets.top}]}/>
             </View>
 
-            <LoseModal visible={isLoseModal} onRetry={handleRetry} onBack={backHandler}/>
+            <LoseModal
+                visible={isLoseModal}
+                score={count}
+                onRetry={handleRetry}
+                onBack={handleExitConfirm}
+                onWatchAd={handleWatchAd}
+            />
+            <ExitModal visible={isExitModal} onConfirm={handleExitConfirm} onCancel={handleExitCancel}/>
 
             {boxesData
                 .slice()

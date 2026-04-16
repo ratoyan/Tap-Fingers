@@ -31,7 +31,7 @@ function SettingRow(props: SettingRowProps) {
         <TouchableOpacity
             onPress={
                 isToggle
-                    ? () => props.onChange(!props.value) // ամբողջ row-ը clickable է toggle-ի համար
+                    ? () => props.onChange(!props.value)
                     : isPress
                         ? props.onPress
                         : undefined

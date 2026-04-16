@@ -22,40 +22,47 @@ function ProgressItem({item, trophy}: ProgressItemProps) {
         ? `${trophy} ${t('level')} ${item.level}`
         : `${t('level')} ${item.level}`;
 
+    const progressPercent = Math.round(item.progress * 100);
+
     return (
         <LinearGradient
             colors={[GRADIENT_LIGHT, GRADIENT_DARK]}
             start={{x: 0, y: 0}}
             end={{x: 1, y: 1}}
             style={styles.progressItem}
-
             accessible={true}
             accessibilityRole="summary"
-            accessibilityLabel={`${levelText}. ${t('score')} ${item.score}. ${t('progress')} ${Math.round(item.progress * 100)}%`}
+            accessibilityLabel={`${levelText}. ${t('score')} ${item.score}. ${t('progress')} ${progressPercent}%`}
         >
-            <Image source={{uri: item.avatar}}
-                   style={styles.avatar}
-                   accessible={true}
-                   accessibilityRole="image"
-                   accessibilityLabel={`${t('avatar')}`}
+            <Image
+                source={{uri: item.avatar}}
+                style={styles.avatar}
+                accessible={true}
+                accessibilityRole="image"
+                accessibilityLabel={`${t('avatar')}`}
             />
-            <View style={styles.info}
-                  importantForAccessibility="no-hide-descendants"
-            >
-                <Text style={styles.level}>
-                    {trophy ? `${trophy} ${t('level')} ${item.level}` : `${t('level')} ${item.level}`}
-                </Text>
-                <View style={styles.progressBarBackground}>
-                    <View style={[styles.progressBarFill, {flex: item.progress}]}/>
-                    <View style={[styles.progressBarEmpty, {flex: 1 - item.progress}]}/>
+
+            <View style={styles.info} importantForAccessibility="no-hide-descendants">
+                {/* Level row */}
+                <View style={styles.levelRow}>
+                    <Text style={styles.level}>{levelText}</Text>
+                    <View style={styles.scoreRow}>
+                        <Text style={styles.score}>{item.score}</Text>
+                        <Coin width={18} height={18}/>
+                    </View>
                 </View>
-                <View style={styles.scoreRow}>
-                    <Text style={styles.score}>{item.score}</Text>
-                    <Coin width={22} height={22}/>
+
+                {/* Progress bar */}
+                <View style={styles.progressWrapper}>
+                    <View style={styles.progressBarBackground}>
+                        <View style={[styles.progressBarFill, {flex: item.progress}]}/>
+                        <View style={[styles.progressBarEmpty, {flex: 1 - item.progress}]}/>
+                    </View>
+                    <Text style={styles.progressLabel}>{progressPercent}%</Text>
                 </View>
             </View>
         </LinearGradient>
-    )
+    );
 }
 
 export default ProgressItem;

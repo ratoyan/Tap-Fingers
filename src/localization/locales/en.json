@@ -22,5 +22,11 @@
   "lostLevel": "You lost this level",
   "retry": "Retry",
   "profile": "Profile",
-  "back": "Back"
+  "back": "Back",
+  "changePhoto": "Change Photo",
+  "camera": "Camera",
+  "gallery": "Gallery",
+  "watchAd": "Watch Ad",
+  "getHeart": "+1 Heart",
+  "score": "Score"
 }

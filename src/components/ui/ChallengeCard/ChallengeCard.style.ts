@@ -1,11 +1,12 @@
-import {StyleSheet} from "react-native";
-import {DARK_PURPLE, GOLD, MEDIUM_PURPLE, PURPLE_DARK, WHITE, WHITE_100} from "../../../constants/colors.ts";
+import {StyleSheet} from 'react-native';
+import {DARK_PURPLE, GOLD} from '../../../constants/colors.ts';
+import {ms, vs} from '../../../utils/responsive.ts';
 
 export default StyleSheet.create({
     card: {
-        marginHorizontal: 10,
-        marginBottom: 16,
-        borderRadius: 22,
+        marginHorizontal: ms(10),
+        marginBottom: ms(16),
+        borderRadius: ms(22),
         overflow: 'hidden',
         elevation: 10,
         shadowColor: '#000',
@@ -14,108 +15,102 @@ export default StyleSheet.create({
         shadowRadius: 10,
     },
     cardInner: {
-        padding: 18,
+        padding: ms(18),
     },
-    // ── Header row ──────────────────────────────
     header: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: 14,
-        gap: 12,
+        marginBottom: vs(14),
+        gap: ms(12),
     },
     iconBox: {
-        width: 48,
-        height: 48,
-        borderRadius: 14,
+        width: ms(48),
+        height: ms(48),
+        borderRadius: ms(14),
         backgroundColor: 'rgba(255,255,255,0.12)',
         alignItems: 'center',
         justifyContent: 'center',
     },
     iconText: {
-        fontSize: 24,
+        fontSize: ms(24),
     },
     headerText: {
         flex: 1,
     },
     title: {
-        fontSize: 16,
+        fontSize: ms(16),
         fontWeight: '800',
-        color: WHITE,
+        color: 'white',
         letterSpacing: 0.2,
     },
     subtitle: {
-        fontSize: 12,
+        fontSize: ms(12),
         color: 'rgba(255,255,255,0.6)',
-        marginTop: 2,
+        marginTop: vs(2),
     },
-    // ── Status badge ────────────────────────────
     badge: {
-        paddingHorizontal: 10,
-        paddingVertical: 5,
-        borderRadius: 12,
+        paddingHorizontal: ms(10),
+        paddingVertical: vs(5),
+        borderRadius: ms(12),
     },
     badgeText: {
-        fontSize: 11,
+        fontSize: ms(11),
         fontWeight: '800',
         letterSpacing: 0.4,
     },
-    // ── Progress bar ────────────────────────────
     progressTrack: {
-        height: 10,
+        height: ms(10),
         backgroundColor: 'rgba(255,255,255,0.15)',
-        borderRadius: 10,
+        borderRadius: ms(10),
         overflow: 'hidden',
-        marginBottom: 6,
+        marginBottom: vs(6),
     },
     progressFill: {
         height: '100%',
-        borderRadius: 10,
+        borderRadius: ms(10),
     },
     progressLabel: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        marginBottom: 14,
+        marginBottom: vs(14),
     },
     progressText: {
-        fontSize: 11,
+        fontSize: ms(11),
         color: 'rgba(255,255,255,0.6)',
     },
-    // ── Footer ──────────────────────────────────
     footer: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        marginTop: 4,
+        marginTop: vs(4),
     },
     rewardRow: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 5,
+        gap: ms(5),
     },
     rewardText: {
         color: GOLD,
         fontWeight: '700',
-        fontSize: 13,
+        fontSize: ms(13),
     },
-    // collect button
     collectBtn: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 5,
-        paddingHorizontal: 14,
-        paddingVertical: 8,
-        borderRadius: 16,
+        gap: ms(5),
+        paddingHorizontal: ms(14),
+        paddingVertical: vs(8),
+        borderRadius: ms(16),
         backgroundColor: GOLD,
     },
     collectText: {
         color: DARK_PURPLE,
         fontWeight: '900',
-        fontSize: 13,
+        fontSize: ms(13),
     },
-    // locked
     lockedSubtitle: {
         color: 'rgba(255,255,255,0.45)',
-        fontSize: 12,
-        marginTop: 6,
+        fontSize: ms(12),
+        marginTop: vs(6),
     },
 });

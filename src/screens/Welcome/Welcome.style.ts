@@ -1,15 +1,16 @@
-import {StyleSheet} from "react-native";
-import {WHITE} from "../../constants/colors.ts";
+import {StyleSheet} from 'react-native';
+import {WHITE} from '../../constants/colors.ts';
+import {ms, scale} from '../../utils/responsive.ts';
 
 export default StyleSheet.create({
     container: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        padding: 20,
+        padding: ms(20),
     },
     title: {
-        fontSize: 32,
+        fontSize: ms(32),
         fontWeight: 'bold',
         color: WHITE,
         fontFamily: '',
@@ -21,40 +22,40 @@ export default StyleSheet.create({
     },
     ghostWrap: {
         position: 'absolute',
-        right: -30,
-        bottom: 10,
+        right: -ms(30),
+        bottom: ms(10),
     },
     buttonsWrap: {
         width: '100%',
         alignItems: 'center',
     },
     icon: {
-        width: 24,
-        height: 24,
-        marginRight: 12,
+        width: ms(24),
+        height: ms(24),
+        marginRight: ms(12),
     },
     buttonText: {
-        fontSize: 16,
+        fontSize: ms(16),
         color: WHITE,
         fontWeight: 'bold',
     },
     button: {
         width: '90%',
-        marginVertical: 15,
-        borderRadius: 35,
+        marginVertical: ms(15),
+        borderRadius: ms(35),
         overflow: 'hidden',
     },
     gradientButton: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        paddingVertical: 16,
-        paddingHorizontal: 25,
-        borderRadius: 35,
-        gap: 10,
+        paddingVertical: ms(16),
+        paddingHorizontal: ms(25),
+        borderRadius: ms(35),
+        gap: ms(10),
     },
     buttonTextLarge: {
-        fontSize: 18,
+        fontSize: ms(18),
         fontWeight: 'bold',
         color: WHITE,
     },

@@ -36,11 +36,14 @@ export default StyleSheet.create({
         top: 0,
     },
     avatar: {
-        width: scale(35),
-        height: scale(35),
-        borderRadius: 55,
-        borderWidth: 4,
+        width: scale(38),
+        height: scale(38),
+        borderRadius: scale(19),
+        borderWidth: 2,
         borderColor: '#fff',
+        backgroundColor: 'rgba(255,255,255,0.15)',
+        alignItems: 'center',
+        justifyContent: 'center',
     },
     avatarRing: {
         position: 'absolute',

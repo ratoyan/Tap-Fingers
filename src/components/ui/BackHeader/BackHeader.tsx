@@ -1,11 +1,12 @@
 import React from "react";
-import {Image, Text, TouchableOpacity, View, ViewStyle} from "react-native";
+import {Text, TouchableOpacity, View, ViewStyle} from "react-native";
 import {useSafeAreaInsets} from "react-native-safe-area-context";
 import {useNavigation} from "@react-navigation/core";
 import {TOP_OFFSET} from "../../../constants/uiConstants.ts";
 
 // icons
 import Back from "../../../assets/icons/Back.tsx";
+import UserIcon from "../../../assets/icons/UserIcon.tsx";
 
 // components
 import CoinCount from "../CoinCount/CoinCount.tsx";
@@ -72,10 +73,9 @@ function BackHeader({
                 isProfile && (
                     <TouchableOpacity style={[styles.avatarWrapper, {top: insets.top + TOP_OFFSET + 5}]}
                                       onPress={handleProfilePress}>
-                        <Image
-                            source={{uri: 'https://i.pravatar.cc/150?img=3'}}
-                            style={styles.avatar}
-                        />
+                        <View style={styles.avatar}>
+                            <UserIcon size={22} color="#fff"/>
+                        </View>
                         <View style={styles.avatarRing}/>
                     </TouchableOpacity>
                 )

@@ -11,14 +11,16 @@ interface ToggleRow {
     label: string;
     value: boolean;
     onChange: (val: boolean) => void;
-    viewStyle?: ViewStyle
+    viewStyle?: ViewStyle;
+    icon?: React.ReactNode;
 }
 
 interface PressRow {
     label: string;
     valueText: string;
     onPress: () => void;
-    viewStyle?: ViewStyle
+    viewStyle?: ViewStyle;
+    icon?: React.ReactNode;
 }
 
 type SettingRowProps = ToggleRow | PressRow;
@@ -50,6 +52,12 @@ function SettingRow(props: SettingRowProps) {
             }
         >
             <View style={[styles.row, props.viewStyle && props.viewStyle]} importantForAccessibility="no-hide-descendants">
+                {props.icon && (
+                    <View style={styles.iconBubble}>
+                        {props.icon}
+                    </View>
+                )}
+
                 <Text style={styles.label}>{props.label}</Text>
 
                 {isToggle && (

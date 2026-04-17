@@ -3,6 +3,7 @@ import {
     View,
     Text, TouchableOpacity,
 } from 'react-native';
+import LinearGradient from 'react-native-linear-gradient';
 import {LanguageType} from "../../types/language.type.ts";
 import {changeAppLanguage} from "../../localization/i18n.ts";
 import {useNavigation} from "@react-navigation/core";
@@ -17,6 +18,13 @@ import SettingRow from "../../components/ui/SettingRow/SettingRow.tsx";
 import LanguageModal from "../../components/ui/LanguageModal/LanguageModal.tsx";
 import BackHeader from "../../components/ui/BackHeader/BackHeader.tsx";
 import LogoutModal from "../../components/ui/LogoutModal/LogoutModal.tsx";
+
+// icons
+import MusicIcon from "../../assets/icons/MusicIcon.tsx";
+import SoundIcon from "../../assets/icons/SoundIcon.tsx";
+import VibrationIcon from "../../assets/icons/VibrationIcon.tsx";
+import LanguageIcon from "../../assets/icons/LanguageIcon.tsx";
+import ExitIcon from "../../assets/icons/ExitIcon.tsx";
 
 // styles
 import styles from './Settings.style.ts';
@@ -105,7 +113,10 @@ function Settings() {
     }, [currentLang])
 
     return (
-        <View
+        <LinearGradient
+            colors={['#1a1a2e', '#4B0082', '#6a0dad']}
+            start={{x: 0, y: 0}}
+            end={{x: 0.3, y: 1}}
             style={styles.container}
             accessible={true}
             accessibilityLabel="Settings screen"
@@ -123,44 +134,53 @@ function Settings() {
                 accessibilityLabel="Settings options"
             >
                 <SettingRow
-                    label={`🎵 ${t('music')}`}
+                    label={t('music')}
                     value={music}
                     onChange={toggleMusic}
+                    icon={<MusicIcon size={20} color="#fff"/>}
                 />
 
                 <SettingRow
-                    label={`🔊 ${t('soundEffects')}`}
+                    label={t('soundEffects')}
                     value={sound}
                     onChange={toggleSound}
+                    icon={<SoundIcon size={20} color="#fff"/>}
                 />
 
                 <SettingRow
-                    label={`📳 ${t('vibration')}`}
+                    label={t('vibration')}
                     value={vibration}
                     onChange={toggleVibration}
+                    icon={<VibrationIcon size={20} color="#fff"/>}
                 />
 
                 <SettingRow
-                    label={`🌍 ${t('language')}`}
+                    label={t('language')}
                     valueText={language.name}
                     onPress={() => setLangModal(true)}
                     viewStyle={{ borderBottomWidth: 0 }}
+                    icon={<LanguageIcon size={20} color="#fff"/>}
                 />
             </View>
 
             {/* Exit Button */}
             <TouchableOpacity
-                style={styles.button}
-                onPress={() => {
-                    setLogoutModal(true);
-                }}
+                style={styles.buttonWrapper}
+                onPress={() => setLogoutModal(true)}
                 accessibilityRole="button"
                 accessibilityLabel={t('exitGame')}
                 accessibilityHint="Opens exit confirmation dialog"
+                activeOpacity={0.82}
             >
-                <Text style={styles.buttonText}>
-                    {t('exitGame')}
-                </Text>
+                <LinearGradient
+                    colors={['#c0392b', '#7b0000']}
+                    start={{x: 0, y: 0}}
+                    end={{x: 1, y: 0}}
+                    style={styles.button}
+                >
+                    <ExitIcon size={22} color="#fff"/>
+                    <Text style={styles.buttonText}>{t('exitGame')}</Text>
+                </LinearGradient>
             </TouchableOpacity>
 
             <LanguageModal
@@ -178,7 +198,7 @@ function Settings() {
                 onClose={() => setLogoutModal(false)}
                 onConfirm={logOut}
             />
-        </View>
+        </LinearGradient>
     );
 }
 

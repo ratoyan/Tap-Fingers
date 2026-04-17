@@ -32,6 +32,11 @@ export default StyleSheet.create({
         borderWidth: 3,
         borderColor: ORCHID,
     },
+    avatarPlaceholder: {
+        backgroundColor: 'rgba(255,255,255,0.12)',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
     cameraOverlay: {
         position: 'absolute',
         bottom: 0,

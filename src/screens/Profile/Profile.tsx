@@ -20,13 +20,14 @@ import BackHeader from '../../components/ui/BackHeader/BackHeader.tsx';
 import PhotoPickerSheet from '../../components/ui/PhotoPickerSheet/PhotoPickerSheet.tsx';
 import SocialAuthButton from '../../components/ui/SocialAuthButton/SocialAuthButton.tsx';
 import Ghost from '../../assets/icons/Ghost.tsx';
+import UserIcon from '../../assets/icons/UserIcon.tsx';
 
 // styles
 import styles from './Profile.style.ts';
 import {GRADIENT_LIGHT, PURPLE, VIOLET} from '../../constants/colors.ts';
 import {STORAGE_KEYS} from '../../utils/storageKeys.ts';
 
-const DEFAULT_AVATAR = 'https://i.pravatar.cc/150?img=3';
+const DEFAULT_AVATAR = '';
 const STORAGE_KEY_NAME  = 'profile_username';
 const STORAGE_KEY_PHOTO = 'profile_photo';
 
@@ -166,12 +167,18 @@ function Profile() {
                                     accessibilityLabel={t('changePhoto')}
                                 >
                                     <View style={styles.avatarWrapper}>
-                                        <Image
-                                            source={{uri: photoUri}}
-                                            style={styles.avatar}
-                                            accessibilityRole="image"
-                                            accessibilityLabel="User profile picture"
-                                        />
+                                        {photoUri ? (
+                                            <Image
+                                                source={{uri: photoUri}}
+                                                style={styles.avatar}
+                                                accessibilityRole="image"
+                                                accessibilityLabel="User profile picture"
+                                            />
+                                        ) : (
+                                            <View style={[styles.avatar, styles.avatarPlaceholder]}>
+                                                <UserIcon size={70} color="rgba(255,255,255,0.9)"/>
+                                            </View>
+                                        )}
                                         <View style={styles.cameraOverlay}>
                                             <Text style={styles.cameraIcon}>📷</Text>
                                         </View>

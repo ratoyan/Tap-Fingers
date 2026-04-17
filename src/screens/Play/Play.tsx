@@ -43,7 +43,7 @@ import {GRADIENT_LIGHT} from '../../constants/colors.ts';
 const {width, height} = Dimensions.get('window');
 
 const HEARTS_LENGTH = 7;
-const LEVEL_LENGTH = 1;
+const LEVEL_LENGTH = 30;
 const MAX_ITEMS = 5;
 const INITIAL_DURATION = 20;
 const DURATION_STEP = 20;

@@ -9,6 +9,9 @@ import StarCard from "../../../assets/icons/StarCard.tsx";
 import DiamondCard from "../../../assets/icons/DiamondCard.tsx";
 import HeartCard from "../../../assets/icons/HeartCard.tsx";
 import BombCard from "../../../assets/icons/BombCard.tsx";
+import Ghost from "../../../assets/icons/Ghost.tsx";
+import FlameIcon from "../../../assets/icons/FlameIcon.tsx";
+import BoltIcon from "../../../assets/icons/BoltIcon.tsx";
 import SuccessIcon from "../../../assets/icons/SuccessIcon.tsx";
 
 // styles
@@ -105,6 +108,8 @@ function ShopItem({item, index = 0, handlePress, selected = false, purchased = f
                 return <HeartCard width={90} height={90}/>;
             case 'bomb':
                 return <BombCard width={90} height={90}/>;
+            case 'ghost':
+                return <Ghost size={90}/>;
             case 'square':
                 return (
                     <View style={styles.squareGrid}>

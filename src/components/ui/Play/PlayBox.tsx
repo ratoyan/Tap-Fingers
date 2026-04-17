@@ -11,6 +11,9 @@ import StarCard from "../../../assets/icons/StarCard";
 import DiamondCard from "../../../assets/icons/DiamondCard";
 import HeartCard from "../../../assets/icons/HeartCard";
 import BombCard from "../../../assets/icons/BombCard";
+import Ghost from "../../../assets/icons/Ghost";
+import FlameIcon from "../../../assets/icons/FlameIcon";
+import BoltIcon from "../../../assets/icons/BoltIcon";
 
 interface PlayBoxProps {
     box: any;
@@ -136,6 +139,19 @@ function PlayBox({box, handlePress}: PlayBoxProps) {
         ) : (
             <Pressable onPress={handlePress} style={[commonStyle, {zIndex: 1}]}>
                 <BombCard width={100} height={100}/>
+            </Pressable>
+        );
+    }
+
+    // 👻 Ghost
+    if (typeName === "ghost") {
+        return box.isBoom ? (
+            <View style={commonStyle}>
+                <TrackIcon width={100} height={100} color="rgba(255,255,255,0.6)"/>
+            </View>
+        ) : (
+            <Pressable onPress={handlePress} style={[commonStyle, {zIndex: 1}]}>
+                <Ghost size={100} color={box.color ?? '#fff'} eyeColor="#4B0082"/>
             </Pressable>
         );
     }

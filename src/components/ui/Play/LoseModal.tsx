@@ -36,9 +36,10 @@ interface LoseModalProps {
     onRetry: () => void;
     onBack: () => void;
     onWatchAd: () => void;
+    canWatchAd?: boolean;
 }
 
-export default function LoseModal({visible, score, onRetry, onBack, onWatchAd}: LoseModalProps) {
+export default function LoseModal({visible, score, onRetry, onBack, onWatchAd, canWatchAd = true}: LoseModalProps) {
     const {t} = useTranslation();
 
     const scaleAnim = useRef(new Animated.Value(0)).current;
@@ -166,25 +167,31 @@ export default function LoseModal({visible, score, onRetry, onBack, onWatchAd}: 
                 </LinearGradient>
 
                 {/* Watch Ad button */}
-                <Animated.View style={[styles.adBtnWrap, {transform: [{scale: adPulseAnim}]}]}>
-                    <TouchableOpacity onPress={onWatchAd} activeOpacity={0.85}>
-                        <LinearGradient
-                            colors={['#f7971e', '#ffd200']}
-                            start={{x: 0, y: 0}}
-                            end={{x: 1, y: 0}}
-                            style={styles.adBtn}
-                        >
-                            <Text style={styles.adBtnIcon}>📺</Text>
-                            <View style={styles.adBtnTextWrap}>
-                                <Text style={styles.adBtnTitle}>{t('watchAd')}</Text>
-                                <View style={styles.adBtnBadge}>
-                                    <FullHeart size={14} color="#e74c3c"/>
-                                    <Text style={styles.adBtnBadgeText}> {t('getHeart')}</Text>
+                {canWatchAd ? (
+                    <Animated.View style={[styles.adBtnWrap, {transform: [{scale: adPulseAnim}]}]}>
+                        <TouchableOpacity onPress={onWatchAd} activeOpacity={0.85}>
+                            <LinearGradient
+                                colors={['#f7971e', '#ffd200']}
+                                start={{x: 0, y: 0}}
+                                end={{x: 1, y: 0}}
+                                style={styles.adBtn}
+                            >
+                                <Text style={styles.adBtnIcon}>📺</Text>
+                                <View style={styles.adBtnTextWrap}>
+                                    <Text style={styles.adBtnTitle}>{t('watchAd')}</Text>
+                                    <View style={styles.adBtnBadge}>
+                                        <FullHeart size={14} color="#e74c3c"/>
+                                        <Text style={styles.adBtnBadgeText}> {t('getHeart')}</Text>
+                                    </View>
                                 </View>
-                            </View>
-                        </LinearGradient>
-                    </TouchableOpacity>
-                </Animated.View>
+                            </LinearGradient>
+                        </TouchableOpacity>
+                    </Animated.View>
+                ) : (
+                    <View style={styles.adBtnDisabled}>
+                        <Text style={styles.adBtnDisabledText}>📺 {t('watchAd')} (0/2)</Text>
+                    </View>
+                )}
 
                 {/* Retry + Back row */}
                 <View style={styles.actions}>
@@ -329,6 +336,22 @@ const styles = StyleSheet.create({
     adBtnBadgeText: {
         color: DARK_PURPLE,
         fontSize: ms(13),
+        fontWeight: '700',
+    },
+    adBtnDisabled: {
+        width: '100%',
+        borderRadius: ms(18),
+        paddingVertical: vs(14),
+        paddingHorizontal: ms(20),
+        alignItems: 'center',
+        marginBottom: vs(14),
+        backgroundColor: 'rgba(255,255,255,0.07)',
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.12)',
+    },
+    adBtnDisabledText: {
+        color: 'rgba(255,255,255,0.3)',
+        fontSize: ms(15),
         fontWeight: '700',
     },
     actions: {

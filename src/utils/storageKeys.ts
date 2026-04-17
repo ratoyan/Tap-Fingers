@@ -10,4 +10,5 @@ export const STORAGE_KEYS = {
     CARDSID: 'cardsId',
     BACKGROUNDSID: 'backgroundsId',
     AUTH_TYPE: 'auth_type',  // 'google' | 'apple' | 'guest'
+    BOMB_COUNT: 'bomb_count',
 };

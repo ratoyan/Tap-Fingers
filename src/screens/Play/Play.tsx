@@ -59,7 +59,6 @@ function getDefaultBackground(level: number) {
     return require('../../assets/images/background1.jpg');
 }
 
-
 function createBoxes(card: any, duration: number) {
     return Array.from({length: MAX_ITEMS}, () => ({
         ...card,

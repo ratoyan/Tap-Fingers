@@ -43,11 +43,11 @@ import {GRADIENT_LIGHT} from '../../constants/colors.ts';
 const {width, height} = Dimensions.get('window');
 
 const HEARTS_LENGTH = 7;
-const LEVEL_LENGTH = 30;
+const LEVEL_LENGTH = 1;
 const MAX_ITEMS = 5;
 const INITIAL_DURATION = 20;
 const DURATION_STEP = 20;
-const INITIAL_BOMBS = 3;
+const INITIAL_BOMBS = 0;
 const COMBO_WINDOW_MS = 550;
 const COMBO_RESET_MS = 850;
 const GOLDEN_SPAWN_CHANCE = 0.13;

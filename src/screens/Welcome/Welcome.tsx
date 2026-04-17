@@ -34,11 +34,18 @@ function Welcome() {
     async function saveCardAndBackground() {
         try {
             if (!shops || shops.length === 0) return;
-            const firstCardId = shops[0].id;
-            await AsyncStorage.setItem(STORAGE_KEYS.CARDSID, JSON.stringify([firstCardId]));
-            await AsyncStorage.setItem(STORAGE_KEYS.CARDID, JSON.stringify(firstCardId));
+
+            const firstCardId = shops[0].id.toString();
+
+            await AsyncStorage.multiSet([
+                [STORAGE_KEYS.CARDSID, JSON.stringify([firstCardId])],
+                [STORAGE_KEYS.CARDID, JSON.stringify(firstCardId)],
+                [STORAGE_KEYS.BOMB_COUNT, JSON.stringify(1)],
+                [STORAGE_KEYS.SLOW_COUNT, JSON.stringify(1)],
+                [STORAGE_KEYS.SHIELD_COUNT, JSON.stringify(1)],
+            ]);
         } catch (error) {
-            console.log("Save error:", error);
+            console.log('Save error:', error);
         }
     }
 

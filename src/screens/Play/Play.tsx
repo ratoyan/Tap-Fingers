@@ -140,14 +140,12 @@ export default function Play() {
     const [bombCount,      setBombCount]      = useState(INITIAL_BOMBS);
     const [combo,          setCombo]          = useState(0);
     const [watchAdUsed,    setWatchAdUsed]    = useState(0);
-    const [streak,          setStreak]          = useState(0);
     const [showLevelUp,     setShowLevelUp]     = useState(false);
     const [shieldCount,     setShieldCount]     = useState(0);
     const [slowCount,       setSlowCount]       = useState(0);
     const [shieldActive,    setShieldActive]    = useState(false);
     const [slowActive,      setSlowActive]      = useState(false);
     const [slowTimer,       setSlowTimer]       = useState(0);
-    const [timer,           setTimer]           = useState(0);
 
     const levelIndex = Math.min(level - 1, 4);
 
@@ -301,14 +299,12 @@ export default function Play() {
         setEmptyHeartCount(0);
         setBombCount(INITIAL_BOMBS);
         setCombo(0);
-        setStreak(0);
         setShieldCount(0);
         setSlowCount(0);
         AsyncStorage.setItem(STORAGE_KEYS.SLOW_COUNT,   JSON.stringify(0));
         AsyncStorage.setItem(STORAGE_KEYS.SHIELD_COUNT, JSON.stringify(0));
         setShieldActive(false);
         setSlowActive(false);
-        setTimer(0);
         setWatchAdUsed(0);
         setIsPlaying(true);
         setIsLoseModal(false);
@@ -330,7 +326,6 @@ export default function Play() {
         saveBombCount(newBombs);
 
         streakRef.current = 0;
-        setStreak(0);
 
         if (!cancelSoundRef.current && musicBombRef.current) {
             musicBombRef.current.setCurrentTime(0);
@@ -430,7 +425,6 @@ export default function Play() {
 
         // Streak
         streakRef.current += 1;
-        setStreak(streakRef.current);
 
         // Combo
         const now = Date.now();
@@ -596,7 +590,6 @@ export default function Play() {
 
             if (missHappenedRef.current) {
                 streakRef.current = 0;
-                setStreak(0);
                 triggerMissShake();
             }
 
@@ -605,13 +598,6 @@ export default function Play() {
 
         animationFrameId = requestAnimationFrame(animate);
         return () => cancelAnimationFrame(animationFrameId);
-    }, [isPlaying]);
-
-    // Timer — counts up every second while playing
-    useEffect(() => {
-        if (!isPlaying) return;
-        const interval = setInterval(() => setTimer(t => t + 1), 1000);
-        return () => clearInterval(interval);
     }, [isPlaying]);
 
     // Spawn new boxes

@@ -21,6 +21,11 @@ import uuId from 'react-native-uuid';
 // icons
 import Back from '../../assets/icons/Back.tsx';
 import BombCard from '../../assets/icons/BombCard.tsx';
+import ShieldIcon from '../../assets/icons/ShieldIcon.tsx';
+import SlowIcon from '../../assets/icons/SlowIcon.tsx';
+import FlameIcon from '../../assets/icons/FlameIcon.tsx';
+import BoltIcon from '../../assets/icons/BoltIcon.tsx';
+import StarBurstIcon from '../../assets/icons/StarBurstIcon.tsx';
 
 // components
 import CoinCount from '../../components/ui/CoinCount/CoinCount.tsx';
@@ -45,6 +50,7 @@ const DURATION_STEP = 20;
 const INITIAL_BOMBS = 3;
 const COMBO_WINDOW_MS = 550;
 const COMBO_RESET_MS = 850;
+const GOLDEN_SPAWN_CHANCE = 0.13;
 
 function getDefaultBackground(level: number) {
     if (level > 4) return require('../../assets/images/background4.jpg');
@@ -52,6 +58,7 @@ function getDefaultBackground(level: number) {
     if (level > 2) return require('../../assets/images/background2.jpg');
     return require('../../assets/images/background1.jpg');
 }
+
 
 function createBoxes(card: any, duration: number) {
     return Array.from({length: MAX_ITEMS}, () => ({
@@ -64,7 +71,24 @@ function createBoxes(card: any, duration: number) {
         color: colors[Math.floor(Math.random() * colors.length)],
         duration,
         isBoom: false,
+        isGolden: false,
     }));
+}
+
+function spawnBox(card: any, duration: number) {
+    const isGolden = Math.random() < GOLDEN_SPAWN_CHANCE;
+    return {
+        ...card,
+        id: uuId.v4(),
+        x: Math.random() * (width - card.size),
+        y: Math.random() * -1000,
+        tx: Math.random() * (width - card.size),
+        ty: 0,
+        color: isGolden ? '#FFD700' : colors[Math.floor(Math.random() * colors.length)],
+        duration,
+        isBoom: false,
+        isGolden,
+    };
 }
 
 export default function Play() {
@@ -72,49 +96,70 @@ export default function Play() {
     const insets = useSafeAreaInsets();
     const {card, background} = useShopStore();
 
-    // Refs
-    const cancelSoundRef = useRef(true);
-    const cancelVibrationRef = useRef(true);
-    const durationRef = useRef(INITIAL_DURATION);
-    const musicJumpingRef = useRef<Sound | null>(null);
-    const musicPopRef = useRef<Sound | null>(null);
-    const countRef = useRef(0);
-    const bombCountRef = useRef(INITIAL_BOMBS);
-    const levelRef = useRef(1);
-    const watchAdUsedRef = useRef(0);
-    const lastTapTimeRef = useRef(0);
-    const comboCountRef = useRef(0);
-    const comboTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    // ─── Refs ─────────────────────────────────────────────────────────────────
+    const cancelSoundRef       = useRef(true);
+    const cancelVibrationRef   = useRef(true);
+    const durationRef          = useRef(INITIAL_DURATION);
+    const musicJumpingRef      = useRef<Sound | null>(null);
+    const musicPopRef          = useRef<Sound | null>(null);
+    const musicBombRef         = useRef<Sound | null>(null);
+    const countRef             = useRef(0);
+    const bombCountRef         = useRef(INITIAL_BOMBS);
+    const levelRef             = useRef(1);
+    const watchAdUsedRef       = useRef(0);
+    const lastTapTimeRef       = useRef(0);
+    const comboCountRef        = useRef(0);
+    const comboTimerRef        = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const streakRef            = useRef(0);
+    const missHappenedRef      = useRef(false);
+    const shieldActiveRef      = useRef(false);
+    const slowActiveRef        = useRef(false);
+    const slowSpeedRef         = useRef(1);
+    const shieldCountRef       = useRef(0);
+    const slowCountRef         = useRef(0);
 
-    // Animated values
-    const bombFlashAnim = useRef(new Animated.Value(0)).current;
-    const comboScaleAnim = useRef(new Animated.Value(0)).current;
+    // ─── Animated values ──────────────────────────────────────────────────────
+    const bombFlashAnim    = useRef(new Animated.Value(0)).current;
+    const shieldFlashAnim  = useRef(new Animated.Value(0)).current;
+    const slowFlashAnim    = useRef(new Animated.Value(0)).current;
+    const comboScaleAnim   = useRef(new Animated.Value(0)).current;
     const comboOpacityAnim = useRef(new Animated.Value(0)).current;
-    const bombPulseAnim = useRef(new Animated.Value(1)).current;
+    const bombPulseAnim    = useRef(new Animated.Value(1)).current;
+    const shakeAnim        = useRef(new Animated.Value(0)).current;
+    const lvlUpOpacityAnim = useRef(new Animated.Value(0)).current;
+    const lvlUpScaleAnim   = useRef(new Animated.Value(0.5)).current;
 
-    // State
-    const [count, setCount] = useState(0);
-    const [levelCount, setLevelCount] = useState(0);
-    const [level, setLevel] = useState(1);
-    const [emptyHeartCount, setEmptyHeartCount] = useState(0);
-    const [isPlaying, setIsPlaying] = useState(true);
-    const [isLoseModal, setIsLoseModal] = useState(false);
-    const [isExitModal, setIsExitModal] = useState(false);
-    const [boxesData, setBoxesData] = useState(() => createBoxes(card, durationRef.current));
-    const [bombCount, setBombCount] = useState(INITIAL_BOMBS);
-    const [combo, setCombo] = useState(0);
-    const [watchAdUsed, setWatchAdUsed] = useState(0);
+    // ─── State ────────────────────────────────────────────────────────────────
+    const [count,          setCount]          = useState(0);
+    const [levelCount,     setLevelCount]     = useState(0);
+    const [level,          setLevel]          = useState(1);
+    const [emptyHeartCount,setEmptyHeartCount]= useState(0);
+    const [isPlaying,      setIsPlaying]      = useState(true);
+    const [isLoseModal,    setIsLoseModal]    = useState(false);
+    const [isExitModal,    setIsExitModal]    = useState(false);
+    const [boxesData,      setBoxesData]      = useState(() => createBoxes(card, durationRef.current));
+    const [bombCount,      setBombCount]      = useState(INITIAL_BOMBS);
+    const [combo,          setCombo]          = useState(0);
+    const [watchAdUsed,    setWatchAdUsed]    = useState(0);
+    const [streak,          setStreak]          = useState(0);
+    const [showLevelUp,     setShowLevelUp]     = useState(false);
+    const [shieldCount,     setShieldCount]     = useState(0);
+    const [slowCount,       setSlowCount]       = useState(0);
+    const [shieldActive,    setShieldActive]    = useState(false);
+    const [slowActive,      setSlowActive]      = useState(false);
+    const [slowTimer,       setSlowTimer]       = useState(0);
+    const [timer,           setTimer]           = useState(0);
 
     const levelIndex = Math.min(level - 1, 4);
 
-    // ─── Bomb pulse loop ──────────────────────────────────────────────────────
 
+    // ─── Bomb pulse loop ──────────────────────────────────────────────────────
     useEffect(() => {
         if (bombCount <= 0) return;
         const pulse = Animated.loop(
             Animated.sequence([
                 Animated.timing(bombPulseAnim, {toValue: 1.12, duration: 700, useNativeDriver: true}),
-                Animated.timing(bombPulseAnim, {toValue: 1, duration: 700, useNativeDriver: true}),
+                Animated.timing(bombPulseAnim, {toValue: 1,    duration: 700, useNativeDriver: true}),
             ])
         );
         pulse.start();
@@ -122,38 +167,88 @@ export default function Play() {
     }, [bombCount]);
 
     // ─── Storage helpers ──────────────────────────────────────────────────────
-
     async function saveCoinStorage() {
         try {
-            const stored = await AsyncStorage.getItem(STORAGE_KEYS.COIN);
+            const stored  = await AsyncStorage.getItem(STORAGE_KEYS.COIN);
             const current = stored ? JSON.parse(stored) : 0;
             await AsyncStorage.setItem(STORAGE_KEYS.COIN, JSON.stringify(current + countRef.current));
-        } catch (error) {
-            console.log('Coin storage error:', error);
-        }
+        } catch (e) {}
     }
 
     async function loadSettings() {
-        const cancelSound = await AsyncStorage.getItem(STORAGE_KEYS.SOUND);
-        const cancelVibration = await AsyncStorage.getItem(STORAGE_KEYS.VIBRATION);
-        cancelSoundRef.current = !!cancelSound;
-        cancelVibrationRef.current = !!cancelVibration;
+        const s = await AsyncStorage.getItem(STORAGE_KEYS.SOUND);
+        const v = await AsyncStorage.getItem(STORAGE_KEYS.VIBRATION);
+        cancelSoundRef.current     = !!s;
+        cancelVibrationRef.current = !!v;
     }
 
     async function loadBombCount() {
         const stored = await AsyncStorage.getItem(STORAGE_KEYS.BOMB_COUNT);
-        const saved = stored ? JSON.parse(stored) : INITIAL_BOMBS;
-        const value = Math.max(saved, INITIAL_BOMBS);
+        const saved  = stored ? JSON.parse(stored) : INITIAL_BOMBS;
+        const value  = Math.max(saved, INITIAL_BOMBS);
         bombCountRef.current = value;
         setBombCount(value);
     }
 
-    async function saveBombCount(count: number) {
-        await AsyncStorage.setItem(STORAGE_KEYS.BOMB_COUNT, JSON.stringify(count));
+    async function saveBombCount(n: number) {
+        await AsyncStorage.setItem(STORAGE_KEYS.BOMB_COUNT, JSON.stringify(n));
+    }
+
+    async function loadHelperCounts() {
+        const slow   = await AsyncStorage.getItem(STORAGE_KEYS.SLOW_COUNT);
+        const shield = await AsyncStorage.getItem(STORAGE_KEYS.SHIELD_COUNT);
+        const s = slow   ? JSON.parse(slow)   : 0;
+        const h = shield ? JSON.parse(shield) : 0;
+        slowCountRef.current   = s;
+        shieldCountRef.current = h;
+        setSlowCount(s);
+        setShieldCount(h);
+    }
+
+    async function saveSlowCount(n: number) {
+        await AsyncStorage.setItem(STORAGE_KEYS.SLOW_COUNT, JSON.stringify(n));
+    }
+
+    async function saveShieldCount(n: number) {
+        await AsyncStorage.setItem(STORAGE_KEYS.SHIELD_COUNT, JSON.stringify(n));
+    }
+
+    // ─── Animations ───────────────────────────────────────────────────────────
+    function triggerMissShake() {
+        Animated.sequence([
+            Animated.timing(shakeAnim, {toValue:  9, duration: 50, useNativeDriver: true}),
+            Animated.timing(shakeAnim, {toValue: -9, duration: 50, useNativeDriver: true}),
+            Animated.timing(shakeAnim, {toValue:  5, duration: 50, useNativeDriver: true}),
+            Animated.timing(shakeAnim, {toValue:  0, duration: 50, useNativeDriver: true}),
+        ]).start();
+    }
+
+    function triggerLevelUp(newLevel: number) {
+        setShowLevelUp(true);
+        lvlUpOpacityAnim.setValue(1);
+        lvlUpScaleAnim.setValue(0.4);
+        Animated.parallel([
+            Animated.spring(lvlUpScaleAnim,   {toValue: 1, useNativeDriver: true, friction: 4}),
+            Animated.sequence([
+                Animated.delay(1100),
+                Animated.timing(lvlUpOpacityAnim, {toValue: 0, duration: 400, useNativeDriver: true}),
+            ]),
+        ]).start(() => setShowLevelUp(false));
+    }
+
+    function triggerComboAnim() {
+        comboScaleAnim.setValue(0.4);
+        comboOpacityAnim.setValue(1);
+        Animated.parallel([
+            Animated.spring(comboScaleAnim, {toValue: 1, useNativeDriver: true, friction: 4}),
+            Animated.sequence([
+                Animated.delay(500),
+                Animated.timing(comboOpacityAnim, {toValue: 0, duration: 300, useNativeDriver: true}),
+            ]),
+        ]).start();
     }
 
     // ─── Game actions ─────────────────────────────────────────────────────────
-
     function backHandler() {
         setIsPlaying(false);
         setIsExitModal(true);
@@ -188,19 +283,33 @@ export default function Play() {
     }
 
     function handleRetry() {
-        durationRef.current = INITIAL_DURATION;
-        countRef.current = 0;
-        bombCountRef.current = INITIAL_BOMBS;
-        levelRef.current = 1;
+        durationRef.current      = INITIAL_DURATION;
+        countRef.current         = 0;
+        bombCountRef.current     = INITIAL_BOMBS;
+        levelRef.current         = 1;
+        comboCountRef.current    = 0;
+        streakRef.current        = 0;
+        shieldCountRef.current   = 0;
+        slowCountRef.current     = 0;
+        shieldActiveRef.current  = false;
+        slowActiveRef.current    = false;
+        slowSpeedRef.current     = 1;
+        watchAdUsedRef.current   = 0;
         AsyncStorage.setItem(STORAGE_KEYS.BOMB_COUNT, JSON.stringify(INITIAL_BOMBS));
-        comboCountRef.current = 0;
         setCount(0);
         setLevelCount(0);
         setLevel(1);
         setEmptyHeartCount(0);
         setBombCount(INITIAL_BOMBS);
         setCombo(0);
-        watchAdUsedRef.current = 0;
+        setStreak(0);
+        setShieldCount(0);
+        setSlowCount(0);
+        AsyncStorage.setItem(STORAGE_KEYS.SLOW_COUNT,   JSON.stringify(0));
+        AsyncStorage.setItem(STORAGE_KEYS.SHIELD_COUNT, JSON.stringify(0));
+        setShieldActive(false);
+        setSlowActive(false);
+        setTimer(0);
         setWatchAdUsed(0);
         setIsPlaying(true);
         setIsLoseModal(false);
@@ -213,7 +322,6 @@ export default function Play() {
     }
 
     // ─── Bomb helper ──────────────────────────────────────────────────────────
-
     function handleBomb() {
         if (bombCountRef.current <= 0 || !isPlaying) return;
 
@@ -222,41 +330,89 @@ export default function Play() {
         setBombCount(newBombs);
         saveBombCount(newBombs);
 
+        streakRef.current = 0;
+        setStreak(0);
+
+        if (!cancelSoundRef.current && musicBombRef.current) {
+            musicBombRef.current.setCurrentTime(0);
+            musicBombRef.current.play();
+        }
+
         if (!cancelVibrationRef.current) Vibration.vibrate([0, 80, 60, 80]);
 
-        // Flash screen orange→transparent
         bombFlashAnim.setValue(1);
-        Animated.timing(bombFlashAnim, {
-            toValue: 0,
-            duration: 700,
-            useNativeDriver: true,
-        }).start();
+        Animated.timing(bombFlashAnim, {toValue: 0, duration: 700, useNativeDriver: true}).start();
 
-        // Count active (non-boom) boxes and award coins
         setBoxesData(prev => {
             const activeCount = prev.filter(b => !b.isBoom).length;
-            countRef.current += activeCount;
-            setCount(c => c + activeCount);
-            setLevelCount(c => c + activeCount);
+            const pts = activeCount;
+            countRef.current += pts;
+            setCount(c => c + pts);
+            setLevelCount(c => c + pts);
             return [];
         });
         setTimeout(() => setBoxesData(createBoxes(card, durationRef.current)), 150);
     }
 
-    // ─── Combo ────────────────────────────────────────────────────────────────
+    // ─── Shield helper ───────────────────────────────────────────────────────
+    function handleShield() {
+        if (shieldCountRef.current <= 0 || !isPlaying || shieldActiveRef.current) return;
 
-    function triggerComboAnim() {
-        comboScaleAnim.setValue(0.4);
-        comboOpacityAnim.setValue(1);
-        Animated.parallel([
-            Animated.spring(comboScaleAnim, {toValue: 1, useNativeDriver: true, friction: 4}),
-            Animated.sequence([
-                Animated.delay(500),
-                Animated.timing(comboOpacityAnim, {toValue: 0, duration: 300, useNativeDriver: true}),
-            ]),
-        ]).start();
+        shieldCountRef.current -= 1;
+        setShieldCount(shieldCountRef.current);
+        shieldActiveRef.current = true;
+        setShieldActive(true);
+
+        if (!cancelSoundRef.current && musicJumpingRef.current) {
+            musicJumpingRef.current.setSpeed(1.6);
+            musicJumpingRef.current.setCurrentTime(0);
+            musicJumpingRef.current.play();
+        }
+
+        shieldFlashAnim.setValue(1);
+        Animated.timing(shieldFlashAnim, {toValue: 0, duration: 600, useNativeDriver: true}).start();
+
+        if (!cancelVibrationRef.current) Vibration.vibrate(120);
     }
 
+    // ─── Slow Mo helper ───────────────────────────────────────────────────────
+    function handleSlow() {
+        if (slowCountRef.current <= 0 || !isPlaying || slowActiveRef.current) return;
+
+        slowCountRef.current -= 1;
+        setSlowCount(slowCountRef.current);
+        slowActiveRef.current = true;
+        slowSpeedRef.current  = 0.25;
+        setSlowActive(true);
+
+        if (!cancelSoundRef.current && musicBombRef.current) {
+            musicBombRef.current.setSpeed(0.5);
+            musicBombRef.current.setCurrentTime(0);
+            musicBombRef.current.play();
+        }
+
+        slowFlashAnim.setValue(1);
+        Animated.timing(slowFlashAnim, {toValue: 0, duration: 800, useNativeDriver: true}).start();
+
+        if (!cancelVibrationRef.current) Vibration.vibrate([0, 60, 40, 60]);
+
+        const SLOW_DURATION = 8;
+        setSlowTimer(SLOW_DURATION);
+        const countdown = setInterval(() => {
+            setSlowTimer(t => {
+                if (t <= 1) {
+                    clearInterval(countdown);
+                    slowActiveRef.current = false;
+                    slowSpeedRef.current  = 1;
+                    setSlowActive(false);
+                    return 0;
+                }
+                return t - 1;
+            });
+        }, 1000);
+    }
+
+    // ─── Tap handler ─────────────────────────────────────────────────────────
     function handleTap(box: any) {
         if (box.isBoom) return;
 
@@ -273,7 +429,11 @@ export default function Play() {
             }
         }
 
-        // Combo detection
+        // Streak
+        streakRef.current += 1;
+        setStreak(streakRef.current);
+
+        // Combo
         const now = Date.now();
         if (now - lastTapTimeRef.current < COMBO_WINDOW_MS) {
             comboCountRef.current += 1;
@@ -293,17 +453,21 @@ export default function Play() {
             setCombo(0);
         }, COMBO_RESET_MS);
 
+        // Points: golden = 3 base, normal = 1, both × streak multiplier
+        const pts = box.isGolden ? 3 : 1;
+
         boomBox(box.id);
-        countRef.current += 1;
-        setCount(c => c + 1);
-        setLevelCount(c => c + 1);
+        countRef.current += pts;
+        setCount(c => c + pts);
+        setLevelCount(c => c + pts);
     }
 
     function levelUp() {
         saveCoinStorage();
         durationRef.current += DURATION_STEP;
-        levelRef.current += 1;
+        levelRef.current    += 1;
         setLevel(levelRef.current);
+        triggerLevelUp(levelRef.current);
 
         if (levelRef.current % 10 === 0) {
             const newBombs = bombCountRef.current + 1;
@@ -312,17 +476,31 @@ export default function Play() {
             saveBombCount(newBombs);
         }
 
+        if (levelRef.current % 15 === 0) {
+            const newSlow = slowCountRef.current + 1;
+            slowCountRef.current = newSlow;
+            setSlowCount(newSlow);
+            saveSlowCount(newSlow);
+        }
+
+        if (levelRef.current % 20 === 0) {
+            const newShield = shieldCountRef.current + 1;
+            shieldCountRef.current = newShield;
+            setShieldCount(newShield);
+            saveShieldCount(newShield);
+        }
+
         setBoxesData(prev => prev.map(b => ({...b, duration: durationRef.current})));
     }
 
     // ─── Effects ──────────────────────────────────────────────────────────────
-
     useFocusEffect(
         useCallback(() => {
             releaseMusic();
             loadSettings();
-
             loadBombCount();
+            loadHelperCounts();
+
             const loadTimeout = setTimeout(() => loadMusic('games1.mp3'), 100);
             const playTimeout = setTimeout(() => playMusic(), 300);
 
@@ -337,20 +515,23 @@ export default function Play() {
     );
 
     useEffect(() => {
-        const jumping = new Sound('jumping.wav', Sound.MAIN_BUNDLE, error => {
-            if (error) console.log('Failed to load jump sound:', error);
+        const jumping = new Sound('jumping.wav', Sound.MAIN_BUNDLE, e => {
+            if (e) console.log('jump sound error:', e);
         });
         musicJumpingRef.current = jumping;
 
-        const pop = new Sound('pop.wav', Sound.MAIN_BUNDLE, error => {
-            if (error) console.log('Failed to load pop sound:', error);
+        const pop = new Sound('pop.wav', Sound.MAIN_BUNDLE, e => {
+            if (e) console.log('pop sound error:', e);
         });
         musicPopRef.current = pop;
 
-        return () => {
-            jumping.release();
-            pop.release();
-        };
+        const bomb = new Sound('jumping.wav', Sound.MAIN_BUNDLE, e => {
+            if (e) console.log('bomb sound error:', e);
+            else bomb.setSpeed(0.25);
+        });
+        musicBombRef.current = bomb;
+
+        return () => { jumping.release(); pop.release(); bomb.release(); };
     }, []);
 
     useEffect(() => {
@@ -371,44 +552,67 @@ export default function Play() {
         let animationFrameId: number;
 
         const animate = () => {
+            missHappenedRef.current = false;
+
             setBoxesData(prev =>
                 prev.map((b: any) => {
                     if (b.isBoom) return b;
 
-                    const newX = b.x + (b.tx - b.x) * 0.05;
-                    const newY = b.y + (b.ty - b.y) * 0.05;
+                    const speed = 0.05 * slowSpeedRef.current;
+                    const newX = b.x + (b.tx - b.x) * speed;
+                    const newY = b.y + (b.ty - b.y) * speed;
 
                     if (newY + b.size > height) {
-                        if (!cancelVibrationRef.current) Vibration.vibrate(500);
-                        setEmptyHeartCount(prev => prev + 1);
+                        if (shieldActiveRef.current) {
+                            shieldActiveRef.current = false;
+                            setShieldActive(false);
+                        } else {
+                            if (!cancelVibrationRef.current) Vibration.vibrate(500);
+                            setEmptyHeartCount(prev => prev + 1);
+                        }
+                        missHappenedRef.current = true;
 
                         return {
                             ...b,
-                            x: Math.random() * (width - b.size),
-                            y: -Math.random() * 500,
-                            tx: Math.random() * (width - b.size),
-                            ty: durationRef.current + 10,
-                            color: colors[Math.floor(Math.random() * colors.length)],
+                            x:        Math.random() * (width - b.size),
+                            y:        -Math.random() * 500,
+                            tx:       Math.random() * (width - b.size),
+                            ty:       durationRef.current + 10,
+                            color:    colors[Math.floor(Math.random() * colors.length)],
                             rotation: b.isRotation ? (b.rotation + 2) % 360 : b.rotation,
+                            isGolden: false,
                         };
                     }
 
                     return {
                         ...b,
-                        x: newX,
-                        y: newY,
-                        tx: Math.abs(b.tx - b.x) < 1 ? Math.random() * (width - b.size) : b.tx,
-                        ty: b.y + durationRef.current + 10,
+                        x:        newX,
+                        y:        newY,
+                        tx:       Math.abs(b.tx - b.x) < 1 ? Math.random() * (width - b.size) : b.tx,
+                        ty:       b.y + durationRef.current + 10,
                         rotation: b.isRotation ? (b.rotation + 2) % 360 : b.rotation,
                     };
                 })
             );
+
+            if (missHappenedRef.current) {
+                streakRef.current = 0;
+                setStreak(0);
+                triggerMissShake();
+            }
 
             animationFrameId = requestAnimationFrame(animate);
         };
 
         animationFrameId = requestAnimationFrame(animate);
         return () => cancelAnimationFrame(animationFrameId);
+    }, [isPlaying]);
+
+    // Timer — counts up every second while playing
+    useEffect(() => {
+        if (!isPlaying) return;
+        const interval = setInterval(() => setTimer(t => t + 1), 1000);
+        return () => clearInterval(interval);
     }, [isPlaying]);
 
     // Spawn new boxes
@@ -418,36 +622,27 @@ export default function Play() {
         const interval = setInterval(() => {
             setBoxesData(prev => {
                 if (prev.length >= MAX_ITEMS) return prev;
-                return [
-                    ...prev,
-                    {
-                        ...card,
-                        id: uuId.v4(),
-                        x: Math.random() * (width - card.size),
-                        y: Math.random() * -1000,
-                        tx: Math.random() * (width - card.size),
-                        ty: 0,
-                        color: colors[Math.floor(Math.random() * colors.length)],
-                        duration: durationRef.current,
-                        isBoom: false,
-                    },
-                ];
+                return [...prev, spawnBox(card, durationRef.current)];
             });
         }, 1000);
 
         return () => clearInterval(interval);
     }, [isPlaying]);
 
-    // ─── Render ───────────────────────────────────────────────────────────────
-
+    // ─── Render helpers ───────────────────────────────────────────────────────
     const comboLabel =
-        combo >= 5 ? '🔥 INSANE!' :
-        combo >= 4 ? '💥 MEGA!' :
+        combo >= 5 ? '🔥 INSANE!'      :
+        combo >= 4 ? '💥 MEGA!'        :
         combo >= 3 ? '⚡ COMBO x' + combo :
                      '✨ COMBO x' + combo;
 
+
+    const LevelUpIcon = level >= 10 ? FlameIcon : level >= 5 ? BoltIcon : StarBurstIcon;
+    const levelUpColor = level >= 10 ? '#FF6B00' : level >= 5 ? '#FFD700' : '#ffffff';
+
+    // ─── Game content ─────────────────────────────────────────────────────────
     const gameContent = (
-        <>
+        <Animated.View style={[styles.container, {transform: [{translateX: shakeAnim}]}]}>
             <View style={styles.zIndexStyle}>
                 <Level level={level}/>
             </View>
@@ -455,6 +650,7 @@ export default function Play() {
             <View style={styles.zIndexStyle}>
                 <Progress length={LEVEL_LENGTH} coin={levelCount}/>
             </View>
+
 
             <View style={[styles.headerLeftView, {top: insets.top, zIndex: 2}]}>
                 <TouchableOpacity onPress={backHandler}>
@@ -467,47 +663,108 @@ export default function Play() {
                 <CoinCount count={count} viewStyles={[styles.countView, {top: insets.top}]}/>
             </View>
 
+
             {/* Combo overlay */}
             {combo >= 2 && (
                 <Animated.View
                     pointerEvents="none"
-                    style={[
-                        styles.comboOverlay,
-                        {
-                            opacity: comboOpacityAnim,
-                            transform: [{scale: comboScaleAnim}],
-                        },
-                    ]}
+                    style={[styles.comboOverlay, {
+                        opacity:   comboOpacityAnim,
+                        transform: [{scale: comboScaleAnim}],
+                    }]}
                 >
                     <Text style={styles.comboText}>{comboLabel}</Text>
                 </Animated.View>
             )}
 
-            {/* Bomb button */}
-            <Animated.View
-                style={[
-                    styles.bombWrapper,
-                    {bottom: insets.bottom + 28, transform: [{scale: bombCount > 0 ? bombPulseAnim : 1}]},
-                ]}
-            >
-                <TouchableOpacity
-                    onPress={handleBomb}
-                    disabled={bombCount <= 0 || !isPlaying}
-                    activeOpacity={0.75}
-                    style={[styles.bombButton, bombCount <= 0 && styles.bombButtonDisabled]}
+            {/* Level up overlay */}
+            {showLevelUp && (
+                <Animated.View
+                    pointerEvents="none"
+                    style={[styles.levelUpOverlay, {
+                        opacity:   lvlUpOpacityAnim,
+                        transform: [{scale: lvlUpScaleAnim}],
+                    }]}
                 >
-                    <BombCard width={34} height={34}/>
-                    <View style={styles.bombBadge}>
-                        <Text style={styles.bombBadgeText}>{bombCount}</Text>
-                    </View>
-                </TouchableOpacity>
-            </Animated.View>
+                    <LevelUpIcon size={56}/>
+                    <Text style={[styles.levelUpText, {color: levelUpColor}]}>
+                        LEVEL {level}!
+                    </Text>
+                </Animated.View>
+            )}
 
-            {/* Bomb flash overlay */}
-            <Animated.View
-                pointerEvents="none"
-                style={[styles.flashOverlay, {opacity: bombFlashAnim}]}
-            />
+            {/* Helpers row */}
+            <View style={[styles.helpersRow, {bottom: insets.bottom + 22}]}>
+
+                {/* Shield */}
+                <Animated.View style={{transform: [{scale: shieldCount > 0 && !shieldActive ? bombPulseAnim : 1}]}}>
+                    <TouchableOpacity
+                        onPress={handleShield}
+                        disabled={shieldCount <= 0 || !isPlaying || shieldActive}
+                        activeOpacity={0.75}
+                        style={[
+                            styles.helperButton,
+                            {borderColor: shieldActive ? '#00e5ff' : '#4fc3f7'},
+                            (shieldCount <= 0 || shieldActive) && styles.helperButtonDisabled,
+                        ]}
+                    >
+                        <ShieldIcon size={28} color={shieldActive ? '#00e5ff' : '#fff'}/>
+                        <View style={[styles.helperBadge, {backgroundColor: '#0288d1'}]}>
+                            <Text style={styles.helperBadgeText}>{shieldCount}</Text>
+                        </View>
+                    </TouchableOpacity>
+                </Animated.View>
+
+                {/* Bomb */}
+                <Animated.View style={{transform: [{scale: bombCount > 0 ? bombPulseAnim : 1}]}}>
+                    <TouchableOpacity
+                        onPress={handleBomb}
+                        disabled={bombCount <= 0 || !isPlaying}
+                        activeOpacity={0.75}
+                        style={[styles.helperButton, styles.helperButtonBomb, bombCount <= 0 && styles.helperButtonDisabled]}
+                    >
+                        <BombCard width={32} height={32}/>
+                        <View style={[styles.helperBadge, {backgroundColor: '#ff4500'}]}>
+                            <Text style={styles.helperBadgeText}>{bombCount}</Text>
+                        </View>
+                    </TouchableOpacity>
+                </Animated.View>
+
+                {/* Slow Mo */}
+                <Animated.View style={{transform: [{scale: slowCount > 0 && !slowActive ? bombPulseAnim : 1}]}}>
+                    <TouchableOpacity
+                        onPress={handleSlow}
+                        disabled={slowCount <= 0 || !isPlaying || slowActive}
+                        activeOpacity={0.75}
+                        style={[
+                            styles.helperButton,
+                            {borderColor: slowActive ? '#b39ddb' : '#ce93d8'},
+                            (slowCount <= 0 || slowActive) && styles.helperButtonDisabled,
+                        ]}
+                    >
+                        {slowActive ? (
+                            <Text style={styles.slowCountdownText}>{slowTimer}</Text>
+                        ) : (
+                            <SlowIcon size={28} color="#fff"/>
+                        )}
+                        {!slowActive && (
+                            <View style={[styles.helperBadge, {backgroundColor: '#7b1fa2'}]}>
+                                <Text style={styles.helperBadgeText}>{slowCount}</Text>
+                            </View>
+                        )}
+                    </TouchableOpacity>
+                </Animated.View>
+            </View>
+
+            {/* Shield active border */}
+            {shieldActive && (
+                <View pointerEvents="none" style={styles.shieldBorder}/>
+            )}
+
+            {/* Flash overlays */}
+            <Animated.View pointerEvents="none" style={[styles.flashOverlay, {opacity: bombFlashAnim, backgroundColor: '#ff6a00'}]}/>
+            <Animated.View pointerEvents="none" style={[styles.flashOverlay, {opacity: shieldFlashAnim, backgroundColor: '#00e5ff'}]}/>
+            <Animated.View pointerEvents="none" style={[styles.flashOverlay, {opacity: slowFlashAnim,  backgroundColor: '#ce93d8'}]}/>
 
             <LoseModal
                 visible={isLoseModal}
@@ -525,7 +782,7 @@ export default function Play() {
                 .map(box => (
                     <PlayBox key={box.id} box={box} handlePress={() => handleTap(box)}/>
                 ))}
-        </>
+        </Animated.View>
     );
 
     if (background?.colors?.length) {

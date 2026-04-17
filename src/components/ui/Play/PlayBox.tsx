@@ -20,6 +20,16 @@ interface PlayBoxProps {
 function PlayBox({box, handlePress}: PlayBoxProps) {
 
     const typeName = box?.typeName?.toLowerCase?.() ?? "";
+    const goldenGlow: ViewStyle = box.isGolden ? {
+        borderWidth: 2.5,
+        borderColor: '#FFD700',
+        borderRadius: 14,
+        shadowColor: '#FFD700',
+        shadowOffset: {width: 0, height: 0},
+        shadowOpacity: 0.9,
+        shadowRadius: 10,
+        elevation: 10,
+    } : {};
 
     const baseTransform: ViewStyle["transform"] = [
         {translateX: box.x + box.size / 2},
@@ -32,6 +42,7 @@ function PlayBox({box, handlePress}: PlayBoxProps) {
     const commonStyle: ViewStyle = {
         position: "absolute",
         transform: baseTransform,
+        ...goldenGlow,
     };
 
     // 🎈 Ballon

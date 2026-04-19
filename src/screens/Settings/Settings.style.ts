@@ -1,5 +1,15 @@
 import {StyleSheet} from 'react-native';
-import {DARK_PURPLE, GRADIENT_DARK, GRADIENT_LIGHT, MEDIUM_PURPLE, ORCHID, PLUM, PURPLE, WHITE} from '../../constants/colors.ts';
+import {
+    DARK_PURPLE,
+    GRADIENT_DARK,
+    GRADIENT_LIGHT,
+    MEDIUM_PURPLE,
+    ORCHID,
+    PLUM,
+    PURPLE,
+    PURPLE_DARK,
+    WHITE
+} from '../../constants/colors.ts';
 import {HORIZONAL_OFFSET} from '../../constants/uiConstants.ts';
 import {ms, vs} from '../../utils/responsive.ts';
 
@@ -32,7 +42,7 @@ export default StyleSheet.create({
 
     // Card
     card: {
-        backgroundColor: 'rgba(128,0,128,0.35)',
+        backgroundColor: PURPLE,
         borderRadius: ms(18),
         paddingHorizontal: ms(16),
         borderWidth: 1,

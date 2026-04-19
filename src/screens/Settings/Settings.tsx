@@ -1,7 +1,8 @@
 import React, {useEffect, useState} from 'react';
 import {
     View,
-    Text, TouchableOpacity,
+    Text,
+    TouchableOpacity,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import {LanguageType} from "../../types/language.type.ts";
@@ -32,7 +33,7 @@ import styles from './Settings.style.ts';
 function Settings() {
     const navigation = useNavigation<any>();
     const {i18n, t} = useTranslation();
-    const currentLang = i18n.language
+    const currentLang = i18n.language;
 
     const [music, setMusic] = useState(true);
     const [sound, setSound] = useState(true);
@@ -42,29 +43,27 @@ function Settings() {
     const [logoutModal, setLogoutModal] = useState(false);
 
     const getCurrentLanguage = () => {
-        const langObj = languages.find((e: LanguageType) => e.code === currentLang)
-        setLanguage(langObj || languages[2])
-    }
+        const langObj = languages.find((e: LanguageType) => e.code === currentLang);
+        setLanguage(langObj || languages[2]);
+    };
 
     const logOut = async () => {
         await AsyncStorage.clear();
         setLogoutModal(false);
         navigation.navigate('Welcome');
-    }
+    };
 
     const toggleMusic = async (val: boolean) => {
         setMusic(val);
         if (val) {
             await AsyncStorage.removeItem(STORAGE_KEYS.MUSIC);
             loadMusic("gamemusic2.mp3");
-            setTimeout(() => {
-                playMusic();
-            }, 200)
+            setTimeout(() => { playMusic(); }, 200);
         } else {
             await AsyncStorage.setItem(STORAGE_KEYS.MUSIC, 'STOP');
             stopMusic();
         }
-    }
+    };
 
     const toggleSound = async (val: boolean) => {
         setSound(val);
@@ -73,7 +72,7 @@ function Settings() {
         } else {
             await AsyncStorage.setItem(STORAGE_KEYS.SOUND, 'STOP');
         }
-    }
+    };
 
     const toggleVibration = async (val: boolean) => {
         setVibration(val);
@@ -82,21 +81,16 @@ function Settings() {
         } else {
             await AsyncStorage.removeItem(STORAGE_KEYS.VIBRATION);
         }
-    }
+    };
 
     const getStorageData = async () => {
         try {
             const musicData = await AsyncStorage.getItem(STORAGE_KEYS.MUSIC);
             const soundData = await AsyncStorage.getItem(STORAGE_KEYS.SOUND);
             const vibrationData = await AsyncStorage.getItem(STORAGE_KEYS.VIBRATION);
-
-            const musicState = !musicData;
-            const soundState = !soundData;
-            const vibrationState = !vibrationData;
-
-            setMusic(musicState);
-            setSound(soundState);
-            setVibration(vibrationState);
+            setMusic(!musicData);
+            setSound(!soundData);
+            setVibration(!vibrationData);
         } catch (error) {
             setMusic(false);
             setSound(false);
@@ -104,13 +98,8 @@ function Settings() {
         }
     };
 
-    useEffect(() => {
-        getStorageData();
-    }, []);
-
-    useEffect(() => {
-        getCurrentLanguage();
-    }, [currentLang])
+    useEffect(() => { getStorageData(); }, []);
+    useEffect(() => { getCurrentLanguage(); }, [currentLang]);
 
     return (
         <LinearGradient
@@ -118,8 +107,6 @@ function Settings() {
             start={{x: 0, y: 0}}
             end={{x: 0.3, y: 1}}
             style={styles.container}
-            accessible={true}
-            accessibilityLabel="Settings screen"
         >
             <BackHeader
                 title={`⚙️ ${t('settings')}`}
@@ -127,58 +114,85 @@ function Settings() {
                 handleProfilePress={() => navigation.navigate('Profile')}
             />
 
-            <View
-                style={styles.card}
-                accessible={true}
-                accessibilityRole="menu"
-                accessibilityLabel="Settings options"
-            >
+            {/* Audio Section */}
+            <View style={styles.sectionHeader}>
+                <LinearGradient
+                    colors={['#8e2de2', '#DDA0DD']}
+                    start={{x: 0, y: 0}}
+                    end={{x: 1, y: 0}}
+                    style={styles.sectionLine}
+                />
+                <Text style={styles.sectionTitle}>🎵 AUDIO</Text>
+                <LinearGradient
+                    colors={['#DDA0DD', '#8e2de2']}
+                    start={{x: 0, y: 0}}
+                    end={{x: 1, y: 0}}
+                    style={styles.sectionLine}
+                />
+            </View>
+
+            <View style={styles.card}>
                 <SettingRow
                     label={t('music')}
                     value={music}
                     onChange={toggleMusic}
-                    icon={<MusicIcon size={20} color="#fff"/>}
+                    icon={<MusicIcon size={20} color="#DA70D6"/>}
                 />
-
                 <SettingRow
                     label={t('soundEffects')}
                     value={sound}
                     onChange={toggleSound}
-                    icon={<SoundIcon size={20} color="#fff"/>}
+                    icon={<SoundIcon size={20} color="#9370DB"/>}
                 />
-
                 <SettingRow
                     label={t('vibration')}
                     value={vibration}
                     onChange={toggleVibration}
-                    icon={<VibrationIcon size={20} color="#fff"/>}
+                    viewStyle={{borderBottomWidth: 0}}
+                    icon={<VibrationIcon size={20} color="#EE82EE"/>}
                 />
+            </View>
 
+            {/* General Section */}
+            <View style={styles.sectionHeader}>
+                <LinearGradient
+                    colors={['#4a00e0', '#DDA0DD']}
+                    start={{x: 0, y: 0}}
+                    end={{x: 1, y: 0}}
+                    style={styles.sectionLine}
+                />
+                <Text style={styles.sectionTitle}>🌐 GENERAL</Text>
+                <LinearGradient
+                    colors={['#DDA0DD', '#4a00e0']}
+                    start={{x: 0, y: 0}}
+                    end={{x: 1, y: 0}}
+                    style={styles.sectionLine}
+                />
+            </View>
+
+            <View style={styles.card}>
                 <SettingRow
                     label={t('language')}
                     valueText={language.name}
                     onPress={() => setLangModal(true)}
-                    viewStyle={{ borderBottomWidth: 0 }}
-                    icon={<LanguageIcon size={20} color="#fff"/>}
+                    viewStyle={{borderBottomWidth: 0}}
+                    icon={<LanguageIcon size={20} color="#DDA0DD"/>}
                 />
             </View>
 
-            {/* Exit Button */}
+            {/* Exit Button — small & centered */}
             <TouchableOpacity
                 style={styles.buttonWrapper}
                 onPress={() => setLogoutModal(true)}
-                accessibilityRole="button"
-                accessibilityLabel={t('exitGame')}
-                accessibilityHint="Opens exit confirmation dialog"
-                activeOpacity={0.82}
+                activeOpacity={0.78}
             >
                 <LinearGradient
-                    colors={['#c0392b', '#7b0000']}
+                    colors={['#4B0082', '#8e2de2', '#6a0dad']}
                     start={{x: 0, y: 0}}
                     end={{x: 1, y: 0}}
                     style={styles.button}
                 >
-                    <ExitIcon size={22} color="#fff"/>
+                    <ExitIcon size={16} color="#EE82EE"/>
                     <Text style={styles.buttonText}>{t('exitGame')}</Text>
                 </LinearGradient>
             </TouchableOpacity>

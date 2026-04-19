@@ -33,8 +33,12 @@ import PlayBox from '../../components/ui/Play/PlayBox.tsx';
 import Hearts from '../../components/ui/Play/Hearts.tsx';
 import LoseModal from '../../components/ui/Play/LoseModal.tsx';
 import ExitModal from '../../components/ui/Play/ExitModal.tsx';
+import BuyHelperModal, {HelperType, HELPER_CONFIGS} from '../../components/ui/Play/BuyHelperModal.tsx';
 import Level from '../../components/ui/Play/Level.tsx';
 import Progress from '../../components/ui/Play/Progress.tsx';
+
+// store
+import {useGlobalStore} from '../../store/globalStore.ts';
 
 // styles
 import styles from './Play.style.ts';
@@ -94,6 +98,7 @@ export default function Play() {
     const navigation = useNavigation();
     const insets = useSafeAreaInsets();
     const {card, background} = useShopStore();
+    const {coins, setCoins, minusCoins} = useGlobalStore();
 
     // ─── Refs ─────────────────────────────────────────────────────────────────
     const cancelSoundRef       = useRef(true);
@@ -136,6 +141,7 @@ export default function Play() {
     const [isPlaying,      setIsPlaying]      = useState(true);
     const [isLoseModal,    setIsLoseModal]    = useState(false);
     const [isExitModal,    setIsExitModal]    = useState(false);
+    const [buyModal,       setBuyModal]       = useState<HelperType | null>(null);
     const [boxesData,      setBoxesData]      = useState(() => createBoxes(card, durationRef.current));
     const [bombCount,      setBombCount]      = useState(INITIAL_BOMBS);
     const [combo,          setCombo]          = useState(0);
@@ -177,6 +183,55 @@ export default function Play() {
         const v = await AsyncStorage.getItem(STORAGE_KEYS.VIBRATION);
         cancelSoundRef.current     = !!s;
         cancelVibrationRef.current = !!v;
+        const coinStored = await AsyncStorage.getItem(STORAGE_KEYS.COIN);
+        setCoins(coinStored ? JSON.parse(coinStored) : 0);
+    }
+
+    function handleWatchAdHelper(type: HelperType) {
+        if (type === 'bomb') {
+            const n = bombCountRef.current + 1;
+            bombCountRef.current = n;
+            setBombCount(n);
+            saveBombCount(n);
+        } else if (type === 'shield') {
+            const n = shieldCountRef.current + 1;
+            shieldCountRef.current = n;
+            setShieldCount(n);
+            saveShieldCount(n);
+        } else if (type === 'slow') {
+            const n = slowCountRef.current + 1;
+            slowCountRef.current = n;
+            setSlowCount(n);
+            saveSlowCount(n);
+        }
+        setBuyModal(null);
+        setIsPlaying(true);
+    }
+
+    async function handleBuyHelper(type: HelperType) {
+        const {price} = HELPER_CONFIGS[type];
+        if (coins < price) return;
+        const newBalance = coins - price;
+        minusCoins(price);
+        await AsyncStorage.setItem(STORAGE_KEYS.COIN, JSON.stringify(newBalance));
+        if (type === 'bomb') {
+            const n = bombCountRef.current + 1;
+            bombCountRef.current = n;
+            setBombCount(n);
+            saveBombCount(n);
+        } else if (type === 'shield') {
+            const n = shieldCountRef.current + 1;
+            shieldCountRef.current = n;
+            setShieldCount(n);
+            saveShieldCount(n);
+        } else if (type === 'slow') {
+            const n = slowCountRef.current + 1;
+            slowCountRef.current = n;
+            setSlowCount(n);
+            saveSlowCount(n);
+        }
+        setBuyModal(null);
+        setIsPlaying(true);
     }
 
     async function loadBombCount() {
@@ -286,8 +341,6 @@ export default function Play() {
         levelRef.current         = 1;
         comboCountRef.current    = 0;
         streakRef.current        = 0;
-        shieldCountRef.current   = 0;
-        slowCountRef.current     = 0;
         shieldActiveRef.current  = false;
         slowActiveRef.current    = false;
         slowSpeedRef.current     = 1;
@@ -299,16 +352,13 @@ export default function Play() {
         setEmptyHeartCount(0);
         setBombCount(INITIAL_BOMBS);
         setCombo(0);
-        setShieldCount(0);
-        setSlowCount(0);
-        AsyncStorage.setItem(STORAGE_KEYS.SLOW_COUNT,   JSON.stringify(0));
-        AsyncStorage.setItem(STORAGE_KEYS.SHIELD_COUNT, JSON.stringify(0));
         setShieldActive(false);
         setSlowActive(false);
         setWatchAdUsed(0);
         setIsPlaying(true);
         setIsLoseModal(false);
         setBoxesData(createBoxes(card, durationRef.current));
+        loadHelperCounts();
     }
 
     function boomBox(id: string) {
@@ -354,6 +404,7 @@ export default function Play() {
 
         shieldCountRef.current -= 1;
         setShieldCount(shieldCountRef.current);
+        saveShieldCount(shieldCountRef.current);
         shieldActiveRef.current = true;
         setShieldActive(true);
 
@@ -375,6 +426,7 @@ export default function Play() {
 
         slowCountRef.current -= 1;
         setSlowCount(slowCountRef.current);
+        saveSlowCount(slowCountRef.current);
         slowActiveRef.current = true;
         slowSpeedRef.current  = 0.25;
         setSlowActive(true);
@@ -684,18 +736,21 @@ export default function Play() {
                 {/* Shield */}
                 <Animated.View style={{transform: [{scale: shieldCount > 0 && !shieldActive ? bombPulseAnim : 1}]}}>
                     <TouchableOpacity
-                        onPress={handleShield}
-                        disabled={shieldCount <= 0 || !isPlaying || shieldActive}
+                        onPress={() => {
+                            if (shieldCount > 0 && !shieldActive) { handleShield(); }
+                            else if (!shieldActive) { setIsPlaying(false); setBuyModal('shield'); }
+                        }}
+                        disabled={shieldActive}
                         activeOpacity={0.75}
                         style={[
                             styles.helperButton,
-                            {borderColor: shieldActive ? '#00e5ff' : '#4fc3f7'},
-                            (shieldCount <= 0 || shieldActive) && styles.helperButtonDisabled,
+                            {borderColor: shieldActive ? '#00e5ff' : shieldCount > 0 ? '#4fc3f7' : '#1a5276'},
+                            shieldActive && styles.helperButtonDisabled,
                         ]}
                     >
-                        <ShieldIcon size={28} color={shieldActive ? '#00e5ff' : '#fff'}/>
-                        <View style={[styles.helperBadge, {backgroundColor: '#0288d1'}]}>
-                            <Text style={styles.helperBadgeText}>{shieldCount}</Text>
+                        <ShieldIcon size={28} color={shieldActive ? '#00e5ff' : shieldCount > 0 ? '#fff' : '#4fc3f7'}/>
+                        <View style={[styles.helperBadge, {backgroundColor: shieldCount > 0 ? '#0288d1' : '#1a3a4a'}]}>
+                            <Text style={styles.helperBadgeText}>{shieldCount > 0 ? shieldCount : '+'}</Text>
                         </View>
                     </TouchableOpacity>
                 </Animated.View>
@@ -703,14 +758,20 @@ export default function Play() {
                 {/* Bomb */}
                 <Animated.View style={{transform: [{scale: bombCount > 0 ? bombPulseAnim : 1}]}}>
                     <TouchableOpacity
-                        onPress={handleBomb}
-                        disabled={bombCount <= 0 || !isPlaying}
+                        onPress={() => {
+                            if (bombCount > 0) { handleBomb(); }
+                            else { setIsPlaying(false); setBuyModal('bomb'); }
+                        }}
                         activeOpacity={0.75}
-                        style={[styles.helperButton, styles.helperButtonBomb, bombCount <= 0 && styles.helperButtonDisabled]}
+                        style={[
+                            styles.helperButton,
+                            styles.helperButtonBomb,
+                            {borderColor: bombCount > 0 ? '#ff6a00' : '#5a2a1a'},
+                        ]}
                     >
                         <BombCard width={32} height={32}/>
-                        <View style={[styles.helperBadge, {backgroundColor: '#ff4500'}]}>
-                            <Text style={styles.helperBadgeText}>{bombCount}</Text>
+                        <View style={[styles.helperBadge, {backgroundColor: bombCount > 0 ? '#ff4500' : '#3a1a0a'}]}>
+                            <Text style={styles.helperBadgeText}>{bombCount > 0 ? bombCount : '+'}</Text>
                         </View>
                     </TouchableOpacity>
                 </Animated.View>
@@ -718,23 +779,26 @@ export default function Play() {
                 {/* Slow Mo */}
                 <Animated.View style={{transform: [{scale: slowCount > 0 && !slowActive ? bombPulseAnim : 1}]}}>
                     <TouchableOpacity
-                        onPress={handleSlow}
-                        disabled={slowCount <= 0 || !isPlaying || slowActive}
+                        onPress={() => {
+                            if (slowCount > 0 && !slowActive) { handleSlow(); }
+                            else if (!slowActive) { setIsPlaying(false); setBuyModal('slow'); }
+                        }}
+                        disabled={slowActive}
                         activeOpacity={0.75}
                         style={[
                             styles.helperButton,
-                            {borderColor: slowActive ? '#b39ddb' : '#ce93d8'},
-                            (slowCount <= 0 || slowActive) && styles.helperButtonDisabled,
+                            {borderColor: slowActive ? '#b39ddb' : slowCount > 0 ? '#ce93d8' : '#4a2060'},
+                            slowActive && styles.helperButtonDisabled,
                         ]}
                     >
                         {slowActive ? (
                             <Text style={styles.slowCountdownText}>{slowTimer}</Text>
                         ) : (
-                            <SlowIcon size={28} color="#fff"/>
+                            <SlowIcon size={28} color={slowCount > 0 ? '#fff' : '#ce93d8'}/>
                         )}
                         {!slowActive && (
-                            <View style={[styles.helperBadge, {backgroundColor: '#7b1fa2'}]}>
-                                <Text style={styles.helperBadgeText}>{slowCount}</Text>
+                            <View style={[styles.helperBadge, {backgroundColor: slowCount > 0 ? '#7b1fa2' : '#2a0a40'}]}>
+                                <Text style={styles.helperBadgeText}>{slowCount > 0 ? slowCount : '+'}</Text>
                             </View>
                         )}
                     </TouchableOpacity>
@@ -760,6 +824,14 @@ export default function Play() {
                 canWatchAd={watchAdUsed < 2}
             />
             <ExitModal visible={isExitModal} onConfirm={handleExitConfirm} onCancel={handleExitCancel}/>
+            <BuyHelperModal
+                visible={buyModal !== null}
+                helperType={buyModal}
+                coins={coins}
+                onBuy={handleBuyHelper}
+                onWatchAd={handleWatchAdHelper}
+                onClose={() => { setBuyModal(null); setIsPlaying(true); }}
+            />
 
             {boxesData
                 .slice()

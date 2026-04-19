@@ -2,7 +2,7 @@ import {StyleSheet} from 'react-native';
 import {
     DARK_PURPLE,
     GRADIENT_DARK,
-    GRADIENT_LIGHT,
+    GRADIENT_LIGHT, GRAY_100,
     MEDIUM_PURPLE,
     ORCHID,
     PLUM,

@@ -29,6 +29,7 @@ import ExitIcon from "../../assets/icons/ExitIcon.tsx";
 
 // styles
 import styles from './Settings.style.ts';
+import {DARK_PURPLE, GRADIENT_LIGHT, PURPLE, PURPLE_DARK} from "../../constants/colors.ts";
 
 function Settings() {
     const navigation = useNavigation<any>();
@@ -103,7 +104,7 @@ function Settings() {
 
     return (
         <LinearGradient
-            colors={['#1a1a2e', '#4B0082', '#6a0dad']}
+            colors={[DARK_PURPLE, PURPLE_DARK]}
             start={{x: 0, y: 0}}
             end={{x: 0.3, y: 1}}
             style={styles.container}

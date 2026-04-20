@@ -137,20 +137,20 @@ function Settings() {
                     label={t('music')}
                     value={music}
                     onChange={toggleMusic}
-                    icon={<MusicIcon size={20} color="#DA70D6"/>}
+                    icon={<MusicIcon size={20} color={DARK_PURPLE}/>}
                 />
                 <SettingRow
                     label={t('soundEffects')}
                     value={sound}
                     onChange={toggleSound}
-                    icon={<SoundIcon size={20} color="#9370DB"/>}
+                    icon={<SoundIcon size={20} color={DARK_PURPLE}/>}
                 />
                 <SettingRow
                     label={t('vibration')}
                     value={vibration}
                     onChange={toggleVibration}
                     viewStyle={{borderBottomWidth: 0}}
-                    icon={<VibrationIcon size={20} color="#EE82EE"/>}
+                    icon={<VibrationIcon size={20} color={DARK_PURPLE}/>}
                 />
             </View>
 
@@ -177,7 +177,7 @@ function Settings() {
                     valueText={language.name}
                     onPress={() => setLangModal(true)}
                     viewStyle={{borderBottomWidth: 0}}
-                    icon={<LanguageIcon size={20} color="#DDA0DD"/>}
+                    icon={<LanguageIcon size={20} color={DARK_PURPLE}/>}
                 />
             </View>
 

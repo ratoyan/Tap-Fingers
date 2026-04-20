@@ -185,15 +185,15 @@ function Settings() {
             <TouchableOpacity
                 style={styles.buttonWrapper}
                 onPress={() => setLogoutModal(true)}
-                activeOpacity={0.78}
+                activeOpacity={0.75}
             >
                 <LinearGradient
-                    colors={['#4B0082', '#8e2de2', '#6a0dad']}
+                    colors={['#1a0030', '#5B0EA6', '#9D50BB']}
                     start={{x: 0, y: 0}}
                     end={{x: 1, y: 0}}
                     style={styles.button}
                 >
-                    <ExitIcon size={16} color="#EE82EE"/>
+                    <ExitIcon size={20} color="#DDA0DD"/>
                     <Text style={styles.buttonText}>{t('exitGame')}</Text>
                 </LinearGradient>
             </TouchableOpacity>

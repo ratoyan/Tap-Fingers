@@ -11,6 +11,7 @@ import {
     GOLD,
     GRADIENT_DARK,
     GRADIENT_LIGHT,
+    LIGHT_GREEN,
     MEDIUM_PURPLE,
     PURPLE_DARK,
 } from "../../../constants/colors.ts";
@@ -70,7 +71,7 @@ function ChallengeCard({item, index = 0}: ChallengeCardProps) {
 
     const getStatus = () => {
         if (item.locked)    return {label: '🔒 Locked',   bg: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.5)'};
-        if (item.taken)     return {label: '✅ Claimed',   bg: 'rgba(50,205,50,0.2)',  color: '#7fff7f'};
+        if (item.taken)     return {label: '✅ Claimed',   bg: 'rgba(50,205,50,0.2)',  color: LIGHT_GREEN};
         if (item.finished)  return {label: '🎁 Ready',    bg: 'rgba(255,215,0,0.2)',  color: GOLD};
         return               {label: '⚡ Active',          bg: 'rgba(142,45,226,0.3)', color: '#d4aaff'};
     };
@@ -168,7 +169,7 @@ function ChallengeCard({item, index = 0}: ChallengeCardProps) {
 
                         {item.taken && (
                             <View style={[styles.badge, {backgroundColor: 'rgba(50,205,50,0.15)'}]}>
-                                <Text style={[styles.badgeText, {color: '#7fff7f'}]}>✓ Done</Text>
+                                <Text style={[styles.badgeText, {color: LIGHT_GREEN}]}>✓ Done</Text>
                             </View>
                         )}
                     </View>

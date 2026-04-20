@@ -42,7 +42,7 @@ import {useGlobalStore} from '../../store/globalStore.ts';
 
 // styles
 import styles from './Play.style.ts';
-import {GRADIENT_LIGHT} from '../../constants/colors.ts';
+import {CYAN, GRADIENT_LIGHT, LILAC, ORANGE, ORANGE_RED} from '../../constants/colors.ts';
 
 const {width, height} = Dimensions.get('window');
 
@@ -766,11 +766,11 @@ export default function Play() {
                         style={[
                             styles.helperButton,
                             styles.helperButtonBomb,
-                            {borderColor: bombCount > 0 ? '#ff6a00' : '#5a2a1a'},
+                            {borderColor: bombCount > 0 ? ORANGE : '#5a2a1a'},
                         ]}
                     >
                         <BombCard width={32} height={32}/>
-                        <View style={[styles.helperBadge, {backgroundColor: bombCount > 0 ? '#ff4500' : '#3a1a0a'}]}>
+                        <View style={[styles.helperBadge, {backgroundColor: bombCount > 0 ? ORANGE_RED : '#3a1a0a'}]}>
                             <Text style={styles.helperBadgeText}>{bombCount > 0 ? bombCount : '+'}</Text>
                         </View>
                     </TouchableOpacity>
@@ -787,14 +787,14 @@ export default function Play() {
                         activeOpacity={0.75}
                         style={[
                             styles.helperButton,
-                            {borderColor: slowActive ? '#b39ddb' : slowCount > 0 ? '#ce93d8' : '#4a2060'},
+                            {borderColor: slowActive ? '#b39ddb' : slowCount > 0 ? LILAC : '#4a2060'},
                             slowActive && styles.helperButtonDisabled,
                         ]}
                     >
                         {slowActive ? (
                             <Text style={styles.slowCountdownText}>{slowTimer}</Text>
                         ) : (
-                            <SlowIcon size={28} color={slowCount > 0 ? '#fff' : '#ce93d8'}/>
+                            <SlowIcon size={28} color={slowCount > 0 ? '#fff' : LILAC}/>
                         )}
                         {!slowActive && (
                             <View style={[styles.helperBadge, {backgroundColor: slowCount > 0 ? '#7b1fa2' : '#2a0a40'}]}>
@@ -811,9 +811,9 @@ export default function Play() {
             )}
 
             {/* Flash overlays */}
-            <Animated.View pointerEvents="none" style={[styles.flashOverlay, {opacity: bombFlashAnim, backgroundColor: '#ff6a00'}]}/>
+            <Animated.View pointerEvents="none" style={[styles.flashOverlay, {opacity: bombFlashAnim, backgroundColor: ORANGE}]}/>
             <Animated.View pointerEvents="none" style={[styles.flashOverlay, {opacity: shieldFlashAnim, backgroundColor: '#00e5ff'}]}/>
-            <Animated.View pointerEvents="none" style={[styles.flashOverlay, {opacity: slowFlashAnim,  backgroundColor: '#ce93d8'}]}/>
+            <Animated.View pointerEvents="none" style={[styles.flashOverlay, {opacity: slowFlashAnim,  backgroundColor: LILAC}]}/>
 
             <LoseModal
                 visible={isLoseModal}

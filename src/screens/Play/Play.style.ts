@@ -1,5 +1,6 @@
 import {Dimensions, StyleSheet} from "react-native";
 import {ms} from "../../utils/responsive.ts";
+import {CYAN, LILAC, ORANGE, ORANGE_RED} from "../../constants/colors.ts";
 
 const {width, height} = Dimensions.get('window');
 
@@ -86,7 +87,7 @@ export default StyleSheet.create({
         borderRadius: ms(29),
         backgroundColor: 'rgba(10,10,20,0.72)',
         borderWidth: 2.5,
-        borderColor: '#ff6a00',
+        borderColor: ORANGE,
         alignItems: 'center',
         justifyContent: 'center',
         shadowOffset: {width: 0, height: 0},
@@ -98,8 +99,8 @@ export default StyleSheet.create({
         width: ms(66),
         height: ms(66),
         borderRadius: ms(33),
-        borderColor: '#ff6a00',
-        shadowColor: '#ff4500',
+        borderColor: ORANGE,
+        shadowColor: ORANGE_RED,
     },
     helperButtonDisabled: {
         borderColor: 'rgba(255,255,255,0.15)',
@@ -125,7 +126,7 @@ export default StyleSheet.create({
         fontWeight: '800',
     },
     slowCountdownText: {
-        color: '#ce93d8',
+        color: LILAC,
         fontSize: ms(22),
         fontWeight: '900',
         letterSpacing: -0.5,
@@ -139,10 +140,10 @@ export default StyleSheet.create({
         width,
         height,
         borderWidth: 6,
-        borderColor: '#00e5ff',
+        borderColor: CYAN,
         borderRadius: 2,
         zIndex: 19,
-        shadowColor: '#00e5ff',
+        shadowColor: CYAN,
         shadowOffset: {width: 0, height: 0},
         shadowOpacity: 1,
         shadowRadius: 20,
@@ -156,7 +157,7 @@ export default StyleSheet.create({
         left: 0,
         width,
         height,
-        backgroundColor: '#ff6a00',
+        backgroundColor: ORANGE,
         zIndex: 20,
     },
 
@@ -173,7 +174,7 @@ export default StyleSheet.create({
         fontSize: ms(36),
         fontWeight: '900',
         color: '#FFD700',
-        textShadowColor: '#ff4500',
+        textShadowColor: ORANGE_RED,
         textShadowOffset: {width: 0, height: 2},
         textShadowRadius: 10,
         letterSpacing: 1.5,

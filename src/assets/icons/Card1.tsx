@@ -1,4 +1,5 @@
 import * as React from "react"
+import {DARK_NAVY} from "../../constants/colors.ts";
 import Svg, {
     Rect,
     Image,
@@ -18,7 +19,7 @@ function Card1(props: any) {
             xmlns="http://www.w3.org/2000/svg"
             {...props}
         >
-            <Rect width={260} height={360} rx={20} fill="#0f0f1a" />
+            <Rect width={260} height={360} rx={20} fill={DARK_NAVY} />
             <Rect
                 x={6}
                 y={6}

@@ -1,5 +1,5 @@
 import {StyleSheet} from 'react-native';
-import {GOLD} from '../../../constants/colors.ts';
+import {GOLD, LIGHT_GREEN} from '../../../constants/colors.ts';
 import {ms, vs, isTablet} from '../../../utils/responsive.ts';
 
 export default StyleSheet.create({
@@ -77,7 +77,7 @@ export default StyleSheet.create({
         backgroundColor: 'rgba(50,205,50,0.2)',
     },
     equippedText: {
-        color: '#7fff7f',
+        color: LIGHT_GREEN,
         fontWeight: '800',
         fontSize: ms(13),
     },

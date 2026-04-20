@@ -29,7 +29,7 @@ import ExitIcon from "../../assets/icons/ExitIcon.tsx";
 
 // styles
 import styles from './Settings.style.ts';
-import {DARK_PURPLE, GRADIENT_LIGHT, PURPLE, PURPLE_DARK} from "../../constants/colors.ts";
+import {DARK_PURPLE, GRADIENT_LIGHT, PURPLE, PURPLE_DARK, VIOLET_MEDIUM} from "../../constants/colors.ts";
 
 function Settings() {
     const navigation = useNavigation<any>();
@@ -188,7 +188,7 @@ function Settings() {
                 activeOpacity={0.75}
             >
                 <LinearGradient
-                    colors={['#1a0030', '#5B0EA6', '#9D50BB']}
+                    colors={['#1a0030', '#5B0EA6', VIOLET_MEDIUM]}
                     start={{x: 0, y: 0}}
                     end={{x: 1, y: 0}}
                     style={styles.button}

@@ -2,6 +2,7 @@ import React, {useMemo} from "react";
 import {Pressable, View, ViewStyle} from "react-native";
 import {BoxType} from "../../../types/play.type.ts";
 import {ShopType} from "../../../types/shop.type.ts";
+import {BOMB_ORANGE, CYAN, DARK_NAVY, HOT_PINK} from "../../../constants/colors.ts";
 
 // icons
 import Card1 from "../../../assets/icons/Card1";
@@ -109,7 +110,7 @@ function PlayBox({box, handlePress}: PlayBoxProps) {
     if (typeName === "diamond") {
         return box.isBoom ? (
             <View style={commonStyle}>
-                <TrackIcon width={100} height={100} color="#00E5FF"/>
+                <TrackIcon width={100} height={100} color={CYAN}/>
             </View>
         ) : (
             <Pressable onPress={handlePress} style={[commonStyle, {zIndex: 1}]}>
@@ -122,7 +123,7 @@ function PlayBox({box, handlePress}: PlayBoxProps) {
     if (typeName === "heart") {
         return box.isBoom ? (
             <View style={commonStyle}>
-                <TrackIcon width={100} height={100} color="#FF69B4"/>
+                <TrackIcon width={100} height={100} color={HOT_PINK}/>
             </View>
         ) : (
             <Pressable onPress={handlePress} style={[commonStyle, {zIndex: 1}]}>
@@ -135,7 +136,7 @@ function PlayBox({box, handlePress}: PlayBoxProps) {
     if (typeName === "bomb") {
         return box.isBoom ? (
             <View style={commonStyle}>
-                <TrackIcon width={100} height={100} color="#FF6600"/>
+                <TrackIcon width={100} height={100} color={BOMB_ORANGE}/>
             </View>
         ) : (
             <Pressable onPress={handlePress} style={[commonStyle, {zIndex: 1}]}>
@@ -160,7 +161,7 @@ function PlayBox({box, handlePress}: PlayBoxProps) {
     // 🃏 Default (Card)
     return box.isBoom ? (
             <View style={commonStyle}>
-                <TrackIcon width={100} height={100} color={'#0f0f1a'}/>
+                <TrackIcon width={100} height={100} color={DARK_NAVY}/>
             </View>
         )
         :

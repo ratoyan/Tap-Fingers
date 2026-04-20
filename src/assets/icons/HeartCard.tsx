@@ -1,5 +1,6 @@
 import * as React from "react"
 import Svg, {Path, Defs, LinearGradient, Stop} from "react-native-svg"
+import {HOT_PINK} from "../../constants/colors.ts";
 
 function HeartCard(props: any) {
     return (
@@ -14,7 +15,7 @@ function HeartCard(props: any) {
             <Path
                 d="M50 85 C50 85 10 58 10 32 C10 18 20 8 33 8 C40 8 47 12 50 18 C53 12 60 8 67 8 C80 8 90 18 90 32 C90 58 50 85 50 85 Z"
                 fill="url(#heartGrad)"
-                stroke="#FF69B4"
+                stroke={HOT_PINK}
                 strokeWidth={2}
             />
             <Path
@@ -25,7 +26,7 @@ function HeartCard(props: any) {
             />
             <Defs>
                 <LinearGradient id="heartGrad" x1="0" y1="0" x2="1" y2="1">
-                    <Stop offset="0%" stopColor="#FF69B4"/>
+                    <Stop offset="0%" stopColor={HOT_PINK}/>
                     <Stop offset="100%" stopColor="#C2185B"/>
                 </LinearGradient>
             </Defs>

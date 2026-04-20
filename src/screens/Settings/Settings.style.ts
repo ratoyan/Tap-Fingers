@@ -8,6 +8,7 @@ import {
     PLUM,
     PURPLE,
     PURPLE_DARK,
+    VIOLET_MEDIUM,
     WHITE
 } from '../../constants/colors.ts';
 import {HORIZONAL_OFFSET} from '../../constants/uiConstants.ts';
@@ -59,7 +60,7 @@ export default StyleSheet.create({
         alignSelf: 'center',
         marginTop: vs(30),
         borderRadius: ms(50),
-        shadowColor: '#9D50BB',
+        shadowColor: VIOLET_MEDIUM,
         shadowOffset: {width: 0, height: 0},
         shadowOpacity: 1,
         shadowRadius: 20,

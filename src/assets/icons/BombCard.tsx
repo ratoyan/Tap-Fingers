@@ -1,5 +1,6 @@
 import * as React from "react"
 import Svg, {Circle, Path, Defs, LinearGradient, Stop} from "react-native-svg"
+import {BOMB_ORANGE} from "../../constants/colors.ts";
 
 function BombCard(props: any) {
     return (
@@ -27,7 +28,7 @@ function BombCard(props: any) {
             />
             <Path
                 d="M50 14 Q58 8 64 12"
-                stroke="#FF6600"
+                stroke={BOMB_ORANGE}
                 strokeWidth={3}
                 strokeLinecap="round"
                 fill="none"

@@ -1,5 +1,6 @@
 import * as React from "react"
 import Svg, {Path, Defs, LinearGradient, Stop} from "react-native-svg"
+import {CYAN} from "../../constants/colors.ts";
 
 function DiamondCard(props: any) {
     return (
@@ -14,7 +15,7 @@ function DiamondCard(props: any) {
             <Path
                 d="M50 5 L95 50 L50 95 L5 50 Z"
                 fill="url(#diamondGrad)"
-                stroke="#00E5FF"
+                stroke={CYAN}
                 strokeWidth={2}
             />
             <Path
@@ -25,7 +26,7 @@ function DiamondCard(props: any) {
             />
             <Defs>
                 <LinearGradient id="diamondGrad" x1="0" y1="0" x2="1" y2="1">
-                    <Stop offset="0%" stopColor="#00E5FF"/>
+                    <Stop offset="0%" stopColor={CYAN}/>
                     <Stop offset="100%" stopColor="#0057FF"/>
                 </LinearGradient>
             </Defs>

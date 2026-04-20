@@ -1,7 +1,9 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npm install *)"
+      "Bash(npm install *)",
+      "Bash(/tmp/filter_colors.sh)",
+      "Bash(awk '$1 >= 3 {print $0}')"
     ]
   }
 }

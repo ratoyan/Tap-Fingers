@@ -1,5 +1,5 @@
 import React, {useCallback} from 'react';
-import {View} from "react-native";
+import {ScrollView, View} from "react-native";
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {RootStackParamList} from '../../types/RootStackParamList';
 import {MenuType} from "../../types/menu.type.ts";
@@ -79,27 +79,25 @@ const Home: React.FC<Props> = () => {
             accessible={true}
             accessibilityLabel="Main menu screen"
         >
-            <Logo
-                width={150}
-                height={150}
-                viewStyles={[globalStyles.logoView, {top: insets.top + TOP_OFFSET}]}
-            />
-
             <CoinCount
                 count={coins}
                 viewStyles={[globalStyles.coinView, {top: insets.top + TOP_OFFSET}]}
             />
 
-            <View accessible={true} accessibilityLabel="Main menu options">
-                {menus.map((menu: MenuType, index: number) => {
-                    return (
-                        <MenuButton
-                            menu={menu}
-                            key={index}
-                        />
-                    );
-                })}
-            </View>
+            <ScrollView
+                style={styles.scroll}
+                contentContainerStyle={[styles.scrollContent, {paddingTop: insets.top + TOP_OFFSET}]}
+                showsVerticalScrollIndicator={false}
+                bounces={true}
+            >
+                <Logo width={160} height={160} viewStyles={styles.logo}/>
+
+                <View accessible={true} accessibilityLabel="Main menu options">
+                    {menus.map((menu: MenuType, index: number) => (
+                        <MenuButton menu={menu} key={index}/>
+                    ))}
+                </View>
+            </ScrollView>
         </LinearGradient>
     );
 };

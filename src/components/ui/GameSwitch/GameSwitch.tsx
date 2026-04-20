@@ -4,6 +4,7 @@ import {Animated, TouchableOpacity} from "react-native";
 // styles
 import styles from './GameSwitch.style.ts';
 import {DARK_PURPLE, ORCHID, PLUM, PURPLE} from "../../../constants/colors.ts";
+import {ms} from "../../../utils/responsive.ts";
 
 interface GameSwitchProps {
     value: boolean;
@@ -26,7 +27,7 @@ function GameSwitch({
 
     const translateX = anim.interpolate({
         inputRange: [0, 1],
-        outputRange: [2, 20],
+        outputRange: [2, ms(26) - 4],
     });
 
     return (

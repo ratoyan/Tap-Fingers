@@ -141,7 +141,7 @@ export default StyleSheet.create({
         height,
         borderWidth: 6,
         borderColor: CYAN,
-        borderRadius: 2,
+        borderRadius: 38,
         zIndex: 19,
         shadowColor: CYAN,
         shadowOffset: {width: 0, height: 0},

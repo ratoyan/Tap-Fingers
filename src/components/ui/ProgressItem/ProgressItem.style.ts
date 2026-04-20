@@ -6,7 +6,7 @@ export default StyleSheet.create({
     progressItem: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingVertical: vs(18),
+        paddingVertical: vs(14),
         paddingHorizontal: ms(18),
         borderRadius: ms(24),
         marginBottom: ms(16),

@@ -24,14 +24,15 @@ function PlayBox({box, handlePress}: PlayBoxProps) {
 
     const typeName = box?.typeName?.toLowerCase?.() ?? "";
     const goldenGlow: ViewStyle = box.isGolden ? {
-        borderWidth: 2.5,
+        borderWidth: 2,
         borderColor: '#FFD700',
-        borderRadius: 14,
+        borderRadius: 25,
         shadowColor: '#FFD700',
         shadowOffset: {width: 0, height: 0},
-        shadowOpacity: 0.9,
-        shadowRadius: 10,
-        elevation: 10,
+        shadowOpacity: 1,
+        shadowRadius: 22,
+        elevation: 44,
+        backgroundColor: 'rgba(255, 215, 0, 0.08)',
     } : {};
 
     const baseTransform: ViewStyle["transform"] = [

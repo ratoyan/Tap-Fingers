@@ -56,11 +56,9 @@ export default StyleSheet.create({
         backgroundColor: 'rgba(255,255,255,0.12)',
     },
     progressBarFill: {
+        height: ms(8),
         backgroundColor: GOLD,
         borderRadius: ms(4),
-    },
-    progressBarEmpty: {
-        backgroundColor: 'rgba(255, 255, 255, 0.1)',
     },
     progressLabel: {
         fontSize: ms(11),

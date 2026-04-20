@@ -1,6 +1,6 @@
-import React from "react";
+import React, {useEffect, useRef} from "react";
 import LinearGradient from "react-native-linear-gradient";
-import {Image, Text, View} from "react-native";
+import {Animated, Image, Text, View} from "react-native";
 import {useTranslation} from "react-i18next";
 
 // icons
@@ -17,6 +17,22 @@ interface ProgressItemProps {
 
 function ProgressItem({item, trophy}: ProgressItemProps) {
     const {t} = useTranslation();
+
+    const progressAnim = useRef(new Animated.Value(0)).current;
+
+    useEffect(() => {
+        Animated.timing(progressAnim, {
+            toValue: item.progress,
+            duration: 700,
+            delay: 200,
+            useNativeDriver: false,
+        }).start();
+    }, [item.progress]);
+
+    const progressWidth = progressAnim.interpolate({
+        inputRange: [0, 1],
+        outputRange: ['0%', '100%'],
+    });
 
     const levelText = trophy
         ? `${trophy} ${t('level')} ${item.level}`
@@ -55,8 +71,7 @@ function ProgressItem({item, trophy}: ProgressItemProps) {
                 {/* Progress bar */}
                 <View style={styles.progressWrapper}>
                     <View style={styles.progressBarBackground}>
-                        <View style={[styles.progressBarFill, {flex: item.progress}]}/>
-                        <View style={[styles.progressBarEmpty, {flex: 1 - item.progress}]}/>
+                        <Animated.View style={[styles.progressBarFill, {width: progressWidth}]}/>
                     </View>
                     <Text style={styles.progressLabel}>{progressPercent}%</Text>
                 </View>

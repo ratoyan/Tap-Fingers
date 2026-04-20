@@ -50,18 +50,18 @@ export default StyleSheet.create({
     },
     progressBarBackground: {
         flexDirection: 'row',
-        height: ms(8),
-        borderRadius: ms(4),
+        height: ms(10),
+        borderRadius: ms(5),
         overflow: 'hidden',
         backgroundColor: 'rgba(255,255,255,0.12)',
     },
     progressBarFill: {
-        height: ms(8),
+        height: ms(10),
         backgroundColor: GOLD,
-        borderRadius: ms(4),
+        borderRadius: ms(5),
     },
     progressLabel: {
-        fontSize: ms(11),
+        fontSize: ms(13),
         color: 'rgba(255,255,255,0.5)',
         marginTop: vs(4),
         fontWeight: '600',

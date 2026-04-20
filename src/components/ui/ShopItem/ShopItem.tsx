@@ -192,7 +192,7 @@ function ShopItem({item, index = 0, handlePress, selected = false, purchased = f
                 <LinearGradient
                     colors={[PURPLE_DARK, DARK_PURPLE]}
                     start={{x: 0, y: 0}}
-                    end={{x: 0, y: 1}}
+                    end={{x: 1, y: 1}}
                     style={styles.card}
                 >
                     {/* Preview */}
@@ -221,8 +221,8 @@ function ShopItem({item, index = 0, handlePress, selected = false, purchased = f
 
             {/* Equipped checkmark */}
             {selected && (
-                <View style={{position: 'absolute', top: -10, right: -4, zIndex: 10}}>
-                    <SuccessIcon width={32} height={32}/>
+                <View style={{position: 'absolute', top: -8, right: -6, zIndex: 10}}>
+                    <SuccessIcon width={34} height={34}/>
                 </View>
             )}
         </Animated.View>

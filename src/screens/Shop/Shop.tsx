@@ -27,6 +27,8 @@ function Shop() {
     const [activeTab, setActiveTab] = useState<TabType>('card');
     const [cardsId, setCardsId] = useState<number[]>([]);
     const [backgroundsId, setBackgroundsId] = useState<number[]>([]);
+    const [sortedCardItems, setSortedCardItems] = useState<any[]>([]);
+    const [sortedBackgroundItems, setSortedBackgroundItems] = useState<any[]>([]);
 
     const tabAnim = useRef(new Animated.Value(0)).current;
 
@@ -76,25 +78,29 @@ function Shop() {
         try {
             const purchaseCardsId = await AsyncStorage.getItem(STORAGE_KEYS.CARDSID);
             const purchaseBackgroundsId = await AsyncStorage.getItem(STORAGE_KEYS.BACKGROUNDSID);
-            setCardsId(purchaseCardsId ? JSON.parse(purchaseCardsId) : []);
-            setBackgroundsId(purchaseBackgroundsId ? JSON.parse(purchaseBackgroundsId) : []);
+            const cIds: number[] = purchaseCardsId ? JSON.parse(purchaseCardsId) : [];
+            const bIds: number[] = purchaseBackgroundsId ? JSON.parse(purchaseBackgroundsId) : [];
+            setCardsId(cIds);
+            setBackgroundsId(bIds);
+            setSortedCardItems(
+                shops.filter(e => e.type === 'card')
+                    .sort((a, b) => (cIds.includes(a.id) ? 0 : 1) - (cIds.includes(b.id) ? 0 : 1))
+            );
+            setSortedBackgroundItems(
+                shops.filter(e => e.type === 'background')
+                    .sort((a, b) => (bIds.includes(a.id) ? 0 : 1) - (bIds.includes(b.id) ? 0 : 1))
+            );
         } catch {
             setCardsId([]);
             setBackgroundsId([]);
+            setSortedCardItems(shops.filter(e => e.type === 'card'));
+            setSortedBackgroundItems(shops.filter(e => e.type === 'background'));
         }
     }
 
     useEffect(() => {
         getStorageData();
     }, []);
-
-    const cardItems = shops
-        .filter(e => e.type === 'card')
-        .sort((a, b) => (cardsId.includes(a.id) ? 0 : 1) - (cardsId.includes(b.id) ? 0 : 1));
-
-    const backgroundItems = shops
-        .filter(e => e.type === 'background')
-        .sort((a, b) => (backgroundsId.includes(a.id) ? 0 : 1) - (backgroundsId.includes(b.id) ? 0 : 1));
 
     const tabIndicatorLeft = tabAnim.interpolate({
         inputRange: [0, 1],
@@ -159,7 +165,7 @@ function Shop() {
                     showsVerticalScrollIndicator={false}
                 >
                     <View style={styles.grid}>
-                        {cardItems.map((item, index) => (
+                        {sortedCardItems.map((item, index) => (
                             <ShopItem
                                 key={item.id}
                                 index={index}
@@ -180,7 +186,7 @@ function Shop() {
                     showsVerticalScrollIndicator={false}
                 >
                     <View style={styles.grid}>
-                        {backgroundItems.map((item, index) => (
+                        {sortedBackgroundItems.map((item, index) => (
                             <ShopItem
                                 key={item.id}
                                 index={index}

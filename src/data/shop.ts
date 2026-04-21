@@ -85,4 +85,20 @@ export const shops: ShopType[] = [
         id: "24", title: "Neon", coins: "60", type: 'background', typeName: 'background',
         colors: ['#0d001a', '#1a0033', '#33004d', '#4d0066', '#660080'],
     },
+    {
+        id: "25", title: "✨ Starfield", coins: "80", type: 'background', typeName: 'background',
+        animationType: 'stars', isRare: true,
+    },
+    {
+        id: "26", title: "🌌 Aurora", coins: "120", type: 'background', typeName: 'background',
+        animationType: 'aurora', isRare: true,
+    },
+    {
+        id: "27", title: "🔥 Inferno", coins: "100", type: 'background', typeName: 'background',
+        animationType: 'inferno', isRare: true,
+    },
+    {
+        id: "28", title: "💚 Matrix", coins: "90", type: 'background', typeName: 'background',
+        animationType: 'matrix', isRare: true,
+    },
 ];

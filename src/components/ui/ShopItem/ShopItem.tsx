@@ -119,6 +119,38 @@ function ShopItem({item, index = 0, handlePress, selected = false, purchased = f
                     </View>
                 );
             case 'background':
+                if (item.animationType === 'stars') {
+                    return (
+                        <LinearGradient colors={['#020012', '#090040']} style={{width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center'}}>
+                            <Text style={{fontSize: 32}}>✨</Text>
+                            <Text style={{color: '#aaaaff', fontSize: 10, marginTop: 4}}>ANIMATED</Text>
+                        </LinearGradient>
+                    );
+                }
+                if (item.animationType === 'aurora') {
+                    return (
+                        <LinearGradient colors={['#010008', '#0d2040', '#1a0030']} style={{width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center'}}>
+                            <Text style={{fontSize: 32}}>🌌</Text>
+                            <Text style={{color: '#80ffb0', fontSize: 10, marginTop: 4}}>ANIMATED</Text>
+                        </LinearGradient>
+                    );
+                }
+                if (item.animationType === 'inferno') {
+                    return (
+                        <LinearGradient colors={['#0d0000', '#4d0000', '#ff3300']} style={{width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center'}}>
+                            <Text style={{fontSize: 32}}>🔥</Text>
+                            <Text style={{color: '#ffaa44', fontSize: 10, marginTop: 4}}>ANIMATED</Text>
+                        </LinearGradient>
+                    );
+                }
+                if (item.animationType === 'matrix') {
+                    return (
+                        <LinearGradient colors={['#000900', '#001a00']} style={{width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center'}}>
+                            <Text style={{fontSize: 32}}>💚</Text>
+                            <Text style={{color: '#00ff41', fontSize: 10, marginTop: 4}}>ANIMATED</Text>
+                        </LinearGradient>
+                    );
+                }
                 if (item.images?.length) {
                     return (
                         <Image

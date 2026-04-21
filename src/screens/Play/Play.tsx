@@ -28,6 +28,7 @@ import BoltIcon from '../../assets/icons/BoltIcon.tsx';
 import StarBurstIcon from '../../assets/icons/StarBurstIcon.tsx';
 
 // components
+import AnimatedBackground from '../../components/ui/Play/AnimatedBackground.tsx';
 import CoinCount from '../../components/ui/CoinCount/CoinCount.tsx';
 import PlayBox from '../../components/ui/Play/PlayBox.tsx';
 import Hearts from '../../components/ui/Play/Hearts.tsx';
@@ -868,6 +869,15 @@ export default function Play() {
                 ))}
         </Animated.View>
     );
+
+    if (background?.animationType) {
+        return (
+            <View style={styles.container}>
+                <AnimatedBackground type={background.animationType}/>
+                {gameContent}
+            </View>
+        );
+    }
 
     if (background?.colors?.length) {
         return (

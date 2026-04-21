@@ -8,4 +8,6 @@ export interface ShopType {
     size?: number,
     images?: any[],
     colors?: string[],
+    animationType?: string,
+    isRare?: boolean,
 }

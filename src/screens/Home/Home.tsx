@@ -1,5 +1,5 @@
-import React, {useCallback} from 'react';
-import {ScrollView, View} from "react-native";
+import React, {useCallback, useRef, useState} from 'react';
+import {Animated, ScrollView, Text, TouchableOpacity, View} from "react-native";
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {RootStackParamList} from '../../types/RootStackParamList';
 import {MenuType} from "../../types/menu.type.ts";
@@ -10,11 +10,14 @@ import {menus} from "../../data/menu.ts";
 import {TOP_OFFSET} from "../../constants/uiConstants.ts";
 import {useGlobalStore} from "../../store/globalStore.ts";
 import {useShopStore} from "../../store/shopStore.ts";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import {STORAGE_KEYS} from "../../utils/storageKeys.ts";
 
 // components
 import MenuButton from "../../components/ui/MenuButton/MenuButton.tsx";
 import CoinCount from "../../components/ui/CoinCount/CoinCount.tsx";
 import Logo from "../../components/ui/Logo/Logo.tsx";
+import LuckyWheelModal from "../../components/ui/LuckyWheel/LuckyWheelModal.tsx";
 
 // styles
 import styles from './Home.style.ts';
@@ -28,6 +31,21 @@ const Home: React.FC<Props> = () => {
     const insets = useSafeAreaInsets();
     const {coins, setCoins} = useGlobalStore();
     const {setCard, setBackground} = useShopStore();
+    const [showWheel, setShowWheel] = useState(false);
+    const [canSpin, setCanSpin] = useState(false);
+    const wheelScale = useRef(new Animated.Value(1)).current;
+
+    const checkCanSpin = useCallback(async () => {
+        const raw = await AsyncStorage.getItem(STORAGE_KEYS.LUCKY_SPIN_DATE);
+        if (!raw) { setCanSpin(true); return; }
+        const last = new Date(raw);
+        const now = new Date();
+        setCanSpin(
+            last.getFullYear() !== now.getFullYear() ||
+            last.getMonth() !== now.getMonth() ||
+            last.getDate() !== now.getDate()
+        );
+    }, []);
 
     useFocusEffect(
         React.useCallback(() => {
@@ -46,6 +64,8 @@ const Home: React.FC<Props> = () => {
 
         }, [])
     );
+
+    useFocusEffect(useCallback(() => { checkCanSpin(); }, [checkCanSpin]));
 
     useFocusEffect(
         useCallback(() => {
@@ -96,7 +116,43 @@ const Home: React.FC<Props> = () => {
                         <MenuButton menu={menu} key={index}/>
                     ))}
                 </View>
+
             </ScrollView>
+
+            {/* Lucky Wheel — top left floating button */}
+            <View style={[styles.wheelShadow, {top: insets.top + 8}]}>
+                <Animated.View style={{transform: [{scale: wheelScale}]}}>
+                    <TouchableOpacity
+                        activeOpacity={0.9}
+                        onPressIn={() => Animated.spring(wheelScale, {toValue: 0.9,  useNativeDriver: true}).start()}
+                        onPressOut={() => Animated.spring(wheelScale, {toValue: 1, friction: 4, useNativeDriver: true}).start()}
+                        onPress={() => setShowWheel(true)}
+                    >
+                        <LinearGradient
+                            colors={['#2a0052', '#1a0035', '#0e001f']}
+                            start={{x: 0, y: 0}}
+                            end={{x: 1, y: 1}}
+                            style={styles.wheelGradient}
+                        >
+                            {canSpin && (
+                                <View style={styles.wheelFreeBadge}>
+                                    <Text style={styles.wheelFreeBadgeText}>FREE</Text>
+                                </View>
+                            )}
+
+                            <Text style={styles.wheelEmoji}>🎡</Text>
+                            <View style={styles.wheelSeparator}/>
+                            <Text style={styles.wheelSpinText}>SPIN</Text>
+                        </LinearGradient>
+                    </TouchableOpacity>
+                </Animated.View>
+            </View>
+
+            <LuckyWheelModal
+                visible={showWheel}
+                onClose={() => setShowWheel(false)}
+                onSpinComplete={() => setCanSpin(false)}
+            />
         </LinearGradient>
     );
 };

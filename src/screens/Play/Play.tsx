@@ -29,6 +29,7 @@ import StarBurstIcon from '../../assets/icons/StarBurstIcon.tsx';
 
 // components
 import AnimatedBackground from '../../components/ui/Play/AnimatedBackground.tsx';
+import BossBox from '../../components/ui/Play/BossBox.tsx';
 import CoinCount from '../../components/ui/CoinCount/CoinCount.tsx';
 import PlayBox from '../../components/ui/Play/PlayBox.tsx';
 import Hearts from '../../components/ui/Play/Hearts.tsx';
@@ -48,7 +49,7 @@ import {CYAN, GRADIENT_LIGHT, LILAC, ORANGE, ORANGE_RED} from '../../constants/c
 const {width, height} = Dimensions.get('window');
 
 const HEARTS_LENGTH = 7;
-const LEVEL_LENGTH = 30;
+const LEVEL_LENGTH = 1;
 const MAX_ITEMS = 5;
 const INITIAL_DURATION = 20;
 const DURATION_STEP = 20;
@@ -124,6 +125,10 @@ export default function Play() {
     const slowCountRef         = useRef(0);
     const slowIntervalRef      = useRef<ReturnType<typeof setInterval> | null>(null);
     const slowTimerValueRef    = useRef(0);
+    const isBossFightRef       = useRef(false);
+    const bossHPRef            = useRef(0);
+    const bossMaxHPRef         = useRef(0);
+    const bossRewardRef        = useRef(0);
 
     // ─── Animated values ──────────────────────────────────────────────────────
     const bombFlashAnim    = useRef(new Animated.Value(0)).current;
@@ -153,8 +158,12 @@ export default function Play() {
     const [shieldCount,     setShieldCount]     = useState(0);
     const [slowCount,       setSlowCount]       = useState(0);
     const [shieldActive,    setShieldActive]    = useState(false);
-    const [slowActive,      setSlowActive]      = useState(false);
-    const [slowTimer,       setSlowTimer]       = useState(0);
+    const [slowActive,       setSlowActive]       = useState(false);
+    const [slowTimer,        setSlowTimer]        = useState(0);
+    const [isBossFight,      setIsBossFight]      = useState(false);
+    const [bossHP,           setBossHP]           = useState(0);
+    const [bossMaxHP,        setBossMaxHP]        = useState(0);
+    const [showBossDefeated, setShowBossDefeated] = useState(false);
 
     const levelIndex = Math.min(level - 1, 4);
 
@@ -348,6 +357,9 @@ export default function Play() {
         slowActiveRef.current    = false;
         slowSpeedRef.current     = 1;
         watchAdUsedRef.current   = 0;
+        isBossFightRef.current   = false;
+        bossHPRef.current        = 0;
+        bossMaxHPRef.current     = 0;
         AsyncStorage.setItem(STORAGE_KEYS.BOMB_COUNT, JSON.stringify(INITIAL_BOMBS));
         setCount(0);
         setLevelCount(0);
@@ -358,6 +370,10 @@ export default function Play() {
         setShieldActive(false);
         setSlowActive(false);
         setWatchAdUsed(0);
+        setIsBossFight(false);
+        setBossHP(0);
+        setBossMaxHP(0);
+        setShowBossDefeated(false);
         setIsPlaying(true);
         setIsLoseModal(false);
         setBoxesData(createBoxes(card, durationRef.current));
@@ -470,6 +486,62 @@ export default function Play() {
         }, 1000);
     }
 
+    // ─── Boss fight ───────────────────────────────────────────────────────────
+    function startBossFight(lvl: number) {
+        const maxHP = 10 + Math.floor(lvl / 10) * 10;
+        bossHPRef.current     = maxHP;
+        bossMaxHPRef.current  = maxHP;
+        bossRewardRef.current = Math.floor(lvl / 10) * 5;
+        isBossFightRef.current = true;
+        setBossHP(maxHP);
+        setBossMaxHP(maxHP);
+        setIsBossFight(true);
+        setBoxesData([]);
+    }
+
+    function handleBossTap() {
+        if (!isPlaying || !isBossFightRef.current) return;
+        const newHP = bossHPRef.current - 1;
+        bossHPRef.current = newHP;
+        setBossHP(newHP);
+
+        countRef.current += 1;
+        setCount(c => c + 1);
+
+        if (!cancelSoundRef.current && musicJumpingRef.current) {
+            musicJumpingRef.current.setSpeed(0.3 + Math.random() * 0.15);
+            musicJumpingRef.current.setCurrentTime(0);
+            musicJumpingRef.current.play();
+        }
+        if (!cancelVibrationRef.current) Vibration.vibrate(25);
+
+        if (newHP <= 0) endBossFight();
+    }
+
+    async function endBossFight() {
+        // keep isBossFightRef true while the overlay shows — blocks box spawning & animation
+        setIsBossFight(false);
+        setShowBossDefeated(true);
+
+        const reward = bossRewardRef.current;
+        countRef.current += reward;
+        setCount(c => c + reward);
+
+        const stored = await AsyncStorage.getItem(STORAGE_KEYS.COIN);
+        const current = stored ? JSON.parse(stored) : 0;
+        const newTotal = current + reward;
+        await AsyncStorage.setItem(STORAGE_KEYS.COIN, JSON.stringify(newTotal));
+        setCoins(newTotal);
+
+        setEmptyHeartCount(prev => Math.max(0, prev - 1));
+
+        setTimeout(() => {
+            isBossFightRef.current = false;
+            setShowBossDefeated(false);
+            setBoxesData(createBoxes(card, durationRef.current));
+        }, 2500);
+    }
+
     // ─── Tap handler ─────────────────────────────────────────────────────────
     function handleTap(box: any) {
         if (box.isBoom) return;
@@ -531,6 +603,7 @@ export default function Play() {
             bombCountRef.current = newBombs;
             setBombCount(newBombs);
             saveBombCount(newBombs);
+            setTimeout(() => startBossFight(levelRef.current), 2000);
         }
 
         if (levelRef.current % 15 === 0) {
@@ -625,6 +698,11 @@ export default function Play() {
         let animationFrameId: number;
 
         const animate = () => {
+            if (isBossFightRef.current) {
+                animationFrameId = requestAnimationFrame(animate);
+                return;
+            }
+
             missHappenedRef.current = false;
 
             setBoxesData(prev =>
@@ -685,6 +763,7 @@ export default function Play() {
         if (!isPlaying) return;
 
         const interval = setInterval(() => {
+            if (isBossFightRef.current) return;
             setBoxesData(prev => {
                 if (prev.length >= MAX_ITEMS) return prev;
                 return [...prev, spawnBox(card, durationRef.current)];
@@ -756,6 +835,69 @@ export default function Play() {
                         LEVEL {level}!
                     </Text>
                 </Animated.View>
+            )}
+
+            {/* Boss fight banner */}
+            {isBossFight && (
+                <View pointerEvents="none" style={{
+                    position:   'absolute',
+                    top:        140,
+                    left:       0,
+                    right:      0,
+                    alignItems: 'center',
+                    zIndex:     11,
+                }}>
+                    <Text style={{
+                        color:            '#ff3030',
+                        fontSize:         18,
+                        fontWeight:       '900',
+                        letterSpacing:    2.5,
+                        textShadowColor:  '#000',
+                        textShadowRadius: 8,
+                    }}>
+                        ⚔️  BOSS FIGHT  ⚔️
+                    </Text>
+                </View>
+            )}
+
+            {/* Boss */}
+            {isBossFight && (
+                <BossBox
+                    bossHP={bossHP}
+                    bossMaxHP={bossMaxHP}
+                    level={level}
+                    onTap={handleBossTap}
+                />
+            )}
+
+            {/* Boss defeated overlay */}
+            {showBossDefeated && (
+                <View style={{
+                    position:        'absolute',
+                    top:             0,
+                    left:            0,
+                    right:           0,
+                    bottom:          0,
+                    backgroundColor: 'rgba(0,0,0,0.72)',
+                    alignItems:      'center',
+                    justifyContent:  'center',
+                    zIndex:          22,
+                }}>
+                    <Text style={{fontSize: 64, marginBottom: 10}}>🏆</Text>
+                    <Text style={{
+                        color:            '#FFD700',
+                        fontSize:         34,
+                        fontWeight:       '900',
+                        letterSpacing:    2,
+                        textShadowColor:  '#000',
+                        textShadowRadius: 14,
+                    }}>
+                        BOSS DEFEATED!
+                    </Text>
+                    <Text style={{color: '#fff', fontSize: 17, marginTop: 14, opacity: 0.9}}>
+                        +{bossRewardRef.current} coins  •  ❤️ restored
+                    </Text>
+                </View>
             )}
 
             {/* Helpers row */}

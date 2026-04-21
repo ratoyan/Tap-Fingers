@@ -44,7 +44,7 @@ import {useGlobalStore} from '../../store/globalStore.ts';
 
 // styles
 import styles from './Play.style.ts';
-import {CYAN, GRADIENT_LIGHT, LILAC, ORANGE, ORANGE_RED} from '../../constants/colors.ts';
+import {GRADIENT_LIGHT, LILAC, ORANGE, ORANGE_RED} from '../../constants/colors.ts';
 
 const {width, height} = Dimensions.get('window');
 

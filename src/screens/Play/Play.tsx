@@ -121,6 +121,8 @@ export default function Play() {
     const slowSpeedRef         = useRef(1);
     const shieldCountRef       = useRef(0);
     const slowCountRef         = useRef(0);
+    const slowIntervalRef      = useRef<ReturnType<typeof setInterval> | null>(null);
+    const slowTimerValueRef    = useRef(0);
 
     // ─── Animated values ──────────────────────────────────────────────────────
     const bombFlashAnim    = useRef(new Animated.Value(0)).current;
@@ -443,17 +445,26 @@ export default function Play() {
         if (!cancelVibrationRef.current) Vibration.vibrate([0, 60, 40, 60]);
 
         const SLOW_DURATION = 8;
+        slowTimerValueRef.current = SLOW_DURATION;
         setSlowTimer(SLOW_DURATION);
-        const countdown = setInterval(() => {
+        startSlowInterval();
+    }
+
+    function startSlowInterval() {
+        if (slowIntervalRef.current) clearInterval(slowIntervalRef.current);
+        slowIntervalRef.current = setInterval(() => {
             setSlowTimer(t => {
-                if (t <= 1) {
-                    clearInterval(countdown);
-                    slowActiveRef.current = false;
-                    slowSpeedRef.current  = 1;
+                const next = t - 1;
+                slowTimerValueRef.current = next;
+                if (next <= 0) {
+                    clearInterval(slowIntervalRef.current!);
+                    slowIntervalRef.current  = null;
+                    slowActiveRef.current    = false;
+                    slowSpeedRef.current     = 1;
                     setSlowActive(false);
                     return 0;
                 }
-                return t - 1;
+                return next;
             });
         }, 1000);
     }
@@ -576,7 +587,12 @@ export default function Play() {
         });
         musicBombRef.current = bomb;
 
-        return () => { jumping.release(); pop.release(); bomb.release(); };
+        return () => {
+            jumping.release();
+            pop.release();
+            bomb.release();
+            if (slowIntervalRef.current) clearInterval(slowIntervalRef.current);
+        };
     }, []);
 
     useEffect(() => {
@@ -589,6 +605,17 @@ export default function Play() {
     useEffect(() => {
         if (emptyHeartCount >= HEARTS_LENGTH) gameOver();
     }, [emptyHeartCount]);
+
+    useEffect(() => {
+        if (!isPlaying) {
+            if (slowIntervalRef.current) {
+                clearInterval(slowIntervalRef.current);
+                slowIntervalRef.current = null;
+            }
+        } else if (slowActiveRef.current && slowTimerValueRef.current > 0) {
+            startSlowInterval();
+        }
+    }, [isPlaying]);
 
     // Animation loop
     useEffect(() => {

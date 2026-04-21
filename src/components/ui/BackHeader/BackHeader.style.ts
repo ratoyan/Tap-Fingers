@@ -36,8 +36,8 @@ export default StyleSheet.create({
         top: 0,
     },
     avatar: {
-        width: scale(38),
-        height: scale(38),
+        width: scale(35),
+        height: scale(35),
         borderRadius: scale(19),
         borderWidth: 2,
         borderColor: '#fff',

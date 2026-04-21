@@ -5,6 +5,14 @@ import LinearGradient from 'react-native-linear-gradient';
 const {width, height} = Dimensions.get('window');
 export const BOSS_SIZE = 150;
 
+const BOSS_TIERS = [
+    {emoji: '👾', colors: ['#3d0066', '#8b0020', '#3d0066'], glow: 'rgba(220,0,50,0.55)'},   // lv 10
+    {emoji: '💀', colors: ['#1a1a1a', '#4d0000', '#1a1a1a'], glow: 'rgba(180,0,0,0.65)'},    // lv 20
+    {emoji: '🔮', colors: ['#000d33', '#003399', '#000d33'], glow: 'rgba(0,80,255,0.55)'},    // lv 30
+    {emoji: '👹', colors: ['#2b0000', '#8b2500', '#2b0000'], glow: 'rgba(255,80,0,0.60)'},    // lv 40
+    {emoji: '🐉', colors: ['#001a00', '#006600', '#001a00'], glow: 'rgba(0,200,0,0.55)'},     // lv 50+
+];
+
 interface Props {
     bossHP:    number;
     bossMaxHP: number;
@@ -20,9 +28,11 @@ export default function BossBox({bossHP, bossMaxHP, level, onTap}: Props) {
     const hitOpacity  = useRef(new Animated.Value(0)).current;
     const moveRef     = useRef<Animated.CompositeAnimation | null>(null);
 
-    const hpRatio = bossMaxHP > 0 ? bossHP / bossMaxHP : 0;
-    const hpColor = hpRatio > 0.6 ? '#2ecc71' : hpRatio > 0.3 ? '#f39c12' : '#e74c3c';
-    const moveDur = Math.max(480, 1500 - Math.floor((level - 1) / 10) * 150);
+    const hpRatio  = bossMaxHP > 0 ? bossHP / bossMaxHP : 0;
+    const hpColor  = hpRatio > 0.6 ? '#2ecc71' : hpRatio > 0.3 ? '#f39c12' : '#e74c3c';
+    const moveDur  = Math.max(480, 1500 - Math.floor((level - 1) / 10) * 150);
+    const tierIdx  = Math.min(Math.floor(level / 10) - 1, BOSS_TIERS.length - 1);
+    const tier     = BOSS_TIERS[Math.max(0, tierIdx)];
 
     useEffect(() => {
         Animated.spring(scaleAnim, {toValue: 1, friction: 5, tension: 55, useNativeDriver: true}).start(() => {
@@ -112,7 +122,7 @@ export default function BossBox({bossHP, bossMaxHP, level, onTap}: Props) {
                     width:           BOSS_SIZE + 20,
                     height:          BOSS_SIZE + 20,
                     borderRadius:    (BOSS_SIZE + 20) / 2,
-                    backgroundColor: 'rgba(220,0,50,0.55)',
+                    backgroundColor: tier.glow,
                     opacity:         glowOpacity,
                 }}
             />
@@ -120,7 +130,7 @@ export default function BossBox({bossHP, bossMaxHP, level, onTap}: Props) {
             {/* Boss body */}
             <TouchableOpacity onPress={handleTap} activeOpacity={0.95}>
                 <LinearGradient
-                    colors={['#3d0066', '#8b0020', '#3d0066']}
+                    colors={tier.colors}
                     start={{x: 0, y: 0}}
                     end={{x: 1, y: 1}}
                     style={{
@@ -133,7 +143,7 @@ export default function BossBox({bossHP, bossMaxHP, level, onTap}: Props) {
                         borderColor:    'rgba(255,80,80,0.85)',
                     }}
                 >
-                    <Text style={{fontSize: 72, lineHeight: 84}}>👾</Text>
+                    <Text style={{fontSize: 72, lineHeight: 84}}>{tier.emoji}</Text>
 
                     {/* Hit flash */}
                     <Animated.View

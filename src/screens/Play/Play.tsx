@@ -827,7 +827,7 @@ export default function Play() {
                         <MenuIcon size={18} color="#fff"/>
                     </TouchableOpacity>
                 </View>
-                <View style={{marginLeft: 6}}>
+                <View style={styles.heartsWrapper}>
                     <Hearts length={HEARTS_LENGTH} emptyCount={emptyHeartCount}/>
                 </View>
             </View>
@@ -868,22 +868,8 @@ export default function Play() {
 
             {/* Boss fight banner */}
             {isBossFight && (
-                <View pointerEvents="none" style={{
-                    position:   'absolute',
-                    top:        140,
-                    left:       0,
-                    right:      0,
-                    alignItems: 'center',
-                    zIndex:     11,
-                }}>
-                    <Text style={{
-                        color:            '#ff3030',
-                        fontSize:         18,
-                        fontWeight:       '900',
-                        letterSpacing:    2.5,
-                        textShadowColor:  '#000',
-                        textShadowRadius: 8,
-                    }}>
+                <View pointerEvents="none" style={styles.bossFightBanner}>
+                    <Text style={styles.bossFightText}>
                         ⚔️  BOSS FIGHT  ⚔️
                     </Text>
                 </View>
@@ -901,29 +887,12 @@ export default function Play() {
 
             {/* Boss defeated overlay */}
             {showBossDefeated && (
-                <View style={{
-                    position:        'absolute',
-                    top:             0,
-                    left:            0,
-                    right:           0,
-                    bottom:          0,
-                    backgroundColor: 'rgba(0,0,0,0.72)',
-                    alignItems:      'center',
-                    justifyContent:  'center',
-                    zIndex:          22,
-                }}>
-                    <Text style={{fontSize: 64, marginBottom: 10}}>🏆</Text>
-                    <Text style={{
-                        color:            '#FFD700',
-                        fontSize:         34,
-                        fontWeight:       '900',
-                        letterSpacing:    2,
-                        textShadowColor:  '#000',
-                        textShadowRadius: 14,
-                    }}>
+                <View style={styles.bossDefeatedOverlay}>
+                    <Text style={styles.bossDefeatedEmoji}>🏆</Text>
+                    <Text style={styles.bossDefeatedText}>
                         BOSS DEFEATED!
                     </Text>
-                    <Text style={{color: '#fff', fontSize: 17, marginTop: 14, opacity: 0.9}}>
+                    <Text style={styles.bossDefeatedReward}>
                         +{bossRewardRef.current} coins  •  ❤️ restored
                     </Text>
                 </View>

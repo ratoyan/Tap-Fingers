@@ -17,9 +17,11 @@ import {STORAGE_KEYS} from '../../utils/storageKeys.ts';
 import {useShopStore} from '../../store/shopStore.ts';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import uuId from 'react-native-uuid';
+import useMusicAppState from '../../hooks/useMusicAppState.tsx';
 
 // icons
 import Back from '../../assets/icons/Back.tsx';
+import MenuIcon from '../../assets/icons/MenuIcon.tsx';
 import BombCard from '../../assets/icons/BombCard.tsx';
 import ShieldIcon from '../../assets/icons/ShieldIcon.tsx';
 import SlowIcon from '../../assets/icons/SlowIcon.tsx';
@@ -38,6 +40,7 @@ import ExitModal from '../../components/ui/Play/ExitModal.tsx';
 import BuyHelperModal, {HelperType, HELPER_CONFIGS} from '../../components/ui/Play/BuyHelperModal.tsx';
 import Level from '../../components/ui/Play/Level.tsx';
 import Progress from '../../components/ui/Play/Progress.tsx';
+import GameMenuModal from '../../components/ui/Play/GameMenuModal.tsx';
 
 // store
 import {useGlobalStore} from '../../store/globalStore.ts';
@@ -149,6 +152,7 @@ export default function Play() {
     const [isPlaying,      setIsPlaying]      = useState(true);
     const [isLoseModal,    setIsLoseModal]    = useState(false);
     const [isExitModal,    setIsExitModal]    = useState(false);
+    const [isMenuModal,    setIsMenuModal]    = useState(false);
     const [buyModal,       setBuyModal]       = useState<HelperType | null>(null);
     const [boxesData,      setBoxesData]      = useState(() => createBoxes(card, durationRef.current));
     const [bombCount,      setBombCount]      = useState(INITIAL_BOMBS);
@@ -313,8 +317,20 @@ export default function Play() {
     }
 
     // ─── Game actions ─────────────────────────────────────────────────────────
-    function backHandler() {
+
+    function menuHandler() {
+        if (isLoseModal || isExitModal || buyModal !== null) return;
         setIsPlaying(false);
+        setIsMenuModal(true);
+    }
+
+    function handleMenuClose() {
+        setIsMenuModal(false);
+        setIsPlaying(true);
+    }
+
+    function handleMenuExit() {
+        setIsMenuModal(false);
         setIsExitModal(true);
     }
 
@@ -623,6 +639,15 @@ export default function Play() {
         setBoxesData(prev => prev.map(b => ({...b, duration: durationRef.current})));
     }
 
+    // ─── App state (background → auto-pause & open menu) ─────────────────────
+    const onAppBackground = useCallback(() => {
+        if (isLoseModal || isExitModal || buyModal !== null) return;
+        setIsPlaying(false);
+        setIsMenuModal(true);
+    }, [isLoseModal, isExitModal, buyModal]);
+
+    useMusicAppState(playMusic, pauceMusic, onAppBackground);
+
     // ─── Effects ──────────────────────────────────────────────────────────────
     useFocusEffect(
         useCallback(() => {
@@ -797,10 +822,14 @@ export default function Play() {
 
 
             <View style={[styles.headerLeftView, {top: insets.top, zIndex: 2}]}>
-                <TouchableOpacity onPress={backHandler}>
-                    <Back color={GRADIENT_LIGHT}/>
-                </TouchableOpacity>
-                <Hearts length={HEARTS_LENGTH} emptyCount={emptyHeartCount}/>
+                <View style={styles.headerTopRow}>
+                    <TouchableOpacity onPress={menuHandler} style={styles.menuBtn}>
+                        <MenuIcon size={18} color="#fff"/>
+                    </TouchableOpacity>
+                </View>
+                <View style={{marginLeft: 6}}>
+                    <Hearts length={HEARTS_LENGTH} emptyCount={emptyHeartCount}/>
+                </View>
             </View>
 
             <View style={styles.zIndexStyle}>
@@ -994,6 +1023,7 @@ export default function Play() {
                 canWatchAd={watchAdUsed < 2}
             />
             <ExitModal visible={isExitModal} onConfirm={handleExitConfirm} onCancel={handleExitCancel}/>
+            <GameMenuModal visible={isMenuModal} onClose={handleMenuClose} onExit={handleMenuExit}/>
             <BuyHelperModal
                 visible={buyModal !== null}
                 helperType={buyModal}

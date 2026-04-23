@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { AppState } from 'react-native';
 
-const useMusicAppState = (playMusic: any, pauseMusic: any) => {
+const useMusicAppState = (playMusic: any, pauseMusic: any, onBackground?: () => void) => {
     const appState = useRef(AppState.currentState);
 
     useEffect(() => {
@@ -10,6 +10,7 @@ const useMusicAppState = (playMusic: any, pauseMusic: any) => {
             // active -> background
             if (appState.current === 'active' && nextState === 'background') {
                 pauseMusic();
+                onBackground?.();
             }
 
             // background -> active
@@ -21,7 +22,7 @@ const useMusicAppState = (playMusic: any, pauseMusic: any) => {
         });
 
         return () => subscription.remove();
-    }, [playMusic, pauseMusic]);
+    }, [playMusic, pauseMusic, onBackground]);
 };
 
 export default useMusicAppState;

@@ -132,6 +132,23 @@ export default StyleSheet.create({
         letterSpacing: -0.5,
     },
 
+    // ── Header top row ────────────────────────────────────────────
+    headerTopRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: ms(10),
+    },
+    menuBtn: {
+        width: ms(36),
+        height: ms(36),
+        borderRadius: ms(18),
+        backgroundColor: 'rgba(10,10,20,0.65)',
+        borderWidth: 1.5,
+        borderColor: 'rgba(255,255,255,0.3)',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+
     // ── Shield border ──────────────────────────────────────────────
     shieldBorder: {
         position: 'absolute',

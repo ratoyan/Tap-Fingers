@@ -53,7 +53,7 @@ const {width, height} = Dimensions.get('window');
 
 const HEARTS_LENGTH = 7;
 const LEVEL_LENGTH = 30;
-const MAX_ITEMS = 5;
+const MAX_ITEMS = 3;
 const INITIAL_DURATION = 20;
 const DURATION_STEP = 20;
 const INITIAL_BOMBS = 0;
@@ -73,7 +73,7 @@ function createBoxes(card: any, duration: number) {
         ...card,
         id: uuId.v4(),
         x: Math.random() * (width - card.size),
-        y: Math.random() * -1000,
+        y: Math.random() * -100,
         tx: Math.random() * (width - card.size),
         ty: 0,
         color: colors[Math.floor(Math.random() * colors.length)],
@@ -106,67 +106,67 @@ export default function Play() {
     const {coins, setCoins, minusCoins} = useGlobalStore();
 
     // ─── Refs ─────────────────────────────────────────────────────────────────
-    const cancelSoundRef       = useRef(true);
-    const cancelVibrationRef   = useRef(true);
-    const durationRef          = useRef(INITIAL_DURATION);
-    const musicJumpingRef      = useRef<Sound | null>(null);
-    const musicPopRef          = useRef<Sound | null>(null);
-    const musicBombRef         = useRef<Sound | null>(null);
-    const countRef             = useRef(0);
-    const bombCountRef         = useRef(INITIAL_BOMBS);
-    const levelRef             = useRef(1);
-    const watchAdUsedRef       = useRef(0);
-    const lastTapTimeRef       = useRef(0);
-    const comboCountRef        = useRef(0);
-    const comboTimerRef        = useRef<ReturnType<typeof setTimeout> | null>(null);
-    const streakRef            = useRef(0);
-    const missHappenedRef      = useRef(false);
-    const shieldActiveRef      = useRef(false);
-    const slowActiveRef        = useRef(false);
-    const slowSpeedRef         = useRef(1);
-    const shieldCountRef       = useRef(0);
-    const slowCountRef         = useRef(0);
-    const slowIntervalRef      = useRef<ReturnType<typeof setInterval> | null>(null);
-    const slowTimerValueRef    = useRef(0);
-    const isBossFightRef       = useRef(false);
-    const bossHPRef            = useRef(0);
-    const bossMaxHPRef         = useRef(0);
-    const bossRewardRef        = useRef(0);
+    const cancelSoundRef = useRef(true);
+    const cancelVibrationRef = useRef(true);
+    const durationRef = useRef(INITIAL_DURATION);
+    const musicJumpingRef = useRef<Sound | null>(null);
+    const musicPopRef = useRef<Sound | null>(null);
+    const musicBombRef = useRef<Sound | null>(null);
+    const countRef = useRef(0);
+    const bombCountRef = useRef(INITIAL_BOMBS);
+    const levelRef = useRef(1);
+    const watchAdUsedRef = useRef(0);
+    const lastTapTimeRef = useRef(0);
+    const comboCountRef = useRef(0);
+    const comboTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const streakRef = useRef(0);
+    const missHappenedRef = useRef(false);
+    const shieldActiveRef = useRef(false);
+    const slowActiveRef = useRef(false);
+    const slowSpeedRef = useRef(1);
+    const shieldCountRef = useRef(0);
+    const slowCountRef = useRef(0);
+    const slowIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+    const slowTimerValueRef = useRef(0);
+    const isBossFightRef = useRef(false);
+    const bossHPRef = useRef(0);
+    const bossMaxHPRef = useRef(0);
+    const bossRewardRef = useRef(0);
 
     // ─── Animated values ──────────────────────────────────────────────────────
-    const bombFlashAnim    = useRef(new Animated.Value(0)).current;
-    const shieldFlashAnim  = useRef(new Animated.Value(0)).current;
-    const slowFlashAnim    = useRef(new Animated.Value(0)).current;
-    const comboScaleAnim   = useRef(new Animated.Value(0)).current;
+    const bombFlashAnim = useRef(new Animated.Value(0)).current;
+    const shieldFlashAnim = useRef(new Animated.Value(0)).current;
+    const slowFlashAnim = useRef(new Animated.Value(0)).current;
+    const comboScaleAnim = useRef(new Animated.Value(0)).current;
     const comboOpacityAnim = useRef(new Animated.Value(0)).current;
-    const bombPulseAnim    = useRef(new Animated.Value(1)).current;
-    const shakeAnim        = useRef(new Animated.Value(0)).current;
+    const bombPulseAnim = useRef(new Animated.Value(1)).current;
+    const shakeAnim = useRef(new Animated.Value(0)).current;
     const lvlUpOpacityAnim = useRef(new Animated.Value(0)).current;
-    const lvlUpScaleAnim   = useRef(new Animated.Value(0.5)).current;
+    const lvlUpScaleAnim = useRef(new Animated.Value(0.5)).current;
 
     // ─── State ────────────────────────────────────────────────────────────────
-    const [count,          setCount]          = useState(0);
-    const [levelCount,     setLevelCount]     = useState(0);
-    const [level,          setLevel]          = useState(1);
-    const [emptyHeartCount,setEmptyHeartCount]= useState(0);
-    const [isPlaying,      setIsPlaying]      = useState(true);
-    const [isLoseModal,    setIsLoseModal]    = useState(false);
-    const [isExitModal,    setIsExitModal]    = useState(false);
-    const [isMenuModal,    setIsMenuModal]    = useState(false);
-    const [buyModal,       setBuyModal]       = useState<HelperType | null>(null);
-    const [boxesData,      setBoxesData]      = useState(() => createBoxes(card, durationRef.current));
-    const [bombCount,      setBombCount]      = useState(INITIAL_BOMBS);
-    const [combo,          setCombo]          = useState(0);
-    const [watchAdUsed,    setWatchAdUsed]    = useState(0);
-    const [showLevelUp,     setShowLevelUp]     = useState(false);
-    const [shieldCount,     setShieldCount]     = useState(0);
-    const [slowCount,       setSlowCount]       = useState(0);
-    const [shieldActive,    setShieldActive]    = useState(false);
-    const [slowActive,       setSlowActive]       = useState(false);
-    const [slowTimer,        setSlowTimer]        = useState(0);
-    const [isBossFight,      setIsBossFight]      = useState(false);
-    const [bossHP,           setBossHP]           = useState(0);
-    const [bossMaxHP,        setBossMaxHP]        = useState(0);
+    const [count, setCount] = useState(0);
+    const [levelCount, setLevelCount] = useState(0);
+    const [level, setLevel] = useState(1);
+    const [emptyHeartCount, setEmptyHeartCount] = useState(0);
+    const [isPlaying, setIsPlaying] = useState(true);
+    const [isLoseModal, setIsLoseModal] = useState(false);
+    const [isExitModal, setIsExitModal] = useState(false);
+    const [isMenuModal, setIsMenuModal] = useState(false);
+    const [buyModal, setBuyModal] = useState<HelperType | null>(null);
+    const [boxesData, setBoxesData] = useState(() => createBoxes(card, durationRef.current));
+    const [bombCount, setBombCount] = useState(INITIAL_BOMBS);
+    const [combo, setCombo] = useState(0);
+    const [watchAdUsed, setWatchAdUsed] = useState(0);
+    const [showLevelUp, setShowLevelUp] = useState(false);
+    const [shieldCount, setShieldCount] = useState(0);
+    const [slowCount, setSlowCount] = useState(0);
+    const [shieldActive, setShieldActive] = useState(false);
+    const [slowActive, setSlowActive] = useState(false);
+    const [slowTimer, setSlowTimer] = useState(0);
+    const [isBossFight, setIsBossFight] = useState(false);
+    const [bossHP, setBossHP] = useState(0);
+    const [bossMaxHP, setBossMaxHP] = useState(0);
     const [showBossDefeated, setShowBossDefeated] = useState(false);
 
     const levelIndex = Math.min(level - 1, 4);
@@ -178,7 +178,7 @@ export default function Play() {
         const pulse = Animated.loop(
             Animated.sequence([
                 Animated.timing(bombPulseAnim, {toValue: 1.12, duration: 700, useNativeDriver: true}),
-                Animated.timing(bombPulseAnim, {toValue: 1,    duration: 700, useNativeDriver: true}),
+                Animated.timing(bombPulseAnim, {toValue: 1, duration: 700, useNativeDriver: true}),
             ])
         );
         pulse.start();
@@ -188,16 +188,17 @@ export default function Play() {
     // ─── Storage helpers ──────────────────────────────────────────────────────
     async function saveCoinStorage() {
         try {
-            const stored  = await AsyncStorage.getItem(STORAGE_KEYS.COIN);
+            const stored = await AsyncStorage.getItem(STORAGE_KEYS.COIN);
             const current = stored ? JSON.parse(stored) : 0;
             await AsyncStorage.setItem(STORAGE_KEYS.COIN, JSON.stringify(current + countRef.current));
-        } catch (e) {}
+        } catch (e) {
+        }
     }
 
     async function loadSettings() {
         const s = await AsyncStorage.getItem(STORAGE_KEYS.SOUND);
         const v = await AsyncStorage.getItem(STORAGE_KEYS.VIBRATION);
-        cancelSoundRef.current     = !!s;
+        cancelSoundRef.current = !!s;
         cancelVibrationRef.current = !!v;
         const coinStored = await AsyncStorage.getItem(STORAGE_KEYS.COIN);
         setCoins(coinStored ? JSON.parse(coinStored) : 0);
@@ -252,8 +253,8 @@ export default function Play() {
 
     async function loadBombCount() {
         const stored = await AsyncStorage.getItem(STORAGE_KEYS.BOMB_COUNT);
-        const saved  = stored ? JSON.parse(stored) : INITIAL_BOMBS;
-        const value  = Math.max(saved, INITIAL_BOMBS);
+        const saved = stored ? JSON.parse(stored) : INITIAL_BOMBS;
+        const value = Math.max(saved, INITIAL_BOMBS);
         bombCountRef.current = value;
         setBombCount(value);
     }
@@ -263,11 +264,11 @@ export default function Play() {
     }
 
     async function loadHelperCounts() {
-        const slow   = await AsyncStorage.getItem(STORAGE_KEYS.SLOW_COUNT);
+        const slow = await AsyncStorage.getItem(STORAGE_KEYS.SLOW_COUNT);
         const shield = await AsyncStorage.getItem(STORAGE_KEYS.SHIELD_COUNT);
-        const s = slow   ? JSON.parse(slow)   : 0;
+        const s = slow ? JSON.parse(slow) : 0;
         const h = shield ? JSON.parse(shield) : 0;
-        slowCountRef.current   = s;
+        slowCountRef.current = s;
         shieldCountRef.current = h;
         setSlowCount(s);
         setShieldCount(h);
@@ -284,10 +285,10 @@ export default function Play() {
     // ─── Animations ───────────────────────────────────────────────────────────
     function triggerMissShake() {
         Animated.sequence([
-            Animated.timing(shakeAnim, {toValue:  9, duration: 50, useNativeDriver: true}),
+            Animated.timing(shakeAnim, {toValue: 9, duration: 50, useNativeDriver: true}),
             Animated.timing(shakeAnim, {toValue: -9, duration: 50, useNativeDriver: true}),
-            Animated.timing(shakeAnim, {toValue:  5, duration: 50, useNativeDriver: true}),
-            Animated.timing(shakeAnim, {toValue:  0, duration: 50, useNativeDriver: true}),
+            Animated.timing(shakeAnim, {toValue: 5, duration: 50, useNativeDriver: true}),
+            Animated.timing(shakeAnim, {toValue: 0, duration: 50, useNativeDriver: true}),
         ]).start();
     }
 
@@ -296,7 +297,7 @@ export default function Play() {
         lvlUpOpacityAnim.setValue(1);
         lvlUpScaleAnim.setValue(0.4);
         Animated.parallel([
-            Animated.spring(lvlUpScaleAnim,   {toValue: 1, useNativeDriver: true, friction: 4}),
+            Animated.spring(lvlUpScaleAnim, {toValue: 1, useNativeDriver: true, friction: 4}),
             Animated.sequence([
                 Animated.delay(1100),
                 Animated.timing(lvlUpOpacityAnim, {toValue: 0, duration: 400, useNativeDriver: true}),
@@ -363,19 +364,19 @@ export default function Play() {
     }
 
     function handleRetry() {
-        durationRef.current      = INITIAL_DURATION;
-        countRef.current         = 0;
-        bombCountRef.current     = INITIAL_BOMBS;
-        levelRef.current         = 1;
-        comboCountRef.current    = 0;
-        streakRef.current        = 0;
-        shieldActiveRef.current  = false;
-        slowActiveRef.current    = false;
-        slowSpeedRef.current     = 1;
-        watchAdUsedRef.current   = 0;
-        isBossFightRef.current   = false;
-        bossHPRef.current        = 0;
-        bossMaxHPRef.current     = 0;
+        durationRef.current = INITIAL_DURATION;
+        countRef.current = 0;
+        bombCountRef.current = INITIAL_BOMBS;
+        levelRef.current = 1;
+        comboCountRef.current = 0;
+        streakRef.current = 0;
+        shieldActiveRef.current = false;
+        slowActiveRef.current = false;
+        slowSpeedRef.current = 1;
+        watchAdUsedRef.current = 0;
+        isBossFightRef.current = false;
+        bossHPRef.current = 0;
+        bossMaxHPRef.current = 0;
         AsyncStorage.setItem(STORAGE_KEYS.BOMB_COUNT, JSON.stringify(INITIAL_BOMBS));
         setCount(0);
         setLevelCount(0);
@@ -463,7 +464,7 @@ export default function Play() {
         setSlowCount(slowCountRef.current);
         saveSlowCount(slowCountRef.current);
         slowActiveRef.current = true;
-        slowSpeedRef.current  = 0.25;
+        slowSpeedRef.current = 0.25;
         setSlowActive(true);
 
         if (!cancelSoundRef.current && musicBombRef.current) {
@@ -491,9 +492,9 @@ export default function Play() {
                 slowTimerValueRef.current = next;
                 if (next <= 0) {
                     clearInterval(slowIntervalRef.current!);
-                    slowIntervalRef.current  = null;
-                    slowActiveRef.current    = false;
-                    slowSpeedRef.current     = 1;
+                    slowIntervalRef.current = null;
+                    slowActiveRef.current = false;
+                    slowSpeedRef.current = 1;
                     setSlowActive(false);
                     return 0;
                 }
@@ -505,8 +506,8 @@ export default function Play() {
     // ─── Boss fight ───────────────────────────────────────────────────────────
     function startBossFight(lvl: number) {
         const maxHP = 10 + Math.floor(lvl / 10) * 10;
-        bossHPRef.current     = maxHP;
-        bossMaxHPRef.current  = maxHP;
+        bossHPRef.current = maxHP;
+        bossMaxHPRef.current = maxHP;
         bossRewardRef.current = Math.floor(lvl / 10) * 5;
         isBossFightRef.current = true;
         setBossHP(maxHP);
@@ -610,7 +611,7 @@ export default function Play() {
     function levelUp() {
         saveCoinStorage();
         durationRef.current += DURATION_STEP;
-        levelRef.current    += 1;
+        levelRef.current += 1;
         setLevel(levelRef.current);
         triggerLevelUp(levelRef.current);
 
@@ -750,11 +751,11 @@ export default function Play() {
 
                         return {
                             ...b,
-                            x:        Math.random() * (width - b.size),
-                            y:        -Math.random() * 500,
-                            tx:       Math.random() * (width - b.size),
-                            ty:       durationRef.current + 10,
-                            color:    colors[Math.floor(Math.random() * colors.length)],
+                            x: Math.random() * (width - b.size),
+                            y: -Math.random() * 500,
+                            tx: Math.random() * (width - b.size),
+                            ty: durationRef.current + 10,
+                            color: colors[Math.floor(Math.random() * colors.length)],
                             rotation: b.isRotation ? (b.rotation + 2) % 360 : b.rotation,
                             isGolden: false,
                         };
@@ -762,10 +763,10 @@ export default function Play() {
 
                     return {
                         ...b,
-                        x:        newX,
-                        y:        newY,
-                        tx:       Math.abs(b.tx - b.x) < 1 ? Math.random() * (width - b.size) : b.tx,
-                        ty:       b.y + durationRef.current + 10,
+                        x: newX,
+                        y: newY,
+                        tx: Math.abs(b.tx - b.x) < 1 ? Math.random() * (width - b.size) : b.tx,
+                        ty: b.y + durationRef.current + 10,
                         rotation: b.isRotation ? (b.rotation + 2) % 360 : b.rotation,
                     };
                 })
@@ -800,10 +801,10 @@ export default function Play() {
 
     // ─── Render helpers ───────────────────────────────────────────────────────
     const comboLabel =
-        combo >= 5 ? '🔥 INSANE!'      :
-        combo >= 4 ? '💥 MEGA!'        :
-        combo >= 3 ? '⚡ COMBO x' + combo :
-                     '✨ COMBO x' + combo;
+        combo >= 5 ? '🔥 INSANE!' :
+            combo >= 4 ? '💥 MEGA!' :
+                combo >= 3 ? '⚡ COMBO x' + combo :
+                    '✨ COMBO x' + combo;
 
 
     const LevelUpIcon = level >= 10 ? FlameIcon : level >= 5 ? BoltIcon : StarBurstIcon;
@@ -842,7 +843,7 @@ export default function Play() {
                 <Animated.View
                     pointerEvents="none"
                     style={[styles.comboOverlay, {
-                        opacity:   comboOpacityAnim,
+                        opacity: comboOpacityAnim,
                         transform: [{scale: comboScaleAnim}],
                     }]}
                 >
@@ -855,7 +856,7 @@ export default function Play() {
                 <Animated.View
                     pointerEvents="none"
                     style={[styles.levelUpOverlay, {
-                        opacity:   lvlUpOpacityAnim,
+                        opacity: lvlUpOpacityAnim,
                         transform: [{scale: lvlUpScaleAnim}],
                     }]}
                 >
@@ -870,7 +871,7 @@ export default function Play() {
             {isBossFight && (
                 <View pointerEvents="none" style={styles.bossFightBanner}>
                     <Text style={styles.bossFightText}>
-                        ⚔️  BOSS FIGHT  ⚔️
+                        ⚔️ BOSS FIGHT ⚔️
                     </Text>
                 </View>
             )}
@@ -893,7 +894,7 @@ export default function Play() {
                         BOSS DEFEATED!
                     </Text>
                     <Text style={styles.bossDefeatedReward}>
-                        +{bossRewardRef.current} coins  •  ❤️ restored
+                        +{bossRewardRef.current} coins • ❤️ restored
                     </Text>
                 </View>
             )}
@@ -905,8 +906,12 @@ export default function Play() {
                 <Animated.View style={{transform: [{scale: shieldCount > 0 && !shieldActive ? bombPulseAnim : 1}]}}>
                     <TouchableOpacity
                         onPress={() => {
-                            if (shieldCount > 0 && !shieldActive) { handleShield(); }
-                            else if (!shieldActive) { setIsPlaying(false); setBuyModal('shield'); }
+                            if (shieldCount > 0 && !shieldActive) {
+                                handleShield();
+                            } else if (!shieldActive) {
+                                setIsPlaying(false);
+                                setBuyModal('shield');
+                            }
                         }}
                         disabled={shieldActive}
                         activeOpacity={0.75}
@@ -927,8 +932,12 @@ export default function Play() {
                 <Animated.View style={{transform: [{scale: bombCount > 0 ? bombPulseAnim : 1}]}}>
                     <TouchableOpacity
                         onPress={() => {
-                            if (bombCount > 0) { handleBomb(); }
-                            else { setIsPlaying(false); setBuyModal('bomb'); }
+                            if (bombCount > 0) {
+                                handleBomb();
+                            } else {
+                                setIsPlaying(false);
+                                setBuyModal('bomb');
+                            }
                         }}
                         activeOpacity={0.75}
                         style={[
@@ -948,8 +957,12 @@ export default function Play() {
                 <Animated.View style={{transform: [{scale: slowCount > 0 && !slowActive ? bombPulseAnim : 1}]}}>
                     <TouchableOpacity
                         onPress={() => {
-                            if (slowCount > 0 && !slowActive) { handleSlow(); }
-                            else if (!slowActive) { setIsPlaying(false); setBuyModal('slow'); }
+                            if (slowCount > 0 && !slowActive) {
+                                handleSlow();
+                            } else if (!slowActive) {
+                                setIsPlaying(false);
+                                setBuyModal('slow');
+                            }
                         }}
                         disabled={slowActive}
                         activeOpacity={0.75}
@@ -965,7 +978,8 @@ export default function Play() {
                             <SlowIcon size={28} color={slowCount > 0 ? '#fff' : LILAC}/>
                         )}
                         {!slowActive && (
-                            <View style={[styles.helperBadge, {backgroundColor: slowCount > 0 ? '#7b1fa2' : '#2a0a40'}]}>
+                            <View
+                                style={[styles.helperBadge, {backgroundColor: slowCount > 0 ? '#7b1fa2' : '#2a0a40'}]}>
                                 <Text style={styles.helperBadgeText}>{slowCount > 0 ? slowCount : '+'}</Text>
                             </View>
                         )}
@@ -979,9 +993,12 @@ export default function Play() {
             )}
 
             {/* Flash overlays */}
-            <Animated.View pointerEvents="none" style={[styles.flashOverlay, {opacity: bombFlashAnim, backgroundColor: ORANGE}]}/>
-            <Animated.View pointerEvents="none" style={[styles.flashOverlay, {opacity: shieldFlashAnim, backgroundColor: '#00e5ff'}]}/>
-            <Animated.View pointerEvents="none" style={[styles.flashOverlay, {opacity: slowFlashAnim,  backgroundColor: LILAC}]}/>
+            <Animated.View pointerEvents="none"
+                           style={[styles.flashOverlay, {opacity: bombFlashAnim, backgroundColor: ORANGE}]}/>
+            <Animated.View pointerEvents="none"
+                           style={[styles.flashOverlay, {opacity: shieldFlashAnim, backgroundColor: '#00e5ff'}]}/>
+            <Animated.View pointerEvents="none"
+                           style={[styles.flashOverlay, {opacity: slowFlashAnim, backgroundColor: LILAC}]}/>
 
             <LoseModal
                 visible={isLoseModal}
@@ -999,7 +1016,10 @@ export default function Play() {
                 coins={coins}
                 onBuy={handleBuyHelper}
                 onWatchAd={handleWatchAdHelper}
-                onClose={() => { setBuyModal(null); setIsPlaying(true); }}
+                onClose={() => {
+                    setBuyModal(null);
+                    setIsPlaying(true);
+                }}
             />
 
             {boxesData

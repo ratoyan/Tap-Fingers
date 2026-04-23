@@ -902,7 +902,7 @@ export default function Play() {
             )}
 
             {/* Helpers row */}
-            <View style={[styles.helpersRow, {bottom: insets.bottom + 22}]}>
+            <View style={[styles.helpersRow, {bottom: insets.bottom + 22}, isBossFight && {opacity: 0.3, pointerEvents: 'none'}]}>
 
                 {/* Shield */}
                 <Animated.View style={{transform: [{scale: shieldCount > 0 && !shieldActive ? bombPulseAnim : 1}]}}>

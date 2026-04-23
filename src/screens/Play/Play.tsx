@@ -69,11 +69,11 @@ function getDefaultBackground(level: number) {
 }
 
 function createBoxes(card: any, duration: number) {
-    return Array.from({length: MAX_ITEMS}, () => ({
+    return Array.from({length: MAX_ITEMS}, (_, i) => ({
         ...card,
         id: uuId.v4(),
         x: Math.random() * (width - card.size),
-        y: Math.random() * -100,
+        y: -(i * 280 + Math.random() * 80),
         tx: Math.random() * (width - card.size),
         ty: 0,
         color: colors[Math.floor(Math.random() * colors.length)],
@@ -791,10 +791,12 @@ export default function Play() {
         const interval = setInterval(() => {
             if (isBossFightRef.current) return;
             setBoxesData(prev => {
-                if (prev.length >= MAX_ITEMS) return prev;
-                return [...prev, spawnBox(card, durationRef.current)];
+                const slots = MAX_ITEMS - prev.length;
+                if (slots <= 0) return prev;
+                const toSpawn = Math.min(slots, Math.random() < 0.35 ? 2 : 1);
+                return [...prev, ...Array.from({length: toSpawn}, () => spawnBox(card, durationRef.current))];
             });
-        }, 1000);
+        }, 800);
 
         return () => clearInterval(interval);
     }, [isPlaying]);

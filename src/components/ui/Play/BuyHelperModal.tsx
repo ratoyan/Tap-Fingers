@@ -66,12 +66,13 @@ interface BuyHelperModalProps {
     visible: boolean;
     helperType: HelperType | null;
     coins: number;
+    watchAdUsed: number;
     onBuy: (type: HelperType) => void;
     onWatchAd: (type: HelperType) => void;
     onClose: () => void;
 }
 
-export default function BuyHelperModal({visible, helperType, coins, onBuy, onWatchAd, onClose}: BuyHelperModalProps) {
+export default function BuyHelperModal({visible, helperType, coins, watchAdUsed, onBuy, onWatchAd, onClose}: BuyHelperModalProps) {
     const scaleAnim   = useRef(new Animated.Value(0.8)).current;
     const fadeAnim    = useRef(new Animated.Value(0)).current;
     const adPulseAnim = useRef(new Animated.Value(1)).current;
@@ -95,8 +96,9 @@ export default function BuyHelperModal({visible, helperType, coins, onBuy, onWat
 
     if (!visible || !helperType) return null;
 
-    const cfg       = HELPER_CONFIGS[helperType];
-    const canAfford = coins >= cfg.price;
+    const cfg        = HELPER_CONFIGS[helperType];
+    const canAfford  = coins >= cfg.price;
+    const adDisabled = watchAdUsed >= 2;
 
     return (
         <Animated.View style={[styles.overlay, {opacity: fadeAnim}]}>
@@ -145,18 +147,26 @@ export default function BuyHelperModal({visible, helperType, coins, onBuy, onWat
                 </View>
 
                 {/* Watch Ad button */}
-                <Animated.View style={[styles.adWrap, {transform: [{scale: adPulseAnim}]}]}>
-                    <TouchableOpacity onPress={() => onWatchAd(helperType)} activeOpacity={0.82}>
+                <Animated.View style={[styles.adWrap, {transform: [{scale: adDisabled ? 1 : adPulseAnim}]}, adDisabled && {opacity: 0.35}]}>
+                    <TouchableOpacity
+                        onPress={() => onWatchAd(helperType)}
+                        activeOpacity={0.82}
+                        disabled={adDisabled}
+                    >
                         <LinearGradient
-                            colors={['#f7971e', '#ffd200']}
+                            colors={adDisabled ? ['#555', '#333'] : ['#f7971e', '#ffd200']}
                             start={{x: 0, y: 0}}
                             end={{x: 1, y: 0}}
                             style={styles.adBtn}
                         >
                             <Text style={styles.adIcon}>📺</Text>
                             <View>
-                                <Text style={styles.adTitle}>Watch Ad</Text>
-                                <Text style={styles.adSub}>Get +1 {cfg.name} for free</Text>
+                                <Text style={[styles.adTitle, adDisabled && {color: 'rgba(255,255,255,0.5)'}]}>
+                                    {adDisabled ? 'Ad limit reached' : 'Watch Ad'}
+                                </Text>
+                                <Text style={[styles.adSub, adDisabled && {color: 'rgba(255,255,255,0.35)'}]}>
+                                    {adDisabled ? `${watchAdUsed}/2 ads used` : `Get +1 ${cfg.name} for free`}
+                                </Text>
                             </View>
                         </LinearGradient>
                     </TouchableOpacity>

@@ -205,6 +205,9 @@ export default function Play() {
     }
 
     function handleWatchAdHelper(type: HelperType) {
+        if (watchAdUsedRef.current >= 2) return;
+        watchAdUsedRef.current += 1;
+        setWatchAdUsed(watchAdUsedRef.current);
         if (type === 'bomb') {
             const n = bombCountRef.current + 1;
             bombCountRef.current = n;
@@ -353,9 +356,6 @@ export default function Play() {
     }
 
     function handleWatchAd() {
-        if (watchAdUsedRef.current >= 2) return;
-        watchAdUsedRef.current += 1;
-        setWatchAdUsed(watchAdUsedRef.current);
         setEmptyHeartCount(prev => Math.max(0, prev - 1));
         setIsLoseModal(false);
         setIsPlaying(true);
@@ -1016,6 +1016,7 @@ export default function Play() {
                 visible={buyModal !== null}
                 helperType={buyModal}
                 coins={coins}
+                watchAdUsed={watchAdUsed}
                 onBuy={handleBuyHelper}
                 onWatchAd={handleWatchAdHelper}
                 onClose={() => {

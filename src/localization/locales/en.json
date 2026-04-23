@@ -30,5 +30,7 @@
   "getHeart": "+1 Heart",
   "score": "Score",
   "resume": "RESUME",
-  "close": "CLOSE"
+  "close": "CLOSE",
+  "pause": "PAUSE",
+  "continuePlaying": "CONTINUE"
 }

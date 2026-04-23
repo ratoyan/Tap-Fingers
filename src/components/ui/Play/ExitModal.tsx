@@ -39,20 +39,20 @@ export default function ExitModal({visible, onConfirm, onCancel}: ExitModalProps
                 <Text style={styles.loseText}>{t('exitGameDescription')}</Text>
                 <View style={styles.loseModalActions}>
                     <TouchableOpacity
-                        onPress={onCancel}
+                        onPress={onConfirm}
                         activeOpacity={0.8}
                         style={styles.loseModalBackAction}
                     >
-                        <Text style={{color: WHITE, fontSize: 16}}>{t('cancel')}</Text>
+                        <Text style={{color: WHITE, fontSize: 16}}>{t('pause')}</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity onPress={onConfirm} activeOpacity={0.8}>
+                    <TouchableOpacity onPress={onCancel} activeOpacity={0.8}>
                         <LinearGradient
                             colors={[GRADIENT_LIGHT, GRADIENT_DARK]}
                             start={{x: 0, y: 0}}
                             end={{x: 1, y: 1}}
                             style={styles.loseRetry}
                         >
-                            <Text style={styles.loseBtnText}>{t('yes')}</Text>
+                            <Text style={styles.loseBtnText}>{t('continuePlaying')}</Text>
                         </LinearGradient>
                     </TouchableOpacity>
                 </View>

@@ -30,5 +30,7 @@
   "getHeart": "+1 Сердце",
   "score": "Счёт",
   "resume": "ПРОДОЛЖИТЬ",
-  "close": "ЗАКРЫТЬ"
+  "close": "ЗАКРЫТЬ",
+  "pause": "ПАУЗА",
+  "continuePlaying": "ПРОДОЛЖИТЬ"
 }

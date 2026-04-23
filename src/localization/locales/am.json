@@ -30,5 +30,7 @@
   "getHeart": "+1 Սիրտ",
   "score": "Հաշիվ",
   "resume": "ՇԱՐՈՒՆԱԿԵԼ",
-  "close": "ՓԱԿԵԼ"
+  "close": "ՓԱԿԵԼ",
+  "pause": "ԿԱՍԵՑՆԵԼ",
+  "continuePlaying": "ՇԱՐՈՒՆԱԿԵԼ"
 }

@@ -11,13 +11,14 @@ import {
 } from 'react-native';
 import {useTranslation} from 'react-i18next';
 import LinearGradient from 'react-native-linear-gradient';
-import {launchCamera, launchImageLibrary} from 'react-native-image-picker';
+import {launchImageLibrary} from 'react-native-image-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {GoogleSignin, statusCodes} from '@react-native-google-signin/google-signin';
 
 // components
 import BackHeader from '../../components/ui/BackHeader/BackHeader.tsx';
 import PhotoPickerSheet from '../../components/ui/PhotoPickerSheet/PhotoPickerSheet.tsx';
+import CameraModal from '../../components/ui/CameraModal/CameraModal.tsx';
 import SocialAuthButton from '../../components/ui/SocialAuthButton/SocialAuthButton.tsx';
 import Ghost from '../../assets/icons/Ghost.tsx';
 import UserIcon from '../../assets/icons/UserIcon.tsx';
@@ -35,6 +36,7 @@ function Profile() {
     const [username,     setUsername]     = useState('Your Name');
     const [photoUri,     setPhotoUri]     = useState<string>(DEFAULT_AVATAR);
     const [sheetVisible, setSheetVisible] = useState(false);
+    const [cameraVisible, setCameraVisible] = useState(false);
     const [isGuest,      setIsGuest]      = useState(false);
     const {t} = useTranslation();
 
@@ -104,10 +106,14 @@ function Profile() {
     }
 
     function handleCamera() {
-        launchCamera({mediaType: 'photo', quality: 0.8}, response => {
-            const uri = response.assets?.[0]?.uri;
-            if (uri) handlePickResult(uri);
-        });
+        setSheetVisible(false);
+        setTimeout(() => setCameraVisible(true), 350);
+    }
+
+    function handleCameraCapture(uri: string) {
+        setCameraVisible(false);
+        setPhotoUri(uri);
+        AsyncStorage.setItem(STORAGE_KEY_PHOTO, uri);
     }
 
     function handleGallery() {
@@ -216,6 +222,12 @@ function Profile() {
                     onClose={() => setSheetVisible(false)}
                 />
             )}
+
+            <CameraModal
+                visible={cameraVisible}
+                onCapture={handleCameraCapture}
+                onClose={() => setCameraVisible(false)}
+            />
         </LinearGradient>
     );
 }

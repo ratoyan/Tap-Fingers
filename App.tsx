@@ -8,6 +8,7 @@ import StackNavigator from "./src/navigation/StackNavigator.tsx";
 import useMusicAppState from "./src/hooks/useMusicAppState.tsx";
 import {playMusic, stopMusic} from "./src/utils/helpers.ts";
 import UpdateModal from "./src/components/ui/UpdateModal/UpdateModal.tsx";
+import Splash from "./src/screens/Splash/Splash.tsx";
 
 const STORE_URL = Platform.OS === 'ios'
     ? 'https://apps.apple.com/app/idYOUR_APP_ID'
@@ -15,6 +16,7 @@ const STORE_URL = Platform.OS === 'ios'
 
 function App() {
     useMusicAppState(playMusic, stopMusic);
+    const [splashDone, setSplashDone] = useState(false);
     const [showUpdate, setShowUpdate] = useState(false);
     const [storeUrl,   setStoreUrl]   = useState(STORE_URL);
 
@@ -31,10 +33,13 @@ function App() {
     }, []);
 
     return (
-        <NavigationContainer>
-            <StackNavigator/>
-            <UpdateModal visible={showUpdate} storeUrl={storeUrl}/>
-        </NavigationContainer>
+        <>
+            <NavigationContainer>
+                <StackNavigator/>
+                <UpdateModal visible={showUpdate} storeUrl={storeUrl}/>
+            </NavigationContainer>
+            {!splashDone && <Splash onFinish={() => setSplashDone(true)}/>}
+        </>
     );
 }
 

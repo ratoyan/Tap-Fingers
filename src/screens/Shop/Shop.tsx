@@ -11,6 +11,7 @@ import {shops} from "../../data/shop.ts";
 // components
 import BackHeader from "../../components/ui/BackHeader/BackHeader.tsx";
 import ShopItem from "../../components/ui/ShopItem/ShopItem.tsx";
+import WatchAdModal from "../../components/ui/WatchAdModal/WatchAdModal.tsx";
 
 // styles
 import styles from './Shop.style.ts';
@@ -21,10 +22,11 @@ type TabType = 'card' | 'background';
 
 function Shop() {
     const {t} = useTranslation();
-    const {coins, minusCoins} = useGlobalStore();
+    const {coins, minusCoins, addCoins} = useGlobalStore();
     const {card, setCard, setBackground, background} = useShopStore();
 
     const [activeTab, setActiveTab] = useState<TabType>('card');
+    const [showAdModal, setShowAdModal] = useState(false);
     const [cardsId, setCardsId] = useState<number[]>([]);
     const [backgroundsId, setBackgroundsId] = useState<number[]>([]);
     const [sortedCardItems, setSortedCardItems] = useState<any[]>([]);
@@ -118,6 +120,7 @@ function Shop() {
                     isShowCoin={true}
                     textStyle={{marginRight: 25}}
                     coins={coins}
+                    onCoinPress={() => setShowAdModal(true)}
                 />
             </View>
 
@@ -201,6 +204,15 @@ function Shop() {
                     </View>
                 </ScrollView>
             )}
+            <WatchAdModal
+                visible={showAdModal}
+                onCollect={async () => {
+                    addCoins(10);
+                    await AsyncStorage.setItem(STORAGE_KEYS.COIN, JSON.stringify(coins + 10));
+                    setShowAdModal(false);
+                }}
+                onClose={() => setShowAdModal(false)}
+            />
         </LinearGradient>
     );
 }

@@ -12,6 +12,7 @@
   "exitGameDescription": "Վստա՞հ եք, որ ուզում եք դուրս գալ խաղից?",
   "cancel": "Չեղարկել",
   "yes": "Այո",
+  "no": "Ոչ",
   "level": "Մակարդակ",
   "selectLanguage": "Ընտրեք լեզուն",
   "cards": "Քարտեր",
@@ -32,5 +33,8 @@
   "resume": "ՇԱՐՈՒՆԱԿԵԼ",
   "close": "ՓԱԿԵԼ",
   "pause": "ԿԱՍԵՑՆԵԼ",
-  "continuePlaying": "ՇԱՐՈՒՆԱԿԵԼ"
+  "continuePlaying": "ՇԱՐՈՒՆԱԿԵԼ",
+  "watchAdQuestion": "Դիտե՞լ գովազդ՝ +10 մետաղադրամ ստանալու համար:",
+  "collectCoins": "+10 Մետաղադրամ հավաքել",
+  "waitSeconds": "Սպասեք {{count}} վ..."
 }

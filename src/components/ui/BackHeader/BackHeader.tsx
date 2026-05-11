@@ -22,6 +22,7 @@ interface BackHeaderProps {
     coins?: number;
     isProfile?: boolean;
     handleProfilePress?: () => void;
+    onCoinPress?: () => void;
 }
 
 function BackHeader({
@@ -31,7 +32,8 @@ function BackHeader({
                         textStyle,
                         coins,
                         isProfile = false,
-                        handleProfilePress
+                        handleProfilePress,
+                        onCoinPress,
                     }: BackHeaderProps) {
     const insets = useSafeAreaInsets();
     const navigation = useNavigation();
@@ -66,7 +68,7 @@ function BackHeader({
 
             {
                 isShowCoin && (
-                    <CoinCount count={coins} viewStyles={[styles.coinPosition, {top: insets.top + TOP_OFFSET + 5}]}/>
+                    <CoinCount count={coins} viewStyles={[styles.coinPosition, {top: insets.top + TOP_OFFSET + 5}]} onPress={onCoinPress}/>
                 )
             }
             {

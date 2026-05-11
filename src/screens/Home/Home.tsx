@@ -1,5 +1,5 @@
 ﻿import React, {useCallback, useRef, useState} from 'react';
-import {Animated, ScrollView, Text, TouchableOpacity, View} from "react-native";
+import {Animated, BackHandler, ScrollView, Text, TouchableOpacity, View} from "react-native";
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {RootStackParamList} from '../../types/RootStackParamList';
 import {MenuType} from "../../types/menu.type.ts";
@@ -18,6 +18,8 @@ import MenuButton from "../../components/ui/MenuButton/MenuButton.tsx";
 import CoinCount from "../../components/ui/CoinCount/CoinCount.tsx";
 import Logo from "../../components/ui/Logo/Logo.tsx";
 import LuckyWheelModal from "../../components/ui/LuckyWheel/LuckyWheelModal.tsx";
+import WatchAdModal from "../../components/ui/WatchAdModal/WatchAdModal.tsx";
+import ExitModal from "../../components/ui/Play/ExitModal.tsx";
 
 // styles
 import styles from './Home.style.ts';
@@ -29,10 +31,12 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Home'>;
 
 const Home: React.FC<Props> = () => {
     const insets = useSafeAreaInsets();
-    const {coins, setCoins} = useGlobalStore();
+    const {coins, setCoins, addCoins} = useGlobalStore();
     const {setCard, setBackground} = useShopStore();
     const [showWheel, setShowWheel] = useState(false);
     const [canSpin, setCanSpin] = useState(false);
+    const [showAdModal, setShowAdModal] = useState(false);
+    const [showExitModal, setShowExitModal] = useState(false);
     const wheelScale = useRef(new Animated.Value(1)).current;
 
     const checkCanSpin = useCallback(async () => {
@@ -69,6 +73,16 @@ const Home: React.FC<Props> = () => {
 
     useFocusEffect(
         useCallback(() => {
+            const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+                setShowExitModal(true);
+                return true;
+            });
+            return () => sub.remove();
+        }, [])
+    );
+
+    useFocusEffect(
+        useCallback(() => {
             const fetchCoin = async () => {
                 const value = await getCoin();
                 const card = await getCard();
@@ -98,11 +112,6 @@ const Home: React.FC<Props> = () => {
             accessible={true}
             accessibilityLabel="Main menu screen"
         >
-            <CoinCount
-                count={coins}
-                viewStyles={[globalStyles.coinView, {top: insets.top + TOP_OFFSET}]}
-            />
-
             <ScrollView
                 style={styles.scroll}
                 contentContainerStyle={[styles.scrollContent, {paddingTop: insets.top + TOP_OFFSET}]}
@@ -118,6 +127,12 @@ const Home: React.FC<Props> = () => {
                 </View>
 
             </ScrollView>
+
+            <CoinCount
+                count={coins}
+                viewStyles={[globalStyles.coinView, {top: insets.top + TOP_OFFSET}]}
+                onPress={() => setShowAdModal(true)}
+            />
 
             {/* Lucky Wheel — top left floating button */}
             <View style={[styles.wheelShadow, {top: insets.top + 8}]}>
@@ -152,6 +167,22 @@ const Home: React.FC<Props> = () => {
                 visible={showWheel}
                 onClose={() => setShowWheel(false)}
                 onSpinComplete={() => setCanSpin(false)}
+            />
+
+            <WatchAdModal
+                visible={showAdModal}
+                onCollect={async () => {
+                    addCoins(10);
+                    await AsyncStorage.setItem(STORAGE_KEYS.COIN, JSON.stringify(coins + 10));
+                    setShowAdModal(false);
+                }}
+                onClose={() => setShowAdModal(false)}
+            />
+
+            <ExitModal
+                visible={showExitModal}
+                onConfirm={() => BackHandler.exitApp()}
+                onCancel={() => setShowExitModal(false)}
             />
         </LinearGradient>
     );

@@ -52,7 +52,17 @@ export default StyleSheet.create({
         marginVertical:  10,
     },
 
-    // ── Pointer arrow ─────────────────────────────────────────────────────────
+    // ── Shine sweep ───────────────────────────────────────────────────────────
+    shine: {
+        position:        'absolute',
+        top:             0,
+        bottom:          0,
+        width:           90,
+        backgroundColor: 'rgba(255,255,255,0.045)',
+        transform:       [{skewX: '-18deg'}],
+    },
+
+    // ── Pointer ───────────────────────────────────────────────────────────────
     pointerWrapper: {
         marginBottom:  -4,
         zIndex:        10,
@@ -71,6 +81,12 @@ export default StyleSheet.create({
         borderLeftColor:  'transparent',
         borderRightColor: 'transparent',
         borderTopColor:   '#FFD700',
+    },
+    pointerGem: {
+        width:        18,
+        height:       18,
+        borderRadius: 4,
+        transform:    [{rotate: '45deg'}],
     },
 
     // ── Spin button (hub) ─────────────────────────────────────────────────────
@@ -195,13 +211,17 @@ export default StyleSheet.create({
 
     // ── Close button ──────────────────────────────────────────────────────────
     closeButton: {
-        marginTop:         18,
+        marginTop:   18,
+        borderRadius: 24,
+        borderWidth:  1,
+        borderColor:  'rgba(255,215,0,0.35)',
+        overflow:     'hidden',
+    },
+    closeGradient: {
         paddingVertical:   11,
         paddingHorizontal: 48,
         borderRadius:      24,
-        borderWidth:       1,
-        borderColor:       'rgba(255,215,0,0.35)',
-        backgroundColor:   'rgba(255,255,255,0.05)',
+        alignItems:        'center',
     },
     closeText: {
         color:         'rgba(255,215,0,0.75)',

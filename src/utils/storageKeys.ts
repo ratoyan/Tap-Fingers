@@ -14,4 +14,5 @@ export const STORAGE_KEYS = {
     SLOW_COUNT:      'slow_count',
     SHIELD_COUNT:    'shield_count',
     LUCKY_SPIN_DATE: 'lucky_spin_date',
+    DAILY_AD_WATCHES: 'daily_ad_watches',
 };

@@ -35,6 +35,9 @@
   "pause": "PAUSE",
   "continuePlaying": "CONTINUE",
   "watchAdQuestion": "Watch an ad to earn +10 coins?",
+  "adLimitTitle": "Come back tomorrow!",
+  "adLimitSub": "You've watched 2 ads today",
+  "adWatchedAt": "Watched at",
   "collectCoins": "Collect +10 Coins",
   "waitSeconds": "Wait {{count}}s..."
 }

@@ -35,6 +35,9 @@
   "pause": "ԿԱՍԵՑՆԵԼ",
   "continuePlaying": "ՇԱՐՈՒՆԱԿԵԼ",
   "watchAdQuestion": "Դիտե՞լ գովազդ՝ +10 մետաղադրամ ստանալու համար:",
+  "adLimitTitle": "Վաղը արի՛ նորից!",
+  "adLimitSub": "Այսօր արդեն 2 գովազդ դիտեցիր",
+  "adWatchedAt": "Դիտեցիր",
   "collectCoins": "+10 Մետաղադրամ հավաքել",
   "waitSeconds": "Սպասեք {{count}} վ..."
 }

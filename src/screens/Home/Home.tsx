@@ -174,7 +174,6 @@ const Home: React.FC<Props> = () => {
                 onCollect={async () => {
                     addCoins(10);
                     await AsyncStorage.setItem(STORAGE_KEYS.COIN, JSON.stringify(coins + 10));
-                    setShowAdModal(false);
                 }}
                 onClose={() => setShowAdModal(false)}
             />

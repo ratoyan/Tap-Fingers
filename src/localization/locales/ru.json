@@ -35,6 +35,9 @@
   "pause": "ПАУЗА",
   "continuePlaying": "ПРОДОЛЖИТЬ",
   "watchAdQuestion": "Смотреть рекламу, чтобы получить +10 монет?",
+  "adLimitTitle": "Возвращайся завтра!",
+  "adLimitSub": "Сегодня ты уже посмотрел 2 рекламы",
+  "adWatchedAt": "Просмотрено в",
   "collectCoins": "Собрать +10 монет",
   "waitSeconds": "Подождите {{count}}с..."
 }

@@ -11,6 +11,12 @@
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
 		761780ED2CA45674006654EE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 761780EC2CA45674006654EE /* AppDelegate.swift */; };
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
+		AA0001BB0001AA0001BB0001 /* gamemusic.wav in Resources */ = {isa = PBXBuildFile; fileRef = AA0001AA0001AA0001AA0001 /* gamemusic.wav */; };
+		AA0002BB0002AA0002BB0002 /* jumping.wav in Resources */ = {isa = PBXBuildFile; fileRef = AA0002AA0002AA0002AA0002 /* jumping.wav */; };
+		AA0003BB0003AA0003BB0003 /* games1.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = AA0003AA0003AA0003AA0003 /* games1.mp3 */; };
+		AA0004BB0004AA0004BB0004 /* games2.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = AA0004AA0004AA0004AA0004 /* games2.mp3 */; };
+		AA0005BB0005AA0005BB0005 /* gamemusic2.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = AA0005AA0005AA0005AA0005 /* gamemusic2.mp3 */; };
+		AA0006BB0006AA0006BB0006 /* gamemusic3.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = AA0006AA0006AA0006AA0006 /* gamemusic3.mp3 */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -24,6 +30,12 @@
 		761780EC2CA45674006654EE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = TapFingers/AppDelegate.swift; sourceTree = "<group>"; };
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = TapFingers/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
+		AA0001AA0001AA0001AA0001 /* gamemusic.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = gamemusic.wav; path = TapFingers/gamemusic.wav; sourceTree = "<group>"; };
+		AA0002AA0002AA0002AA0002 /* jumping.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = jumping.wav; path = TapFingers/jumping.wav; sourceTree = "<group>"; };
+		AA0003AA0003AA0003AA0003 /* games1.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; name = games1.mp3; path = TapFingers/games1.mp3; sourceTree = "<group>"; };
+		AA0004AA0004AA0004AA0004 /* games2.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; name = games2.mp3; path = TapFingers/games2.mp3; sourceTree = "<group>"; };
+		AA0005AA0005AA0005AA0005 /* gamemusic2.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; name = gamemusic2.mp3; path = TapFingers/gamemusic2.mp3; sourceTree = "<group>"; };
+		AA0006AA0006AA0006AA0006 /* gamemusic3.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; name = gamemusic3.mp3; path = TapFingers/gamemusic3.mp3; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -46,6 +58,12 @@
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */,
 				13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */,
+				AA0001AA0001AA0001AA0001 /* gamemusic.wav */,
+				AA0002AA0002AA0002AA0002 /* jumping.wav */,
+				AA0003AA0003AA0003AA0003 /* games1.mp3 */,
+				AA0004AA0004AA0004AA0004 /* games2.mp3 */,
+				AA0005AA0005AA0005AA0005 /* gamemusic2.mp3 */,
+				AA0006AA0006AA0006AA0006 /* gamemusic3.mp3 */,
 			);
 			name = TapFingers;
 			sourceTree = "<group>";
@@ -159,6 +177,12 @@
 			files = (
 				81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
+				AA0001BB0001AA0001BB0001 /* gamemusic.wav in Resources */,
+				AA0002BB0002AA0002BB0002 /* jumping.wav in Resources */,
+				AA0003BB0003AA0003BB0003 /* games1.mp3 in Resources */,
+				AA0004BB0004AA0004BB0004 /* games2.mp3 in Resources */,
+				AA0005BB0005AA0005BB0005 /* gamemusic2.mp3 in Resources */,
+				AA0006BB0006AA0006BB0006 /* gamemusic3.mp3 in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

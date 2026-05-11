@@ -1,6 +1,7 @@
 import React, {useEffect, useState} from 'react';
 import {Platform} from 'react-native';
 import {NavigationContainer} from "@react-navigation/native";
+// @ts-ignore
 import VersionCheck from 'react-native-version-check';
 
 import StackNavigator from "./src/navigation/StackNavigator.tsx";

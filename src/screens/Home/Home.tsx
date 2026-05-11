@@ -73,6 +73,7 @@ const Home: React.FC<Props> = () => {
 
     useFocusEffect(
         useCallback(() => {
+            if (Platform.OS !== 'android') return;
             const sub = BackHandler.addEventListener('hardwareBackPress', () => {
                 setShowExitModal(true);
                 return true;
@@ -180,10 +181,7 @@ const Home: React.FC<Props> = () => {
 
             <ExitModal
                 visible={showExitModal}
-                onConfirm={() => {
-                    if (Platform.OS === 'android') BackHandler.exitApp();
-                    else setShowExitModal(false);
-                }}
+                onConfirm={() => BackHandler.exitApp()}
                 onCancel={() => setShowExitModal(false)}
             />
         </LinearGradient>

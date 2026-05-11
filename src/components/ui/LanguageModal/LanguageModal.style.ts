@@ -1,14 +1,11 @@
 import {StyleSheet} from 'react-native';
-import {BLUISH_PURPLE, GRADIENT_DARK, GRADIENT_LIGHT, ORCHID, PLUM, PURPLE, PURPLE_LIGHT, WHITE, WHITE_100} from '../../../constants/colors.ts';
-import {ms, vs, isTablet, SW} from '../../../utils/responsive.ts';
+import {isTablet, ms, SW, vs} from '../../../utils/responsive.ts';
+import {BLUISH_PURPLE, GOLD, ORCHID, PURPLE, PURPLE_LIGHT, WHITE, WHITE_100} from '../../../constants/colors.ts';
 
 export default StyleSheet.create({
     overlay: {
         position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
+        top: 0, left: 0, right: 0, bottom: 0,
         zIndex: 10,
         backgroundColor: 'rgba(0,0,0,0.75)',
         justifyContent: 'center',
@@ -17,50 +14,77 @@ export default StyleSheet.create({
     card: {
         width: isTablet ? Math.min(SW * 0.55, 420) : '82%',
         backgroundColor: BLUISH_PURPLE,
-        borderRadius: ms(24),
-        paddingVertical: vs(22),
+        borderRadius: ms(28),
+        paddingVertical: vs(24),
         paddingHorizontal: ms(20),
         alignItems: 'center',
         borderWidth: 1.5,
-        borderColor: 'rgba(218,112,214,0.35)',
+        borderColor: 'rgba(218,112,214,0.4)',
         shadowColor: PURPLE_LIGHT,
         shadowOffset: {width: 0, height: 0},
-        shadowOpacity: 0.5,
-        shadowRadius: 24,
-        elevation: 18,
+        shadowOpacity: 0.6,
+        shadowRadius: 28,
+        elevation: 20,
     },
     title: {
         color: ORCHID,
-        fontSize: ms(20),
+        fontSize: ms(18),
         fontWeight: '800',
         textAlign: 'center',
-        marginBottom: vs(16),
-        letterSpacing: 1,
+        marginBottom: vs(14),
+        letterSpacing: 0.8,
         textShadowColor: PURPLE_LIGHT,
         textShadowOffset: {width: 0, height: 0},
         textShadowRadius: 8,
     },
+    divider: {
+        width: '100%',
+        height: 1,
+        backgroundColor: 'rgba(218,112,214,0.2)',
+        marginBottom: vs(14),
+    },
     item: {
         width: '100%',
-        paddingVertical: vs(13),
-        paddingHorizontal: ms(14),
-        borderRadius: ms(12),
-        marginBottom: vs(6),
+        borderRadius: ms(16),
+        marginBottom: vs(10),
+        overflow: 'hidden',
         borderWidth: 1,
         borderColor: 'rgba(218,112,214,0.2)',
     },
-    text: {
-        color: WHITE_100,
+    itemInner: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: vs(12),
+        paddingHorizontal: ms(14),
+        gap: ms(14),
+        borderRadius: ms(16),
+    },
+    flag: {
+        fontSize: ms(30),
+    },
+    labelCol: {
+        flex: 1,
+        gap: vs(2),
+    },
+    nativeName: {
+        color: WHITE,
         fontSize: ms(16),
-        textAlign: 'center',
+        fontWeight: '700',
+    },
+    nativeNameSelected: {
+        color: WHITE,
+    },
+    engName: {
+        color: 'rgba(255,255,255,0.45)',
+        fontSize: ms(12),
         fontWeight: '500',
     },
-    selectedItem: {
-        backgroundColor: 'rgba(142,45,226,0.35)',
-        borderColor: GRADIENT_LIGHT,
+    engNameSelected: {
+        color: 'rgba(255,255,255,0.7)',
     },
-    selectedText: {
-        fontWeight: '800',
-        color: WHITE,
+    checkmark: {
+        color: GOLD,
+        fontSize: ms(20),
+        fontWeight: '900',
     },
 });

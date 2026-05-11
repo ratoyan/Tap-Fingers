@@ -1,5 +1,5 @@
 ﻿import React, {useCallback, useRef, useState} from 'react';
-import {Animated, BackHandler, ScrollView, Text, TouchableOpacity, View} from "react-native";
+import {Animated, BackHandler, Platform, ScrollView, Text, TouchableOpacity, View} from "react-native";
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {RootStackParamList} from '../../types/RootStackParamList';
 import {MenuType} from "../../types/menu.type.ts";
@@ -180,7 +180,10 @@ const Home: React.FC<Props> = () => {
 
             <ExitModal
                 visible={showExitModal}
-                onConfirm={() => BackHandler.exitApp()}
+                onConfirm={() => {
+                    if (Platform.OS === 'android') BackHandler.exitApp();
+                    else setShowExitModal(false);
+                }}
                 onCancel={() => setShowExitModal(false)}
             />
         </LinearGradient>

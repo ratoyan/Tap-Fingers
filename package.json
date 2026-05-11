@@ -33,6 +33,7 @@
     "react-native-sound": "^0.13.0",
     "react-native-svg": "^15.15.4",
     "react-native-uuid": "^2.0.4",
+    "react-native-version-check": "^3.5.0",
     "react-native-vision-camera": "^4.7.3",
     "uuid": "^13.0.0",
     "zustand": "^5.0.12"

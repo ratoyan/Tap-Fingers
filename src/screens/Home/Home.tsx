@@ -1,5 +1,5 @@
-﻿import React, {useCallback, useRef, useState} from 'react';
-import {Animated, BackHandler, Platform, ScrollView, Text, TouchableOpacity, View} from "react-native";
+﻿import React, {useCallback, useState} from 'react';
+import {Animated, BackHandler, Platform, ScrollView, View} from "react-native";
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {RootStackParamList} from '../../types/RootStackParamList';
 import {MenuType} from "../../types/menu.type.ts";
@@ -18,6 +18,7 @@ import MenuButton from "../../components/ui/MenuButton/MenuButton.tsx";
 import CoinCount from "../../components/ui/CoinCount/CoinCount.tsx";
 import Logo from "../../components/ui/Logo/Logo.tsx";
 import LuckyWheelModal from "../../components/ui/LuckyWheel/LuckyWheelModal.tsx";
+import LuckyWheelButton from "../../components/ui/LuckyWheelButton/LuckyWheelButton.tsx";
 import WatchAdModal from "../../components/ui/WatchAdModal/WatchAdModal.tsx";
 import ExitModal from "../../components/ui/Play/ExitModal.tsx";
 
@@ -37,8 +38,6 @@ const Home: React.FC<Props> = () => {
     const [canSpin, setCanSpin] = useState(false);
     const [showAdModal, setShowAdModal] = useState(false);
     const [showExitModal, setShowExitModal] = useState(false);
-    const wheelScale = useRef(new Animated.Value(1)).current;
-
     const checkCanSpin = useCallback(async () => {
         const raw = await AsyncStorage.getItem(STORAGE_KEYS.LUCKY_SPIN_DATE);
         if (!raw) { setCanSpin(true); return; }
@@ -135,34 +134,11 @@ const Home: React.FC<Props> = () => {
                 onPress={() => setShowAdModal(true)}
             />
 
-            {/* Lucky Wheel — top left floating button */}
-            <View style={[styles.wheelShadow, {top: insets.top + 8}]}>
-                <Animated.View style={{transform: [{scale: wheelScale}]}}>
-                    <TouchableOpacity
-                        activeOpacity={0.9}
-                        onPressIn={() => Animated.spring(wheelScale, {toValue: 0.9,  useNativeDriver: true}).start()}
-                        onPressOut={() => Animated.spring(wheelScale, {toValue: 1, friction: 4, useNativeDriver: true}).start()}
-                        onPress={() => setShowWheel(true)}
-                    >
-                        <LinearGradient
-                            colors={['#2a0052', '#1a0035', '#0e001f']}
-                            start={{x: 0, y: 0}}
-                            end={{x: 1, y: 1}}
-                            style={styles.wheelGradient}
-                        >
-                            {canSpin && (
-                                <View style={styles.wheelFreeBadge}>
-                                    <Text allowFontScaling={false} style={styles.wheelFreeBadgeText}>FREE</Text>
-                                </View>
-                            )}
-
-                            <Text allowFontScaling={false} style={styles.wheelEmoji}>🎡</Text>
-                            <View style={styles.wheelSeparator}/>
-                            <Text allowFontScaling={false} style={styles.wheelSpinText}>SPIN</Text>
-                        </LinearGradient>
-                    </TouchableOpacity>
-                </Animated.View>
-            </View>
+            <LuckyWheelButton
+                canSpin={canSpin}
+                top={insets.top + 8}
+                onPress={() => setShowWheel(true)}
+            />
 
             <LuckyWheelModal
                 visible={showWheel}

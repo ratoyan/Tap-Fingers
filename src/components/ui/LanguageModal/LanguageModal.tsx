@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import {
     View,
     Text,
@@ -34,7 +34,7 @@ function LanguageModal({
         accessible={false}
     >
         <View style={styles.card}>
-            <Text style={styles.title} accessibilityRole="header">{t('selectLanguage')}</Text>
+            <Text allowFontScaling={false} style={styles.title} accessibilityRole="header">{t('selectLanguage')}</Text>
 
             {languages.map(lang => (
                 <TouchableOpacity
@@ -53,7 +53,7 @@ function LanguageModal({
                     accessibilityLabel={lang.name}
                     accessibilityHint="Double tap to select this language"
                 >
-                    <Text
+                    <Text allowFontScaling={false}
                         style={[
                             styles.text,
                             selectedLanguage === lang.name && styles.selectedText,

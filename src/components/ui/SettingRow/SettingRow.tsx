@@ -1,4 +1,4 @@
-import {Text, TouchableOpacity, View, ViewStyle} from "react-native";
+﻿import {Text, TouchableOpacity, View, ViewStyle} from "react-native";
 import React from "react";
 
 // components
@@ -58,14 +58,14 @@ function SettingRow(props: SettingRowProps) {
                     </View>
                 )}
 
-                <Text style={styles.label}>{props.label}</Text>
+                <Text allowFontScaling={false} style={styles.label}>{props.label}</Text>
 
                 {isToggle && (
                     <GameSwitch value={props.value} onChange={props.onChange}/>
                 )}
 
                 {'valueText' in props && (
-                    <Text style={styles.valueText}>{props.valueText} ›</Text>
+                    <Text allowFontScaling={false} style={styles.valueText}>{props.valueText} ›</Text>
                 )}
             </View>
         </TouchableOpacity>

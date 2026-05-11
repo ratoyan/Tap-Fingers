@@ -1,4 +1,4 @@
-import * as React from "react"
+﻿import * as React from "react"
 import {DARK_NAVY} from "../../constants/colors.ts";
 import Svg, {
     Rect,
@@ -45,7 +45,7 @@ function Card1(props: any) {
                 width={200}
                 height={200}
             />
-            <Text x={130} y={240} textAnchor="middle" fill="#fff" fontSize={20}>
+            <Text allowFontScaling={false} x={130} y={240} textAnchor="middle" fill="#fff" fontSize={20}>
                 {"Tap Fingers"}
             </Text>
             <Defs>

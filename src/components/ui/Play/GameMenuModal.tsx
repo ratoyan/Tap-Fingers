@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState} from 'react';
+﻿import React, {useEffect, useRef, useState} from 'react';
 import {Animated, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import {useTranslation} from 'react-i18next';
@@ -51,7 +51,7 @@ export default function GameMenuModal({visible, onClose, onExit}: GameMenuModalP
                             style={styles.btnGradient}
                         >
                             <PlayIcon size={18} color={WHITE} />
-                            <Text style={styles.resumeText}>{t('play')}</Text>
+                            <Text allowFontScaling={false} style={styles.resumeText}>{t('play')}</Text>
                         </LinearGradient>
                     </TouchableOpacity>
 
@@ -61,7 +61,7 @@ export default function GameMenuModal({visible, onClose, onExit}: GameMenuModalP
                         activeOpacity={0.85}
                         style={[styles.btn, styles.settingsBtn]}
                     >
-                        <Text style={styles.settingsText}>⚙️  {t('settings')}</Text>
+                        <Text allowFontScaling={false} style={styles.settingsText}>⚙️  {t('settings')}</Text>
                     </TouchableOpacity>
 
                     {/* Exit Game */}
@@ -73,7 +73,7 @@ export default function GameMenuModal({visible, onClose, onExit}: GameMenuModalP
                             style={styles.exitGradient}
                         >
                             <ExitIcon size={18} color="#DDA0DD" />
-                            <Text style={styles.exitText}>{t('exitGame')}</Text>
+                            <Text allowFontScaling={false} style={styles.exitText}>{t('exitGame')}</Text>
                         </LinearGradient>
                     </TouchableOpacity>
 

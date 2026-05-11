@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import {Animated, Text, TouchableOpacity} from "react-native";
 import {MenuType} from "../../../types/menu.type.ts";
 import {useTranslation} from "react-i18next";
@@ -53,8 +53,8 @@ function MenuButton({menu}: MenuProps){
                     end={{x: 1, y: 0}}
                     style={styles.gradientButton}
                 >
-                    <Text style={styles.icon}>{menu.icon}</Text>
-                    <Text style={styles.title}>{t(menu.title)}</Text>
+                    <Text allowFontScaling={false} style={styles.icon}>{menu.icon}</Text>
+                    <Text allowFontScaling={false} style={styles.title}>{t(menu.title)}</Text>
                 </LinearGradient>
             </TouchableOpacity>
         </Animated.View>

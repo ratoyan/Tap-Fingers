@@ -1,4 +1,4 @@
-import React, {useEffect, useRef} from "react";
+﻿import React, {useEffect, useRef} from "react";
 import {Animated, Text, TouchableOpacity, View} from "react-native";
 
 // icons
@@ -113,19 +113,19 @@ function ChallengeCard({item, index = 0}: ChallengeCardProps) {
                 {/* Header */}
                 <View style={styles.header}>
                     <View style={styles.iconBox}>
-                        <Text style={styles.iconText}>{getIcon()}</Text>
+                        <Text allowFontScaling={false} style={styles.iconText}>{getIcon()}</Text>
                     </View>
 
                     <View style={styles.headerText}>
-                        <Text style={styles.title} numberOfLines={1}>{item.title}</Text>
+                        <Text allowFontScaling={false} style={styles.title} numberOfLines={1}>{item.title}</Text>
                         {item.locked
-                            ? <Text style={styles.lockedSubtitle}>Complete previous challenge</Text>
-                            : <Text style={styles.subtitle}>{item.progress}% completed</Text>
+                            ? <Text allowFontScaling={false} style={styles.lockedSubtitle}>Complete previous challenge</Text>
+                            : <Text allowFontScaling={false} style={styles.subtitle}>{item.progress}% completed</Text>
                         }
                     </View>
 
                     <View style={[styles.badge, {backgroundColor: status.bg}]}>
-                        <Text style={[styles.badgeText, {color: status.color}]}>{status.label}</Text>
+                        <Text allowFontScaling={false} style={[styles.badgeText, {color: status.color}]}>{status.label}</Text>
                     </View>
                 </View>
 
@@ -144,8 +144,8 @@ function ChallengeCard({item, index = 0}: ChallengeCardProps) {
                             />
                         </View>
                         <View style={styles.progressLabel}>
-                            <Text style={styles.progressText}>Progress</Text>
-                            <Text style={styles.progressText}>{item.progress} / 100</Text>
+                            <Text allowFontScaling={false} style={styles.progressText}>Progress</Text>
+                            <Text allowFontScaling={false} style={styles.progressText}>{item.progress} / 100</Text>
                         </View>
                     </>
                 )}
@@ -155,21 +155,21 @@ function ChallengeCard({item, index = 0}: ChallengeCardProps) {
                     <View style={styles.footer}>
                         <View style={styles.rewardRow}>
                             <Coin width={18} height={16}/>
-                            <Text style={styles.rewardText}>+{item.reward} coins</Text>
+                            <Text allowFontScaling={false} style={styles.rewardText}>+{item.reward} coins</Text>
                         </View>
 
                         {item.finished && !item.taken && (
                             <Animated.View style={{transform: [{scale: collectPulse}]}}>
                                 <TouchableOpacity style={styles.collectBtn} activeOpacity={0.8}>
                                     <Coin width={16} height={14}/>
-                                    <Text style={styles.collectText}>Collect</Text>
+                                    <Text allowFontScaling={false} style={styles.collectText}>Collect</Text>
                                 </TouchableOpacity>
                             </Animated.View>
                         )}
 
                         {item.taken && (
                             <View style={[styles.badge, {backgroundColor: 'rgba(50,205,50,0.15)'}]}>
-                                <Text style={[styles.badgeText, {color: LIGHT_GREEN}]}>✓ Done</Text>
+                                <Text allowFontScaling={false} style={[styles.badgeText, {color: LIGHT_GREEN}]}>✓ Done</Text>
                             </View>
                         )}
                     </View>

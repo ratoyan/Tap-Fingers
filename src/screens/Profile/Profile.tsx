@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+﻿import React, {useEffect, useState} from 'react';
 import {
     View,
     Text,
@@ -138,15 +138,15 @@ function Profile() {
                                 <Ghost size={110} color="rgba(255,255,255,0.9)" eyeColor="#6a0dad" />
                             </View>
 
-                            <Text style={styles.guestName}>👻 Guest Player</Text>
-                            <Text style={styles.guestHint}>
+                            <Text allowFontScaling={false} style={styles.guestName}>👻 Guest Player</Text>
+                            <Text allowFontScaling={false} style={styles.guestHint}>
                                 Sign in to save your progress
                             </Text>
 
                             {/* Divider */}
                             <View style={styles.dividerRow}>
                                 <View style={styles.dividerLine} />
-                                <Text style={styles.dividerText}>Sign in with</Text>
+                                <Text allowFontScaling={false} style={styles.dividerText}>Sign in with</Text>
                                 <View style={styles.dividerLine} />
                             </View>
 
@@ -180,17 +180,17 @@ function Profile() {
                                             </View>
                                         )}
                                         <View style={styles.cameraOverlay}>
-                                            <Text style={styles.cameraIcon}>📷</Text>
+                                            <Text allowFontScaling={false} style={styles.cameraIcon}>📷</Text>
                                         </View>
                                     </View>
                                 </TouchableOpacity>
-                                <Text style={styles.changePhotoText}>{t('changePhoto')}</Text>
+                                <Text allowFontScaling={false} style={styles.changePhotoText}>{t('changePhoto')}</Text>
                             </View>
 
-                            <Text style={styles.greeting}>Hello, {username}!</Text>
+                            <Text allowFontScaling={false} style={styles.greeting}>Hello, {username}!</Text>
 
                             <View style={styles.inputCard}>
-                                <Text style={styles.inputLabel}>✏️  Name</Text>
+                                <Text allowFontScaling={false} style={styles.inputLabel}>✏️  Name</Text>
                                 <TextInput
                                     value={username}
                                     onChangeText={handleNameChange}

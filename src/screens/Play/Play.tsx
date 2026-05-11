@@ -1,4 +1,4 @@
-import React, {useCallback, useEffect, useRef, useState} from 'react';
+﻿import React, {useCallback, useEffect, useRef, useState} from 'react';
 import Sound from 'react-native-sound';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {useFocusEffect, useNavigation} from '@react-navigation/core';
@@ -849,7 +849,7 @@ export default function Play() {
                         transform: [{scale: comboScaleAnim}],
                     }]}
                 >
-                    <Text style={styles.comboText}>{comboLabel}</Text>
+                    <Text allowFontScaling={false} style={styles.comboText}>{comboLabel}</Text>
                 </Animated.View>
             )}
 
@@ -863,7 +863,7 @@ export default function Play() {
                     }]}
                 >
                     <LevelUpIcon size={56}/>
-                    <Text style={[styles.levelUpText, {color: levelUpColor}]}>
+                    <Text allowFontScaling={false} style={[styles.levelUpText, {color: levelUpColor}]}>
                         LEVEL {level}!
                     </Text>
                 </Animated.View>
@@ -872,7 +872,7 @@ export default function Play() {
             {/* Boss fight banner */}
             {isBossFight && (
                 <View pointerEvents="none" style={styles.bossFightBanner}>
-                    <Text style={styles.bossFightText}>
+                    <Text allowFontScaling={false} style={styles.bossFightText}>
                         ⚔️ BOSS FIGHT ⚔️
                     </Text>
                 </View>
@@ -891,11 +891,11 @@ export default function Play() {
             {/* Boss defeated overlay */}
             {showBossDefeated && (
                 <View style={styles.bossDefeatedOverlay}>
-                    <Text style={styles.bossDefeatedEmoji}>🏆</Text>
-                    <Text style={styles.bossDefeatedText}>
+                    <Text allowFontScaling={false} style={styles.bossDefeatedEmoji}>🏆</Text>
+                    <Text allowFontScaling={false} style={styles.bossDefeatedText}>
                         BOSS DEFEATED!
                     </Text>
-                    <Text style={styles.bossDefeatedReward}>
+                    <Text allowFontScaling={false} style={styles.bossDefeatedReward}>
                         +{bossRewardRef.current} coins • ❤️ restored
                     </Text>
                 </View>
@@ -925,7 +925,7 @@ export default function Play() {
                     >
                         <ShieldIcon size={28} color={shieldActive ? '#00e5ff' : shieldCount > 0 ? '#fff' : '#4fc3f7'}/>
                         <View style={[styles.helperBadge, {backgroundColor: shieldCount > 0 ? '#0288d1' : '#1a3a4a'}]}>
-                            <Text style={styles.helperBadgeText}>{shieldCount > 0 ? shieldCount : '+'}</Text>
+                            <Text allowFontScaling={false} style={styles.helperBadgeText}>{shieldCount > 0 ? shieldCount : '+'}</Text>
                         </View>
                     </TouchableOpacity>
                 </Animated.View>
@@ -950,7 +950,7 @@ export default function Play() {
                     >
                         <BombCard width={32} height={32}/>
                         <View style={[styles.helperBadge, {backgroundColor: bombCount > 0 ? ORANGE_RED : '#3a1a0a'}]}>
-                            <Text style={styles.helperBadgeText}>{bombCount > 0 ? bombCount : '+'}</Text>
+                            <Text allowFontScaling={false} style={styles.helperBadgeText}>{bombCount > 0 ? bombCount : '+'}</Text>
                         </View>
                     </TouchableOpacity>
                 </Animated.View>
@@ -975,14 +975,14 @@ export default function Play() {
                         ]}
                     >
                         {slowActive ? (
-                            <Text style={styles.slowCountdownText}>{slowTimer}</Text>
+                            <Text allowFontScaling={false} style={styles.slowCountdownText}>{slowTimer}</Text>
                         ) : (
                             <SlowIcon size={28} color={slowCount > 0 ? '#fff' : LILAC}/>
                         )}
                         {!slowActive && (
                             <View
                                 style={[styles.helperBadge, {backgroundColor: slowCount > 0 ? '#7b1fa2' : '#2a0a40'}]}>
-                                <Text style={styles.helperBadgeText}>{slowCount > 0 ? slowCount : '+'}</Text>
+                                <Text allowFontScaling={false} style={styles.helperBadgeText}>{slowCount > 0 ? slowCount : '+'}</Text>
                             </View>
                         )}
                     </TouchableOpacity>

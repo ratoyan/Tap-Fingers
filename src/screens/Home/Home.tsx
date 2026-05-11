@@ -1,4 +1,4 @@
-import React, {useCallback, useRef, useState} from 'react';
+﻿import React, {useCallback, useRef, useState} from 'react';
 import {Animated, ScrollView, Text, TouchableOpacity, View} from "react-native";
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {RootStackParamList} from '../../types/RootStackParamList';
@@ -136,13 +136,13 @@ const Home: React.FC<Props> = () => {
                         >
                             {canSpin && (
                                 <View style={styles.wheelFreeBadge}>
-                                    <Text style={styles.wheelFreeBadgeText}>FREE</Text>
+                                    <Text allowFontScaling={false} style={styles.wheelFreeBadgeText}>FREE</Text>
                                 </View>
                             )}
 
-                            <Text style={styles.wheelEmoji}>🎡</Text>
+                            <Text allowFontScaling={false} style={styles.wheelEmoji}>🎡</Text>
                             <View style={styles.wheelSeparator}/>
-                            <Text style={styles.wheelSpinText}>SPIN</Text>
+                            <Text allowFontScaling={false} style={styles.wheelSpinText}>SPIN</Text>
                         </LinearGradient>
                     </TouchableOpacity>
                 </Animated.View>

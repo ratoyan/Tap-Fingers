@@ -1,4 +1,4 @@
-import React, {useEffect, useRef} from 'react';
+﻿import React, {useEffect, useRef} from 'react';
 import {
     View,
     Text,
@@ -152,16 +152,16 @@ export default function LoseModal({visible, score, onRetry, onBack, onWatchAd, c
                 </Animated.Text>
 
                 {/* Subtitle */}
-                <Text style={styles.subtitle}>{t('lostLevel')}</Text>
+                <Text allowFontScaling={false} style={styles.subtitle}>{t('lostLevel')}</Text>
 
                 {/* Score card */}
                 <LinearGradient
                     colors={['rgba(255,255,255,0.12)', 'rgba(255,255,255,0.05)']}
                     style={styles.scoreCard}
                 >
-                    <Text style={styles.scoreLabel}>{t('score')}</Text>
+                    <Text allowFontScaling={false} style={styles.scoreLabel}>{t('score')}</Text>
                     <View style={styles.scoreRow}>
-                        <Text style={styles.scoreValue}>{score}</Text>
+                        <Text allowFontScaling={false} style={styles.scoreValue}>{score}</Text>
                         <Coin width={28} height={28}/>
                     </View>
                 </LinearGradient>
@@ -176,12 +176,12 @@ export default function LoseModal({visible, score, onRetry, onBack, onWatchAd, c
                                 end={{x: 1, y: 0}}
                                 style={styles.adBtn}
                             >
-                                <Text style={styles.adBtnIcon}>📺</Text>
+                                <Text allowFontScaling={false} style={styles.adBtnIcon}>📺</Text>
                                 <View style={styles.adBtnTextWrap}>
-                                    <Text style={styles.adBtnTitle}>{t('watchAd')}</Text>
+                                    <Text allowFontScaling={false} style={styles.adBtnTitle}>{t('watchAd')}</Text>
                                     <View style={styles.adBtnBadge}>
                                         <FullHeart size={14} color="#e74c3c"/>
-                                        <Text style={styles.adBtnBadgeText}> {t('getHeart')}</Text>
+                                        <Text allowFontScaling={false} style={styles.adBtnBadgeText}> {t('getHeart')}</Text>
                                     </View>
                                 </View>
                             </LinearGradient>
@@ -189,14 +189,14 @@ export default function LoseModal({visible, score, onRetry, onBack, onWatchAd, c
                     </Animated.View>
                 ) : (
                     <View style={styles.adBtnDisabled}>
-                        <Text style={styles.adBtnDisabledText}>📺 {t('watchAd')} (0/2)</Text>
+                        <Text allowFontScaling={false} style={styles.adBtnDisabledText}>📺 {t('watchAd')} (0/2)</Text>
                     </View>
                 )}
 
                 {/* Retry + Back row */}
                 <View style={styles.actions}>
                     <TouchableOpacity onPress={onBack} activeOpacity={0.75} style={styles.backBtn}>
-                        <Text style={styles.backBtnText}>← {t('back')}</Text>
+                        <Text allowFontScaling={false} style={styles.backBtnText}>← {t('back')}</Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity onPress={onRetry} activeOpacity={0.8} style={styles.retryWrap}>
@@ -206,7 +206,7 @@ export default function LoseModal({visible, score, onRetry, onBack, onWatchAd, c
                             end={{x: 1, y: 1}}
                             style={styles.retryBtn}
                         >
-                            <Text style={styles.retryBtnText}>🔄 {t('retry')}</Text>
+                            <Text allowFontScaling={false} style={styles.retryBtnText}>🔄 {t('retry')}</Text>
                         </LinearGradient>
                     </TouchableOpacity>
                 </View>

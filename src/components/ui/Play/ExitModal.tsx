@@ -1,4 +1,4 @@
-import React, {useEffect, useRef} from "react";
+﻿import React, {useEffect, useRef} from "react";
 import {View, Text, TouchableOpacity, Animated} from "react-native";
 import {useTranslation} from "react-i18next";
 import LinearGradient from "react-native-linear-gradient";
@@ -34,16 +34,16 @@ export default function ExitModal({visible, onConfirm, onCancel}: ExitModalProps
     return (
         <View style={styles.loseOverlay}>
             <Animated.View style={[styles.loseModal, {transform: [{scale: scaleAnim}]}]}>
-                <Text style={{fontSize: 44, marginBottom: 6}}>🚪</Text>
-                <Text style={[styles.loseTitle, {color: WHITE}]}>{t('exitGame')}</Text>
-                <Text style={styles.loseText}>{t('exitGameDescription')}</Text>
+                <Text allowFontScaling={false} style={{fontSize: 44, marginBottom: 6}}>🚪</Text>
+                <Text allowFontScaling={false} style={[styles.loseTitle, {color: WHITE}]}>{t('exitGame')}</Text>
+                <Text allowFontScaling={false} style={styles.loseText}>{t('exitGameDescription')}</Text>
                 <View style={styles.loseModalActions}>
                     <TouchableOpacity
                         onPress={onConfirm}
                         activeOpacity={0.8}
                         style={styles.loseModalBackAction}
                     >
-                        <Text style={{color: WHITE, fontSize: 16}}>{t('pause')}</Text>
+                        <Text allowFontScaling={false} style={{color: WHITE, fontSize: 16}}>{t('pause')}</Text>
                     </TouchableOpacity>
                     <TouchableOpacity onPress={onCancel} activeOpacity={0.8}>
                         <LinearGradient
@@ -52,7 +52,7 @@ export default function ExitModal({visible, onConfirm, onCancel}: ExitModalProps
                             end={{x: 1, y: 1}}
                             style={styles.loseRetry}
                         >
-                            <Text style={styles.loseBtnText}>{t('continuePlaying')}</Text>
+                            <Text allowFontScaling={false} style={styles.loseBtnText}>{t('continuePlaying')}</Text>
                         </LinearGradient>
                     </TouchableOpacity>
                 </View>

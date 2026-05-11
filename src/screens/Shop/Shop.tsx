@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState} from "react";
+﻿import React, {useEffect, useRef, useState} from "react";
 import {Animated, ScrollView, Text, TouchableOpacity, View} from "react-native";
 import {useTranslation} from "react-i18next";
 import {useGlobalStore} from "../../store/globalStore.ts";
@@ -145,13 +145,13 @@ function Shop() {
                 </Animated.View>
 
                 <TouchableOpacity style={styles.tab} onPress={() => switchTab('card')} activeOpacity={0.8}>
-                    <Text style={[styles.tabText, activeTab === 'card' && styles.tabTextActive]}>
+                    <Text allowFontScaling={false} style={[styles.tabText, activeTab === 'card' && styles.tabTextActive]}>
                         🃏 {t('cards')}
                     </Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity style={styles.tab} onPress={() => switchTab('background')} activeOpacity={0.8}>
-                    <Text style={[styles.tabText, activeTab === 'background' && styles.tabTextActive]}>
+                    <Text allowFontScaling={false} style={[styles.tabText, activeTab === 'background' && styles.tabTextActive]}>
                         🖼 {t('backgrounds')}
                     </Text>
                 </TouchableOpacity>

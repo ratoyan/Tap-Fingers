@@ -1,4 +1,4 @@
-import React, {useEffect, useRef} from "react";
+﻿import React, {useEffect, useRef} from "react";
 import {Animated, Image, Text, TouchableOpacity, View} from "react-native";
 
 // icons
@@ -122,32 +122,32 @@ function ShopItem({item, index = 0, handlePress, selected = false, purchased = f
                 if (item.animationType === 'stars') {
                     return (
                         <LinearGradient colors={['#020012', '#090040']} style={{width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center'}}>
-                            <Text style={{fontSize: 32}}>✨</Text>
-                            <Text style={{color: '#aaaaff', fontSize: 10, marginTop: 4}}>ANIMATED</Text>
+                            <Text allowFontScaling={false} style={{fontSize: 32}}>✨</Text>
+                            <Text allowFontScaling={false} style={{color: '#aaaaff', fontSize: 10, marginTop: 4}}>ANIMATED</Text>
                         </LinearGradient>
                     );
                 }
                 if (item.animationType === 'aurora') {
                     return (
                         <LinearGradient colors={['#010008', '#0d2040', '#1a0030']} style={{width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center'}}>
-                            <Text style={{fontSize: 32}}>🌌</Text>
-                            <Text style={{color: '#80ffb0', fontSize: 10, marginTop: 4}}>ANIMATED</Text>
+                            <Text allowFontScaling={false} style={{fontSize: 32}}>🌌</Text>
+                            <Text allowFontScaling={false} style={{color: '#80ffb0', fontSize: 10, marginTop: 4}}>ANIMATED</Text>
                         </LinearGradient>
                     );
                 }
                 if (item.animationType === 'inferno') {
                     return (
                         <LinearGradient colors={['#0d0000', '#4d0000', '#ff3300']} style={{width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center'}}>
-                            <Text style={{fontSize: 32}}>🔥</Text>
-                            <Text style={{color: '#ffaa44', fontSize: 10, marginTop: 4}}>ANIMATED</Text>
+                            <Text allowFontScaling={false} style={{fontSize: 32}}>🔥</Text>
+                            <Text allowFontScaling={false} style={{color: '#ffaa44', fontSize: 10, marginTop: 4}}>ANIMATED</Text>
                         </LinearGradient>
                     );
                 }
                 if (item.animationType === 'matrix') {
                     return (
                         <LinearGradient colors={['#000900', '#001a00']} style={{width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center'}}>
-                            <Text style={{fontSize: 32}}>💚</Text>
-                            <Text style={{color: '#00ff41', fontSize: 10, marginTop: 4}}>ANIMATED</Text>
+                            <Text allowFontScaling={false} style={{fontSize: 32}}>💚</Text>
+                            <Text allowFontScaling={false} style={{color: '#00ff41', fontSize: 10, marginTop: 4}}>ANIMATED</Text>
                         </LinearGradient>
                     );
                 }
@@ -173,14 +173,14 @@ function ShopItem({item, index = 0, handlePress, selected = false, purchased = f
         if (selected) {
             return (
                 <View style={styles.equippedBadge}>
-                    <Text style={styles.equippedText}>✓ Equipped</Text>
+                    <Text allowFontScaling={false} style={styles.equippedText}>✓ Equipped</Text>
                 </View>
             );
         }
         if (purchased) {
             return (
                 <View style={styles.ownedBadge}>
-                    <Text style={styles.ownedText}>Tap to equip</Text>
+                    <Text allowFontScaling={false} style={styles.ownedText}>Tap to equip</Text>
                 </View>
             );
         }
@@ -191,7 +191,7 @@ function ShopItem({item, index = 0, handlePress, selected = false, purchased = f
                 end={{x: 1, y: 0}}
                 style={styles.priceBadge}
             >
-                <Text style={styles.priceText}>{item.coins}</Text>
+                <Text allowFontScaling={false} style={styles.priceText}>{item.coins}</Text>
                 <Coin width={18} height={16}/>
             </LinearGradient>
         );
@@ -237,7 +237,7 @@ function ShopItem({item, index = 0, handlePress, selected = false, purchased = f
 
                     {/* Info */}
                     <View style={styles.info}>
-                        <Text style={styles.title} numberOfLines={1}>{item.title}</Text>
+                        <Text allowFontScaling={false} style={styles.title} numberOfLines={1}>{item.title}</Text>
                         {renderBadge()}
                     </View>
                 </LinearGradient>
@@ -245,8 +245,8 @@ function ShopItem({item, index = 0, handlePress, selected = false, purchased = f
                 {/* Lock overlay */}
                 {disabled && (
                     <View style={styles.lockOverlay}>
-                        <Text style={styles.lockText}>🔒</Text>
-                        <Text style={styles.lockPrice}>{item.coins} coins needed</Text>
+                        <Text allowFontScaling={false} style={styles.lockText}>🔒</Text>
+                        <Text allowFontScaling={false} style={styles.lockPrice}>{item.coins} coins needed</Text>
                     </View>
                 )}
             </TouchableOpacity>

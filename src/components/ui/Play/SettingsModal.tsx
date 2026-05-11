@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState} from 'react';
+﻿import React, {useEffect, useRef, useState} from 'react';
 import {Animated, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -87,7 +87,7 @@ export default function SettingsModal({visible, onClose}: SettingsModalProps) {
         <View style={styles.overlay}>
             <Animated.View style={[styles.modal, {transform: [{scale: scaleAnim}]}]}>
 
-                <Text style={styles.title}>⚙️  {t('settings')}</Text>
+                <Text allowFontScaling={false} style={styles.title}>⚙️  {t('settings')}</Text>
 
                 <View style={styles.divider} />
 
@@ -120,7 +120,7 @@ export default function SettingsModal({visible, onClose}: SettingsModalProps) {
                         end={{x: 1, y: 1}}
                         style={styles.closeGradient}
                     >
-                        <Text style={styles.closeText}>✕  {t('close')}</Text>
+                        <Text allowFontScaling={false} style={styles.closeText}>✕  {t('close')}</Text>
                     </LinearGradient>
                 </TouchableOpacity>
 

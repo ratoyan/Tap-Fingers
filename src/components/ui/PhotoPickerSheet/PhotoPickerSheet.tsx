@@ -1,4 +1,4 @@
-import React, {useEffect, useRef} from 'react';
+﻿import React, {useEffect, useRef} from 'react';
 import {
     Modal,
     View,
@@ -82,7 +82,7 @@ export default function PhotoPickerSheet({
                 {/* Handle bar */}
                 <View style={styles.handleBar} />
 
-                <Text style={styles.title}>{t('changePhoto')}</Text>
+                <Text allowFontScaling={false} style={styles.title}>{t('changePhoto')}</Text>
 
                 {/* Camera option */}
                 <TouchableOpacity
@@ -97,9 +97,9 @@ export default function PhotoPickerSheet({
                         style={styles.optionGradient}
                     >
                         <View style={styles.iconBubble}>
-                            <Text style={styles.optionIcon}>📸</Text>
+                            <Text allowFontScaling={false} style={styles.optionIcon}>📸</Text>
                         </View>
-                        <Text style={styles.optionLabel}>{t('camera')}</Text>
+                        <Text allowFontScaling={false} style={styles.optionLabel}>{t('camera')}</Text>
                     </LinearGradient>
                 </TouchableOpacity>
 
@@ -116,15 +116,15 @@ export default function PhotoPickerSheet({
                         style={styles.optionGradient}
                     >
                         <View style={styles.iconBubble}>
-                            <Text style={styles.optionIcon}>🖼️</Text>
+                            <Text allowFontScaling={false} style={styles.optionIcon}>🖼️</Text>
                         </View>
-                        <Text style={styles.optionLabel}>{t('gallery')}</Text>
+                        <Text allowFontScaling={false} style={styles.optionLabel}>{t('gallery')}</Text>
                     </LinearGradient>
                 </TouchableOpacity>
 
                 {/* Cancel */}
                 <TouchableOpacity onPress={onClose} activeOpacity={0.7} style={styles.cancelBtn}>
-                    <Text style={styles.cancelText}>{t('cancel')}</Text>
+                    <Text allowFontScaling={false} style={styles.cancelText}>{t('cancel')}</Text>
                 </TouchableOpacity>
             </Animated.View>
         </Modal>

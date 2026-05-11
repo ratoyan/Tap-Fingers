@@ -1,4 +1,4 @@
-import {Text, TouchableOpacity, View} from "react-native";
+﻿import {Text, TouchableOpacity, View} from "react-native";
 import LinearGradient from "react-native-linear-gradient";
 import React from "react";
 
@@ -51,7 +51,7 @@ function SocialAuthButton({type, handlePress}: SocialAuthButtonProps) {
                         : Icon && <Icon />
                     }
                 </View>
-                <Text style={[styles.buttonTextLarge, isGhost && styles.ghostText]}>
+                <Text allowFontScaling={false} style={[styles.buttonTextLarge, isGhost && styles.ghostText]}>
                     {text}
                 </Text>
             </LinearGradient>

@@ -1,4 +1,4 @@
-import React, {useEffect, useRef} from 'react';
+﻿import React, {useEffect, useRef} from 'react';
 import {Animated, Dimensions, Easing, Text, TouchableOpacity, View} from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 
@@ -82,7 +82,7 @@ export default function BossBox({bossHP, bossMaxHP, level, onTap}: Props) {
         >
             {/* HP bar */}
             <View style={{width: BOSS_SIZE + 20, marginBottom: 6}}>
-                <Text style={{
+                <Text allowFontScaling={false} style={{
                     color:       '#fff',
                     fontSize:    11,
                     fontWeight:  '900',
@@ -143,7 +143,7 @@ export default function BossBox({bossHP, bossMaxHP, level, onTap}: Props) {
                         borderColor:    'rgba(255,80,80,0.85)',
                     }}
                 >
-                    <Text style={{fontSize: 72, lineHeight: 84}}>{tier.emoji}</Text>
+                    <Text allowFontScaling={false} style={{fontSize: 72, lineHeight: 84}}>{tier.emoji}</Text>
 
                     {/* Hit flash */}
                     <Animated.View

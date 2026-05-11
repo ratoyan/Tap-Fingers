@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState} from 'react';
+﻿import React, {useEffect, useRef, useState} from 'react';
 import {
     Animated,
     Easing,
@@ -262,13 +262,13 @@ export default function LuckyWheelModal({visible, onClose, onSpinComplete}: Prop
                         style={styles.card}
                     >
                         {/* Header */}
-                        <Text style={styles.title}>🎡  LUCKY WHEEL</Text>
+                        <Text allowFontScaling={false} style={styles.title}>🎡  LUCKY WHEEL</Text>
 
                         {isActive && (
-                            <Text style={styles.subtitle}>Your daily free spin!</Text>
+                            <Text allowFontScaling={false} style={styles.subtitle}>Your daily free spin!</Text>
                         )}
                         {!canSpin && !spinning && (
-                            <Text style={styles.subtitleDisabled}>⏰  Next spin in {timeLeft}</Text>
+                            <Text allowFontScaling={false} style={styles.subtitleDisabled}>⏰  Next spin in {timeLeft}</Text>
                         )}
 
                         <View style={styles.divider}/>
@@ -351,7 +351,7 @@ export default function LuckyWheelModal({visible, onClose, onSpinComplete}: Prop
                                                 isActive ? styles.spinGradientActive : styles.spinGradientInactive,
                                             ]}
                                         >
-                                            <Text style={[
+                                            <Text allowFontScaling={false} style={[
                                                 styles.spinText,
                                                 spinning ? styles.spinTextSpinning
                                                     : isActive ? styles.spinTextActive
@@ -373,9 +373,9 @@ export default function LuckyWheelModal({visible, onClose, onSpinComplete}: Prop
                                     start={{x: 0, y: 0}} end={{x: 1, y: 0}}
                                     style={styles.resultGradient}
                                 >
-                                    <Text style={styles.resultYouWon}>YOU WON</Text>
-                                    <Text style={styles.resultIcon}>{result.icon}</Text>
-                                    <Text style={styles.resultLabel}>{rewardLabel}</Text>
+                                    <Text allowFontScaling={false} style={styles.resultYouWon}>YOU WON</Text>
+                                    <Text allowFontScaling={false} style={styles.resultIcon}>{result.icon}</Text>
+                                    <Text allowFontScaling={false} style={styles.resultLabel}>{rewardLabel}</Text>
                                 </LinearGradient>
                             </Animated.View>
                         )}
@@ -383,8 +383,8 @@ export default function LuckyWheelModal({visible, onClose, onSpinComplete}: Prop
                         {/* Cooldown box */}
                         {!canSpin && !spinning && !result && (
                             <View style={styles.cooldownBox}>
-                                <Text style={styles.cooldownIcon}>⏳</Text>
-                                <Text style={styles.cooldownText}>
+                                <Text allowFontScaling={false} style={styles.cooldownIcon}>⏳</Text>
+                                <Text allowFontScaling={false} style={styles.cooldownText}>
                                     Come back in {timeLeft} for your next spin!
                                 </Text>
                             </View>
@@ -392,7 +392,7 @@ export default function LuckyWheelModal({visible, onClose, onSpinComplete}: Prop
 
                         {/* Close */}
                         <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-                            <Text style={styles.closeText}>CLOSE</Text>
+                            <Text allowFontScaling={false} style={styles.closeText}>CLOSE</Text>
                         </TouchableOpacity>
                     </LinearGradient>
                 </Animated.View>

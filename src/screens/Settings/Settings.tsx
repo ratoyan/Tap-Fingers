@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+﻿import React, {useEffect, useState} from 'react';
 import {
     View,
     Text,
@@ -123,7 +123,7 @@ function Settings() {
                     end={{x: 1, y: 0}}
                     style={styles.sectionLine}
                 />
-                <Text style={styles.sectionTitle}>🎵 AUDIO</Text>
+                <Text allowFontScaling={false} style={styles.sectionTitle}>🎵 AUDIO</Text>
                 <LinearGradient
                     colors={['#DDA0DD', '#8e2de2']}
                     start={{x: 0, y: 0}}
@@ -162,7 +162,7 @@ function Settings() {
                     end={{x: 1, y: 0}}
                     style={styles.sectionLine}
                 />
-                <Text style={styles.sectionTitle}>🌐 GENERAL</Text>
+                <Text allowFontScaling={false} style={styles.sectionTitle}>🌐 GENERAL</Text>
                 <LinearGradient
                     colors={['#DDA0DD', '#4a00e0']}
                     start={{x: 0, y: 0}}
@@ -194,7 +194,7 @@ function Settings() {
                     style={styles.button}
                 >
                     <ExitIcon size={20} color="#DDA0DD"/>
-                    <Text style={styles.buttonText}>{t('exitGame')}</Text>
+                    <Text allowFontScaling={false} style={styles.buttonText}>{t('exitGame')}</Text>
                 </LinearGradient>
             </TouchableOpacity>
 

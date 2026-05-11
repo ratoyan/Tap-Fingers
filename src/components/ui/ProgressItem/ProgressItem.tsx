@@ -1,4 +1,4 @@
-import React, {useEffect, useRef} from "react";
+﻿import React, {useEffect, useRef} from "react";
 import LinearGradient from "react-native-linear-gradient";
 import {Animated, Image, Text, View} from "react-native";
 import {useTranslation} from "react-i18next";
@@ -61,9 +61,9 @@ function ProgressItem({item, trophy}: ProgressItemProps) {
             <View style={styles.info} importantForAccessibility="no-hide-descendants">
                 {/* Level row */}
                 <View style={styles.levelRow}>
-                    <Text style={styles.level}>{levelText}</Text>
+                    <Text allowFontScaling={false} style={styles.level}>{levelText}</Text>
                     <View style={styles.scoreRow}>
-                        <Text style={styles.score}>{item.score}</Text>
+                        <Text allowFontScaling={false} style={styles.score}>{item.score}</Text>
                         <Coin width={18} height={18}/>
                     </View>
                 </View>
@@ -73,7 +73,7 @@ function ProgressItem({item, trophy}: ProgressItemProps) {
                     <View style={styles.progressBarBackground}>
                         <Animated.View style={[styles.progressBarFill, {width: progressWidth}]}/>
                     </View>
-                    <Text style={styles.progressLabel}>{progressPercent}%</Text>
+                    <Text allowFontScaling={false} style={styles.progressLabel}>{progressPercent}%</Text>
                 </View>
             </View>
         </LinearGradient>

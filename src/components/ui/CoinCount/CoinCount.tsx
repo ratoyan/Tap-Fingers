@@ -1,4 +1,4 @@
-import {Text, View, StyleProp} from "react-native";
+﻿import {Text, View, StyleProp} from "react-native";
 
 // icons
 import Coin from "../../../assets/icons/Coin.tsx";
@@ -19,7 +19,7 @@ function CoinCount({count, viewStyles}: CoinCountProps) {
               accessibilityLabel={`${count} coins`}
         >
             <Coin width={22} height={20}/>
-            <Text style={styles.text}>{count}</Text>
+            <Text allowFontScaling={false} style={styles.text}>{count}</Text>
         </View>
     );
 }

@@ -1,4 +1,4 @@
-import React, {useEffect, useRef} from "react";
+﻿import React, {useEffect, useRef} from "react";
 import {View, Text, TouchableOpacity, Animated, Easing} from "react-native";
 import {useTranslation} from "react-i18next";
 
@@ -59,14 +59,14 @@ export default function LevelModalGaming({visible, setVisible, level = 1}: Level
         <View style={styles.modalBackground}>
             <Animated.View style={[styles.modalContainer, {transform: [{scale: scaleAnim}]}]}>
                 <View style={styles.confettiPlaceholder}>
-                    <Text style={{color: WHITE, fontSize: 32}}>🎉✨🎊</Text>
+                    <Text allowFontScaling={false} style={{color: WHITE, fontSize: 32}}>🎉✨🎊</Text>
                 </View>
 
                 <Animated.View style={[styles.levelHeader, {backgroundColor: headerGlow}]}>
-                    <Text style={styles.levelText}>{t('level')} {level}</Text>
+                    <Text allowFontScaling={false} style={styles.levelText}>{t('level')} {level}</Text>
                 </Animated.View>
 
-                <Text style={styles.messageText}>{t('leveledUp')}</Text>
+                <Text allowFontScaling={false} style={styles.messageText}>{t('leveledUp')}</Text>
 
                 <TouchableOpacity style={styles.continueButton} onPress={() => setVisible(false)}>
                     <LinearGradient
@@ -75,7 +75,7 @@ export default function LevelModalGaming({visible, setVisible, level = 1}: Level
                         end={{x: 1, y: 1}}
                         style={styles.buttonGradient}
                     >
-                        <Text style={styles.buttonText}>{t('continue')}</Text>
+                        <Text allowFontScaling={false} style={styles.buttonText}>{t('continue')}</Text>
                     </LinearGradient>
                 </TouchableOpacity>
             </Animated.View>

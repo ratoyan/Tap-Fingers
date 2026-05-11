@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import {Text} from "react-native";
 import {useSafeAreaInsets} from "react-native-safe-area-context";
 
@@ -21,9 +21,9 @@ function Level({level = 1}: LevelProps) {
             end={{x: 1, y: 1}}
             style={[styles.levelContainer, {top: insets.top + 30}]}
         >
-            <Text style={styles.levelIcon}>⚡</Text>
-            <Text style={styles.levelLabel}>LVL</Text>
-            <Text style={styles.level}>{level}</Text>
+            <Text allowFontScaling={false} style={styles.levelIcon}>⚡</Text>
+            <Text allowFontScaling={false} style={styles.levelLabel}>LVL</Text>
+            <Text allowFontScaling={false} style={styles.level}>{level}</Text>
         </LinearGradient>
     );
 }

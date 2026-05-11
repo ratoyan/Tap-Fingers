@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import {Text, TouchableOpacity, View, ViewStyle} from "react-native";
 import {useSafeAreaInsets} from "react-native-safe-area-context";
 import {useNavigation} from "@react-navigation/core";
@@ -57,7 +57,7 @@ function BackHeader({
                 <Back/>
             </TouchableOpacity>
 
-            <Text style={[styles.title, textStyle && textStyle, isProfile && {marginLeft: 0}]}
+            <Text allowFontScaling={false} style={[styles.title, textStyle && textStyle, isProfile && {marginLeft: 0}]}
                   numberOfLines={1}
                   ellipsizeMode="tail"
                   accessible={true}

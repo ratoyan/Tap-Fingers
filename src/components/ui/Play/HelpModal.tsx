@@ -1,4 +1,4 @@
-import React, {useEffect, useRef} from 'react';
+﻿import React, {useEffect, useRef} from 'react';
 import {
     View,
     Text,
@@ -81,10 +81,10 @@ export default function HelpModal({visible, onClose}: HelpModalProps) {
                     end={{x: 1, y: 0}}
                     style={styles.header}
                 >
-                    <Text style={styles.headerEmoji}>📖</Text>
+                    <Text allowFontScaling={false} style={styles.headerEmoji}>📖</Text>
                     <View>
-                        <Text style={styles.headerTitle}>HOW TO PLAY</Text>
-                        <Text style={styles.headerSub}>Game guide</Text>
+                        <Text allowFontScaling={false} style={styles.headerTitle}>HOW TO PLAY</Text>
+                        <Text allowFontScaling={false} style={styles.headerSub}>Game guide</Text>
                     </View>
                 </LinearGradient>
 
@@ -97,11 +97,11 @@ export default function HelpModal({visible, onClose}: HelpModalProps) {
                     {RULES.map((rule, i) => (
                         <View key={i} style={styles.ruleRow}>
                             <View style={styles.ruleIconWrap}>
-                                <Text style={styles.ruleIcon}>{rule.icon}</Text>
+                                <Text allowFontScaling={false} style={styles.ruleIcon}>{rule.icon}</Text>
                             </View>
                             <View style={styles.ruleTextWrap}>
-                                <Text style={styles.ruleTitle}>{rule.title}</Text>
-                                <Text style={styles.ruleDesc}>{rule.desc}</Text>
+                                <Text allowFontScaling={false} style={styles.ruleTitle}>{rule.title}</Text>
+                                <Text allowFontScaling={false} style={styles.ruleDesc}>{rule.desc}</Text>
                             </View>
                         </View>
                     ))}
@@ -112,10 +112,10 @@ export default function HelpModal({visible, onClose}: HelpModalProps) {
 
                 {/* Cost notice */}
                 <View style={styles.costRow}>
-                    <Text style={styles.costLabel}>Cost per view</Text>
+                    <Text allowFontScaling={false} style={styles.costLabel}>Cost per view</Text>
                     <View style={styles.costBadge}>
                         <Coin width={16} height={16}/>
-                        <Text style={styles.costValue}>5</Text>
+                        <Text allowFontScaling={false} style={styles.costValue}>5</Text>
                     </View>
                 </View>
 
@@ -127,7 +127,7 @@ export default function HelpModal({visible, onClose}: HelpModalProps) {
                         end={{x: 1, y: 0}}
                         style={styles.closeBtn}
                     >
-                        <Text style={styles.closeBtnText}>Got it! ✓</Text>
+                        <Text allowFontScaling={false} style={styles.closeBtnText}>Got it! ✓</Text>
                     </LinearGradient>
                 </TouchableOpacity>
 

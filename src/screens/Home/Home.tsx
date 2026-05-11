@@ -1,5 +1,5 @@
 ﻿import React, {useCallback, useState} from 'react';
-import {Animated, BackHandler, Platform, ScrollView, View} from "react-native";
+import {BackHandler, Platform, ScrollView, View} from "react-native";
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {RootStackParamList} from '../../types/RootStackParamList';
 import {MenuType} from "../../types/menu.type.ts";

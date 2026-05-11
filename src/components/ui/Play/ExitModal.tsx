@@ -43,7 +43,7 @@ export default function ExitModal({visible, onConfirm, onCancel}: ExitModalProps
                         activeOpacity={0.8}
                         style={styles.loseModalBackAction}
                     >
-                        <Text allowFontScaling={false} style={{color: WHITE, fontSize: 16}}>{t('pause')}</Text>
+                        <Text allowFontScaling={false} style={{color: WHITE, fontSize: 16}}>{t('yes')}</Text>
                     </TouchableOpacity>
                     <TouchableOpacity onPress={onCancel} activeOpacity={0.8}>
                         <LinearGradient
@@ -52,7 +52,7 @@ export default function ExitModal({visible, onConfirm, onCancel}: ExitModalProps
                             end={{x: 1, y: 1}}
                             style={styles.loseRetry}
                         >
-                            <Text allowFontScaling={false} style={styles.loseBtnText}>{t('continuePlaying')}</Text>
+                            <Text allowFontScaling={false} style={styles.loseBtnText}>{t('no')}</Text>
                         </LinearGradient>
                     </TouchableOpacity>
                 </View>

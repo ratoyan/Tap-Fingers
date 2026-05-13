@@ -12,6 +12,7 @@ import {useGlobalStore} from "../../store/globalStore.ts";
 import {useShopStore} from "../../store/shopStore.ts";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {STORAGE_KEYS} from "../../utils/storageKeys.ts";
+import InAppReview from 'react-native-in-app-review';
 
 // components
 import MenuButton from "../../components/ui/MenuButton/MenuButton.tsx";
@@ -100,6 +101,24 @@ const Home: React.FC<Props> = () => {
             return () => {
                 clearTimeout(timeout);
             };
+        }, [])
+    );
+
+    useFocusEffect(
+        useCallback(() => {
+            const requestReviewIfNeeded = async () => {
+                if (!InAppReview.isAvailable()) return;
+                const raw = await AsyncStorage.getItem(STORAGE_KEYS.LAST_REVIEW_DATE);
+                const now = new Date();
+                if (raw) {
+                    const last = new Date(raw);
+                    const diffDays = (now.getTime() - last.getTime()) / (1000 * 60 * 60 * 24);
+                    if (diffDays < 3) return;
+                }
+                await AsyncStorage.setItem(STORAGE_KEYS.LAST_REVIEW_DATE, now.toISOString());
+                await InAppReview.RequestInAppReview().catch(() => {});
+            };
+            requestReviewIfNeeded();
         }, [])
     );
 

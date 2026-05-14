@@ -15,6 +15,10 @@ import {
 import {colors} from '../../data/play.ts';
 import {STORAGE_KEYS} from '../../utils/storageKeys.ts';
 import {useShopStore} from '../../store/shopStore.ts';
+import {useAuthStore} from '../../store/authStore.ts';
+import * as gameService from '../../services/gameService.ts';
+import * as userService from '../../services/userService.ts';
+import {resolveCardEntry} from '../../data/shopVisuals.ts';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import uuId from 'react-native-uuid';
 import useMusicAppState from '../../hooks/useMusicAppState.tsx';
@@ -102,8 +106,13 @@ function spawnBox(card: any, duration: number) {
 export default function Play() {
     const navigation = useNavigation();
     const insets = useSafeAreaInsets();
-    const {card, background} = useShopStore();
-    const {coins, setCoins, minusCoins} = useGlobalStore();
+    const storeCard = useShopStore(s => s.card);
+    const background = useShopStore(s => s.background);
+    // shopStore.card is hydrated from the server profile; guard against the
+    // brief window before that resolves so box spawning never sees a null card.
+    const card = storeCard ?? resolveCardEntry(null);
+    const {coins, addCoins} = useGlobalStore();
+    const patchStats = useAuthStore(s => s.patchStats);
 
     // ─── Refs ─────────────────────────────────────────────────────────────────
     const cancelSoundRef = useRef(true);
@@ -132,6 +141,13 @@ export default function Play() {
     const bossHPRef = useRef(0);
     const bossMaxHPRef = useRef(0);
     const bossRewardRef = useRef(0);
+
+    // ─── Backend game-session tracking ────────────────────────────────────────
+    const sessionTokenRef = useRef<string | null>(null);
+    const sessionStartRef = useRef(0);
+    const sessionEndedRef = useRef(false);
+    const tapsRef = useRef(0);         // honest tap-gesture count (anti-cheat needs score ≈ taps)
+    const maxComboRef = useRef(0);
 
     // ─── Animated values ──────────────────────────────────────────────────────
     const bombFlashAnim = useRef(new Animated.Value(0)).current;
@@ -185,23 +201,92 @@ export default function Play() {
         return () => pulse.stop();
     }, [bombCount]);
 
-    // ─── Storage helpers ──────────────────────────────────────────────────────
-    async function saveCoinStorage() {
+    // ─── Backend game session ─────────────────────────────────────────────────
+
+    // Loads the server's helper stock into refs/state, and keeps the local
+    // AsyncStorage cache warm for the offline fallback path.
+    function applyHelperCounts(bomb: number, slow: number, shield: number) {
+        bombCountRef.current = bomb;
+        slowCountRef.current = slow;
+        shieldCountRef.current = shield;
+        setBombCount(bomb);
+        setSlowCount(slow);
+        setShieldCount(shield);
+        AsyncStorage.multiSet([
+            [STORAGE_KEYS.BOMB_COUNT, JSON.stringify(bomb)],
+            [STORAGE_KEYS.SLOW_COUNT, JSON.stringify(slow)],
+            [STORAGE_KEYS.SHIELD_COUNT, JSON.stringify(shield)],
+        ]).catch(() => {});
+    }
+
+    async function startGameSession() {
+        sessionEndedRef.current = false;
+        tapsRef.current = 0;
+        maxComboRef.current = 0;
+        sessionStartRef.current = Date.now();
+        sessionTokenRef.current = null;
         try {
-            const stored = await AsyncStorage.getItem(STORAGE_KEYS.COIN);
-            const current = stored ? JSON.parse(stored) : 0;
-            await AsyncStorage.setItem(STORAGE_KEYS.COIN, JSON.stringify(current + countRef.current));
-        } catch (e) {
+            const res = await gameService.startSession();
+            sessionTokenRef.current = res.sessionToken;
+            applyHelperCounts(res.helpers.bomb, res.helpers.slow, res.helpers.shield);
+        } catch {
+            // Offline / server error — the round still plays locally (it just
+            // won't be scored), falling back to the cached helper stock.
+            sessionTokenRef.current = null;
+            loadBombCount();
+            loadHelperCounts();
         }
     }
 
+    // Submits the finished run to /game/end. Captures everything synchronously
+    // so it is safe to call immediately before startGameSession() resets the refs.
+    function submitGameSession() {
+        if (sessionEndedRef.current) return;
+        sessionEndedRef.current = true;
+
+        const token = sessionTokenRef.current;
+        const taps = tapsRef.current;
+        const maxCombo = maxComboRef.current;
+        const livesLost = Math.min(7, emptyHeartCount);
+        const durationSecs = Math.max(
+            5,
+            Math.min(600, Math.round((Date.now() - sessionStartRef.current) / 1000)),
+        );
+
+        // Final device-side helper stock — server stores this snapshot.
+        const bombCountFinal   = bombCountRef.current;
+        const slowCountFinal   = slowCountRef.current;
+        const shieldCountFinal = shieldCountRef.current;
+
+        // Nothing to report: no server session, or the player never tapped.
+        if (!token || taps <= 0) return;
+
+        // Anti-cheat requires score ≈ taps, so submit the honest tap count for both.
+        gameService
+            .endSession({
+                sessionToken: token,
+                score: taps,
+                taps,
+                durationSecs,
+                livesLost,
+                maxCombo,
+                bombCount: bombCountFinal,
+                slowCount: slowCountFinal,
+                shieldCount: shieldCountFinal,
+            })
+            .then(result => patchStats({coins: result.totalCoins}))
+            .catch(() => {
+                // Rejected by anti-cheat or a network error — coins simply won't
+                // update for this round; the next profile refresh reconciles.
+            });
+    }
+
+    // ─── Storage helpers ──────────────────────────────────────────────────────
     async function loadSettings() {
         const s = await AsyncStorage.getItem(STORAGE_KEYS.SOUND);
         const v = await AsyncStorage.getItem(STORAGE_KEYS.VIBRATION);
         cancelSoundRef.current = !!s;
         cancelVibrationRef.current = !!v;
-        const coinStored = await AsyncStorage.getItem(STORAGE_KEYS.COIN);
-        setCoins(coinStored ? JSON.parse(coinStored) : 0);
     }
 
     function handleWatchAdHelper(type: HelperType) {
@@ -231,9 +316,14 @@ export default function Play() {
     async function handleBuyHelper(type: HelperType) {
         const {price} = HELPER_CONFIGS[type];
         if (coins < price) return;
-        const newBalance = coins - price;
-        minusCoins(price);
-        await AsyncStorage.setItem(STORAGE_KEYS.COIN, JSON.stringify(newBalance));
+        try {
+            // Server validates the balance, charges the coins and returns the new total.
+            const result = await userService.purchaseHelper(type);
+            patchStats({coins: result.remainingCoins});
+        } catch {
+            // Rejected server-side (insufficient coins) or offline — don't grant.
+            return;
+        }
         if (type === 'bomb') {
             const n = bombCountRef.current + 1;
             bombCountRef.current = n;
@@ -339,7 +429,7 @@ export default function Play() {
     }
 
     function handleExitConfirm() {
-        saveCoinStorage();
+        submitGameSession();
         setIsExitModal(false);
         navigation.goBack();
     }
@@ -364,6 +454,7 @@ export default function Play() {
     }
 
     function handleRetry() {
+        submitGameSession();
         durationRef.current = INITIAL_DURATION;
         countRef.current = 0;
         bombCountRef.current = INITIAL_BOMBS;
@@ -377,7 +468,6 @@ export default function Play() {
         isBossFightRef.current = false;
         bossHPRef.current = 0;
         bossMaxHPRef.current = 0;
-        AsyncStorage.setItem(STORAGE_KEYS.BOMB_COUNT, JSON.stringify(INITIAL_BOMBS));
         setCount(0);
         setLevelCount(0);
         setLevel(1);
@@ -394,7 +484,9 @@ export default function Play() {
         setIsPlaying(true);
         setIsLoseModal(false);
         setBoxesData(createBoxes(card, durationRef.current));
-        loadHelperCounts();
+        // startGameSession() reloads the helper stock from the server (with an
+        // offline AsyncStorage fallback).
+        startGameSession();
     }
 
     function boomBox(id: string) {
@@ -411,6 +503,7 @@ export default function Play() {
         setBombCount(newBombs);
         saveBombCount(newBombs);
 
+        tapsRef.current += 1;
         streakRef.current = 0;
 
         if (!cancelSoundRef.current && musicBombRef.current) {
@@ -524,6 +617,7 @@ export default function Play() {
 
         countRef.current += 1;
         setCount(c => c + 1);
+        tapsRef.current += 1;
 
         if (!cancelSoundRef.current && musicJumpingRef.current) {
             musicJumpingRef.current.setSpeed(0.3 + Math.random() * 0.15);
@@ -535,7 +629,7 @@ export default function Play() {
         if (newHP <= 0) endBossFight();
     }
 
-    async function endBossFight() {
+    function endBossFight() {
         // keep isBossFightRef true while the overlay shows — blocks box spawning & animation
         setIsBossFight(false);
         setShowBossDefeated(true);
@@ -543,12 +637,8 @@ export default function Play() {
         const reward = bossRewardRef.current;
         countRef.current += reward;
         setCount(c => c + reward);
-
-        const stored = await AsyncStorage.getItem(STORAGE_KEYS.COIN);
-        const current = stored ? JSON.parse(stored) : 0;
-        const newTotal = current + reward;
-        await AsyncStorage.setItem(STORAGE_KEYS.COIN, JSON.stringify(newTotal));
-        setCoins(newTotal);
+        // Optimistic only — the boss bonus isn't part of the server score model.
+        addCoins(reward);
 
         setEmptyHeartCount(prev => Math.max(0, prev - 1));
 
@@ -576,8 +666,9 @@ export default function Play() {
             }
         }
 
-        // Streak
+        // Streak + honest tap count for the backend session
         streakRef.current += 1;
+        tapsRef.current += 1;
 
         // Combo
         const now = Date.now();
@@ -587,6 +678,9 @@ export default function Play() {
             comboCountRef.current = 1;
         }
         lastTapTimeRef.current = now;
+        if (comboCountRef.current > maxComboRef.current) {
+            maxComboRef.current = comboCountRef.current;
+        }
 
         if (comboCountRef.current >= 2) {
             setCombo(comboCountRef.current);
@@ -609,7 +703,6 @@ export default function Play() {
     }
 
     function levelUp() {
-        saveCoinStorage();
         durationRef.current += DURATION_STEP;
         levelRef.current += 1;
         setLevel(levelRef.current);
@@ -654,8 +747,9 @@ export default function Play() {
         useCallback(() => {
             releaseMusic();
             loadSettings();
-            loadBombCount();
-            loadHelperCounts();
+            // startGameSession() loads the helper stock from the server, with
+            // an AsyncStorage fallback (loadBombCount/loadHelperCounts) on error.
+            startGameSession();
 
             const loadTimeout = setTimeout(() => loadMusic('games1.mp3'), 100);
             const playTimeout = setTimeout(() => playMusic(), 300);

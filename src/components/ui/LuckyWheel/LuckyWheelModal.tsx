@@ -4,7 +4,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import LinearGradient from 'react-native-linear-gradient';
 import Svg, {Circle, G, Line, Path, Text as SvgText} from 'react-native-svg';
 import {STORAGE_KEYS} from '../../../utils/storageKeys.ts';
-import {useGlobalStore} from '../../../store/globalStore.ts';
+import {useAuthStore} from '../../../store/authStore.ts';
+import * as userService from '../../../services/userService.ts';
 import styles from './LuckyWheelModal.style.ts';
 
 const WHEEL_SIZE    = 310;
@@ -80,7 +81,7 @@ interface Props {
 }
 
 export default function LuckyWheelModal({visible, onClose, onSpinComplete}: Props) {
-    const {addCoins} = useGlobalStore();
+    const patchStats = useAuthStore(s => s.patchStats);
 
     const spinAnim        = useRef(new Animated.Value(0)).current;
     const spinValue       = useRef(0);
@@ -207,28 +208,29 @@ export default function LuckyWheelModal({visible, onClose, onSpinComplete}: Prop
         }
     }
 
-    async function applyReward(seg: typeof SEGMENTS[0]) {
-        if (seg.type === 'coins') {
-            addCoins(seg.value);
-            const raw = await AsyncStorage.getItem(STORAGE_KEYS.COIN);
-            await AsyncStorage.setItem(STORAGE_KEYS.COIN, JSON.stringify((raw ? JSON.parse(raw) : 0) + seg.value));
-        } else {
-            const key = seg.type === 'bomb' ? STORAGE_KEYS.BOMB_COUNT : seg.type === 'shield' ? STORAGE_KEYS.SHIELD_COUNT : STORAGE_KEYS.SLOW_COUNT;
-            const raw = await AsyncStorage.getItem(key);
-            await AsyncStorage.setItem(key, JSON.stringify((raw ? JSON.parse(raw) : 0) + 1));
-        }
-    }
-
-    function spin() {
+    async function spin() {
         if (spinning || !canSpin) return;
-        const winnerIdx   = Math.floor(Math.random() * SEGMENTS.length);
+        setSpinning(true);
+        setResult(null);
+
+        // The server picks the winning slice, enforces the daily limit and
+        // applies the reward — the wheel just animates to whatever it returns.
+        let serverResult;
+        try {
+            serverResult = await userService.spinLuckyWheel();
+        } catch {
+            // Already spun today (429) or offline — reflect that in the UI.
+            setSpinning(false);
+            setCanSpin(false);
+            checkCanSpin();
+            return;
+        }
+
+        const winnerIdx   = serverResult.index;
         const jitter      = (Math.random() - 0.5) * (SEGMENT_ANGLE * 0.4);
         const toTop       = 360 - winnerIdx * SEGMENT_ANGLE + jitter;
         const total       = spinValue.current + NUM_SPINS * 360 + toTop;
         spinValue.current = total;
-
-        setSpinning(true);
-        setResult(null);
 
         Animated.timing(spinAnim, {
             toValue: total, duration: 4400,
@@ -242,7 +244,13 @@ export default function LuckyWheelModal({visible, onClose, onSpinComplete}: Prop
                 Animated.spring(resultScale,   {toValue: 1, friction: 3.5, tension: 90, useNativeDriver: true}),
                 Animated.timing(resultOpacity, {toValue: 1, duration: 250, useNativeDriver: true}),
             ]).start();
-            await applyReward(SEGMENTS[winnerIdx]);
+            // Server already applied the prize — just mirror it into the stores.
+            patchStats({
+                coins:       serverResult.stats.coins,
+                bombCount:   serverResult.stats.bombCount,
+                slowCount:   serverResult.stats.slowCount,
+                shieldCount: serverResult.stats.shieldCount,
+            });
             await AsyncStorage.setItem(STORAGE_KEYS.LUCKY_SPIN_DATE, new Date().toISOString());
             onSpinComplete?.();
         });

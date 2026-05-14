@@ -14,9 +14,13 @@ import Profile from "../screens/Profile/Profile.tsx";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
-const StackNavigator = () => {
+interface StackNavigatorProps {
+    initialRouteName?: keyof RootStackParamList;
+}
+
+const StackNavigator = ({initialRouteName = 'Welcome'}: StackNavigatorProps) => {
     return (
-        <Stack.Navigator initialRouteName="Welcome" screenOptions={{headerShown: false}}>
+        <Stack.Navigator initialRouteName={initialRouteName} screenOptions={{headerShown: false}}>
             <Stack.Screen
                 name="Welcome"
                 component={Welcome}

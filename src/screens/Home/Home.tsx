@@ -1,15 +1,16 @@
-﻿import React, {useCallback, useState} from 'react';
+import React, {useCallback, useState} from 'react';
 import {BackHandler, Platform, ScrollView, View} from "react-native";
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {RootStackParamList} from '../../types/RootStackParamList';
 import {MenuType} from "../../types/menu.type.ts";
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
-import {getBackground, getCard, getCoin, loadMusic, playMusic, releaseMusic} from "../../utils/helpers.ts";
+import {loadMusic, playMusic, releaseMusic} from "../../utils/helpers.ts";
 import {useFocusEffect} from "@react-navigation/core";
 import {menus} from "../../data/menu.ts";
 import {TOP_OFFSET} from "../../constants/uiConstants.ts";
 import {useGlobalStore} from "../../store/globalStore.ts";
-import {useShopStore} from "../../store/shopStore.ts";
+import {useAuthStore} from "../../store/authStore.ts";
+import * as userService from "../../services/userService.ts";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {STORAGE_KEYS} from "../../utils/storageKeys.ts";
 import InAppReview from 'react-native-in-app-review';
@@ -33,8 +34,9 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Home'>;
 
 const Home: React.FC<Props> = () => {
     const insets = useSafeAreaInsets();
-    const {coins, setCoins, addCoins} = useGlobalStore();
-    const {setCard, setBackground} = useShopStore();
+    const {coins} = useGlobalStore();
+    const refreshProfile = useAuthStore(s => s.refreshProfile);
+    const patchStats = useAuthStore(s => s.patchStats);
     const [showWheel, setShowWheel] = useState(false);
     const [canSpin, setCanSpin] = useState(false);
     const [showAdModal, setShowAdModal] = useState(false);
@@ -82,26 +84,14 @@ const Home: React.FC<Props> = () => {
         }, [])
     );
 
+    // Pull the server-authoritative profile (coins, gems, equipped card/bg)
+    // every time the menu regains focus — it may have changed in Play/Shop.
     useFocusEffect(
         useCallback(() => {
-            const fetchCoin = async () => {
-                const value = await getCoin();
-                const card = await getCard();
-                const background = await getBackground();
-
-                setCoins(value);
-                setCard(card);
-                setBackground(background);
-            };
-
-            const timeout = setTimeout(() => {
-                fetchCoin();
-            }, 100);
-
-            return () => {
-                clearTimeout(timeout);
-            };
-        }, [])
+            refreshProfile().catch(() => {
+                // Offline / transient error — keep showing the last known state.
+            });
+        }, [refreshProfile])
     );
 
     useFocusEffect(
@@ -168,8 +158,13 @@ const Home: React.FC<Props> = () => {
             <WatchAdModal
                 visible={showAdModal}
                 onCollect={async () => {
-                    addCoins(10);
-                    await AsyncStorage.setItem(STORAGE_KEYS.COIN, JSON.stringify(coins + 10));
+                    try {
+                        // Server grants the coins and enforces the daily ad cap.
+                        const result = await userService.claimAdReward();
+                        patchStats({coins: result.totalCoins});
+                    } catch {
+                        // Daily limit reached or offline — leave the balance as-is.
+                    }
                 }}
                 onClose={() => setShowAdModal(false)}
             />

@@ -8,12 +8,19 @@ import {
     TouchableWithoutFeedback,
     Keyboard,
     Alert,
+    ActivityIndicator,
 } from 'react-native';
 import {useTranslation} from 'react-i18next';
 import LinearGradient from 'react-native-linear-gradient';
 import {launchImageLibrary} from 'react-native-image-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {GoogleSignin, statusCodes} from '@react-native-google-signin/google-signin';
+import {appleAuth} from '@invertase/react-native-apple-authentication';
+
+// services / store
+import * as authService from '../../services/authService.ts';
+import * as userService from '../../services/userService.ts';
+import {useAuthStore} from '../../store/authStore.ts';
 
 // components
 import BackHeader from '../../components/ui/BackHeader/BackHeader.tsx';
@@ -26,19 +33,24 @@ import UserIcon from '../../assets/icons/UserIcon.tsx';
 // styles
 import styles from './Profile.style.ts';
 import {GRADIENT_LIGHT, PURPLE, VIOLET} from '../../constants/colors.ts';
-import {STORAGE_KEYS} from '../../utils/storageKeys.ts';
 
-const DEFAULT_AVATAR = '';
-const STORAGE_KEY_NAME  = 'profile_username';
+// The profile photo has no backend counterpart — it stays device-local.
 const STORAGE_KEY_PHOTO = 'profile_photo';
 
 function Profile() {
-    const [username,     setUsername]     = useState('Your Name');
-    const [photoUri,     setPhotoUri]     = useState<string>(DEFAULT_AVATAR);
-    const [sheetVisible, setSheetVisible] = useState(false);
-    const [cameraVisible, setCameraVisible] = useState(false);
-    const [isGuest,      setIsGuest]      = useState(false);
     const {t} = useTranslation();
+    const player = useAuthStore(s => s.player);
+    const stats = useAuthStore(s => s.stats);
+    const setSession = useAuthStore(s => s.setSession);
+
+    const [photoUri,      setPhotoUri]      = useState<string>('');
+    const [sheetVisible,  setSheetVisible]  = useState(false);
+    const [cameraVisible, setCameraVisible] = useState(false);
+    const [nameInput,     setNameInput]     = useState('');
+    const [savingName,    setSavingName]    = useState(false);
+
+    const isGuest = player?.accountType === 'guest';
+    const displayName = player?.username || 'Player';
 
     useEffect(() => {
         GoogleSignin.configure({
@@ -47,57 +59,88 @@ function Profile() {
         });
 
         (async () => {
-            const [savedName, savedPhoto, authType] = await Promise.all([
-                AsyncStorage.getItem(STORAGE_KEY_NAME),
-                AsyncStorage.getItem(STORAGE_KEY_PHOTO),
-                AsyncStorage.getItem(STORAGE_KEYS.AUTH_TYPE),
-            ]);
-            if (authType === 'guest') setIsGuest(true);
-            if (savedName)  setUsername(savedName);
+            const savedPhoto = await AsyncStorage.getItem(STORAGE_KEY_PHOTO);
             if (savedPhoto) setPhotoUri(savedPhoto);
         })();
     }, []);
 
-    // ── Auth ────────────────────────────────────────────────
+    // Keep the editable name field in sync with the server username.
+    useEffect(() => {
+        setNameInput(player?.username || '');
+    }, [player?.username]);
+
+    // ── Auth: upgrade a guest account ───────────────────────
 
     async function signInWithGoogle() {
         try {
             await GoogleSignin.hasPlayServices();
             const userInfo: any = await GoogleSignin.signIn();
-            await AsyncStorage.setItem(STORAGE_KEYS.AUTH_TYPE, 'google');
 
-            // Pre-fill name from Google account
-            if (userInfo?.data?.user?.name) {
-                setUsername(userInfo.data.user.name);
-                await AsyncStorage.setItem(STORAGE_KEY_NAME, userInfo.data.user.name);
+            let idToken: string | undefined =
+                userInfo?.data?.idToken ?? userInfo?.idToken;
+            if (!idToken) {
+                const tokens = await GoogleSignin.getTokens();
+                idToken = tokens?.idToken;
             }
-            if (userInfo?.data?.user?.photo) {
-                setPhotoUri(userInfo.data.user.photo);
-                await AsyncStorage.setItem(STORAGE_KEY_PHOTO, userInfo.data.user.photo);
-            }
+            if (!idToken) throw new Error('Could not obtain Google ID token');
 
-            setIsGuest(false);
+            // Links the Google identity onto the current guest account and
+            // merges its progress server-side.
+            await authService.linkGoogle(idToken);
+            await setSession();
         } catch (error: any) {
             if (error.code === statusCodes.SIGN_IN_CANCELLED) return;
             if (error.code === statusCodes.IN_PROGRESS) {
                 Alert.alert('', 'Login already in progress');
             } else {
-                Alert.alert('Error', error.message);
+                Alert.alert('Sign-in failed', error?.message ?? 'Please try again');
             }
         }
     }
 
     async function signInWithApple() {
-        await AsyncStorage.setItem(STORAGE_KEYS.AUTH_TYPE, 'apple');
-        setIsGuest(false);
+        if (!appleAuth.isSupported) {
+            Alert.alert('Apple Sign-In', 'Apple Sign-In is only available on iOS 13+.');
+            return;
+        }
+        try {
+            const resp = await appleAuth.performRequest({
+                requestedOperation: appleAuth.Operation.LOGIN,
+                requestedScopes: [appleAuth.Scope.EMAIL, appleAuth.Scope.FULL_NAME],
+            });
+            if (!resp.identityToken) throw new Error('No identity token from Apple');
+
+            // Links the Apple identity onto the current guest account.
+            await authService.linkApple(resp.identityToken);
+            await setSession();
+        } catch (error: any) {
+            if (error?.code === appleAuth.Error.CANCELED) return;
+            Alert.alert('Sign-in failed', error?.message ?? 'Please try again');
+        }
     }
 
-    // ── Photo ───────────────────────────────────────────────
+    // ── Username (server-owned) ─────────────────────────────
 
-    async function handleNameChange(value: string) {
-        setUsername(value);
-        await AsyncStorage.setItem(STORAGE_KEY_NAME, value);
+    async function handleSaveName() {
+        const next = nameInput.trim();
+        if (!next || next === player?.username) return;
+        if (!/^[a-zA-Z0-9_]{3,32}$/.test(next)) {
+            Alert.alert('Invalid name', 'Use 3–32 letters, numbers or underscores.');
+            return;
+        }
+        setSavingName(true);
+        try {
+            await userService.updateProfile(next);
+            await setSession();
+            Keyboard.dismiss();
+        } catch (error: any) {
+            Alert.alert('Could not save', error?.message ?? 'Please try again');
+        } finally {
+            setSavingName(false);
+        }
     }
+
+    // ── Photo (device-local) ────────────────────────────────
 
     async function handlePickResult(uri: string) {
         setPhotoUri(uri);
@@ -122,6 +165,8 @@ function Profile() {
             if (uri) handlePickResult(uri);
         });
     }
+
+    const nameChanged = nameInput.trim() !== (player?.username || '');
 
     // ── Render ──────────────────────────────────────────────
 
@@ -193,20 +238,54 @@ function Profile() {
                                 <Text allowFontScaling={false} style={styles.changePhotoText}>{t('changePhoto')}</Text>
                             </View>
 
-                            <Text allowFontScaling={false} style={styles.greeting}>Hello, {username}!</Text>
+                            <Text allowFontScaling={false} style={styles.greeting}>Hello, {displayName}!</Text>
 
+                            {/* Editable, server-owned username */}
                             <View style={styles.inputCard}>
                                 <Text allowFontScaling={false} style={styles.inputLabel}>✏️  Name</Text>
                                 <TextInput
-                                    value={username}
-                                    onChangeText={handleNameChange}
+                                    value={nameInput}
+                                    onChangeText={setNameInput}
                                     style={styles.input}
                                     placeholder="Enter your name"
                                     placeholderTextColor={VIOLET}
-                                    accessibilityLabel="Username input field"
-                                    accessibilityRole="text"
+                                    autoCapitalize="none"
+                                    maxLength={32}
                                     returnKeyType="done"
+                                    onSubmitEditing={handleSaveName}
+                                    accessibilityLabel="Username input field"
                                 />
+                                <TouchableOpacity
+                                    onPress={handleSaveName}
+                                    disabled={!nameChanged || savingName}
+                                    activeOpacity={0.8}
+                                    style={[saveBtn, (!nameChanged || savingName) && {opacity: 0.4}]}
+                                >
+                                    {savingName
+                                        ? <ActivityIndicator size="small" color="#fff"/>
+                                        : <Text allowFontScaling={false} style={saveBtnText}>Save</Text>}
+                                </TouchableOpacity>
+                            </View>
+
+                            {/* Read-only server stats */}
+                            <View style={[styles.inputCard, {marginTop: 14}]}>
+                                <Text allowFontScaling={false} style={styles.inputLabel}>📊  Stats</Text>
+                                <View style={statRow}>
+                                    <Text allowFontScaling={false} style={statKey}>Account type</Text>
+                                    <Text allowFontScaling={false} style={statVal}>{player?.accountType ?? '—'}</Text>
+                                </View>
+                                <View style={statRow}>
+                                    <Text allowFontScaling={false} style={statKey}>High score</Text>
+                                    <Text allowFontScaling={false} style={statVal}>{stats?.highScore ?? 0}</Text>
+                                </View>
+                                <View style={statRow}>
+                                    <Text allowFontScaling={false} style={statKey}>Games played</Text>
+                                    <Text allowFontScaling={false} style={statVal}>{stats?.totalGames ?? 0}</Text>
+                                </View>
+                                <View style={statRow}>
+                                    <Text allowFontScaling={false} style={statKey}>Coins</Text>
+                                    <Text allowFontScaling={false} style={statVal}>{stats?.coins ?? 0}</Text>
+                                </View>
                             </View>
                         </>
                     )}
@@ -231,5 +310,37 @@ function Profile() {
         </LinearGradient>
     );
 }
+
+// Local style objects for the Save button + read-only stat rows.
+const saveBtn = {
+    marginTop: 12,
+    paddingVertical: 11,
+    borderRadius: 14,
+    backgroundColor: 'rgba(255,255,255,0.22)',
+    alignItems: 'center' as const,
+};
+const saveBtnText = {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '800' as const,
+    letterSpacing: 0.5,
+};
+const statRow = {
+    flexDirection: 'row' as const,
+    justifyContent: 'space-between' as const,
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.08)',
+};
+const statKey = {
+    color: 'rgba(255,255,255,0.6)',
+    fontSize: 14,
+    fontWeight: '600' as const,
+};
+const statVal = {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '800' as const,
+};
 
 export default Profile;

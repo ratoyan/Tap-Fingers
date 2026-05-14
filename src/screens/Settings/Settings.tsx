@@ -13,6 +13,7 @@ import {useTranslation} from "react-i18next";
 import {languages} from "../../data/language.ts";
 import {STORAGE_KEYS} from "../../utils/storageKeys.ts";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import {useAuthStore} from "../../store/authStore.ts";
 
 // components
 import SettingRow from "../../components/ui/SettingRow/SettingRow.tsx";
@@ -49,9 +50,12 @@ function Settings() {
     };
 
     const logOut = async () => {
+        // Revoke the refresh token server-side, clear tokens + reset the stores...
+        await useAuthStore.getState().logout();
+        // ...then wipe the remaining device-local data (settings, helper counts).
         await AsyncStorage.clear();
         setLogoutModal(false);
-        navigation.navigate('Welcome');
+        navigation.reset({index: 0, routes: [{name: 'Welcome'}]});
     };
 
     const toggleMusic = async (val: boolean) => {

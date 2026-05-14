@@ -6,7 +6,18 @@
       "Bash(awk '$1 >= 3 {print $0}')",
       "Bash(npm list *)",
       "Bash(node *)",
-      "Bash(npx react-native *)"
+      "Bash(npx react-native *)",
+      "Bash(Copy-Item *)",
+      "Bash(Get-ChildItem -Path \"C:\\\\rob-project\\\\mobile\\\\TapFingers\" -Recurse -Force)",
+      "Bash(Select-Object FullName)",
+      "Bash(Sort-Object FullName)",
+      "Bash(Get-ChildItem -Recurse \"C:\\\\rob-project\\\\mobile\\\\TapFingers\\\\src\" -Name)",
+      "Read(//c/rob-project/**)",
+      "Read(//c/rob-project/mobile/**)",
+      "Bash(npx tsc *)",
+      "Bash(npx eslint *)",
+      "Bash(./node_modules/.bin/tsc --noEmit)",
+      "Bash(npm uninstall *)"
     ]
   }
 }

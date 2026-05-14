@@ -12,7 +12,6 @@ import {
     GRADIENT_DARK,
     GRADIENT_LIGHT,
     LIGHT_GREEN,
-    MEDIUM_PURPLE,
     PURPLE_DARK,
 } from "../../../constants/colors.ts";
 import LinearGradient from "react-native-linear-gradient";
@@ -20,9 +19,10 @@ import LinearGradient from "react-native-linear-gradient";
 interface ChallengeCardProps {
     item: any;
     index?: number;
+    onCollect?: () => void;
 }
 
-function ChallengeCard({item, index = 0}: ChallengeCardProps) {
+function ChallengeCard({item, index = 0, onCollect}: ChallengeCardProps) {
 
     const entranceOpacity = useRef(new Animated.Value(0)).current;
     const entranceX = useRef(new Animated.Value(-30)).current;
@@ -160,7 +160,7 @@ function ChallengeCard({item, index = 0}: ChallengeCardProps) {
 
                         {item.finished && !item.taken && (
                             <Animated.View style={{transform: [{scale: collectPulse}]}}>
-                                <TouchableOpacity style={styles.collectBtn} activeOpacity={0.8}>
+                                <TouchableOpacity style={styles.collectBtn} activeOpacity={0.8} onPress={onCollect}>
                                     <Coin width={16} height={14}/>
                                     <Text allowFontScaling={false} style={styles.collectText}>Collect</Text>
                                 </TouchableOpacity>

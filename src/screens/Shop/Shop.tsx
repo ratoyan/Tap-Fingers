@@ -1,12 +1,15 @@
-﻿import React, {useEffect, useRef, useState} from "react";
-import {Animated, ScrollView, Text, TouchableOpacity, View} from "react-native";
+﻿import React, {useCallback, useRef, useState} from "react";
+import {ActivityIndicator, Animated, ScrollView, Text, TouchableOpacity, View} from "react-native";
 import {useTranslation} from "react-i18next";
+import {useFocusEffect} from "@react-navigation/core";
 import {useGlobalStore} from "../../store/globalStore.ts";
-import {STORAGE_KEYS} from "../../utils/storageKeys.ts";
+import {useAuthStore} from "../../store/authStore.ts";
 import {HORIZONAL_OFFSET} from "../../constants/uiConstants.ts";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import {useShopStore} from "../../store/shopStore.ts";
-import {shops} from "../../data/shop.ts";
+
+// services / data
+import * as shopService from "../../services/shopService.ts";
+import * as userService from "../../services/userService.ts";
+import {DEFAULT_BG_KEY, DEFAULT_CARD_KEY, mergeShopItem, ShopEntry} from "../../data/shopVisuals.ts";
 
 // components
 import BackHeader from "../../components/ui/BackHeader/BackHeader.tsx";
@@ -15,24 +18,62 @@ import WatchAdModal from "../../components/ui/WatchAdModal/WatchAdModal.tsx";
 
 // styles
 import styles from './Shop.style.ts';
-import {DARK_PURPLE, GRADIENT_DARK, GRADIENT_LIGHT, PURPLE} from "../../constants/colors.ts";
+import {DARK_PURPLE, GRADIENT_DARK, GRADIENT_LIGHT, PURPLE, WHITE} from "../../constants/colors.ts";
 import LinearGradient from "react-native-linear-gradient";
 
 type TabType = 'card' | 'background';
 
 function Shop() {
     const {t} = useTranslation();
-    const {coins, minusCoins, addCoins} = useGlobalStore();
-    const {card, setCard, setBackground, background} = useShopStore();
+    const {coins} = useGlobalStore();
+    const patchStats = useAuthStore(s => s.patchStats);
 
     const [activeTab, setActiveTab] = useState<TabType>('card');
     const [showAdModal, setShowAdModal] = useState(false);
-    const [cardsId, setCardsId] = useState<number[]>([]);
-    const [backgroundsId, setBackgroundsId] = useState<number[]>([]);
-    const [sortedCardItems, setSortedCardItems] = useState<any[]>([]);
-    const [sortedBackgroundItems, setSortedBackgroundItems] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [busyKey, setBusyKey] = useState<string | null>(null);
+
+    const [cardItems, setCardItems] = useState<ShopEntry[]>([]);
+    const [bgItems, setBgItems] = useState<ShopEntry[]>([]);
+    const [ownedKeys, setOwnedKeys] = useState<Set<string>>(new Set());
+    const [activeCardKey, setActiveCardKey] = useState<string>(DEFAULT_CARD_KEY);
+    const [activeBgKey, setActiveBgKey] = useState<string>(DEFAULT_BG_KEY);
 
     const tabAnim = useRef(new Animated.Value(0)).current;
+
+    // Free starter items count as owned even before they hit the inventory table.
+    function isOwned(entry: ShopEntry) {
+        return ownedKeys.has(entry.key) || entry.priceCoins === 0;
+    }
+
+    async function loadShop() {
+        try {
+            const [items, inventory] = await Promise.all([
+                shopService.getItems(),
+                shopService.getInventory(),
+            ]);
+
+            const merged = items.map(mergeShopItem);
+            setCardItems(merged.filter(e => e.type === 'card'));
+            setBgItems(merged.filter(e => e.type === 'background'));
+
+            setOwnedKeys(new Set(inventory.map(e => e.item.key)));
+            const card = inventory.find(e => e.isActiveCard)?.item.key;
+            const bg = inventory.find(e => e.isActiveBackground)?.item.key;
+            setActiveCardKey(card ?? DEFAULT_CARD_KEY);
+            setActiveBgKey(bg ?? DEFAULT_BG_KEY);
+        } catch (error) {
+            console.error('Failed to load shop:', error);
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    useFocusEffect(
+        useCallback(() => {
+            loadShop();
+        }, [])
+    );
 
     function switchTab(tab: TabType) {
         setActiveTab(tab);
@@ -44,70 +85,47 @@ function Shop() {
         }).start();
     }
 
-    async function payBoxData(box: any, type: TabType) {
+    async function equip(entry: ShopEntry) {
+        await shopService.setActiveItem(entry.key);
+        if (entry.type === 'card') {
+            setActiveCardKey(entry.key);
+            patchStats({activeCardKey: entry.key});
+        } else {
+            setActiveBgKey(entry.key);
+            patchStats({activeBackgroundKey: entry.key});
+        }
+    }
+
+    async function handleItemPress(entry: ShopEntry) {
+        if (busyKey) return;
+        setBusyKey(entry.key);
         try {
-            const isCard = type === 'card';
-            const currentIds = isCard ? cardsId : backgroundsId;
-            const currentSetter = isCard ? setCardsId : setBackgroundsId;
-            const currentBoxSetter = isCard ? setCard : setBackground;
-            const storageKeyIds = isCard ? STORAGE_KEYS.CARDSID : STORAGE_KEYS.BACKGROUNDSID;
-            const storageKeyCurrent = isCard ? STORAGE_KEYS.CARDID : STORAGE_KEYS.BACKGROUNDID;
-
-            const alreadyPurchased = box.id != null && currentIds.includes(box.id);
-
-            if (coins >= box.coins && !alreadyPurchased) {
-                const newCoins = coins - box.coins;
-                minusCoins(box.coins);
-                await AsyncStorage.setItem(STORAGE_KEYS.COIN, JSON.stringify(newCoins));
-
-                if (box.id != null) {
-                    currentBoxSetter(box);
-                    const updatedIds = Array.from(new Set([...currentIds, box.id]));
-                    currentSetter(updatedIds);
-                    await AsyncStorage.setItem(storageKeyIds, JSON.stringify(updatedIds));
-                    await AsyncStorage.setItem(storageKeyCurrent, JSON.stringify(box.id));
-                }
-            } else if (alreadyPurchased && box.id != null) {
-                currentBoxSetter(box);
-                await AsyncStorage.setItem(storageKeyCurrent, JSON.stringify(box.id));
+            if (isOwned(entry)) {
+                // Already owned (or free) — just equip it.
+                await equip(entry);
+            } else if (coins >= entry.priceCoins) {
+                // Buy, then equip — matches the previous one-tap behaviour.
+                const result = await shopService.purchaseItem(entry.key);
+                setOwnedKeys(prev => new Set(prev).add(entry.key));
+                patchStats({coins: result.remainingCoins});
+                await equip(entry);
             }
         } catch (error) {
-            console.error("Error processing box purchase:", error);
+            console.error('Shop action failed:', error);
+            // Re-sync from the server so the UI reflects the real state.
+            loadShop();
+        } finally {
+            setBusyKey(null);
         }
     }
-
-    async function getStorageData() {
-        try {
-            const purchaseCardsId = await AsyncStorage.getItem(STORAGE_KEYS.CARDSID);
-            const purchaseBackgroundsId = await AsyncStorage.getItem(STORAGE_KEYS.BACKGROUNDSID);
-            const cIds: number[] = purchaseCardsId ? JSON.parse(purchaseCardsId) : [];
-            const bIds: number[] = purchaseBackgroundsId ? JSON.parse(purchaseBackgroundsId) : [];
-            setCardsId(cIds);
-            setBackgroundsId(bIds);
-            setSortedCardItems(
-                shops.filter(e => e.type === 'card')
-                    .sort((a, b) => (cIds.includes(a.id) ? 0 : 1) - (cIds.includes(b.id) ? 0 : 1))
-            );
-            setSortedBackgroundItems(
-                shops.filter(e => e.type === 'background')
-                    .sort((a, b) => (bIds.includes(a.id) ? 0 : 1) - (bIds.includes(b.id) ? 0 : 1))
-            );
-        } catch {
-            setCardsId([]);
-            setBackgroundsId([]);
-            setSortedCardItems(shops.filter(e => e.type === 'card'));
-            setSortedBackgroundItems(shops.filter(e => e.type === 'background'));
-        }
-    }
-
-    useEffect(() => {
-        getStorageData();
-    }, []);
 
     const tabIndicatorLeft = tabAnim.interpolate({
         inputRange: [0, 1],
         outputRange: ['0%', '50%'],
     });
+
+    const items = activeTab === 'card' ? cardItems : bgItems;
+    const activeKey = activeTab === 'card' ? activeCardKey : activeBgKey;
 
     return (
         <LinearGradient
@@ -161,54 +179,41 @@ function Shop() {
             </View>
 
             {/* Content */}
-            {activeTab === 'card' ? (
-                <ScrollView
-                    key="cards"
-                    contentContainerStyle={{paddingBottom: 30, marginTop: 20, paddingHorizontal: HORIZONAL_OFFSET}}
-                    showsVerticalScrollIndicator={false}
-                >
-                    <View style={styles.grid}>
-                        {sortedCardItems.map((item, index) => (
-                            <ShopItem
-                                key={item.id}
-                                index={index}
-                                selected={card?.id === item.id}
-                                purchased={cardsId.includes(item.id)}
-                                // @ts-ignore
-                                disabled={!cardsId.includes(item.id) && coins <= item.coins}
-                                handlePress={() => payBoxData(item, 'card')}
-                                item={item}
-                            />
-                        ))}
-                    </View>
-                </ScrollView>
+            {loading ? (
+                <View style={{flex: 1, alignItems: 'center', justifyContent: 'center'}}>
+                    <ActivityIndicator size="large" color={WHITE}/>
+                </View>
             ) : (
                 <ScrollView
-                    key="backgrounds"
+                    key={activeTab}
                     contentContainerStyle={{paddingBottom: 30, marginTop: 20, paddingHorizontal: HORIZONAL_OFFSET}}
                     showsVerticalScrollIndicator={false}
                 >
                     <View style={styles.grid}>
-                        {sortedBackgroundItems.map((item, index) => (
+                        {items.map((item, index) => (
                             <ShopItem
                                 key={item.id}
                                 index={index}
-                                selected={background?.id === item.id}
-                                purchased={backgroundsId.includes(item.id)}
-                                // @ts-ignore
-                                disabled={!backgroundsId.includes(item.id) && coins <= item.coins}
-                                handlePress={() => payBoxData(item, 'background')}
+                                selected={item.key === activeKey}
+                                purchased={isOwned(item)}
+                                disabled={!isOwned(item) && coins < item.priceCoins}
+                                handlePress={() => handleItemPress(item)}
                                 item={item}
                             />
                         ))}
                     </View>
                 </ScrollView>
             )}
+
             <WatchAdModal
                 visible={showAdModal}
                 onCollect={async () => {
-                    addCoins(10);
-                    await AsyncStorage.setItem(STORAGE_KEYS.COIN, JSON.stringify(coins + 10));
+                    try {
+                        const result = await userService.claimAdReward();
+                        patchStats({coins: result.totalCoins});
+                    } catch {
+                        // Daily limit reached or offline.
+                    }
                 }}
                 onClose={() => setShowAdModal(false)}
             />

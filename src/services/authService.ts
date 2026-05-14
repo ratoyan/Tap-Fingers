@@ -1,41 +1,74 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import api from './api';
+import { tokenManager } from './tokenManager';
+import { AuthResult } from './types';
 
-async function saveSession(token: string, user: any, progress: any) {
-    await AsyncStorage.multiSet([
-        ['api_token', token],
-        ['server_user', JSON.stringify(user)],
-        ['server_progress', JSON.stringify(progress)],
-    ]);
+// ── Auth service ──────────────────────────────────────────────────────────────
+// Talks to the TapFingers backend /api/auth/* endpoints. Every call that
+// returns an AuthResult persists the token pair + player identity through
+// `tokenManager`, so the rest of the app only ever reads from storage.
+
+async function persistSession(result: AuthResult): Promise<AuthResult> {
+    await tokenManager.saveAuth(
+        result.accessToken,
+        result.refreshToken,
+        result.player.id,
+        result.player.accountType,
+    );
+    return result;
 }
 
-export async function loginWithGoogle(googleId: string, name: string, email?: string, photoUrl?: string) {
-    const {data} = await api.post('/auth/google', {
-        google_id: googleId,
-        name,
-        email,
-        photo_url: photoUrl,
-    });
-    await saveSession(data.token, data.user, data.progress);
-    return data;
+export async function guestLogin(): Promise<AuthResult> {
+    const { data } = await api.post('/auth/guest');
+    return persistSession(data.data);
 }
 
-export async function loginWithApple(appleId: string, name?: string, email?: string) {
-    const {data} = await api.post('/auth/apple', {apple_id: appleId, name, email});
-    await saveSession(data.token, data.user, data.progress);
-    return data;
+export async function googleLogin(idToken: string): Promise<AuthResult> {
+    const { data } = await api.post('/auth/google', { idToken });
+    return persistSession(data.data);
 }
 
-export async function loginAsGuest(deviceId?: string) {
-    const {data} = await api.post('/auth/guest', {device_id: deviceId});
-    await saveSession(data.token, data.user, data.progress);
-    return data;
+export async function appleLogin(identityToken: string): Promise<AuthResult> {
+    const { data } = await api.post('/auth/apple', { identityToken });
+    return persistSession(data.data);
 }
 
-export async function getStoredToken(): Promise<string | null> {
-    return AsyncStorage.getItem('api_token');
+export async function emailRegister(
+    username: string,
+    email: string,
+    password: string,
+): Promise<AuthResult> {
+    const { data } = await api.post('/auth/register', { username, email, password });
+    return persistSession(data.data);
 }
 
-export async function logout() {
-    await AsyncStorage.multiRemove(['api_token', 'server_user', 'server_progress']);
+export async function emailLogin(email: string, password: string): Promise<AuthResult> {
+    const { data } = await api.post('/auth/login', { email, password });
+    return persistSession(data.data);
+}
+
+// Upgrades the currently authenticated guest account to a Google account.
+export async function linkGoogle(idToken: string): Promise<AuthResult> {
+    const { data } = await api.post('/auth/link-google', { idToken });
+    return persistSession(data.data);
+}
+
+// Upgrades the currently authenticated guest account to an Apple account.
+export async function linkApple(identityToken: string): Promise<AuthResult> {
+    const { data } = await api.post('/auth/link-apple', { identityToken });
+    return persistSession(data.data);
+}
+
+export async function logout(): Promise<void> {
+    try {
+        const refreshToken = await tokenManager.getRefreshToken();
+        if (refreshToken) await api.post('/auth/logout', { refreshToken });
+    } catch {
+        // Best-effort: even if the server call fails we still clear local tokens.
+    } finally {
+        await tokenManager.clear();
+    }
+}
+
+export async function isLoggedIn(): Promise<boolean> {
+    return tokenManager.isLoggedIn();
 }

@@ -1,27 +1,48 @@
 import api from './api';
+import {
+    AdRewardResult,
+    HelperPurchaseResult,
+    HelperType,
+    LuckyWheelResult,
+    Profile,
+    ScoreEntry,
+} from './types';
 
-export async function getProfile() {
-    const {data} = await api.get('/user/profile');
-    return data;
+// ── Player service ────────────────────────────────────────────────────────────
+// Backend: everything under /api/player (all auth-only).
+//   GET  /player/profile          — full profile (player + stats + inventory)
+//   PUT  /player/profile          — update username
+//   GET  /player/scores           — this player's recent scores
+//   POST /player/ad-reward        — rewarded-ad coins (server rate-limited)
+//   POST /player/lucky-wheel      — daily spin (server picks the prize)
+//   POST /player/helpers/purchase — spend coins on a gameplay helper
+
+export async function getProfile(): Promise<Profile> {
+    const { data } = await api.get('/player/profile');
+    return data.data;
 }
 
-export async function updateProfile(payload: {name?: string; photo_url?: string | null}) {
-    const {data} = await api.put('/user/profile', payload);
-    return data;
+export async function updateProfile(username: string): Promise<Profile> {
+    const { data } = await api.put('/player/profile', { username });
+    return data.data;
 }
 
-export async function syncProgress(payload: {
-    coins?: number;
-    level?: number;
-    high_score?: number;
-    bomb_count?: number;
-    slow_count?: number;
-    shield_count?: number;
-    purchased_cards?: string[];
-    purchased_backgrounds?: string[];
-    current_card_id?: string;
-    current_background_id?: string | null;
-}) {
-    const {data} = await api.put('/user/progress', payload);
-    return data;
+export async function getMyScores(): Promise<ScoreEntry[]> {
+    const { data } = await api.get('/player/scores');
+    return data.data.scores;
+}
+
+export async function claimAdReward(): Promise<AdRewardResult> {
+    const { data } = await api.post('/player/ad-reward');
+    return data.data;
+}
+
+export async function spinLuckyWheel(): Promise<LuckyWheelResult> {
+    const { data } = await api.post('/player/lucky-wheel');
+    return data.data;
+}
+
+export async function purchaseHelper(type: HelperType): Promise<HelperPurchaseResult> {
+    const { data } = await api.post('/player/helpers/purchase', { type });
+    return data.data;
 }

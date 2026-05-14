@@ -5,6 +5,7 @@ import {useTranslation} from "react-i18next";
 
 // icons
 import Coin from "../../../assets/icons/Coin.tsx";
+import UserIcon from "../../../assets/icons/UserIcon.tsx";
 
 // styles
 import styles from './ProgressItem.style.ts';
@@ -34,9 +35,12 @@ function ProgressItem({item, trophy}: ProgressItemProps) {
         outputRange: ['0%', '100%'],
     });
 
-    const levelText = trophy
-        ? `${trophy} ${t('level')} ${item.level}`
+    // Leaderboard entries carry a username; fall back to the level label
+    // for any caller that still passes the legacy shape.
+    const primaryText = item.username
+        ? `${item.username}`
         : `${t('level')} ${item.level}`;
+    const levelText = trophy ? `${trophy} ${primaryText}` : primaryText;
 
     const progressPercent = Math.round(item.progress * 100);
 
@@ -50,13 +54,24 @@ function ProgressItem({item, trophy}: ProgressItemProps) {
             accessibilityRole="summary"
             accessibilityLabel={`${levelText}. ${t('score')} ${item.score}. ${t('progress')} ${progressPercent}%`}
         >
-            <Image
-                source={{uri: item.avatar}}
-                style={styles.avatar}
-                accessible={true}
-                accessibilityRole="image"
-                accessibilityLabel={`${t('avatar')}`}
-            />
+            {item.avatar ? (
+                <Image
+                    source={{uri: item.avatar}}
+                    style={styles.avatar}
+                    accessible={true}
+                    accessibilityRole="image"
+                    accessibilityLabel={`${t('avatar')}`}
+                />
+            ) : (
+                <View
+                    style={[styles.avatar, {alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.25)'}]}
+                    accessible={true}
+                    accessibilityRole="image"
+                    accessibilityLabel={`${t('avatar')}`}
+                >
+                    <UserIcon size={28} color="#fff"/>
+                </View>
+            )}
 
             <View style={styles.info} importantForAccessibility="no-hide-descendants">
                 {/* Level row */}

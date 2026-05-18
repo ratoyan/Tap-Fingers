@@ -39,5 +39,9 @@
   "adLimitSub": "You've watched 2 ads today",
   "adWatchedAt": "Watched at",
   "collectCoins": "Collect +10 Coins",
-  "waitSeconds": "Wait {{count}}s..."
+  "waitSeconds": "Wait {{count}}s...",
+  "noProgressionTitle": "No progression data yet",
+  "noProgressionSubtitle": "Play a few rounds and your achievements will appear here.",
+  "startPlaying": "Start Playing",
+  "progressionHint": "Every tap brings you closer to the top"
 }

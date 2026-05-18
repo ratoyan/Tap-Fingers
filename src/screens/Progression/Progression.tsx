@@ -1,5 +1,5 @@
 import React, {useCallback, useState} from 'react';
-import {ActivityIndicator, FlatList, Text, View} from 'react-native';
+import {ActivityIndicator, FlatList, View} from 'react-native';
 import {useFocusEffect} from '@react-navigation/core';
 import {getTrophyEmoji} from "../../utils/helpers.ts";
 import {useTranslation} from "react-i18next";
@@ -11,6 +11,7 @@ import {ScoreEntry} from "../../services/types.ts";
 // components
 import BackHeader from "../../components/ui/BackHeader/BackHeader.tsx";
 import ProgressItem from "../../components/ui/ProgressItem/ProgressItem.tsx";
+import EmptyProgression from "../../components/ui/EmptyProgression/EmptyProgression.tsx";
 
 // styles
 import styles from './Progression.style.ts';
@@ -57,7 +58,7 @@ function Progression() {
             ) : (
                 <FlatList
                     data={entries}
-                    style={{ marginTop: 20 }}
+                    style={{ marginTop: 20, flex: 1 }}
                     keyExtractor={(item) => item.id.toString()}
                     renderItem={({ item, index }) => (
                         <ProgressItem
@@ -73,15 +74,12 @@ function Progression() {
                     )}
                     accessibilityRole="list"
                     showsVerticalScrollIndicator={false}
-                    contentContainerStyle={{ paddingBottom: 40 }}
-                    ListEmptyComponent={
-                        <Text
-                            allowFontScaling={false}
-                            style={{color: 'rgba(255,255,255,0.6)', textAlign: 'center', marginTop: 40}}
-                        >
-                            —
-                        </Text>
+                    contentContainerStyle={
+                        entries.length === 0
+                            ? {flexGrow: 1}
+                            : {paddingBottom: 40}
                     }
+                    ListEmptyComponent={<EmptyProgression />}
                 />
             )}
         </View>

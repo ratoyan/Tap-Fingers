@@ -39,5 +39,9 @@
   "adLimitSub": "Сегодня ты уже посмотрел 2 рекламы",
   "adWatchedAt": "Просмотрено в",
   "collectCoins": "Собрать +10 монет",
-  "waitSeconds": "Подождите {{count}}с..."
+  "waitSeconds": "Подождите {{count}}с...",
+  "noProgressionTitle": "Пока нет данных о прогрессе",
+  "noProgressionSubtitle": "Сыграйте несколько раундов — ваши достижения появятся здесь.",
+  "startPlaying": "Начать играть",
+  "progressionHint": "Каждое касание приближает вас к вершине"
 }

@@ -39,5 +39,9 @@
   "adLimitSub": "Այսօր արդեն 2 գովազդ դիտեցիր",
   "adWatchedAt": "Դիտեցիր",
   "collectCoins": "+10 Մետաղադրամ հավաքել",
-  "waitSeconds": "Սպասեք {{count}} վ..."
+  "waitSeconds": "Սպասեք {{count}} վ...",
+  "noProgressionTitle": "Դեռ առաջընթացի տվյալներ չկան",
+  "noProgressionSubtitle": "Խաղացեք մի քանի փուլ՝ ձեր նվաճումները կհայտնվեն այստեղ։",
+  "startPlaying": "Սկսել խաղալ",
+  "progressionHint": "Ամեն հպումը ձեզ մոտեցնում է գագաթին"
 }

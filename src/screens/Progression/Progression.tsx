@@ -6,7 +6,11 @@ import {useTranslation} from "react-i18next";
 
 // services
 import * as scoreService from "../../services/scoreService.ts";
+import * as gameService from "../../services/gameService.ts";
 import {ScoreEntry} from "../../services/types.ts";
+
+// store
+import {useConfigStore} from "../../store/configStore.ts";
 
 // components
 import BackHeader from "../../components/ui/BackHeader/BackHeader.tsx";
@@ -23,16 +27,24 @@ function Progression() {
     const [entries, setEntries] = useState<ScoreEntry[]>([]);
     const [loading, setLoading] = useState(true);
 
+    const setLevelLength = useConfigStore(s => s.setLevelLength);
+
     const load = useCallback(async () => {
         try {
-            const board = await scoreService.getLeaderboard(1, 50);
+            const [board, config] = await Promise.all([
+                scoreService.getLeaderboard(1, 50),
+                gameService.getGameConfig().catch(() => null),
+            ]);
             setEntries(board.scores);
+            if (config?.TAPS_PER_LEVEL) {
+                setLevelLength(config.TAPS_PER_LEVEL);
+            }
         } catch (error) {
             console.error('Failed to load leaderboard:', error);
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [setLevelLength]);
 
     useFocusEffect(
         useCallback(() => {
@@ -40,8 +52,13 @@ function Progression() {
         }, [load])
     );
 
-    // Progress bar shows each entry's score relative to the current #1.
-    const topScore = entries.length ? entries[0].score : 0;
+    // ProgressItem owns the bar math (reads levelLength from the global
+    // configStore); we just hand it the leaderboard's level ceiling so every
+    // row fills relative to the highest level reached.
+    const topLevel = entries.reduce(
+        (max, entry) => (entry.levelReached > max ? entry.levelReached : max),
+        1,
+    );
 
     return (
         <View
@@ -67,8 +84,8 @@ function Progression() {
                                 username: item.username,
                                 level: item.levelReached,
                                 score: item.score,
-                                progress: topScore > 0 ? item.score / topScore : 0,
                             }}
+                            topLevel={topLevel}
                             trophy={getTrophyEmoji(index)}
                         />
                     )}

@@ -1,4 +1,4 @@
-﻿import React, {useEffect, useRef} from "react";
+import React, {useEffect, useRef} from "react";
 import LinearGradient from "react-native-linear-gradient";
 import {Animated, Image, Text, View} from "react-native";
 import {useTranslation} from "react-i18next";
@@ -7,28 +7,39 @@ import {useTranslation} from "react-i18next";
 import Coin from "../../../assets/icons/Coin.tsx";
 import UserIcon from "../../../assets/icons/UserIcon.tsx";
 
+// store
+import {useConfigStore} from "../../../store/configStore.ts";
+
 // styles
 import styles from './ProgressItem.style.ts';
 import {GRADIENT_DARK, GRADIENT_LIGHT} from "../../../constants/colors.ts";
 
 interface ProgressItemProps {
     item: any,
-    trophy: any
+    trophy: any,
+    // Highest level reached across the leaderboard — used as the ceiling for
+    // the progress-bar denominator (levelLength × topLevel). Defaults to this
+    // entry's own level so the bar still renders if the parent forgets to pass it.
+    topLevel?: number,
 }
 
-function ProgressItem({item, trophy}: ProgressItemProps) {
+function ProgressItem({item, trophy, topLevel}: ProgressItemProps) {
     const {t} = useTranslation();
+    const levelLength = useConfigStore(s => s.levelLength);
+
+    const ceilingLevel = Math.max(1, topLevel ?? item.level ?? 1);
+    const progress = Math.min(1, (item.score ?? 0) / Math.max(1, levelLength * ceilingLevel));
 
     const progressAnim = useRef(new Animated.Value(0)).current;
 
     useEffect(() => {
         Animated.timing(progressAnim, {
-            toValue: item.progress,
+            toValue: progress,
             duration: 700,
             delay: 200,
             useNativeDriver: false,
         }).start();
-    }, [item.progress]);
+    }, [progress]);
 
     const progressWidth = progressAnim.interpolate({
         inputRange: [0, 1],
@@ -42,7 +53,7 @@ function ProgressItem({item, trophy}: ProgressItemProps) {
         : `${t('level')} ${item.level}`;
     const levelText = trophy ? `${trophy} ${primaryText}` : primaryText;
 
-    const progressPercent = Math.round(item.progress * 100);
+    const progressPercent = Math.round(progress * 100);
 
     return (
         <LinearGradient

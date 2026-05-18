@@ -48,6 +48,7 @@ import GameMenuModal from '../../components/ui/Play/GameMenuModal.tsx';
 
 // store
 import {useGlobalStore} from '../../store/globalStore.ts';
+import {useConfigStore} from '../../store/configStore.ts';
 
 // styles
 import styles from './Play.style.ts';
@@ -56,7 +57,6 @@ import {GRADIENT_LIGHT, LILAC, ORANGE, ORANGE_RED} from '../../constants/colors.
 const {width, height} = Dimensions.get('window');
 
 const HEARTS_LENGTH = 7;
-const LEVEL_LENGTH = 30;
 const MAX_ITEMS = 3;
 const INITIAL_DURATION = 20;
 const DURATION_STEP = 20;
@@ -112,6 +112,8 @@ export default function Play() {
     // brief window before that resolves so box spawning never sees a null card.
     const card = storeCard ?? resolveCardEntry(null);
     const {coins, addCoins} = useGlobalStore();
+    const levelLength = useConfigStore(s => s.levelLength);
+    const setLevelLength = useConfigStore(s => s.setLevelLength);
     const patchStats = useAuthStore(s => s.patchStats);
 
     // ─── Refs ─────────────────────────────────────────────────────────────────
@@ -229,6 +231,9 @@ export default function Play() {
             const res = await gameService.startSession();
             sessionTokenRef.current = res.sessionToken;
             applyHelperCounts(res.helpers.bomb, res.helpers.slow, res.helpers.shield);
+            if (res.config?.TAPS_PER_LEVEL) {
+                setLevelLength(res.config.TAPS_PER_LEVEL);
+            }
         } catch {
             // Offline / server error — the round still plays locally (it just
             // won't be scored), falling back to the cached helper stock.
@@ -790,11 +795,11 @@ export default function Play() {
     }, []);
 
     useEffect(() => {
-        if (levelCount >= LEVEL_LENGTH) {
+        if (levelCount >= levelLength) {
             setLevelCount(0);
             levelUp();
         }
-    }, [levelCount]);
+    }, [levelCount, levelLength]);
 
     useEffect(() => {
         if (emptyHeartCount >= HEARTS_LENGTH) gameOver();
@@ -914,7 +919,7 @@ export default function Play() {
             </View>
 
             <View style={styles.zIndexStyle}>
-                <Progress length={LEVEL_LENGTH} coin={levelCount}/>
+                <Progress length={levelLength} coin={levelCount}/>
             </View>
 
 

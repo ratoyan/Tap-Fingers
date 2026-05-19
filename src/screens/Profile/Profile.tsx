@@ -7,9 +7,9 @@ import {
     TouchableOpacity,
     TouchableWithoutFeedback,
     Keyboard,
-    Alert,
     ActivityIndicator,
 } from 'react-native';
+import {notice} from '../../utils/notice.ts';
 import {useTranslation} from 'react-i18next';
 import LinearGradient from 'react-native-linear-gradient';
 import {launchImageLibrary} from 'react-native-image-picker';
@@ -91,16 +91,16 @@ function Profile() {
         } catch (error: any) {
             if (error.code === statusCodes.SIGN_IN_CANCELLED) return;
             if (error.code === statusCodes.IN_PROGRESS) {
-                Alert.alert('', 'Login already in progress');
+                notice.info('Loading', 'Login already in progress');
             } else {
-                Alert.alert('Sign-in failed', error?.message ?? 'Please try again');
+                notice.error('Sign-in failed', error?.message ?? 'Please try again');
             }
         }
     }
 
     async function signInWithApple() {
         if (!appleAuth.isSupported) {
-            Alert.alert('Apple Sign-In', 'Apple Sign-In is only available on iOS 13+.');
+            notice.info('Apple Sign-In', 'Apple Sign-In is only available on iOS 13+.');
             return;
         }
         try {
@@ -115,7 +115,7 @@ function Profile() {
             await setSession();
         } catch (error: any) {
             if (error?.code === appleAuth.Error.CANCELED) return;
-            Alert.alert('Sign-in failed', error?.message ?? 'Please try again');
+            notice.error('Sign-in failed', error?.message ?? 'Please try again');
         }
     }
 
@@ -125,7 +125,7 @@ function Profile() {
         const next = nameInput.trim();
         if (!next || next === player?.username) return;
         if (!/^[a-zA-Z0-9_]{3,32}$/.test(next)) {
-            Alert.alert('Invalid name', 'Use 3–32 letters, numbers or underscores.');
+            notice.error('Invalid name', 'Use 3–32 letters, numbers or underscores.');
             return;
         }
         setSavingName(true);
@@ -133,8 +133,9 @@ function Profile() {
             await userService.updateProfile(next);
             await setSession();
             Keyboard.dismiss();
+            notice.success('Saved', 'Your name has been updated.');
         } catch (error: any) {
-            Alert.alert('Could not save', error?.message ?? 'Please try again');
+            notice.error('Could not save', error?.message ?? 'Please try again');
         } finally {
             setSavingName(false);
         }

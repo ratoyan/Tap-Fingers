@@ -8,6 +8,7 @@ import StackNavigator from "./src/navigation/StackNavigator.tsx";
 import useMusicAppState from "./src/hooks/useMusicAppState.tsx";
 import {playMusic, stopMusic} from "./src/utils/helpers.ts";
 import UpdateModal from "./src/components/ui/UpdateModal/UpdateModal.tsx";
+import NoticeModal from "./src/components/ui/NoticeModal/NoticeModal.tsx";
 import Splash from "./src/screens/Splash/Splash.tsx";
 import {useAuthStore} from "./src/store/authStore.ts";
 import {DARK_PURPLE} from "./src/constants/colors.ts";
@@ -62,6 +63,7 @@ function App() {
         <NavigationContainer>
             <StackNavigator initialRouteName={authStatus === 'authed' ? 'Home' : 'Welcome'}/>
             <UpdateModal visible={showUpdate} storeUrl={storeUrl}/>
+            <NoticeModal/>
         </NavigationContainer>
     );
 }

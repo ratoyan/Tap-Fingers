@@ -1,5 +1,6 @@
 import React, {useRef, useEffect, useState} from 'react';
-import {ActivityIndicator, Alert, Animated, Dimensions} from 'react-native';
+import {ActivityIndicator, Animated, Dimensions} from 'react-native';
+import {notice} from '../../utils/notice.ts';
 import {useFocusEffect, useNavigation} from "@react-navigation/core";
 import {loadMusic, playMusic, releaseMusic} from "../../utils/helpers.ts";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -80,13 +81,13 @@ function Welcome() {
             await enterApp();
         } catch (error: any) {
             if (error.code === statusCodes.SIGN_IN_CANCELLED) {
-                Alert.alert('Cancelled', 'User cancelled login');
+                notice.info('Cancelled', 'User cancelled login');
             } else if (error.code === statusCodes.IN_PROGRESS) {
-                Alert.alert('Loading', 'Login already in progress');
+                notice.info('Loading', 'Login already in progress');
             } else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
-                Alert.alert('Error', 'Google Play Services not available');
+                notice.error('Error', 'Google Play Services not available');
             } else {
-                Alert.alert('Sign-in failed', error?.message ?? 'Please try again');
+                notice.error('Sign-in failed', error?.message ?? 'Please try again');
             }
         } finally {
             setBusy(false);
@@ -100,7 +101,7 @@ function Welcome() {
             await authService.guestLogin();
             await enterApp();
         } catch (error: any) {
-            Alert.alert('Sign-in failed', error?.message ?? 'Please try again');
+            notice.error('Sign-in failed', error?.message ?? 'Please try again');
         } finally {
             setBusy(false);
         }
@@ -109,7 +110,7 @@ function Welcome() {
     async function signInWithApple() {
         if (busy) return;
         if (!appleAuth.isSupported) {
-            Alert.alert('Apple Sign-In', 'Apple Sign-In is only available on iOS 13+.');
+            notice.info('Apple Sign-In', 'Apple Sign-In is only available on iOS 13+.');
             return;
         }
         setBusy(true);
@@ -124,7 +125,7 @@ function Welcome() {
             await enterApp();
         } catch (error: any) {
             if (error?.code !== appleAuth.Error.CANCELED) {
-                Alert.alert('Sign-in failed', error?.message ?? 'Please try again');
+                notice.error('Sign-in failed', error?.message ?? 'Please try again');
             }
         } finally {
             setBusy(false);

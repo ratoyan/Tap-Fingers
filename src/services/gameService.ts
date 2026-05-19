@@ -1,5 +1,5 @@
 import api from './api';
-import { GameConfig, GameStartResult, GameEndResult } from './types';
+import { GameConfig, GameEndResult } from './types';
 
 // ── Game service ──────────────────────────────────────────────────────────────
 // Backend: GET /api/game/config (public), POST /api/game/start,
@@ -12,11 +12,6 @@ import { GameConfig, GameStartResult, GameEndResult } from './types';
 
 export async function getGameConfig(): Promise<GameConfig> {
     const { data } = await api.get('/game/config');
-    return data.data;
-}
-
-export async function startSession(): Promise<GameStartResult> {
-    const { data } = await api.post('/game/start');
     return data.data;
 }
 

@@ -227,20 +227,9 @@ export default function Play() {
         maxComboRef.current = 0;
         sessionStartRef.current = Date.now();
         sessionTokenRef.current = null;
-        try {
-            const res = await gameService.startSession();
-            sessionTokenRef.current = res.sessionToken;
-            applyHelperCounts(res.helpers.bomb, res.helpers.slow, res.helpers.shield);
-            if (res.config?.TAPS_PER_LEVEL) {
-                setLevelLength(res.config.TAPS_PER_LEVEL);
-            }
-        } catch {
-            // Offline / server error — the round still plays locally (it just
-            // won't be scored), falling back to the cached helper stock.
-            sessionTokenRef.current = null;
-            loadBombCount();
-            loadHelperCounts();
-        }
+        setLevelLength(30);
+        loadBombCount();
+        loadHelperCounts();
     }
 
     // Submits the finished run to /game/end. Captures everything synchronously

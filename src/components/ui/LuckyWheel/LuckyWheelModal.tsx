@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState} from 'react';
+import React, {useEffect, useMemo, useRef, useState} from 'react';
 import {Animated, Easing, Modal, Text, TouchableOpacity, View} from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import LinearGradient from 'react-native-linear-gradient';
@@ -6,25 +6,55 @@ import Svg, {Circle, G, Line, Path, Text as SvgText} from 'react-native-svg';
 import {STORAGE_KEYS} from '../../../utils/storageKeys.ts';
 import {useAuthStore} from '../../../store/authStore.ts';
 import * as userService from '../../../services/userService.ts';
+import {LuckyWheelSegment} from '../../../services/types';
 import styles from './LuckyWheelModal.style.ts';
 
 const WHEEL_SIZE    = 310;
 const CENTER        = WHEEL_SIZE / 2;
 const RADIUS        = CENTER - 6;
 const NUM_SPINS     = 6;
-const SEGMENT_ANGLE = 45;
-const N             = 8;
 
-const SEGMENTS = [
-    {label: '10',  icon: '🪙', type: 'coins',  value: 10,  fill: '#9c4d00', textColor: '#FFD700'},
-    {label: '+1',  icon: '💣', type: 'bomb',   value: 1,   fill: '#6b1200', textColor: '#FF8C42'},
-    {label: '25',  icon: '🪙', type: 'coins',  value: 25,  fill: '#7a3b00', textColor: '#FFD700'},
-    {label: '+1',  icon: '🛡️', type: 'shield', value: 1,   fill: '#003d5c', textColor: '#00E5FF'},
-    {label: '50',  icon: '🪙', type: 'coins',  value: 50,  fill: '#9c4d00', textColor: '#FFD700'},
-    {label: '+1',  icon: '🐌', type: 'slow',   value: 1,   fill: '#3b006e', textColor: '#CE93D8'},
-    {label: '5',   icon: '🪙', type: 'coins',  value: 5,   fill: '#2a2a2a', textColor: '#bbb'},
-    {label: '100', icon: '🌟', type: 'coins',  value: 100, fill: '#5c1000', textColor: '#FF6B00'},
-];
+// Visual styling per prize type. Segments returned by the server only carry
+// {type, value} — colours/icons live here so the admin doesn't need to edit
+// hex codes. Alternating fills give the wheel its striped look (one per type).
+type SegType = 'coins' | 'bomb' | 'shield' | 'slow';
+
+const TYPE_VISUALS: Record<SegType, {icon: string; textColor: string; fills: string[]}> = {
+    coins:  {icon: '🪙',  textColor: '#FFD700', fills: ['#9c4d00', '#7a3b00', '#5c1000', '#2a2a2a']},
+    bomb:   {icon: '💣',  textColor: '#FF8C42', fills: ['#6b1200']},
+    shield: {icon: '🛡️', textColor: '#00E5FF', fills: ['#003d5c']},
+    slow:   {icon: '🐌',  textColor: '#CE93D8', fills: ['#3b006e']},
+};
+
+interface WheelSlice {
+    index:     number;
+    type:      SegType;
+    value:     number;
+    label:     string;
+    icon:      string;
+    fill:      string;
+    textColor: string;
+}
+
+function buildSlices(segments: LuckyWheelSegment[]): WheelSlice[] {
+    // Count occurrences of each type so we can rotate through that type's
+    // fill palette and avoid two same-shade slices landing next to each other.
+    const seenPerType: Record<string, number> = {};
+    return segments.map(seg => {
+        const t = seg.type as SegType;
+        const v = TYPE_VISUALS[t] ?? TYPE_VISUALS.coins;
+        const n = (seenPerType[t] = (seenPerType[t] ?? 0) + 1) - 1;
+        return {
+            index:     seg.index,
+            type:      t,
+            value:     seg.value,
+            label:     t === 'coins' ? String(seg.value) : `+${seg.value}`,
+            icon:      v.icon,
+            fill:      v.fills[n % v.fills.length],
+            textColor: v.textColor,
+        };
+    });
+}
 
 const RESULT_COLORS: Record<string, string[]> = {
     coins:  ['rgba(255,180,0,0.25)',  'rgba(255,100,0,0.12)', 'rgba(255,180,0,0.25)'],
@@ -51,27 +81,30 @@ const SPARKLES = Array.from({length: 10}, (_, i) => ({
     size: Math.random() * 3 + 1.5, dur: 1200 + Math.random() * 2000, delay: Math.random() * 2000,
 }));
 
-const RING_DOTS = Array.from({length: 24}, (_, i) => {
-    const deg = (i / 24) * 360;
-    const rad = ((deg - 90) * Math.PI) / 180;
-    const r   = CENTER - 1.5;
-    return {x: CENTER + r * Math.cos(rad), y: CENTER + r * Math.sin(rad), seg: Math.floor(i / 3) % N};
-});
-
 function polarToCart(cx: number, cy: number, r: number, deg: number) {
     const rad = ((deg - 90) * Math.PI) / 180;
     return {x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad)};
 }
-function slicePath(i: number) {
-    const startDeg = i * SEGMENT_ANGLE, endDeg = startDeg + SEGMENT_ANGLE;
+function slicePath(i: number, segAngle: number) {
+    const startDeg = i * segAngle, endDeg = startDeg + segAngle;
     const start = polarToCart(CENTER, CENTER, RADIUS, startDeg);
     const end   = polarToCart(CENTER, CENTER, RADIUS, endDeg);
-    return `M ${CENTER} ${CENTER} L ${start.x} ${start.y} A ${RADIUS} ${RADIUS} 0 0 1 ${end.x} ${end.y} Z`;
+    const largeArc = segAngle > 180 ? 1 : 0;
+    return `M ${CENTER} ${CENTER} L ${start.x} ${start.y} A ${RADIUS} ${RADIUS} 0 ${largeArc} 1 ${end.x} ${end.y} Z`;
 }
-function sliceTextPos(i: number, r: number) {
-    const midDeg = i * SEGMENT_ANGLE + SEGMENT_ANGLE / 2;
+function sliceTextPos(i: number, r: number, segAngle: number) {
+    const midDeg = i * segAngle + segAngle / 2;
     const rad    = ((midDeg - 90) * Math.PI) / 180;
     return {x: CENTER + r * Math.cos(rad), y: CENTER + r * Math.sin(rad)};
+}
+function buildRingDots(slices: WheelSlice[]) {
+    const n = slices.length || 1;
+    return Array.from({length: 24}, (_, i) => {
+        const deg = (i / 24) * 360;
+        const rad = ((deg - 90) * Math.PI) / 180;
+        const r   = CENTER - 1.5;
+        return {x: CENTER + r * Math.cos(rad), y: CENTER + r * Math.sin(rad), seg: Math.floor(i / 3) % n};
+    });
 }
 
 interface Props {
@@ -106,9 +139,15 @@ export default function LuckyWheelModal({visible, onClose, onSpinComplete}: Prop
     const spinIconLoopRef = useRef<Animated.CompositeAnimation | null>(null);
 
     const [spinning, setSpinning] = useState(false);
-    const [result,   setResult]   = useState<typeof SEGMENTS[0] | null>(null);
+    const [result,   setResult]   = useState<WheelSlice | null>(null);
     const [canSpin,  setCanSpin]  = useState(true);
     const [timeLeft, setTimeLeft] = useState('');
+    const [segments, setSegments] = useState<LuckyWheelSegment[] | null>(null);
+    const [loadError, setLoadError] = useState(false);
+
+    const slices       = useMemo(() => buildSlices(segments ?? []), [segments]);
+    const segmentAngle = slices.length > 0 ? 360 / slices.length : 360;
+    const ringDots     = useMemo(() => buildRingDots(slices), [slices]);
 
     useEffect(() => {
         if (visible) {
@@ -116,6 +155,13 @@ export default function LuckyWheelModal({visible, onClose, onSpinComplete}: Prop
             setResult(null);
             resultScale.setValue(0);
             resultOpacity.setValue(0);
+
+            // Pull the latest wheel layout each time the modal opens, so admin
+            // edits show up without an app restart.
+            setLoadError(false);
+            userService.getLuckyWheelSegments()
+                .then(setSegments)
+                .catch(() => { setSegments([]); setLoadError(true); });
 
             Animated.parallel([
                 Animated.spring(modalScale,   {toValue: 1, friction: 6, tension: 65, useNativeDriver: true}),
@@ -209,7 +255,7 @@ export default function LuckyWheelModal({visible, onClose, onSpinComplete}: Prop
     }
 
     async function spin() {
-        if (spinning || !canSpin) return;
+        if (spinning || !canSpin || slices.length === 0) return;
         setSpinning(true);
         setResult(null);
 
@@ -227,8 +273,8 @@ export default function LuckyWheelModal({visible, onClose, onSpinComplete}: Prop
         }
 
         const winnerIdx   = serverResult.index;
-        const jitter      = (Math.random() - 0.5) * (SEGMENT_ANGLE * 0.4);
-        const toTop       = 360 - winnerIdx * SEGMENT_ANGLE + jitter;
+        const jitter      = (Math.random() - 0.5) * (segmentAngle * 0.4);
+        const toTop       = 360 - winnerIdx * segmentAngle + jitter;
         const total       = spinValue.current + NUM_SPINS * 360 + toTop;
         spinValue.current = total;
 
@@ -237,7 +283,7 @@ export default function LuckyWheelModal({visible, onClose, onSpinComplete}: Prop
             easing: Easing.out(Easing.cubic), useNativeDriver: true,
         }).start(async () => {
             setSpinning(false);
-            setResult(SEGMENTS[winnerIdx]);
+            setResult(slices[winnerIdx] ?? null);
             setCanSpin(false);
             burstConfetti();
             Animated.parallel([
@@ -265,7 +311,8 @@ export default function LuckyWheelModal({visible, onClose, onSpinComplete}: Prop
             : result.type === 'bomb' ? '+1 Bomb!' : result.type === 'shield' ? '+1 Shield!' : '+1 Slow Mo!'
         : '';
 
-    const isActive = canSpin && !spinning;
+    const wheelReady = segments !== null && slices.length > 0;
+    const isActive = canSpin && !spinning && wheelReady;
     const glowColor = result ? RESULT_GLOW[result.type] ?? '#FFD700' : '#FFD700';
 
     return (
@@ -296,7 +343,13 @@ export default function LuckyWheelModal({visible, onClose, onSpinComplete}: Prop
                         {/* Header */}
                         <Text allowFontScaling={false} style={styles.title}>🎡  LUCKY WHEEL</Text>
                         {isActive && <Text allowFontScaling={false} style={styles.subtitle}>Your daily free spin!</Text>}
-                        {!canSpin && !spinning && <Text allowFontScaling={false} style={styles.subtitleDisabled}>⏰  Next spin in {timeLeft}</Text>}
+                        {!canSpin && !spinning && wheelReady && <Text allowFontScaling={false} style={styles.subtitleDisabled}>⏰  Next spin in {timeLeft}</Text>}
+                        {segments === null && <Text allowFontScaling={false} style={styles.subtitleDisabled}>Loading…</Text>}
+                        {segments !== null && slices.length === 0 && (
+                            <Text allowFontScaling={false} style={styles.subtitleDisabled}>
+                                {loadError ? 'Could not load wheel — try again later.' : 'Wheel is currently unavailable.'}
+                            </Text>
+                        )}
 
                         <View style={styles.divider}/>
 
@@ -312,17 +365,25 @@ export default function LuckyWheelModal({visible, onClose, onSpinComplete}: Prop
                                 borderRadius: CENTER, transform: [{rotate}],
                             }}>
                                 <Svg width={WHEEL_SIZE} height={WHEEL_SIZE}>
-                                    {SEGMENTS.map((seg, i) => <Path key={`s-${i}`} d={slicePath(i)} fill={seg.fill}/>)}
-                                    {SEGMENTS.map((_, i) => {
-                                        const pt = polarToCart(CENTER, CENTER, RADIUS, i * SEGMENT_ANGLE);
-                                        return <Line key={`l-${i}`} x1={CENTER} y1={CENTER} x2={pt.x} y2={pt.y} stroke="rgba(255,215,0,0.22)" strokeWidth={1.5}/>;
-                                    })}
+                                    {slices.length > 0 ? (
+                                        <>
+                                            {slices.map((seg, i) => <Path key={`s-${i}`} d={slicePath(i, segmentAngle)} fill={seg.fill}/>)}
+                                            {slices.map((_, i) => {
+                                                const pt = polarToCart(CENTER, CENTER, RADIUS, i * segmentAngle);
+                                                return <Line key={`l-${i}`} x1={CENTER} y1={CENTER} x2={pt.x} y2={pt.y} stroke="rgba(255,215,0,0.22)" strokeWidth={1.5}/>;
+                                            })}
+                                        </>
+                                    ) : (
+                                        <Circle cx={CENTER} cy={CENTER} r={RADIUS} fill="#2a1a4a"/>
+                                    )}
                                     <Circle cx={CENTER} cy={CENTER} r={RADIUS} fill="none" stroke="#FFD700" strokeWidth={5}/>
                                     <Circle cx={CENTER} cy={CENTER} r={RADIUS - 8} fill="none" stroke="rgba(255,215,0,0.18)" strokeWidth={1}/>
-                                    {RING_DOTS.map((dot, i) => <Circle key={`rd-${i}`} cx={dot.x} cy={dot.y} r={3} fill={SEGMENTS[dot.seg].textColor} opacity={0.85}/>)}
-                                    {SEGMENTS.map((seg, i) => {
-                                        const ip = sliceTextPos(i, RADIUS * 0.62);
-                                        const lp = sliceTextPos(i, RADIUS * 0.35);
+                                    {slices.length > 0 && ringDots.map((dot, i) => (
+                                        <Circle key={`rd-${i}`} cx={dot.x} cy={dot.y} r={3} fill={slices[dot.seg]?.textColor ?? '#FFD700'} opacity={0.85}/>
+                                    ))}
+                                    {slices.map((seg, i) => {
+                                        const ip = sliceTextPos(i, RADIUS * 0.62, segmentAngle);
+                                        const lp = sliceTextPos(i, RADIUS * 0.35, segmentAngle);
                                         return (
                                             <G key={`t-${i}`}>
                                                 <SvgText x={ip.x} y={ip.y + 7} textAnchor="middle" fontSize={24} fill={seg.textColor}>{seg.icon}</SvgText>
@@ -338,7 +399,7 @@ export default function LuckyWheelModal({visible, onClose, onSpinComplete}: Prop
                             {/* Spin button */}
                             <View style={[styles.spinButtonFixed, {left: CENTER - 38, top: CENTER - 38}]}>
                                 <Animated.View style={{transform: [{scale: isActive ? pulseAnim : 1}]}}>
-                                    <TouchableOpacity onPress={spin} disabled={spinning || !canSpin} activeOpacity={0.82}>
+                                    <TouchableOpacity onPress={spin} disabled={spinning || !canSpin || !wheelReady} activeOpacity={0.82}>
                                         <LinearGradient
                                             colors={isActive ? ['#FFE566', '#FFD700', '#cc8800'] : ['#333', '#222', '#111']}
                                             style={[styles.spinGradient, isActive ? styles.spinGradientActive : styles.spinGradientInactive]}

@@ -193,6 +193,12 @@ export interface LuckyWheelPrize {
     value: number;
 }
 
+export interface LuckyWheelSegment {
+    index: number;
+    type: 'coins' | HelperType;
+    value: number;
+}
+
 export interface LuckyWheelResult {
     index: number;
     prize: LuckyWheelPrize;

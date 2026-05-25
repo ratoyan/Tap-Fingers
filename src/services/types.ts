@@ -80,6 +80,9 @@ export interface ShopItem {
     priceCoins: number;
     priceGems: number;
     imageUrl: string | null;
+    iconSvg: string | null;
+    width: number | null;
+    height: number | null;
     sortOrder: number;
     isActive: boolean;
     isPremium: boolean;

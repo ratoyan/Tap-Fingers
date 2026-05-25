@@ -1,5 +1,6 @@
 ﻿import React, {useEffect, useRef} from "react";
 import {Animated, Image, Text, TouchableOpacity, View} from "react-native";
+import {SvgXml} from "react-native-svg";
 
 // icons
 import Coin from "../../../assets/icons/Coin.tsx";
@@ -95,6 +96,11 @@ function ShopItem({item, index = 0, handlePress, selected = false, purchased = f
     });
 
     const renderPreview = () => {
+        // Admin-authored SVG (backend) wins for cards — falls back to the
+        // on-device component below when the catalog item has no icon_svg.
+        if (item.type === 'card' && typeof item.iconSvg === 'string' && item.iconSvg.trim()) {
+            return <SvgXml xml={item.iconSvg} width={96} height={96}/>;
+        }
         switch (item.typeName) {
             case 'ballon':
                 return <Ballon width={110} height={110}/>;

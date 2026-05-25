@@ -1,5 +1,6 @@
 ﻿import React, {useCallback, useEffect, useRef, useState} from 'react';
 import Sound from 'react-native-sound';
+import LinearGradient from 'react-native-linear-gradient';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {useFocusEffect, useNavigation} from '@react-navigation/core';
 import {loadMusic, pauceMusic, playMusic, releaseMusic, stopMusic} from '../../utils/helpers.ts';
@@ -18,7 +19,8 @@ import {useShopStore} from '../../store/shopStore.ts';
 import {useAuthStore} from '../../store/authStore.ts';
 import * as gameService from '../../services/gameService.ts';
 import * as userService from '../../services/userService.ts';
-import {resolveCardEntry} from '../../data/shopVisuals.ts';
+import * as shopService from '../../services/shopService.ts';
+import {registerShopIcons, resolveCardEntry} from '../../data/shopVisuals.ts';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import uuId from 'react-native-uuid';
 import useMusicAppState from '../../hooks/useMusicAppState.tsx';
@@ -111,6 +113,10 @@ export default function Play() {
     // shopStore.card is hydrated from the server profile; guard against the
     // brief window before that resolves so box spawning never sees a null card.
     const card = storeCard ?? resolveCardEntry(null);
+    // Continuously-spawned boxes read the card through this ref so the spawn
+    // loop (whose effect deps don't include `card`) always uses the latest art.
+    const cardRef = useRef(card);
+    cardRef.current = card;
     const {coins, addCoins} = useGlobalStore();
     const levelLength = useConfigStore(s => s.levelLength);
     const setLevelLength = useConfigStore(s => s.setLevelLength);
@@ -745,6 +751,17 @@ export default function Play() {
             // an AsyncStorage fallback (loadBombCount/loadHelperCounts) on error.
             startGameSession();
 
+            // Fetch the latest card art and refresh the equipped card so the
+            // falling boxes render the admin SVG (best-effort — falls back to
+            // the bundled component if the catalog can't be reached).
+            shopService.getItems()
+                .then(items => {
+                    registerShopIcons(items);
+                    const key = useAuthStore.getState().stats?.activeCardKey;
+                    useShopStore.getState().setCard(resolveCardEntry(key));
+                })
+                .catch(() => {});
+
             const loadTimeout = setTimeout(() => loadMusic('games1.mp3'), 100);
             const playTimeout = setTimeout(() => playMusic(), 300);
 
@@ -793,6 +810,15 @@ export default function Play() {
     useEffect(() => {
         if (emptyHeartCount >= HEARTS_LENGTH) gameOver();
     }, [emptyHeartCount]);
+
+    // When the equipped card's admin art resolves (async catalog fetch), patch
+    // the boxes already on screen in place — SVG and its render width/height —
+    // so they pick up the admin size without repositioning or a fallback flash.
+    useEffect(() => {
+        setBoxesData(prev => prev.map(b => (
+            b.isBoom ? b : {...b, iconSvg: card.iconSvg, width: card.width, height: card.height}
+        )));
+    }, [card.iconSvg, card.width, card.height]);
 
     useEffect(() => {
         if (!isPlaying) {
@@ -882,7 +908,7 @@ export default function Play() {
                 const slots = MAX_ITEMS - prev.length;
                 if (slots <= 0) return prev;
                 const toSpawn = Math.min(slots, Math.random() < 0.35 ? 2 : 1);
-                return [...prev, ...Array.from({length: toSpawn}, () => spawnBox(card, durationRef.current))];
+                return [...prev, ...Array.from({length: toSpawn}, () => spawnBox(cardRef.current, durationRef.current))];
             });
         }, 800);
 
@@ -1133,9 +1159,14 @@ export default function Play() {
 
     if (background?.colors?.length) {
         return (
-            <View style={[styles.container, {backgroundColor: background.colors[levelIndex]}]}>
+            <LinearGradient
+                colors={background.colors}
+                start={{x: 0, y: 0}}
+                end={{x: 0, y: 1}}
+                style={styles.container}
+            >
                 {gameContent}
-            </View>
+            </LinearGradient>
         );
     }
 

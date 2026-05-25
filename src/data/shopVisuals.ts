@@ -44,6 +44,13 @@ export interface ShopEntry {
     animationType?: string;
     isRare?: boolean;
     isPremium: boolean;
+    // Admin-authored inline SVG artwork (backend shop_items.icon_svg). When set,
+    // the Shop renders this instead of the on-device card component.
+    iconSvg?: string | null;
+    // Admin-authored render size (backend shop_items.width/height). Consumed
+    // only by the Play screen's falling card; the Shop preview ignores it.
+    width?: number | null;
+    height?: number | null;
 }
 
 export const DEFAULT_CARD_KEY = 'card_default';
@@ -89,6 +96,25 @@ export const SHOP_VISUALS: Record<string, ShopVisual> = {
 const FALLBACK_CARD: ShopVisual = SHOP_VISUALS[DEFAULT_CARD_KEY];
 const FALLBACK_BG: ShopVisual = SHOP_VISUALS[DEFAULT_BG_KEY];
 
+// Admin-authored artwork (SVG + optional render size), keyed by shop-item key.
+// Populated from the shop catalog via registerShopIcons() so the key-only
+// resolvers below (used by Home/Play, which don't have the full server item)
+// can surface the same icon/dimensions the backend defines for the equipped card.
+interface ShopArt {
+    iconSvg?: string | null;
+    width?: number | null;
+    height?: number | null;
+}
+let shopArtByKey: Record<string, ShopArt> = {};
+
+export function registerShopIcons(items: ShopItem[]): void {
+    const next: Record<string, ShopArt> = {};
+    for (const it of items) {
+        next[it.key] = { iconSvg: it.iconSvg, width: it.width, height: it.height };
+    }
+    shopArtByKey = next;
+}
+
 // Merges a backend ShopItem with its visual into a UI-ready ShopEntry.
 export function mergeShopItem(item: ShopItem): ShopEntry {
     const isCard = item.type === 'card';
@@ -109,6 +135,9 @@ export function mergeShopItem(item: ShopItem): ShopEntry {
         animationType: visual.animationType,
         isRare: visual.isRare,
         isPremium: item.isPremium,
+        iconSvg: item.iconSvg ?? null,
+        width: item.width ?? null,
+        height: item.height ?? null,
     };
 }
 
@@ -123,11 +152,16 @@ function entryFromKey(
 ): ShopEntry {
     const resolvedKey = key && SHOP_VISUALS[key] ? key : defaultKey;
     const visual = SHOP_VISUALS[resolvedKey];
+    // Admin-created skins aren't in SHOP_VISUALS, so `resolvedKey` falls back to
+    // the default for the on-device visual — but the backend still has their
+    // artwork (SVG + size), keyed by the *real* equipped key. Prefer that so a
+    // custom card shows its own SVG/dimensions instead of the starter skin's.
+    const art = (key && shopArtByKey[key]) || shopArtByKey[resolvedKey] || {};
     return {
-        id: resolvedKey,
-        key: resolvedKey,
+        id: key || resolvedKey,
+        key: key || resolvedKey,
         serverId: -1,
-        title: resolvedKey,
+        title: key || resolvedKey,
         coins: '0',
         priceCoins: 0,
         type,
@@ -139,6 +173,9 @@ function entryFromKey(
         animationType: visual.animationType,
         isRare: visual.isRare,
         isPremium: false,
+        iconSvg: art.iconSvg ?? null,
+        width: art.width ?? null,
+        height: art.height ?? null,
     };
 }
 

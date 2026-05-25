@@ -1,5 +1,6 @@
 import React, {useMemo} from "react";
 import {Pressable, View, ViewStyle} from "react-native";
+import {SvgXml} from "react-native-svg";
 import {BoxType} from "../../../types/play.type.ts";
 import {ShopType} from "../../../types/shop.type.ts";
 import {BOMB_ORANGE, CYAN, DARK_NAVY, HOT_PINK} from "../../../constants/colors.ts";
@@ -49,6 +50,37 @@ function PlayBox({box, handlePress}: PlayBoxProps) {
         transform: baseTransform,
         ...goldenGlow,
     };
+
+    // 🖌️ Admin-authored SVG (backend icon_svg) — wins over the on-device art so
+    // the falling card matches what the Shop shows for the equipped skin. The
+    // render size honours the admin-set width/height (Play only); otherwise it
+    // falls back to the on-device size. The transform is recentred on those
+    // dimensions so a non-square card still pivots/positions correctly.
+    if (typeof box.iconSvg === "string" && box.iconSvg.trim()) {
+        // Admin-set width/height fill the box exactly (stretch); without them,
+        // keep the artwork's own aspect ratio.
+        const hasAdminDims = !!(box.width || box.height);
+        const svgW = box.width || box.size || 100;
+        const svgH = box.height || box.size || 100;
+        const svgTransform: ViewStyle["transform"] = [
+            {translateX: box.x + svgW / 2},
+            {translateY: box.y + svgH / 2},
+            ...((box?.isRotation && box?.rotation) ? [{rotate: `${box.rotation}deg`}] : []),
+            {translateX: -svgW / 2},
+            {translateY: -svgH / 2},
+        ];
+        const svgStyle: ViewStyle = {position: "absolute", transform: svgTransform, ...goldenGlow};
+        return box.isBoom ? (
+            <View style={svgStyle}>
+                <TrackIcon width={svgW} height={svgH} color={box.color ?? DARK_NAVY}/>
+            </View>
+        ) : (
+            <Pressable onPress={handlePress} style={[svgStyle, {zIndex: 1}]}>
+                <SvgXml xml={box.iconSvg} width={svgW} height={svgH}
+                    preserveAspectRatio={hasAdminDims ? "none" : "xMidYMid meet"}/>
+            </Pressable>
+        );
+    }
 
     // 🎈 Ballon
     if (typeName === "ballon") {

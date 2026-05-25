@@ -1,4 +1,4 @@
-﻿import React, {useCallback, useRef, useState} from "react";
+﻿import React, {useCallback, useMemo, useRef, useState} from "react";
 import {ActivityIndicator, Animated, ScrollView, Text, TouchableOpacity, View} from "react-native";
 import {useTranslation} from "react-i18next";
 import {useFocusEffect} from "@react-navigation/core";
@@ -9,7 +9,7 @@ import {HORIZONAL_OFFSET} from "../../constants/uiConstants.ts";
 // services / data
 import * as shopService from "../../services/shopService.ts";
 import * as userService from "../../services/userService.ts";
-import {DEFAULT_BG_KEY, DEFAULT_CARD_KEY, mergeShopItem, ShopEntry} from "../../data/shopVisuals.ts";
+import {DEFAULT_BG_KEY, DEFAULT_CARD_KEY, mergeShopItem, registerShopIcons, ShopEntry} from "../../data/shopVisuals.ts";
 
 // components
 import BackHeader from "../../components/ui/BackHeader/BackHeader.tsx";
@@ -53,6 +53,7 @@ function Shop() {
                 shopService.getInventory(),
             ]);
 
+            registerShopIcons(items);
             const merged = items.map(mergeShopItem);
             setCardItems(merged.filter(e => e.type === 'card'));
             setBgItems(merged.filter(e => e.type === 'background'));
@@ -124,7 +125,30 @@ function Shop() {
         outputRange: ['0%', '50%'],
     });
 
-    const items = activeTab === 'card' ? cardItems : bgItems;
+    // Card ordering: the equipped (active) card rises to the top; everything
+    // else is sorted by price, cheapest first. Recomputed when the equipped
+    // card changes so the list re-orders right after equipping.
+    const sortedCardItems = useMemo(() => {
+        return [...cardItems].sort((a, b) => {
+            const aActive = a.key === activeCardKey;
+            const bActive = b.key === activeCardKey;
+            if (aActive !== bActive) return aActive ? -1 : 1;
+            return a.priceCoins - b.priceCoins;
+        });
+    }, [cardItems, activeCardKey]);
+
+    // Background ordering mirrors the cards: equipped one on top, the rest by
+    // price ascending. Re-orders right after equipping a different background.
+    const sortedBgItems = useMemo(() => {
+        return [...bgItems].sort((a, b) => {
+            const aActive = a.key === activeBgKey;
+            const bActive = b.key === activeBgKey;
+            if (aActive !== bActive) return aActive ? -1 : 1;
+            return a.priceCoins - b.priceCoins;
+        });
+    }, [bgItems, activeBgKey]);
+
+    const items = activeTab === 'card' ? sortedCardItems : sortedBgItems;
     const activeKey = activeTab === 'card' ? activeCardKey : activeBgKey;
 
     return (

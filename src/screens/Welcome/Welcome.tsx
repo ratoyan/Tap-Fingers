@@ -1,15 +1,22 @@
 import React, {useRef, useEffect, useState} from 'react';
-import {ActivityIndicator, Animated, Dimensions} from 'react-native';
+import {
+    ActivityIndicator,
+    Animated,
+    Dimensions,
+    KeyboardAvoidingView,
+    Platform,
+    ScrollView,
+    StatusBar,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
+} from 'react-native';
 import {notice} from '../../utils/notice.ts';
 import {useFocusEffect, useNavigation} from "@react-navigation/core";
-import {loadMusic, playMusic, releaseMusic} from "../../utils/helpers.ts";
+import {loadMusic, playMusic, releaseMusic, stopMusic} from "../../utils/helpers.ts";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {STORAGE_KEYS} from "../../utils/storageKeys.ts";
-import {
-    GoogleSignin,
-    statusCodes,
-} from '@react-native-google-signin/google-signin';
-import {appleAuth} from '@invertase/react-native-apple-authentication';
 
 // services / store
 import * as authService from "../../services/authService.ts";
@@ -19,18 +26,51 @@ import {useAuthStore} from "../../store/authStore.ts";
 import Logo from "../../components/ui/Logo/Logo.tsx";
 import SocialAuthButton from "../../components/ui/SocialAuthButton/SocialAuthButton.tsx";
 import Ghost from "../../assets/icons/Ghost.tsx";
+import SoundIcon from "../../assets/icons/SoundIcon.tsx";
+import SoundOffIcon from "../../assets/icons/SoundOffIcon.tsx";
 
 // styles
 import styles from './Welcome.style.ts';
-import {DARK_PURPLE, MEDIUM_PURPLE, PURPLE} from "../../constants/colors.ts";
+import {
+    DARK_PURPLE,
+    GRADIENT_DARK,
+    GRADIENT_LIGHT,
+    MEDIUM_PURPLE,
+    PURPLE,
+} from "../../constants/colors.ts";
 import LinearGradient from 'react-native-linear-gradient';
 
 const {width, height} = Dimensions.get('window');
+
+type AuthMode = 'login' | 'register';
 
 function Welcome() {
     const navigation = useNavigation<any>();
     const setSession = useAuthStore(s => s.setSession);
     const [busy, setBusy] = useState(false);
+
+    // Email auth form
+    const [mode, setMode] = useState<AuthMode>('login');
+    const [name, setName] = useState('');
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+
+    // Music on/off (shares the same STORAGE_KEYS.MUSIC flag as Settings)
+    const [muted, setMuted] = useState(false);
+    const topInset = Platform.OS === 'android' ? (StatusBar.currentHeight ?? 0) : 44;
+
+    async function toggleSound() {
+        if (muted) {
+            await AsyncStorage.removeItem(STORAGE_KEYS.MUSIC);
+            loadMusic('gamemusic.wav');
+            playMusic();
+            setMuted(false);
+        } else {
+            await AsyncStorage.setItem(STORAGE_KEYS.MUSIC, 'STOP');
+            stopMusic();
+            setMuted(true);
+        }
+    }
 
     const fadeTitle   = useRef(new Animated.Value(0)).current;
     const slideButtons = useRef(new Animated.Value(50)).current;
@@ -61,37 +101,47 @@ function Welcome() {
         navigation.reset({index: 0, routes: [{name: 'Home'}]});
     }
 
-    async function signInWithGoogle() {
+    // Mirrors the backend validators (tapfingers-server auth.validator):
+    // username 3-32 alphanumeric/underscore, valid email, password 6-72.
+    function validateForm(): string | null {
+        const trimmedEmail = email.trim();
+        if (!/^\S+@\S+\.\S+$/.test(trimmedEmail)) {
+            return 'Please enter a valid email address';
+        }
+        if (password.length < 6) {
+            return 'Password must be at least 6 characters';
+        }
+        if (mode === 'register' && !/^[a-zA-Z0-9_]{3,32}$/.test(name.trim())) {
+            return 'Name must be 3-32 letters, numbers or underscores';
+        }
+        return null;
+    }
+
+    async function submitEmailAuth() {
         if (busy) return;
+        const validationError = validateForm();
+        if (validationError) {
+            notice.error('Check your details', validationError);
+            return;
+        }
         setBusy(true);
         try {
-            await GoogleSignin.hasPlayServices();
-            const userInfo: any = await GoogleSignin.signIn();
-
-            // google-signin v13+ nests the payload under `.data`.
-            let idToken: string | undefined =
-                userInfo?.data?.idToken ?? userInfo?.idToken;
-            if (!idToken) {
-                const tokens = await GoogleSignin.getTokens();
-                idToken = tokens?.idToken;
+            if (mode === 'register') {
+                await authService.emailRegister(name.trim(), email.trim(), password);
+            } else {
+                await authService.emailLogin(email.trim(), password);
             }
-            if (!idToken) throw new Error('Could not obtain Google ID token');
-
-            await authService.googleLogin(idToken);
             await enterApp();
         } catch (error: any) {
-            if (error.code === statusCodes.SIGN_IN_CANCELLED) {
-                notice.info('Cancelled', 'User cancelled login');
-            } else if (error.code === statusCodes.IN_PROGRESS) {
-                notice.info('Loading', 'Login already in progress');
-            } else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
-                notice.error('Error', 'Google Play Services not available');
-            } else {
-                notice.error('Sign-in failed', error?.message ?? 'Please try again');
-            }
+            notice.error('Sign-in failed', error?.message ?? 'Please try again');
         } finally {
             setBusy(false);
         }
+    }
+
+    function toggleMode() {
+        if (busy) return;
+        setMode(prev => (prev === 'login' ? 'register' : 'login'));
     }
 
     async function signInAsGuest() {
@@ -107,34 +157,11 @@ function Welcome() {
         }
     }
 
-    async function signInWithApple() {
-        if (busy) return;
-        if (!appleAuth.isSupported) {
-            notice.info('Apple Sign-In', 'Apple Sign-In is only available on iOS 13+.');
-            return;
-        }
-        setBusy(true);
-        try {
-            const resp = await appleAuth.performRequest({
-                requestedOperation: appleAuth.Operation.LOGIN,
-                requestedScopes: [appleAuth.Scope.EMAIL, appleAuth.Scope.FULL_NAME],
-            });
-            if (!resp.identityToken) throw new Error('No identity token from Apple');
-
-            await authService.appleLogin(resp.identityToken);
-            await enterApp();
-        } catch (error: any) {
-            if (error?.code !== appleAuth.Error.CANCELED) {
-                notice.error('Sign-in failed', error?.message ?? 'Please try again');
-            }
-        } finally {
-            setBusy(false);
-        }
-    }
-
     useFocusEffect(
         React.useCallback(() => {
             seedHelperDefaults();
+            // Reflect the stored music preference on the toggle.
+            AsyncStorage.getItem(STORAGE_KEYS.MUSIC).then(cancel => setMuted(!!cancel));
             releaseMusic();
             loadMusic("gamemusic.wav");
             const timeout = setTimeout(() => playMusic(), 200);
@@ -186,13 +213,6 @@ function Welcome() {
         ).start();
     }, []);
 
-    useEffect(() => {
-        GoogleSignin.configure({
-            webClientId: 'YOUR_WEB_CLIENT_ID.apps.googleusercontent.com',
-            offlineAccess: true,
-        });
-    }, []);
-
     const buttonsOpacity = slideButtons.interpolate({
         inputRange: [0, 50],
         outputRange: [1, 0],
@@ -203,55 +223,157 @@ function Welcome() {
             colors={[DARK_PURPLE, PURPLE, MEDIUM_PURPLE]}
             style={styles.container}
         >
-            {/* Title */}
-            <Animated.Text
-                style={[
-                    styles.title,
-                    {width: '50%', textAlign: 'center'},
-                    {
-                        opacity: fadeTitle,
-                        transform: [{
-                            translateY: fadeTitle.interpolate({
-                                inputRange: [0, 1],
-                                outputRange: [20, 0],
-                            }),
-                        }],
-                    },
-                ]}
+            {/* Sound on/off — top right */}
+            <TouchableOpacity
+                style={[styles.soundButton, {top: topInset + 8}]}
+                onPress={toggleSound}
+                activeOpacity={0.8}
+                hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}
+                accessibilityRole="button"
+                accessibilityLabel={muted ? 'Turn sound on' : 'Turn sound off'}
             >
-                Tap Fingers
-            </Animated.Text>
+                {muted
+                    ? <SoundOffIcon size={24} color="#fff" />
+                    : <SoundIcon size={24} color="#fff" />}
+            </TouchableOpacity>
 
-            {/* Logo + Ghost side by side */}
-            <Animated.View style={[styles.logoRow, {transform: [{translateY: floatAnim}]}]}>
-                <Logo
-                    width={width / 1.5}
-                    height={height / 2.6}
-                />
-
-                {/* Ghost peeking from the side */}
-                <Animated.View
-                    style={[
-                        styles.ghostWrap,
-                        {
-                            opacity: ghostOpacity,
-                            transform: [{translateY: ghostFloat}],
-                        },
-                    ]}
+            <KeyboardAvoidingView
+                style={styles.flex}
+                behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+            >
+                <ScrollView
+                    contentContainerStyle={styles.scrollContent}
+                    keyboardShouldPersistTaps="handled"
+                    showsVerticalScrollIndicator={false}
                 >
-                    <Ghost size={72} color="rgba(255,255,255,0.88)" eyeColor="#6a0dad" />
-                </Animated.View>
-            </Animated.View>
+                    {/* Title */}
+                    <Animated.Text
+                        style={[
+                            styles.title,
+                            {width: '50%', textAlign: 'center'},
+                            {
+                                opacity: fadeTitle,
+                                transform: [{
+                                    translateY: fadeTitle.interpolate({
+                                        inputRange: [0, 1],
+                                        outputRange: [20, 0],
+                                    }),
+                                }],
+                            },
+                        ]}
+                    >
+                        Tap Fingers
+                    </Animated.Text>
 
-            {/* Buttons */}
-            <Animated.View
-                style={[styles.buttonsWrap, {transform: [{translateY: slideButtons}], opacity: buttonsOpacity}]}
-            >
-                {busy && <ActivityIndicator size="large" color="#FFD700" style={{marginBottom: 12}}/>}
-                <SocialAuthButton type="google" handlePress={signInWithGoogle} />
-                <SocialAuthButton type="apple"  handlePress={signInWithApple} />
-                <SocialAuthButton type="ghost"  handlePress={signInAsGuest} />
-            </Animated.View>
+                    {/* Logo + Ghost side by side */}
+                    <Animated.View style={[styles.logoRow, {transform: [{translateY: floatAnim}]}]}>
+                        <Logo
+                            width={width / 1.8}
+                            height={height / 3.6}
+                        />
+
+                        {/* Ghost peeking from the side */}
+                        <Animated.View
+                            style={[
+                                styles.ghostWrap,
+                                {
+                                    opacity: ghostOpacity,
+                                    transform: [{translateY: ghostFloat}],
+                                },
+                            ]}
+                        >
+                            <Ghost size={72} color="rgba(255,255,255,0.88)" eyeColor="#6a0dad" />
+                        </Animated.View>
+                    </Animated.View>
+
+                    {/* Email auth form */}
+                    <Animated.View
+                        style={[styles.buttonsWrap, {transform: [{translateY: slideButtons}], opacity: buttonsOpacity}]}
+                    >
+                        {mode === 'register' && (
+                            <TextInput
+                                style={styles.input}
+                                placeholder="Name"
+                                placeholderTextColor="rgba(255,255,255,0.5)"
+                                value={name}
+                                onChangeText={setName}
+                                autoCapitalize="none"
+                                autoCorrect={false}
+                                editable={!busy}
+                                allowFontScaling={false}
+                                returnKeyType="next"
+                            />
+                        )}
+
+                        <TextInput
+                            style={styles.input}
+                            placeholder="Email"
+                            placeholderTextColor="rgba(255,255,255,0.5)"
+                            value={email}
+                            onChangeText={setEmail}
+                            keyboardType="email-address"
+                            autoCapitalize="none"
+                            autoCorrect={false}
+                            editable={!busy}
+                            allowFontScaling={false}
+                            returnKeyType="next"
+                        />
+
+                        <TextInput
+                            style={styles.input}
+                            placeholder="Password"
+                            placeholderTextColor="rgba(255,255,255,0.5)"
+                            value={password}
+                            onChangeText={setPassword}
+                            secureTextEntry
+                            autoCapitalize="none"
+                            autoCorrect={false}
+                            editable={!busy}
+                            allowFontScaling={false}
+                            returnKeyType="done"
+                            onSubmitEditing={submitEmailAuth}
+                        />
+
+                        <TouchableOpacity
+                            style={styles.primaryButton}
+                            onPress={submitEmailAuth}
+                            disabled={busy}
+                            activeOpacity={0.85}
+                        >
+                            <LinearGradient
+                                colors={[GRADIENT_LIGHT, GRADIENT_DARK]}
+                                start={{x: 0, y: 0}}
+                                end={{x: 1, y: 0}}
+                                style={styles.primaryGradient}
+                            >
+                                {busy
+                                    ? <ActivityIndicator color="#fff" />
+                                    : (
+                                        <Text allowFontScaling={false} style={styles.primaryText}>
+                                            {mode === 'register' ? 'Create Account' : 'Sign In'}
+                                        </Text>
+                                    )}
+                            </LinearGradient>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                            onPress={toggleMode}
+                            hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}
+                        >
+                            <Text allowFontScaling={false} style={styles.toggleText}>
+                                {mode === 'login' ? "Don't have an account? " : 'Already have an account? '}
+                                <Text style={styles.toggleTextAccent}>
+                                    {mode === 'login' ? 'Sign up' : 'Sign in'}
+                                </Text>
+                            </Text>
+                        </TouchableOpacity>
+
+                        <View style={styles.divider} />
+
+                        <SocialAuthButton type="ghost" handlePress={signInAsGuest} />
+                    </Animated.View>
+                </ScrollView>
+            </KeyboardAvoidingView>
         </LinearGradient>
     );
 }

@@ -1,21 +1,23 @@
-﻿import React, {useEffect, useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {
     View,
     Text,
     TextInput,
     Image,
     TouchableOpacity,
-    TouchableWithoutFeedback,
+    Pressable,
+    ScrollView,
+    KeyboardAvoidingView,
     Keyboard,
+    Platform,
     ActivityIndicator,
 } from 'react-native';
 import {notice} from '../../utils/notice.ts';
 import {useTranslation} from 'react-i18next';
+import {useNavigation} from '@react-navigation/core';
 import LinearGradient from 'react-native-linear-gradient';
 import {launchImageLibrary} from 'react-native-image-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {GoogleSignin, statusCodes} from '@react-native-google-signin/google-signin';
-import {appleAuth} from '@invertase/react-native-apple-authentication';
 
 // services / store
 import * as authService from '../../services/authService.ts';
@@ -26,19 +28,21 @@ import {useAuthStore} from '../../store/authStore.ts';
 import BackHeader from '../../components/ui/BackHeader/BackHeader.tsx';
 import PhotoPickerSheet from '../../components/ui/PhotoPickerSheet/PhotoPickerSheet.tsx';
 import CameraModal from '../../components/ui/CameraModal/CameraModal.tsx';
-import SocialAuthButton from '../../components/ui/SocialAuthButton/SocialAuthButton.tsx';
 import Ghost from '../../assets/icons/Ghost.tsx';
-import UserIcon from '../../assets/icons/UserIcon.tsx';
+
+// data
+import {avatarForId} from '../../data/avatars.ts';
 
 // styles
 import styles from './Profile.style.ts';
-import {GRADIENT_LIGHT, PURPLE, VIOLET} from '../../constants/colors.ts';
+import {GRADIENT_LIGHT, ORCHID, PURPLE, PURPLE_DARK, VIOLET} from '../../constants/colors.ts';
 
 // The profile photo has no backend counterpart — it stays device-local.
 const STORAGE_KEY_PHOTO = 'profile_photo';
 
 function Profile() {
     const {t} = useTranslation();
+    const navigation = useNavigation<any>();
     const player = useAuthStore(s => s.player);
     const stats = useAuthStore(s => s.stats);
     const setSession = useAuthStore(s => s.setSession);
@@ -49,15 +53,35 @@ function Profile() {
     const [nameInput,     setNameInput]     = useState('');
     const [savingName,    setSavingName]    = useState(false);
 
+    // Guest → email/password sign-up form
+    const [regName,     setRegName]     = useState('');
+    const [regEmail,    setRegEmail]    = useState('');
+    const [regPassword, setRegPassword] = useState('');
+    const [linking,     setLinking]     = useState(false);
+    const [focusedField, setFocusedField] = useState<'name' | 'email' | 'password' | null>(null);
+
+    // Change email (email accounts only)
+    const [emailPwd,    setEmailPwd]    = useState('');
+    const [newEmail,    setNewEmail]    = useState('');
+    const [savingEmail, setSavingEmail] = useState(false);
+
+    // Change password (email accounts only)
+    const [curPwd,    setCurPwd]    = useState('');
+    const [newPwd,    setNewPwd]    = useState('');
+    const [savingPwd, setSavingPwd] = useState(false);
+
+    // Delete account
+    const [deleteModal,    setDeleteModal]    = useState(false);
+    const [deletePassword, setDeletePassword] = useState('');
+    const [deleting,       setDeleting]       = useState(false);
+
     const isGuest = player?.accountType === 'guest';
+    const isEmailAccount = player?.accountType === 'email';
     const displayName = player?.username || 'Player';
+    // Stable per-user avatar, shown when no photo has been uploaded.
+    const avatar = avatarForId(player?.id);
 
     useEffect(() => {
-        GoogleSignin.configure({
-            webClientId: 'YOUR_WEB_CLIENT_ID.apps.googleusercontent.com',
-            offlineAccess: true,
-        });
-
         (async () => {
             const savedPhoto = await AsyncStorage.getItem(STORAGE_KEY_PHOTO);
             if (savedPhoto) setPhotoUri(savedPhoto);
@@ -71,51 +95,40 @@ function Profile() {
 
     // ── Auth: upgrade a guest account ───────────────────────
 
-    async function signInWithGoogle() {
-        try {
-            await GoogleSignin.hasPlayServices();
-            const userInfo: any = await GoogleSignin.signIn();
-
-            let idToken: string | undefined =
-                userInfo?.data?.idToken ?? userInfo?.idToken;
-            if (!idToken) {
-                const tokens = await GoogleSignin.getTokens();
-                idToken = tokens?.idToken;
-            }
-            if (!idToken) throw new Error('Could not obtain Google ID token');
-
-            // Links the Google identity onto the current guest account and
-            // merges its progress server-side.
-            await authService.linkGoogle(idToken);
-            await setSession();
-        } catch (error: any) {
-            if (error.code === statusCodes.SIGN_IN_CANCELLED) return;
-            if (error.code === statusCodes.IN_PROGRESS) {
-                notice.info('Loading', 'Login already in progress');
-            } else {
-                notice.error('Sign-in failed', error?.message ?? 'Please try again');
-            }
+    // Mirrors the backend validators (tapfingers-server auth.validator):
+    // username 3-32 alphanumeric/underscore, valid email, password 6-72.
+    function validateRegistration(): string | null {
+        if (!/^[a-zA-Z0-9_]{3,32}$/.test(regName.trim())) {
+            return 'Name must be 3-32 letters, numbers or underscores';
         }
+        if (!/^\S+@\S+\.\S+$/.test(regEmail.trim())) {
+            return 'Please enter a valid email address';
+        }
+        if (regPassword.length < 6) {
+            return 'Password must be at least 6 characters';
+        }
+        return null;
     }
 
-    async function signInWithApple() {
-        if (!appleAuth.isSupported) {
-            notice.info('Apple Sign-In', 'Apple Sign-In is only available on iOS 13+.');
+    async function handleEmailSignUp() {
+        if (linking) return;
+        const validationError = validateRegistration();
+        if (validationError) {
+            notice.error('Check your details', validationError);
             return;
         }
+        setLinking(true);
         try {
-            const resp = await appleAuth.performRequest({
-                requestedOperation: appleAuth.Operation.LOGIN,
-                requestedScopes: [appleAuth.Scope.EMAIL, appleAuth.Scope.FULL_NAME],
-            });
-            if (!resp.identityToken) throw new Error('No identity token from Apple');
-
-            // Links the Apple identity onto the current guest account.
-            await authService.linkApple(resp.identityToken);
+            // Upgrades the current guest account to an email/password account,
+            // keeping all of the guest's progress server-side.
+            await authService.linkEmail(regName.trim(), regEmail.trim(), regPassword);
+            Keyboard.dismiss();
             await setSession();
+            notice.success('Welcome!', 'Your progress is now saved to your account.');
         } catch (error: any) {
-            if (error?.code === appleAuth.Error.CANCELED) return;
-            notice.error('Sign-in failed', error?.message ?? 'Please try again');
+            notice.error('Sign-up failed', error?.message ?? 'Please try again');
+        } finally {
+            setLinking(false);
         }
     }
 
@@ -138,6 +151,80 @@ function Profile() {
             notice.error('Could not save', error?.message ?? 'Please try again');
         } finally {
             setSavingName(false);
+        }
+    }
+
+    // ── Email / password (email accounts only) ──────────────
+
+    async function handleChangeEmail() {
+        if (savingEmail) return;
+        const email = newEmail.trim();
+        if (emailPwd.length < 6) {
+            notice.error('Password required', 'Enter your current password.');
+            return;
+        }
+        if (!/^\S+@\S+\.\S+$/.test(email)) {
+            notice.error('Invalid email', 'Please enter a valid email address.');
+            return;
+        }
+        setSavingEmail(true);
+        try {
+            await userService.changeEmail(emailPwd, email);
+            await setSession();
+            setEmailPwd('');
+            setNewEmail('');
+            Keyboard.dismiss();
+            notice.success('Saved', 'Your email has been updated.');
+        } catch (error: any) {
+            notice.error('Could not update', error?.message ?? 'Please try again');
+        } finally {
+            setSavingEmail(false);
+        }
+    }
+
+    async function handleChangePassword() {
+        if (savingPwd) return;
+        if (curPwd.length < 6) {
+            notice.error('Password required', 'Enter your current password.');
+            return;
+        }
+        if (newPwd.length < 6) {
+            notice.error('Weak password', 'New password must be at least 6 characters.');
+            return;
+        }
+        setSavingPwd(true);
+        try {
+            await userService.changePassword(curPwd, newPwd);
+            setCurPwd('');
+            setNewPwd('');
+            Keyboard.dismiss();
+            notice.success('Saved', 'Your password has been updated.');
+        } catch (error: any) {
+            notice.error('Could not update', error?.message ?? 'Please try again');
+        } finally {
+            setSavingPwd(false);
+        }
+    }
+
+    // ── Delete account ──────────────────────────────────────
+
+    async function handleDeleteAccount() {
+        if (deleting) return;
+        if (isEmailAccount && deletePassword.length < 6) {
+            notice.error('Password required', 'Enter your password to delete your account.');
+            return;
+        }
+        setDeleting(true);
+        try {
+            await userService.deleteAccount(isEmailAccount ? deletePassword : undefined);
+            // Clear the session + device-local data, then drop back to Welcome.
+            await useAuthStore.getState().logout();
+            await AsyncStorage.clear();
+            setDeleteModal(false);
+            navigation.reset({index: 0, routes: [{name: 'Welcome'}]});
+        } catch (error: any) {
+            notice.error('Could not delete', error?.message ?? 'Please try again');
+            setDeleting(false);
         }
     }
 
@@ -173,15 +260,23 @@ function Profile() {
 
     return (
         <LinearGradient
-            colors={[GRADIENT_LIGHT, PURPLE]}
+            colors={[PURPLE_DARK, PURPLE]}
             style={styles.container}
             accessible={true}
             accessibilityLabel="Profile screen"
         >
             <BackHeader title={`👨‍🎓 ${t('profile')}`} />
 
-            <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-                <View style={styles.scrollContainer}>
+            <KeyboardAvoidingView
+                style={{flex: 1}}
+                behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+            >
+                <ScrollView
+                    contentContainerStyle={styles.scrollContainer}
+                    keyboardShouldPersistTaps="handled"
+                    keyboardDismissMode="on-drag"
+                    showsVerticalScrollIndicator={false}
+                >
 
                     {isGuest ? (
                         /* ── Guest view ──────────────────────── */
@@ -192,20 +287,91 @@ function Profile() {
 
                             <Text allowFontScaling={false} style={styles.guestName}>👻 Guest Player</Text>
                             <Text allowFontScaling={false} style={styles.guestHint}>
-                                Sign in to save your progress
+                                Create an account to save your progress
                             </Text>
 
-                            {/* Divider */}
-                            <View style={styles.dividerRow}>
-                                <View style={styles.dividerLine} />
-                                <Text allowFontScaling={false} style={styles.dividerText}>Sign in with</Text>
-                                <View style={styles.dividerLine} />
-                            </View>
+                            {/* Email sign-up form */}
+                            <View style={styles.guestForm}>
+                                <Text allowFontScaling={false} style={styles.formTitle}>✨ Create your account</Text>
 
-                            {/* Social buttons */}
-                            <View style={styles.authButtons}>
-                                <SocialAuthButton type="google" handlePress={signInWithGoogle} />
-                                <SocialAuthButton type="apple"  handlePress={signInWithApple} />
+                                <View style={[styles.fieldRow, focusedField === 'name' && styles.fieldRowFocused]}>
+                                    <Text allowFontScaling={false} style={styles.fieldIcon}>👤</Text>
+                                    <TextInput
+                                        style={styles.fieldInput}
+                                        placeholder="Name"
+                                        placeholderTextColor="rgba(255,255,255,0.45)"
+                                        value={regName}
+                                        onChangeText={setRegName}
+                                        onFocus={() => setFocusedField('name')}
+                                        onBlur={() => setFocusedField(null)}
+                                        autoCapitalize="none"
+                                        autoCorrect={false}
+                                        editable={!linking}
+                                        allowFontScaling={false}
+                                        returnKeyType="next"
+                                    />
+                                </View>
+
+                                <View style={[styles.fieldRow, focusedField === 'email' && styles.fieldRowFocused]}>
+                                    <Text allowFontScaling={false} style={styles.fieldIcon}>✉️</Text>
+                                    <TextInput
+                                        style={styles.fieldInput}
+                                        placeholder="Email"
+                                        placeholderTextColor="rgba(255,255,255,0.45)"
+                                        value={regEmail}
+                                        onChangeText={setRegEmail}
+                                        onFocus={() => setFocusedField('email')}
+                                        onBlur={() => setFocusedField(null)}
+                                        keyboardType="email-address"
+                                        autoCapitalize="none"
+                                        autoCorrect={false}
+                                        editable={!linking}
+                                        allowFontScaling={false}
+                                        returnKeyType="next"
+                                    />
+                                </View>
+
+                                <View style={[styles.fieldRow, focusedField === 'password' && styles.fieldRowFocused]}>
+                                    <Text allowFontScaling={false} style={styles.fieldIcon}>🔒</Text>
+                                    <TextInput
+                                        style={styles.fieldInput}
+                                        placeholder="Password"
+                                        placeholderTextColor="rgba(255,255,255,0.45)"
+                                        value={regPassword}
+                                        onChangeText={setRegPassword}
+                                        onFocus={() => setFocusedField('password')}
+                                        onBlur={() => setFocusedField(null)}
+                                        secureTextEntry
+                                        autoCapitalize="none"
+                                        autoCorrect={false}
+                                        editable={!linking}
+                                        allowFontScaling={false}
+                                        returnKeyType="done"
+                                        onSubmitEditing={handleEmailSignUp}
+                                    />
+                                </View>
+
+                                <TouchableOpacity
+                                    style={styles.linkButton}
+                                    onPress={handleEmailSignUp}
+                                    disabled={linking}
+                                    activeOpacity={0.85}
+                                >
+                                    <LinearGradient
+                                        colors={[ORCHID, VIOLET]}
+                                        start={{x: 0, y: 0}}
+                                        end={{x: 1, y: 1}}
+                                        style={styles.linkButtonGradient}
+                                    >
+                                        {linking
+                                            ? <ActivityIndicator color="#fff" />
+                                            : <Text allowFontScaling={false} style={styles.linkButtonText}>Create Account</Text>}
+                                    </LinearGradient>
+                                </TouchableOpacity>
+
+                                <Text allowFontScaling={false} style={styles.formFootnote}>
+                                    🔒 Your progress stays safe and synced
+                                </Text>
                             </View>
                         </View>
                     ) : (
@@ -227,9 +393,16 @@ function Profile() {
                                                 accessibilityLabel="User profile picture"
                                             />
                                         ) : (
-                                            <View style={[styles.avatar, styles.avatarPlaceholder]}>
-                                                <UserIcon size={70} color="rgba(255,255,255,0.9)"/>
-                                            </View>
+                                            <LinearGradient
+                                                colors={avatar.colors}
+                                                start={{x: 0, y: 0}}
+                                                end={{x: 1, y: 1}}
+                                                style={[styles.avatar, styles.avatarPlaceholder]}
+                                            >
+                                                <Text allowFontScaling={false} style={styles.avatarEmoji}>
+                                                    {avatar.emoji}
+                                                </Text>
+                                            </LinearGradient>
                                         )}
                                         <View style={styles.cameraOverlay}>
                                             <Text allowFontScaling={false} style={styles.cameraIcon}>📷</Text>
@@ -275,6 +448,12 @@ function Profile() {
                                     <Text allowFontScaling={false} style={statKey}>Account type</Text>
                                     <Text allowFontScaling={false} style={statVal}>{player?.accountType ?? '—'}</Text>
                                 </View>
+                                {!!player?.email && (
+                                    <View style={statRow}>
+                                        <Text allowFontScaling={false} style={statKey}>Email</Text>
+                                        <Text allowFontScaling={false} style={statVal} numberOfLines={1}>{player.email}</Text>
+                                    </View>
+                                )}
                                 <View style={statRow}>
                                     <Text allowFontScaling={false} style={statKey}>High score</Text>
                                     <Text allowFontScaling={false} style={statVal}>{stats?.highScore ?? 0}</Text>
@@ -288,11 +467,106 @@ function Profile() {
                                     <Text allowFontScaling={false} style={statVal}>{stats?.coins ?? 0}</Text>
                                 </View>
                             </View>
+
+                            {/* Change email — email accounts only */}
+                            {isEmailAccount && (
+                                <View style={[styles.inputCard, {marginTop: 14}]}>
+                                    <Text allowFontScaling={false} style={styles.inputLabel}>✉️  Change Email</Text>
+                                    <TextInput
+                                        value={emailPwd}
+                                        onChangeText={setEmailPwd}
+                                        style={styles.accountInput}
+                                        placeholder="Current password"
+                                        placeholderTextColor={VIOLET}
+                                        secureTextEntry
+                                        autoCapitalize="none"
+                                        autoCorrect={false}
+                                        editable={!savingEmail}
+                                        allowFontScaling={false}
+                                    />
+                                    <TextInput
+                                        value={newEmail}
+                                        onChangeText={setNewEmail}
+                                        style={styles.accountInput}
+                                        placeholder="New email"
+                                        placeholderTextColor={VIOLET}
+                                        keyboardType="email-address"
+                                        autoCapitalize="none"
+                                        autoCorrect={false}
+                                        editable={!savingEmail}
+                                        allowFontScaling={false}
+                                        returnKeyType="done"
+                                        onSubmitEditing={handleChangeEmail}
+                                    />
+                                    <TouchableOpacity
+                                        onPress={handleChangeEmail}
+                                        disabled={savingEmail}
+                                        activeOpacity={0.8}
+                                        style={[saveBtn, savingEmail && {opacity: 0.4}]}
+                                    >
+                                        {savingEmail
+                                            ? <ActivityIndicator size="small" color="#fff"/>
+                                            : <Text allowFontScaling={false} style={saveBtnText}>Update Email</Text>}
+                                    </TouchableOpacity>
+                                </View>
+                            )}
+
+                            {/* Change password — email accounts only */}
+                            {isEmailAccount && (
+                                <View style={[styles.inputCard, {marginTop: 14}]}>
+                                    <Text allowFontScaling={false} style={styles.inputLabel}>🔒  Change Password</Text>
+                                    <TextInput
+                                        value={curPwd}
+                                        onChangeText={setCurPwd}
+                                        style={styles.accountInput}
+                                        placeholder="Current password"
+                                        placeholderTextColor={VIOLET}
+                                        secureTextEntry
+                                        autoCapitalize="none"
+                                        autoCorrect={false}
+                                        editable={!savingPwd}
+                                        allowFontScaling={false}
+                                    />
+                                    <TextInput
+                                        value={newPwd}
+                                        onChangeText={setNewPwd}
+                                        style={styles.accountInput}
+                                        placeholder="New password"
+                                        placeholderTextColor={VIOLET}
+                                        secureTextEntry
+                                        autoCapitalize="none"
+                                        autoCorrect={false}
+                                        editable={!savingPwd}
+                                        allowFontScaling={false}
+                                        returnKeyType="done"
+                                        onSubmitEditing={handleChangePassword}
+                                    />
+                                    <TouchableOpacity
+                                        onPress={handleChangePassword}
+                                        disabled={savingPwd}
+                                        activeOpacity={0.8}
+                                        style={[saveBtn, savingPwd && {opacity: 0.4}]}
+                                    >
+                                        {savingPwd
+                                            ? <ActivityIndicator size="small" color="#fff"/>
+                                            : <Text allowFontScaling={false} style={saveBtnText}>Update Password</Text>}
+                                    </TouchableOpacity>
+                                </View>
+                            )}
+
+                            {/* Delete account — bottom, danger zone */}
+                            <TouchableOpacity
+                                style={styles.deleteButton}
+                                onPress={() => { setDeletePassword(''); setDeleteModal(true); }}
+                                activeOpacity={0.85}
+                            >
+                                <Text allowFontScaling={false} style={styles.deleteButtonText}>🗑  Delete Account</Text>
+                            </TouchableOpacity>
                         </>
                     )}
 
-                </View>
-            </TouchableWithoutFeedback>
+                </ScrollView>
+            </KeyboardAvoidingView>
 
             {!isGuest && (
                 <PhotoPickerSheet
@@ -308,6 +582,57 @@ function Profile() {
                 onCapture={handleCameraCapture}
                 onClose={() => setCameraVisible(false)}
             />
+
+            {/* Delete account confirmation */}
+            {deleteModal && (
+                <Pressable
+                    style={styles.modalOverlay}
+                    onPress={() => !deleting && setDeleteModal(false)}
+                >
+                    <Pressable style={styles.modalCard} onPress={() => {}}>
+                        <Text allowFontScaling={false} style={styles.modalTitle}>⚠️ Delete account?</Text>
+                        <Text allowFontScaling={false} style={styles.modalMessage}>
+                            This permanently deletes your account and all of your progress. This cannot be undone.
+                        </Text>
+
+                        {isEmailAccount && (
+                            <TextInput
+                                style={styles.modalInput}
+                                placeholder="Enter your password"
+                                placeholderTextColor="rgba(255,255,255,0.45)"
+                                value={deletePassword}
+                                onChangeText={setDeletePassword}
+                                secureTextEntry
+                                autoCapitalize="none"
+                                autoCorrect={false}
+                                editable={!deleting}
+                                allowFontScaling={false}
+                            />
+                        )}
+
+                        <View style={styles.modalButtons}>
+                            <TouchableOpacity
+                                style={[styles.modalBtn, styles.modalCancel]}
+                                onPress={() => setDeleteModal(false)}
+                                disabled={deleting}
+                                activeOpacity={0.8}
+                            >
+                                <Text allowFontScaling={false} style={styles.modalCancelText}>Cancel</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={[styles.modalBtn, styles.modalDelete]}
+                                onPress={handleDeleteAccount}
+                                disabled={deleting}
+                                activeOpacity={0.85}
+                            >
+                                {deleting
+                                    ? <ActivityIndicator color="#fff" />
+                                    : <Text allowFontScaling={false} style={styles.modalDeleteText}>Delete</Text>}
+                            </TouchableOpacity>
+                        </View>
+                    </Pressable>
+                </Pressable>
+            )}
         </LinearGradient>
     );
 }

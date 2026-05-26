@@ -1,7 +1,7 @@
 import {StyleSheet} from 'react-native';
 import {DARK_PURPLE, ORCHID, PURPLE_DARK, VIOLET, WHITE} from '../../constants/colors.ts';
 import {HORIZONAL_OFFSET} from '../../constants/uiConstants.ts';
-import {ms, scale, vs} from '../../utils/responsive.ts';
+import {ms, scale, vs, SW} from '../../utils/responsive.ts';
 
 export default StyleSheet.create({
     container: {
@@ -11,6 +11,7 @@ export default StyleSheet.create({
     scrollContainer: {
         alignItems: 'center',
         paddingTop: vs(24),
+        paddingBottom: vs(40),
     },
 
     /* ── Avatar section ─────────────────────────────── */
@@ -36,6 +37,11 @@ export default StyleSheet.create({
         backgroundColor: 'rgba(255,255,255,0.12)',
         alignItems: 'center',
         justifyContent: 'center',
+        overflow: 'hidden',
+    },
+    avatarEmoji: {
+        fontSize: ms(64),
+        textAlign: 'center',
     },
     cameraOverlay: {
         position: 'absolute',
@@ -75,6 +81,8 @@ export default StyleSheet.create({
 
     /* ── Guest view ─────────────────────────────────── */
     guestSection: {
+        width: SW * 0.8,
+        alignSelf: 'center',
         alignItems: 'center',
         paddingTop: vs(10),
     },
@@ -149,5 +157,194 @@ export default StyleSheet.create({
         color: WHITE,
         fontSize: ms(16),
         textAlign: 'center',
+    },
+
+    /* ── Guest sign-up form ─────────────────────────── */
+    guestForm: {
+        width: '100%',
+        marginTop: vs(18),
+        backgroundColor: 'rgba(255,255,255,0.07)',
+        borderRadius: ms(24),
+        paddingVertical: ms(22),
+        paddingHorizontal: ms(18),
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.14)',
+        shadowColor: DARK_PURPLE,
+        shadowOffset: {width: 0, height: 8},
+        shadowOpacity: 0.35,
+        shadowRadius: 16,
+        elevation: 8,
+    },
+    formTitle: {
+        color: WHITE,
+        fontSize: ms(18),
+        fontWeight: '800',
+        textAlign: 'center',
+        letterSpacing: 0.4,
+        marginBottom: vs(18),
+    },
+    fieldRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: 'rgba(255,255,255,0.12)',
+        borderRadius: ms(14),
+        borderWidth: 1.5,
+        borderColor: 'rgba(255,255,255,0.12)',
+        paddingHorizontal: ms(14),
+        marginBottom: vs(12),
+    },
+    fieldRowFocused: {
+        borderColor: ORCHID,
+        backgroundColor: 'rgba(255,255,255,0.18)',
+    },
+    fieldIcon: {
+        fontSize: ms(18),
+        marginRight: ms(10),
+    },
+    fieldInput: {
+        flex: 1,
+        color: WHITE,
+        fontSize: ms(16),
+        paddingVertical: vs(13),
+    },
+    linkButton: {
+        width: '100%',
+        borderRadius: ms(16),
+        marginTop: vs(6),
+        shadowColor: ORCHID,
+        shadowOffset: {width: 0, height: 6},
+        shadowOpacity: 0.5,
+        shadowRadius: 12,
+        elevation: 8,
+    },
+    linkButtonGradient: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: vs(16),
+        minHeight: vs(54),
+        borderRadius: ms(16),
+    },
+    linkButtonText: {
+        color: WHITE,
+        fontSize: ms(17),
+        fontWeight: '800',
+        letterSpacing: 0.5,
+    },
+    formFootnote: {
+        color: 'rgba(255,255,255,0.5)',
+        fontSize: ms(12),
+        textAlign: 'center',
+        marginTop: vs(14),
+        letterSpacing: 0.3,
+    },
+
+    /* ── Account credential inputs ──────────────────── */
+    accountInput: {
+        width: '100%',
+        paddingVertical: vs(12),
+        paddingHorizontal: ms(14),
+        borderRadius: ms(12),
+        backgroundColor: 'rgba(255,255,255,0.15)',
+        color: WHITE,
+        fontSize: ms(15),
+        marginBottom: vs(10),
+    },
+
+    /* ── Delete account (danger) ────────────────────── */
+    deleteButton: {
+        width: '100%',
+        marginTop: vs(22),
+        paddingVertical: vs(15),
+        borderRadius: ms(16),
+        borderWidth: 1.5,
+        borderColor: 'rgba(229,72,77,0.7)',
+        backgroundColor: 'rgba(229,72,77,0.12)',
+        alignItems: 'center',
+    },
+    deleteButtonText: {
+        color: '#FF6B6E',
+        fontSize: ms(16),
+        fontWeight: '800',
+        letterSpacing: 0.5,
+    },
+
+    /* ── Delete confirmation modal ──────────────────── */
+    modalOverlay: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(0,0,0,0.6)',
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingHorizontal: ms(28),
+    },
+    modalCard: {
+        width: '100%',
+        backgroundColor: '#2A0A3D',
+        borderRadius: ms(24),
+        padding: ms(24),
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.14)',
+        shadowColor: '#000',
+        shadowOffset: {width: 0, height: 10},
+        shadowOpacity: 0.5,
+        shadowRadius: 20,
+        elevation: 16,
+    },
+    modalTitle: {
+        color: WHITE,
+        fontSize: ms(20),
+        fontWeight: '800',
+        textAlign: 'center',
+        marginBottom: vs(12),
+    },
+    modalMessage: {
+        color: 'rgba(255,255,255,0.7)',
+        fontSize: ms(14),
+        lineHeight: ms(21),
+        textAlign: 'center',
+        marginBottom: vs(18),
+    },
+    modalInput: {
+        width: '100%',
+        paddingVertical: vs(12),
+        paddingHorizontal: ms(14),
+        borderRadius: ms(12),
+        backgroundColor: 'rgba(255,255,255,0.12)',
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.2)',
+        color: WHITE,
+        fontSize: ms(15),
+        marginBottom: vs(18),
+    },
+    modalButtons: {
+        flexDirection: 'row',
+        gap: ms(12),
+    },
+    modalBtn: {
+        flex: 1,
+        paddingVertical: vs(13),
+        borderRadius: ms(14),
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: vs(46),
+    },
+    modalCancel: {
+        backgroundColor: 'rgba(255,255,255,0.15)',
+    },
+    modalCancelText: {
+        color: WHITE,
+        fontSize: ms(15),
+        fontWeight: '700',
+    },
+    modalDelete: {
+        backgroundColor: '#E5484D',
+    },
+    modalDeleteText: {
+        color: WHITE,
+        fontSize: ms(15),
+        fontWeight: '800',
     },
 });

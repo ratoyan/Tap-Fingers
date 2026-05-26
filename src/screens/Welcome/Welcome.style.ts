@@ -1,13 +1,21 @@
 import {StyleSheet} from 'react-native';
 import {WHITE} from '../../constants/colors.ts';
-import {ms, scale} from '../../utils/responsive.ts';
+import {ms, vs, scale} from '../../utils/responsive.ts';
 
 export default StyleSheet.create({
     container: {
         flex: 1,
+        padding: ms(20),
+    },
+    flex: {
+        flex: 1,
+        width: '100%',
+    },
+    scrollContent: {
+        flexGrow: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        padding: ms(20),
+        paddingVertical: vs(24),
     },
     title: {
         fontSize: ms(32),
@@ -29,34 +37,63 @@ export default StyleSheet.create({
         width: '100%',
         alignItems: 'center',
     },
-    icon: {
-        width: ms(24),
-        height: ms(24),
-        marginRight: ms(12),
+    soundButton: {
+        position: 'absolute',
+        right: ms(16),
+        width: ms(44),
+        height: ms(44),
+        borderRadius: ms(22),
+        backgroundColor: 'rgba(255,255,255,0.15)',
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.25)',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 10,
     },
-    buttonText: {
+    // ── Email auth form ─────────────────────────────────────────────
+    input: {
+        width: '90%',
+        backgroundColor: 'rgba(255,255,255,0.12)',
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.25)',
+        borderRadius: ms(16),
+        paddingVertical: vs(14),
+        paddingHorizontal: ms(18),
         fontSize: ms(16),
         color: WHITE,
-        fontWeight: 'bold',
+        marginVertical: vs(7),
     },
-    button: {
+    primaryButton: {
         width: '90%',
-        marginVertical: ms(15),
+        marginTop: vs(14),
         borderRadius: ms(35),
         overflow: 'hidden',
     },
-    gradientButton: {
-        flexDirection: 'row',
+    primaryGradient: {
         alignItems: 'center',
         justifyContent: 'center',
-        paddingVertical: ms(16),
-        paddingHorizontal: ms(25),
+        paddingVertical: vs(16),
         borderRadius: ms(35),
-        gap: ms(10),
+        minHeight: vs(54),
     },
-    buttonTextLarge: {
+    primaryText: {
         fontSize: ms(18),
         fontWeight: 'bold',
         color: WHITE,
+    },
+    toggleText: {
+        marginTop: vs(16),
+        fontSize: ms(14),
+        color: 'rgba(255,255,255,0.7)',
+    },
+    toggleTextAccent: {
+        color: WHITE,
+        fontWeight: 'bold',
+    },
+    divider: {
+        width: '70%',
+        height: 1,
+        backgroundColor: 'rgba(255,255,255,0.18)',
+        marginVertical: vs(18),
     },
 });

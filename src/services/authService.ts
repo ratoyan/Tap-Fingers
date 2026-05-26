@@ -58,6 +58,16 @@ export async function linkApple(identityToken: string): Promise<AuthResult> {
     return persistSession(data.data);
 }
 
+// Upgrades the currently authenticated guest account to an email/password account.
+export async function linkEmail(
+    username: string,
+    email: string,
+    password: string,
+): Promise<AuthResult> {
+    const { data } = await api.post('/auth/link-email', { username, email, password });
+    return persistSession(data.data);
+}
+
 export async function logout(): Promise<void> {
     try {
         const refreshToken = await tokenManager.getRefreshToken();

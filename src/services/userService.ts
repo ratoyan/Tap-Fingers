@@ -29,6 +29,22 @@ export async function updateProfile(username: string): Promise<Profile> {
     return data.data;
 }
 
+// Email accounts only — both require the current password.
+export async function changeEmail(currentPassword: string, email: string): Promise<Profile> {
+    const { data } = await api.put('/player/email', { currentPassword, email });
+    return data.data;
+}
+
+export async function changePassword(currentPassword: string, newPassword: string): Promise<void> {
+    await api.put('/player/password', { currentPassword, newPassword });
+}
+
+// Permanently deletes the account (cascades all progress server-side).
+// Email accounts must pass their current password as confirmation.
+export async function deleteAccount(password?: string): Promise<void> {
+    await api.delete('/player/account', { data: password ? { password } : {} });
+}
+
 export async function getMyScores(): Promise<ScoreEntry[]> {
     const { data } = await api.get('/player/scores');
     return data.data.scores;

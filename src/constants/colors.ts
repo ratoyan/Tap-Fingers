@@ -11,6 +11,7 @@ export const WHITE_100 = '#ddd';
 export const DARK_PURPLE = '#4B0082';
 export const PURPLE_DARK = '#6a0dad';
 export const PURPLE = '#800080';
+export const PURPLE_ONE = '#8e088e';
 export const PURPLE_LIGHT = '#ff00ff';
 export const GRADIENT_LIGHT = '#8e2de2';
 export const GRADIENT_DARK = '#4a00e0';

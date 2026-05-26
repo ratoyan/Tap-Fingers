@@ -24,10 +24,11 @@ import {useAuthStore} from "../../store/authStore.ts";
 
 // components
 import Logo from "../../components/ui/Logo/Logo.tsx";
-import SocialAuthButton from "../../components/ui/SocialAuthButton/SocialAuthButton.tsx";
+import WelcomeBackground from "../../components/ui/WelcomeBackground/WelcomeBackground.tsx";
 import Ghost from "../../assets/icons/Ghost.tsx";
 import SoundIcon from "../../assets/icons/SoundIcon.tsx";
 import SoundOffIcon from "../../assets/icons/SoundOffIcon.tsx";
+import {isTablet} from "../../utils/responsive.ts";
 
 // styles
 import styles from './Welcome.style.ts';
@@ -36,7 +37,7 @@ import {
     GRADIENT_DARK,
     GRADIENT_LIGHT,
     MEDIUM_PURPLE,
-    PURPLE,
+    PURPLE, PURPLE_DARK, PURPLE_ONE,
 } from "../../constants/colors.ts";
 import LinearGradient from 'react-native-linear-gradient';
 
@@ -54,6 +55,11 @@ function Welcome() {
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [focusedField, setFocusedField] = useState<'name' | 'email' | 'password' | null>(null);
+
+    // Responsive logo sizing — smaller share of the screen on tablets.
+    const logoW = isTablet ? Math.min(width * 0.42, 320) : width / 2.1;
+    const logoH = isTablet ? Math.min(height * 0.24, 300) : height / 4;
 
     // Music on/off (shares the same STORAGE_KEYS.MUSIC flag as Settings)
     const [muted, setMuted] = useState(false);
@@ -77,6 +83,7 @@ function Welcome() {
     const floatAnim   = useRef(new Animated.Value(0)).current;
     const ghostFloat  = useRef(new Animated.Value(0)).current;
     const ghostOpacity = useRef(new Animated.Value(0)).current;
+    const ctaPulse    = useRef(new Animated.Value(1)).current;
 
     // Local-only gameplay helpers (bomb/slow/shield) are still device-side —
     // seed the starter stock so a brand-new player has one of each.
@@ -211,6 +218,14 @@ function Welcome() {
                 Animated.timing(ghostFloat, {toValue: 0,   duration: 1100, useNativeDriver: true}),
             ])
         ).start();
+
+        // Gentle "tap me" pulse on the primary call-to-action.
+        Animated.loop(
+            Animated.sequence([
+                Animated.timing(ctaPulse, {toValue: 1.035, duration: 1200, useNativeDriver: true}),
+                Animated.timing(ctaPulse, {toValue: 1,     duration: 1200, useNativeDriver: true}),
+            ])
+        ).start();
     }, []);
 
     const buttonsOpacity = slideButtons.interpolate({
@@ -223,6 +238,9 @@ function Welcome() {
             colors={[DARK_PURPLE, PURPLE, MEDIUM_PURPLE]}
             style={styles.container}
         >
+            {/* Animated decorative layer */}
+            <WelcomeBackground />
+
             {/* Sound on/off — top right */}
             <TouchableOpacity
                 style={[styles.soundButton, {top: topInset + 8}]}
@@ -246,132 +264,166 @@ function Welcome() {
                     keyboardShouldPersistTaps="handled"
                     showsVerticalScrollIndicator={false}
                 >
-                    {/* Title */}
-                    <Animated.Text
-                        style={[
-                            styles.title,
-                            {width: '50%', textAlign: 'center'},
-                            {
+                    <View style={styles.content}>
+                        {/* Header */}
+                        <Animated.View
+                            style={{
+                                alignItems: 'center',
                                 opacity: fadeTitle,
                                 transform: [{
-                                    translateY: fadeTitle.interpolate({
-                                        inputRange: [0, 1],
-                                        outputRange: [20, 0],
-                                    }),
+                                    translateY: fadeTitle.interpolate({inputRange: [0, 1], outputRange: [20, 0]}),
                                 }],
-                            },
-                        ]}
-                    >
-                        Tap Fingers
-                    </Animated.Text>
-
-                    {/* Logo + Ghost side by side */}
-                    <Animated.View style={[styles.logoRow, {transform: [{translateY: floatAnim}]}]}>
-                        <Logo
-                            width={width / 1.8}
-                            height={height / 3.6}
-                        />
-
-                        {/* Ghost peeking from the side */}
-                        <Animated.View
-                            style={[
-                                styles.ghostWrap,
-                                {
-                                    opacity: ghostOpacity,
-                                    transform: [{translateY: ghostFloat}],
-                                },
-                            ]}
+                            }}
                         >
-                            <Ghost size={72} color="rgba(255,255,255,0.88)" eyeColor="#6a0dad" />
+                            <Text allowFontScaling={false} style={styles.title}>Tap Fingers</Text>
+                            <Text allowFontScaling={false} style={styles.subtitle}>TAP FAST · SCORE HIGH</Text>
                         </Animated.View>
-                    </Animated.View>
 
-                    {/* Email auth form */}
-                    <Animated.View
-                        style={[styles.buttonsWrap, {transform: [{translateY: slideButtons}], opacity: buttonsOpacity}]}
-                    >
-                        {mode === 'register' && (
-                            <TextInput
-                                style={styles.input}
-                                placeholder="Name"
-                                placeholderTextColor="rgba(255,255,255,0.5)"
-                                value={name}
-                                onChangeText={setName}
-                                autoCapitalize="none"
-                                autoCorrect={false}
-                                editable={!busy}
-                                allowFontScaling={false}
-                                returnKeyType="next"
-                            />
-                        )}
+                        {/* Logo + Ghost side by side */}
+                        <Animated.View style={[styles.logoRow, {transform: [{translateY: floatAnim}]}]}>
+                            <Logo width={logoW} height={logoH} />
 
-                        <TextInput
-                            style={styles.input}
-                            placeholder="Email"
-                            placeholderTextColor="rgba(255,255,255,0.5)"
-                            value={email}
-                            onChangeText={setEmail}
-                            keyboardType="email-address"
-                            autoCapitalize="none"
-                            autoCorrect={false}
-                            editable={!busy}
-                            allowFontScaling={false}
-                            returnKeyType="next"
-                        />
-
-                        <TextInput
-                            style={styles.input}
-                            placeholder="Password"
-                            placeholderTextColor="rgba(255,255,255,0.5)"
-                            value={password}
-                            onChangeText={setPassword}
-                            secureTextEntry
-                            autoCapitalize="none"
-                            autoCorrect={false}
-                            editable={!busy}
-                            allowFontScaling={false}
-                            returnKeyType="done"
-                            onSubmitEditing={submitEmailAuth}
-                        />
-
-                        <TouchableOpacity
-                            style={styles.primaryButton}
-                            onPress={submitEmailAuth}
-                            disabled={busy}
-                            activeOpacity={0.85}
-                        >
-                            <LinearGradient
-                                colors={[GRADIENT_LIGHT, GRADIENT_DARK]}
-                                start={{x: 0, y: 0}}
-                                end={{x: 1, y: 0}}
-                                style={styles.primaryGradient}
+                            {/* Ghost peeking from the side */}
+                            <Animated.View
+                                style={[
+                                    styles.ghostWrap,
+                                    {opacity: ghostOpacity, transform: [{translateY: ghostFloat}]},
+                                ]}
                             >
-                                {busy
-                                    ? <ActivityIndicator color="#fff" />
-                                    : (
-                                        <Text allowFontScaling={false} style={styles.primaryText}>
-                                            {mode === 'register' ? 'Create Account' : 'Sign In'}
-                                        </Text>
-                                    )}
-                            </LinearGradient>
-                        </TouchableOpacity>
+                                <Ghost size={isTablet ? 88 : 72} color="rgba(255,255,255,0.88)" eyeColor="#6a0dad" />
+                            </Animated.View>
+                        </Animated.View>
 
-                        <TouchableOpacity
-                            onPress={toggleMode}
-                            hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}
+                        {/* Email auth card */}
+                        <Animated.View
+                            style={[styles.card, {transform: [{translateY: slideButtons}], opacity: buttonsOpacity}]}
                         >
-                            <Text allowFontScaling={false} style={styles.toggleText}>
-                                {mode === 'login' ? "Don't have an account? " : 'Already have an account? '}
-                                <Text style={styles.toggleTextAccent}>
-                                    {mode === 'login' ? 'Sign up' : 'Sign in'}
-                                </Text>
+                            <Text allowFontScaling={false} style={styles.cardTitle}>
+                                {mode === 'register' ? '✨ Create your account' : '👋 Welcome back'}
                             </Text>
-                        </TouchableOpacity>
 
-                        <View style={styles.divider} />
+                            {mode === 'register' && (
+                                <View style={[styles.fieldRow, focusedField === 'name' && styles.fieldRowFocused]}>
+                                    <Text allowFontScaling={false} style={styles.fieldIcon}>👤</Text>
+                                    <TextInput
+                                        style={styles.fieldInput}
+                                        placeholder="Name"
+                                        placeholderTextColor="rgba(255,255,255,0.45)"
+                                        value={name}
+                                        onChangeText={setName}
+                                        onFocus={() => setFocusedField('name')}
+                                        onBlur={() => setFocusedField(null)}
+                                        autoCapitalize="none"
+                                        autoCorrect={false}
+                                        editable={!busy}
+                                        allowFontScaling={false}
+                                        returnKeyType="next"
+                                    />
+                                </View>
+                            )}
 
-                        <SocialAuthButton type="ghost" handlePress={signInAsGuest} />
-                    </Animated.View>
+                            <View style={[styles.fieldRow, focusedField === 'email' && styles.fieldRowFocused]}>
+                                <Text allowFontScaling={false} style={styles.fieldIcon}>✉️</Text>
+                                <TextInput
+                                    style={styles.fieldInput}
+                                    placeholder="Email"
+                                    placeholderTextColor="rgba(255,255,255,0.45)"
+                                    value={email}
+                                    onChangeText={setEmail}
+                                    onFocus={() => setFocusedField('email')}
+                                    onBlur={() => setFocusedField(null)}
+                                    keyboardType="email-address"
+                                    autoCapitalize="none"
+                                    autoCorrect={false}
+                                    editable={!busy}
+                                    allowFontScaling={false}
+                                    returnKeyType="next"
+                                />
+                            </View>
+
+                            <View style={[styles.fieldRow, focusedField === 'password' && styles.fieldRowFocused]}>
+                                <Text allowFontScaling={false} style={styles.fieldIcon}>🔒</Text>
+                                <TextInput
+                                    style={styles.fieldInput}
+                                    placeholder="Password"
+                                    placeholderTextColor="rgba(255,255,255,0.45)"
+                                    value={password}
+                                    onChangeText={setPassword}
+                                    onFocus={() => setFocusedField('password')}
+                                    onBlur={() => setFocusedField(null)}
+                                    secureTextEntry
+                                    autoCapitalize="none"
+                                    autoCorrect={false}
+                                    editable={!busy}
+                                    allowFontScaling={false}
+                                    returnKeyType="done"
+                                    onSubmitEditing={submitEmailAuth}
+                                />
+                            </View>
+
+                            <Animated.View style={{width: '100%', transform: [{scale: ctaPulse}]}}>
+                                <TouchableOpacity
+                                    style={styles.primaryButton}
+                                    onPress={submitEmailAuth}
+                                    disabled={busy}
+                                    activeOpacity={0.85}
+                                >
+                                    <LinearGradient
+                                        colors={[PURPLE_DARK, GRADIENT_LIGHT]}
+                                        start={{x: 0, y: 0}}
+                                        end={{x: 1, y: 1}}
+                                        style={styles.primaryGradient}
+                                    >
+                                        {busy
+                                            ? <ActivityIndicator color="#fff" />
+                                            : (
+                                                <Text allowFontScaling={false} style={styles.primaryText}>
+                                                    {mode === 'register' ? 'Create Account' : 'Sign In'}
+                                                </Text>
+                                            )}
+                                    </LinearGradient>
+                                </TouchableOpacity>
+                            </Animated.View>
+
+                            <TouchableOpacity
+                                onPress={toggleMode}
+                                hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}
+                            >
+                                <Text allowFontScaling={false} style={styles.toggleText}>
+                                    {mode === 'login' ? "Don't have an account? " : 'Already have an account? '}
+                                    <Text style={styles.toggleTextAccent}>
+                                        {mode === 'login' ? 'Sign up' : 'Sign in'}
+                                    </Text>
+                                </Text>
+                            </TouchableOpacity>
+                        </Animated.View>
+
+                        {/* Divider */}
+                        <Animated.View style={[styles.dividerRow, {opacity: buttonsOpacity}]}>
+                            <View style={styles.dividerLine} />
+                            <Text allowFontScaling={false} style={styles.dividerText}>OR</Text>
+                            <View style={styles.dividerLine} />
+                        </Animated.View>
+
+                        {/* Guest */}
+                        <Animated.View
+                            style={{
+                                width: '100%',
+                                opacity: buttonsOpacity,
+                                transform: [{translateY: slideButtons}],
+                            }}
+                        >
+                            <TouchableOpacity
+                                style={styles.guestButton}
+                                onPress={signInAsGuest}
+                                disabled={busy}
+                                activeOpacity={0.8}
+                            >
+                                <Ghost size={24} color="rgba(255,255,255,0.85)" eyeColor="#9370DB" />
+                                <Text allowFontScaling={false} style={styles.guestButtonText}>Continue as Guest</Text>
+                            </TouchableOpacity>
+                        </Animated.View>
+                    </View>
                 </ScrollView>
             </KeyboardAvoidingView>
         </LinearGradient>

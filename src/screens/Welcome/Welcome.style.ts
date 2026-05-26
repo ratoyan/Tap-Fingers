@@ -106,7 +106,6 @@ export default StyleSheet.create({
         backgroundColor: 'rgba(255,255,255,0.18)',
     },
     fieldIcon: {
-        fontSize: ms(18),
         marginRight: ms(10),
     },
     fieldInput: {

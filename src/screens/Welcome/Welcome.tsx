@@ -28,6 +28,9 @@ import WelcomeBackground from "../../components/ui/WelcomeBackground/WelcomeBack
 import Ghost from "../../assets/icons/Ghost.tsx";
 import SoundIcon from "../../assets/icons/SoundIcon.tsx";
 import SoundOffIcon from "../../assets/icons/SoundOffIcon.tsx";
+import PersonIcon from "../../assets/icons/PersonIcon.tsx";
+import MailIcon from "../../assets/icons/MailIcon.tsx";
+import LockIcon from "../../assets/icons/LockIcon.tsx";
 import {isTablet} from "../../utils/responsive.ts";
 
 // styles
@@ -38,6 +41,7 @@ import {
     GRADIENT_LIGHT,
     MEDIUM_PURPLE,
     PURPLE, PURPLE_DARK, PURPLE_ONE,
+    VIOLET,
 } from "../../constants/colors.ts";
 import LinearGradient from 'react-native-linear-gradient';
 
@@ -60,6 +64,10 @@ function Welcome() {
     // Responsive logo sizing — smaller share of the screen on tablets.
     const logoW = isTablet ? Math.min(width * 0.42, 320) : width / 2.1;
     const logoH = isTablet ? Math.min(height * 0.24, 300) : height / 4;
+
+    const fieldIconSize = isTablet ? 24 : 21;
+    const iconColor = (field: 'name' | 'email' | 'password') =>
+        focusedField === field ? VIOLET : 'rgba(255,255,255,0.55)';
 
     // Music on/off (shares the same STORAGE_KEYS.MUSIC flag as Settings)
     const [muted, setMuted] = useState(false);
@@ -304,7 +312,7 @@ function Welcome() {
 
                             {mode === 'register' && (
                                 <View style={[styles.fieldRow, focusedField === 'name' && styles.fieldRowFocused]}>
-                                    <Text allowFontScaling={false} style={styles.fieldIcon}>👤</Text>
+                                    <PersonIcon size={fieldIconSize} color={iconColor('name')} style={styles.fieldIcon} />
                                     <TextInput
                                         style={styles.fieldInput}
                                         placeholder="Name"
@@ -323,7 +331,7 @@ function Welcome() {
                             )}
 
                             <View style={[styles.fieldRow, focusedField === 'email' && styles.fieldRowFocused]}>
-                                <Text allowFontScaling={false} style={styles.fieldIcon}>✉️</Text>
+                                <MailIcon size={fieldIconSize} color={iconColor('email')} style={styles.fieldIcon} />
                                 <TextInput
                                     style={styles.fieldInput}
                                     placeholder="Email"
@@ -342,7 +350,7 @@ function Welcome() {
                             </View>
 
                             <View style={[styles.fieldRow, focusedField === 'password' && styles.fieldRowFocused]}>
-                                <Text allowFontScaling={false} style={styles.fieldIcon}>🔒</Text>
+                                <LockIcon size={fieldIconSize} color={iconColor('password')} style={styles.fieldIcon} />
                                 <TextInput
                                     style={styles.fieldInput}
                                     placeholder="Password"

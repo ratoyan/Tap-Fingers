@@ -832,13 +832,23 @@ export default function Play() {
     }, [emptyHeartCount]);
 
     // When the equipped card's admin art resolves (async catalog fetch), patch
-    // the boxes already on screen in place — SVG and its render width/height —
-    // so they pick up the admin size without repositioning or a fallback flash.
+    // the boxes already on screen in place — SVG, its render width/height, and
+    // the colour flags — so they pick up the admin art/size without repositioning
+    // or a fallback flash. randomColors/trackColor are included so the initial
+    // boxes (created before the catalog fetch finished) actually render in random
+    // colours instead of the SVG's authored colour.
     useEffect(() => {
         setBoxesData(prev => prev.map(b => (
-            b.isBoom ? b : {...b, iconSvg: card.iconSvg, width: card.width, height: card.height}
+            b.isBoom ? b : {
+                ...b,
+                iconSvg: card.iconSvg,
+                width: card.width,
+                height: card.height,
+                randomColors: card.randomColors,
+                trackColor: card.trackColor,
+            }
         )));
-    }, [card.iconSvg, card.width, card.height]);
+    }, [card.iconSvg, card.width, card.height, card.randomColors, card.trackColor]);
 
     useEffect(() => {
         if (!isPlaying) {

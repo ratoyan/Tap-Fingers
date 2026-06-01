@@ -51,6 +51,9 @@ export interface ShopEntry {
     // only by the Play screen's falling card; the Shop preview ignores it.
     width?: number | null;
     height?: number | null;
+    // Admin flag (backend shop_items.random_colors). When set, the Play screen
+    // recolours each falling instance of this card's SVG to a random hue.
+    randomColors?: boolean;
 }
 
 export const DEFAULT_CARD_KEY = 'card_default';
@@ -104,13 +107,14 @@ interface ShopArt {
     iconSvg?: string | null;
     width?: number | null;
     height?: number | null;
+    randomColors?: boolean;
 }
 let shopArtByKey: Record<string, ShopArt> = {};
 
 export function registerShopIcons(items: ShopItem[]): void {
     const next: Record<string, ShopArt> = {};
     for (const it of items) {
-        next[it.key] = { iconSvg: it.iconSvg, width: it.width, height: it.height };
+        next[it.key] = { iconSvg: it.iconSvg, width: it.width, height: it.height, randomColors: it.randomColors };
     }
     shopArtByKey = next;
 }
@@ -138,6 +142,7 @@ export function mergeShopItem(item: ShopItem): ShopEntry {
         iconSvg: item.iconSvg ?? null,
         width: item.width ?? null,
         height: item.height ?? null,
+        randomColors: item.randomColors ?? false,
     };
 }
 
@@ -176,6 +181,7 @@ function entryFromKey(
         iconSvg: art.iconSvg ?? null,
         width: art.width ?? null,
         height: art.height ?? null,
+        randomColors: art.randomColors ?? false,
     };
 }
 

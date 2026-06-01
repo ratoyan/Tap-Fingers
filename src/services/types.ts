@@ -83,6 +83,9 @@ export interface ShopItem {
     iconSvg: string | null;
     width: number | null;
     height: number | null;
+    // When true, the Play screen recolours each falling instance of this card's
+    // SVG to a random hue instead of its authored colours.
+    randomColors: boolean;
     sortOrder: number;
     isActive: boolean;
     isPremium: boolean;

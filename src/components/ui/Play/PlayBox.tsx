@@ -22,9 +22,44 @@ interface PlayBoxProps {
     handlePress: () => void;
 }
 
+// Vibrant hues used when a card is flagged "random colors" in admin.
+const RANDOM_COLORS = [
+    '#FF5252', '#FF4081', '#E040FB', '#7C4DFF', '#536DFE',
+    '#40C4FF', '#18FFFF', '#69F0AE', '#00E676', '#FFD740', '#FFAB40', '#FF6E40',
+];
+
+// Stable colour per box: same id → same hue for the box's whole lifetime
+// (ids survive the fall-animation reset), so a card doesn't flicker colour.
+function pickColor(id: string): string {
+    let h = 0;
+    for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0;
+    return RANDOM_COLORS[h % RANDOM_COLORS.length];
+}
+
+// Recolours every concrete fill/stroke in an SVG to `color` so a "random colors"
+// card renders in one random hue regardless of how its artwork was authored.
+// `none`/`transparent` are preserved so cut-outs and outlines stay intact.
+function tintSvg(xml: string, color: string): string {
+    return xml
+        .replace(/(fill|stroke)\s*=\s*"(?!none|transparent)[^"]*"/gi, `$1="${color}"`)
+        .replace(/(fill|stroke)\s*=\s*'(?!none|transparent)[^']*'/gi, `$1='${color}'`)
+        .replace(/(fill|stroke)\s*:\s*(?!none|transparent)[^;"']+/gi, `$1:${color}`);
+}
+
 function PlayBox({box, handlePress}: PlayBoxProps) {
 
     const typeName = box?.typeName?.toLowerCase?.() ?? "";
+
+    // When the card is flagged "random colors" (admin), give this box a stable
+    // random hue and recolour its SVG art to match. Computed unconditionally so
+    // the hooks run on every render regardless of which art branch is taken.
+    const randomColor = useMemo(() => pickColor(String(box.id)), [box.id]);
+    const tintedSvg = useMemo(
+        () => (box.randomColors && typeof box.iconSvg === "string"
+            ? tintSvg(box.iconSvg, randomColor)
+            : box.iconSvg),
+        [box.iconSvg, box.randomColors, randomColor],
+    );
     const goldenGlow: ViewStyle = box.isGolden ? {
         borderWidth: 2,
         borderColor: '#FFD700',
@@ -72,11 +107,13 @@ function PlayBox({box, handlePress}: PlayBoxProps) {
         const svgStyle: ViewStyle = {position: "absolute", transform: svgTransform, ...goldenGlow};
         return box.isBoom ? (
             <View style={svgStyle}>
-                <TrackIcon width={svgW} height={svgH} color={box.color ?? DARK_NAVY}/>
+                <TrackIcon width={svgW} height={svgH}
+                    color={box.randomColors ? randomColor : (box.color ?? DARK_NAVY)}/>
             </View>
         ) : (
             <Pressable onPress={handlePress} style={[svgStyle, {zIndex: 1}]}>
-                <SvgXml xml={box.iconSvg} width={svgW} height={svgH}
+                <SvgXml xml={tintedSvg} width={svgW} height={svgH}
+                    color={box.randomColors ? randomColor : undefined}
                     preserveAspectRatio={hasAdminDims ? "none" : "xMidYMid meet"}/>
             </Pressable>
         );

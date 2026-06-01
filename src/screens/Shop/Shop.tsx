@@ -1,4 +1,4 @@
-﻿import React, {useCallback, useMemo, useRef, useState} from "react";
+﻿import React, {useCallback, useRef, useState} from "react";
 import {ActivityIndicator, Animated, ScrollView, Text, TouchableOpacity, View} from "react-native";
 import {useTranslation} from "react-i18next";
 import {useFocusEffect} from "@react-navigation/core";
@@ -22,6 +22,17 @@ import {DARK_PURPLE, GRADIENT_DARK, GRADIENT_LIGHT, PURPLE, WHITE} from "../../c
 import LinearGradient from "react-native-linear-gradient";
 
 type TabType = 'card' | 'background';
+
+// Equipped item on top, then everything else by price ascending. Applied once
+// per screen entry (in loadShop) so the order stays stable while equipping.
+function sortByActive(list: ShopEntry[], activeKey: string): ShopEntry[] {
+    return [...list].sort((a, b) => {
+        const aActive = a.key === activeKey;
+        const bActive = b.key === activeKey;
+        if (aActive !== bActive) return aActive ? -1 : 1;
+        return a.priceCoins - b.priceCoins;
+    });
+}
 
 function Shop() {
     const {t} = useTranslation();
@@ -55,14 +66,18 @@ function Shop() {
 
             registerShopIcons(items);
             const merged = items.map(mergeShopItem);
-            setCardItems(merged.filter(e => e.type === 'card'));
-            setBgItems(merged.filter(e => e.type === 'background'));
 
             setOwnedKeys(new Set(inventory.map(e => e.item.key)));
-            const card = inventory.find(e => e.isActiveCard)?.item.key;
-            const bg = inventory.find(e => e.isActiveBackground)?.item.key;
-            setActiveCardKey(card ?? DEFAULT_CARD_KEY);
-            setActiveBgKey(bg ?? DEFAULT_BG_KEY);
+            const cardKey = inventory.find(e => e.isActiveCard)?.item.key ?? DEFAULT_CARD_KEY;
+            const bgKey = inventory.find(e => e.isActiveBackground)?.item.key ?? DEFAULT_BG_KEY;
+
+            // Sort once, here on entry — equipped on top, then price ascending.
+            // The order is frozen until the next focus, so equipping mid-session
+            // doesn't make the list jump around under the user's finger.
+            setCardItems(sortByActive(merged.filter(e => e.type === 'card'), cardKey));
+            setBgItems(sortByActive(merged.filter(e => e.type === 'background'), bgKey));
+            setActiveCardKey(cardKey);
+            setActiveBgKey(bgKey);
         } catch (error) {
             console.error('Failed to load shop:', error);
         } finally {
@@ -125,30 +140,10 @@ function Shop() {
         outputRange: ['0%', '50%'],
     });
 
-    // Card ordering: the equipped (active) card rises to the top; everything
-    // else is sorted by price, cheapest first. Recomputed when the equipped
-    // card changes so the list re-orders right after equipping.
-    const sortedCardItems = useMemo(() => {
-        return [...cardItems].sort((a, b) => {
-            const aActive = a.key === activeCardKey;
-            const bActive = b.key === activeCardKey;
-            if (aActive !== bActive) return aActive ? -1 : 1;
-            return a.priceCoins - b.priceCoins;
-        });
-    }, [cardItems, activeCardKey]);
-
-    // Background ordering mirrors the cards: equipped one on top, the rest by
-    // price ascending. Re-orders right after equipping a different background.
-    const sortedBgItems = useMemo(() => {
-        return [...bgItems].sort((a, b) => {
-            const aActive = a.key === activeBgKey;
-            const bActive = b.key === activeBgKey;
-            if (aActive !== bActive) return aActive ? -1 : 1;
-            return a.priceCoins - b.priceCoins;
-        });
-    }, [bgItems, activeBgKey]);
-
-    const items = activeTab === 'card' ? sortedCardItems : sortedBgItems;
+    // Items are pre-sorted at load time (see loadShop) and intentionally NOT
+    // re-sorted when the active key changes — equipping updates the "Equipped"
+    // badge but keeps the list order stable. It re-sorts on the next focus.
+    const items = activeTab === 'card' ? cardItems : bgItems;
     const activeKey = activeTab === 'card' ? activeCardKey : activeBgKey;
 
     return (

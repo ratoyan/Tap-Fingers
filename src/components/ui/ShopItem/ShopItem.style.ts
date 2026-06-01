@@ -1,5 +1,5 @@
 import {StyleSheet} from 'react-native';
-import {GOLD, GRADIENT_LIGHT, LIGHT_GREEN, ORCHID} from '../../../constants/colors.ts';
+import {DARK_PURPLE, GOLD, GRADIENT_LIGHT, LIGHT_GREEN, ORCHID} from '../../../constants/colors.ts';
 import {ms, vs, isTablet} from '../../../utils/responsive.ts';
 
 export default StyleSheet.create({
@@ -108,6 +108,39 @@ export default StyleSheet.create({
         fontSize: ms(11),
         fontWeight: '700',
         letterSpacing: 0.3,
+    },
+    randomBadge: {
+        position: 'absolute',
+        top: ms(9),
+        left: ms(9),
+        width: ms(30),
+        height: ms(30),
+        borderRadius: ms(15),
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 8,
+        borderWidth: 1.5,
+        borderColor: DARK_PURPLE,
+        elevation: 8,
+        shadowColor: '#FF49C7',
+        shadowOffset: {width: 0, height: 0},
+        shadowOpacity: 0.9,
+        shadowRadius: 7,
+    },
+    randomBadgeGradientWrap: {
+        ...StyleSheet.absoluteFillObject,
+        borderRadius: ms(15),
+        overflow: 'hidden',
+    },
+    randomBadgeGradient: {
+        width: '100%',
+        height: '100%',
+    },
+    randomBadgeText: {
+        fontSize: ms(13),
+        textShadowColor: 'rgba(0,0,0,0.4)',
+        textShadowOffset: {width: 0, height: 1},
+        textShadowRadius: 2,
     },
     squareGrid: {
         flexDirection: 'row',

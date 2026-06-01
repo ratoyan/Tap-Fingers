@@ -1,5 +1,5 @@
 ﻿import React, {useEffect, useRef} from "react";
-import {Animated, Image, Text, TouchableOpacity, View} from "react-native";
+import {Animated, Easing, Image, Text, TouchableOpacity, View} from "react-native";
 import {SvgXml} from "react-native-svg";
 
 // icons
@@ -35,7 +35,27 @@ function ShopItem({item, index = 0, handlePress, selected = false, purchased = f
     const entranceOpacity = useRef(new Animated.Value(0)).current;
     const entranceY = useRef(new Animated.Value(30)).current;
     const glowAnim = useRef(new Animated.Value(0)).current;
+    const badgeSpin = useRef(new Animated.Value(0)).current;
+    const badgePulse = useRef(new Animated.Value(0)).current;
     const isFirstRender = useRef(true);
+
+    // Random-colors badge: a slowly sweeping rainbow disc with a gentle pulse,
+    // so the indicator feels alive and signals "colourful" at a glance.
+    useEffect(() => {
+        if (!item.randomColors) return;
+        const spin = Animated.loop(
+            Animated.timing(badgeSpin, {toValue: 1, duration: 4500, easing: Easing.linear, useNativeDriver: true}),
+        );
+        const pulse = Animated.loop(
+            Animated.sequence([
+                Animated.timing(badgePulse, {toValue: 1, duration: 1100, useNativeDriver: true}),
+                Animated.timing(badgePulse, {toValue: 0, duration: 1100, useNativeDriver: true}),
+            ]),
+        );
+        spin.start();
+        pulse.start();
+        return () => { spin.stop(); pulse.stop(); };
+    }, [item.randomColors]);
 
     // Staggered entrance
     useEffect(() => {
@@ -94,6 +114,9 @@ function ShopItem({item, index = 0, handlePress, selected = false, purchased = f
         inputRange: [0, 1],
         outputRange: ['rgba(142,45,226,0.4)', 'rgba(142,45,226,1)'],
     });
+
+    const badgeRotate = badgeSpin.interpolate({inputRange: [0, 1], outputRange: ['0deg', '360deg']});
+    const badgeScale = badgePulse.interpolate({inputRange: [0, 1], outputRange: [1, 1.12]});
 
     const renderPreview = () => {
         // Admin-authored SVG (backend) wins for cards — falls back to the
@@ -247,6 +270,22 @@ function ShopItem({item, index = 0, handlePress, selected = false, purchased = f
                         {renderBadge()}
                     </View>
                 </LinearGradient>
+
+                {/* Random-colors indicator (top-left) — falling cards of this
+                    skin render in random colours in Play. */}
+                {item.randomColors && (
+                    <Animated.View style={[styles.randomBadge, {transform: [{scale: badgeScale}]}]}>
+                        <Animated.View style={[styles.randomBadgeGradientWrap, {transform: [{rotate: badgeRotate}]}]}>
+                            <LinearGradient
+                                colors={['#FF5252', '#FFD740', '#69F0AE', '#40C4FF', '#E040FB', '#FF5252']}
+                                start={{x: 0, y: 0}}
+                                end={{x: 1, y: 1}}
+                                style={styles.randomBadgeGradient}
+                            />
+                        </Animated.View>
+                        <Text allowFontScaling={false} style={styles.randomBadgeText}>🎨</Text>
+                    </Animated.View>
+                )}
 
                 {/* Lock overlay */}
                 {disabled && (

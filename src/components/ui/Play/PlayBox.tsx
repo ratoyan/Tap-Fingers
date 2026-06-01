@@ -116,7 +116,7 @@ function PlayBox({box, handlePress}: PlayBoxProps) {
         return box.isBoom ? (
             <View style={svgStyle}>
                 <TrackIcon width={svgW} height={svgH}
-                    color={box.randomColors ? randomColor : (box.color ?? DARK_NAVY)}/>
+                    color={box.randomColors ? randomColor : (box.trackColor ?? box.color ?? DARK_NAVY)}/>
             </View>
         ) : (
             <Pressable onPress={handlePress} style={[svgStyle, {zIndex: 1}]}>

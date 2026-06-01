@@ -86,6 +86,8 @@ export interface ShopItem {
     // When true, the Play screen recolours each falling instance of this card's
     // SVG to a random hue instead of its authored colours.
     randomColors: boolean;
+    // Hex colour for the card's destroy burst (TrackIcon) in Play; null = default.
+    trackColor: string | null;
     sortOrder: number;
     isActive: boolean;
     isPremium: boolean;

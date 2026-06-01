@@ -156,6 +156,9 @@ export default function Play() {
     const sessionEndedRef = useRef(false);
     const tapsRef = useRef(0);         // honest tap-gesture count (anti-cheat needs score ≈ taps)
     const maxComboRef = useRef(0);
+    // Mirror of emptyHeartCount so the on-exit save (a stale-closure cleanup) and
+    // any other ref-based caller read the current lives-lost value.
+    const emptyHeartCountRef = useRef(0);
 
     // ─── Animated values ──────────────────────────────────────────────────────
     const bombFlashAnim = useRef(new Animated.Value(0)).current;
@@ -234,8 +237,19 @@ export default function Play() {
         sessionStartRef.current = Date.now();
         sessionTokenRef.current = null;
         setLevelLength(30);
-        loadBombCount();
-        loadHelperCounts();
+
+        try {
+            // The token returned here is what lets submitGameSession() report the
+            // run and bank the earned coins on /game/end.
+            const session = await gameService.startSession();
+            sessionTokenRef.current = session.sessionToken;
+            applyHelperCounts(session.helpers.bomb, session.helpers.slow, session.helpers.shield);
+        } catch {
+            // Offline / start failed — fall back to the locally cached helper
+            // stock. The run still plays; it just can't be banked server-side.
+            loadBombCount();
+            loadHelperCounts();
+        }
     }
 
     // Submits the finished run to /game/end. Captures everything synchronously
@@ -247,7 +261,7 @@ export default function Play() {
         const token = sessionTokenRef.current;
         const taps = tapsRef.current;
         const maxCombo = maxComboRef.current;
-        const livesLost = Math.min(7, emptyHeartCount);
+        const livesLost = Math.min(7, emptyHeartCountRef.current);
         const durationSecs = Math.max(
             5,
             Math.min(600, Math.round((Date.now() - sessionStartRef.current) / 1000)),
@@ -766,6 +780,11 @@ export default function Play() {
             const playTimeout = setTimeout(() => playMusic(), 300);
 
             return () => {
+                // Force-save: whatever path the player took out of Play (hardware
+                // back, swipe gesture, navigation away, unmount), bank the run.
+                // Idempotent via sessionEndedRef, so the exit-modal/retry paths
+                // that already submitted won't double-report.
+                submitGameSession();
                 clearTimeout(loadTimeout);
                 clearTimeout(playTimeout);
                 pauceMusic();
@@ -808,6 +827,7 @@ export default function Play() {
     }, [levelCount, levelLength]);
 
     useEffect(() => {
+        emptyHeartCountRef.current = emptyHeartCount;
         if (emptyHeartCount >= HEARTS_LENGTH) gameOver();
     }, [emptyHeartCount]);
 

@@ -1,5 +1,5 @@
 import api from './api';
-import { GameConfig, GameEndResult } from './types';
+import { GameConfig, GameEndResult, GameStartResult } from './types';
 
 // ── Game service ──────────────────────────────────────────────────────────────
 // Backend: GET /api/game/config (public), POST /api/game/start,
@@ -12,6 +12,14 @@ import { GameConfig, GameEndResult } from './types';
 
 export async function getGameConfig(): Promise<GameConfig> {
     const { data } = await api.get('/game/config');
+    return data.data;
+}
+
+// Opens a server-side game session and returns the `sessionToken` that
+// `endSession` must echo back — without it the run can't be submitted and no
+// coins are banked. Also returns the authoritative helper stock for the run.
+export async function startSession(): Promise<GameStartResult> {
+    const { data } = await api.post('/game/start');
     return data.data;
 }
 

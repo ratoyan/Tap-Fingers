@@ -60,6 +60,14 @@ function PlayBox({box, handlePress}: PlayBoxProps) {
             : box.iconSvg),
         [box.iconSvg, box.randomColors, randomColor],
     );
+    // Square cards lock in a random size once. Hoisted to the top (not computed
+    // inside the `square` branch) so this hook always runs — a box that gains an
+    // admin SVG mid-flight switches branches, and a conditional hook there would
+    // change the hook count between renders ("rendered fewer hooks").
+    const squareSize = useMemo<[number, number]>(() => {
+        const random = Math.floor(Math.random() * 50) + 101;
+        return [random, random];
+    }, []);
     const goldenGlow: ViewStyle = box.isGolden ? {
         borderWidth: 2,
         borderColor: '#FFD700',
@@ -134,10 +142,7 @@ function PlayBox({box, handlePress}: PlayBoxProps) {
 
     // 🟦 Square
     if (typeName === "square") {
-        const size = useMemo(() => {
-            const random = Math.floor(Math.random() * 50) + 101;
-            return [random, random];
-        }, []);
+        const size = squareSize;
 
         return box.isBoom ? (
                 <View style={commonStyle}>

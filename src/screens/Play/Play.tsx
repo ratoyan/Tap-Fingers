@@ -37,7 +37,7 @@ import StarBurstIcon from '../../assets/icons/StarBurstIcon.tsx';
 
 // components
 import AnimatedBackground from '../../components/ui/Play/AnimatedBackground.tsx';
-import BossBox from '../../components/ui/Play/BossBox.tsx';
+import BossBox, {getBossTier} from '../../components/ui/Play/BossBox.tsx';
 import CoinCount from '../../components/ui/CoinCount/CoinCount.tsx';
 import PlayBox from '../../components/ui/Play/PlayBox.tsx';
 import Hearts from '../../components/ui/Play/Hearts.tsx';
@@ -243,7 +243,7 @@ export default function Play() {
         maxComboRef.current = 0;
         sessionStartRef.current = Date.now();
         sessionTokenRef.current = null;
-        setLevelLength(30);
+        setLevelLength(1);
 
         try {
             // The token returned here is what lets submitGameSession() report the
@@ -1027,6 +1027,9 @@ export default function Play() {
                     <Text allowFontScaling={false} style={styles.bossFightText}>
                         ⚔️ BOSS FIGHT ⚔️
                     </Text>
+                    <Text allowFontScaling={false} style={styles.bossFightSub}>
+                        {getBossTier(level).name} • TAP TO DESTROY
+                    </Text>
                 </View>
             )}
 
@@ -1045,7 +1048,7 @@ export default function Play() {
                 <View style={styles.bossDefeatedOverlay}>
                     <Text allowFontScaling={false} style={styles.bossDefeatedEmoji}>🏆</Text>
                     <Text allowFontScaling={false} style={styles.bossDefeatedText}>
-                        BOSS DEFEATED!
+                        {getBossTier(level).name} DEFEATED!
                     </Text>
                     <Text allowFontScaling={false} style={styles.bossDefeatedReward}>
                         +{bossRewardRef.current} coins • ❤️ restored

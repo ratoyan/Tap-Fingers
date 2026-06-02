@@ -246,11 +246,20 @@ export default StyleSheet.create({
     },
     bossFightText: {
         color:            '#ff3030',
-        fontSize:         18,
+        fontSize:         20,
         fontWeight:       '900',
         letterSpacing:    2.5,
         textShadowColor:  '#000',
         textShadowRadius: 8,
+    },
+    bossFightSub: {
+        marginTop:        4,
+        color:            '#FFD700',
+        fontSize:         12,
+        fontWeight:       '800',
+        letterSpacing:    2,
+        textShadowColor:  '#000',
+        textShadowRadius: 6,
     },
     bossDefeatedOverlay: {
         position:        'absolute',

@@ -3,6 +3,7 @@ import {
     ActivityIndicator,
     Animated,
     Dimensions,
+    Keyboard,
     KeyboardAvoidingView,
     Platform,
     ScrollView,
@@ -31,7 +32,7 @@ import SoundOffIcon from "../../assets/icons/SoundOffIcon.tsx";
 import PersonIcon from "../../assets/icons/PersonIcon.tsx";
 import MailIcon from "../../assets/icons/MailIcon.tsx";
 import LockIcon from "../../assets/icons/LockIcon.tsx";
-import {isTablet} from "../../utils/responsive.ts";
+import {isTablet, vs} from "../../utils/responsive.ts";
 
 // styles
 import styles from './Welcome.style.ts';
@@ -60,6 +61,17 @@ function Welcome() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [focusedField, setFocusedField] = useState<'name' | 'email' | 'password' | null>(null);
+
+    // Keyboard handling: track its height so we can pad the scroll content,
+    // and scroll the focused input into view when the keyboard opens.
+    const scrollRef = useRef<ScrollView>(null);
+    const [keyboardHeight, setKeyboardHeight] = useState(0);
+
+    function handleFieldFocus(field: 'name' | 'email' | 'password') {
+        setFocusedField(field);
+        // Wait for the keyboard/padding to settle, then reveal the form.
+        setTimeout(() => scrollRef.current?.scrollToEnd({animated: true}), 120);
+    }
 
     // Responsive logo sizing — smaller share of the screen on tablets.
     const logoW = isTablet ? Math.min(width * 0.42, 320) : width / 2.1;
@@ -185,6 +197,20 @@ function Welcome() {
     );
 
     useEffect(() => {
+        const showEvt = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+        const hideEvt = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+        const showSub = Keyboard.addListener(showEvt, e => {
+            setKeyboardHeight(e.endCoordinates?.height ?? 0);
+            setTimeout(() => scrollRef.current?.scrollToEnd({animated: true}), 60);
+        });
+        const hideSub = Keyboard.addListener(hideEvt, () => setKeyboardHeight(0));
+        return () => {
+            showSub.remove();
+            hideSub.remove();
+        };
+    }, []);
+
+    useEffect(() => {
         // Title fade in
         Animated.timing(fadeTitle, {
             toValue: 1,
@@ -268,7 +294,11 @@ function Welcome() {
                 behavior={Platform.OS === 'ios' ? 'padding' : undefined}
             >
                 <ScrollView
-                    contentContainerStyle={styles.scrollContent}
+                    ref={scrollRef}
+                    contentContainerStyle={[
+                        styles.scrollContent,
+                        Platform.OS === 'android' && {paddingBottom: vs(28) + keyboardHeight},
+                    ]}
                     keyboardShouldPersistTaps="handled"
                     showsVerticalScrollIndicator={false}
                 >
@@ -319,7 +349,7 @@ function Welcome() {
                                         placeholderTextColor="rgba(255,255,255,0.45)"
                                         value={name}
                                         onChangeText={setName}
-                                        onFocus={() => setFocusedField('name')}
+                                        onFocus={() => handleFieldFocus('name')}
                                         onBlur={() => setFocusedField(null)}
                                         autoCapitalize="none"
                                         autoCorrect={false}
@@ -338,7 +368,7 @@ function Welcome() {
                                     placeholderTextColor="rgba(255,255,255,0.45)"
                                     value={email}
                                     onChangeText={setEmail}
-                                    onFocus={() => setFocusedField('email')}
+                                    onFocus={() => handleFieldFocus('email')}
                                     onBlur={() => setFocusedField(null)}
                                     keyboardType="email-address"
                                     autoCapitalize="none"
@@ -357,7 +387,7 @@ function Welcome() {
                                     placeholderTextColor="rgba(255,255,255,0.45)"
                                     value={password}
                                     onChangeText={setPassword}
-                                    onFocus={() => setFocusedField('password')}
+                                    onFocus={() => handleFieldFocus('password')}
                                     onBlur={() => setFocusedField(null)}
                                     secureTextEntry
                                     autoCapitalize="none"

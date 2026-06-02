@@ -110,6 +110,7 @@ interface ShopArt {
     width?: number | null;
     height?: number | null;
     randomColors?: boolean;
+    rotateAnimation?: boolean;
     trackColor?: string | null;
 }
 let shopArtByKey: Record<string, ShopArt> = {};
@@ -117,7 +118,7 @@ let shopArtByKey: Record<string, ShopArt> = {};
 export function registerShopIcons(items: ShopItem[]): void {
     const next: Record<string, ShopArt> = {};
     for (const it of items) {
-        next[it.key] = { iconSvg: it.iconSvg, width: it.width, height: it.height, randomColors: it.randomColors, trackColor: it.trackColor };
+        next[it.key] = { iconSvg: it.iconSvg, width: it.width, height: it.height, randomColors: it.randomColors, rotateAnimation: it.rotateAnimation, trackColor: it.trackColor };
     }
     shopArtByKey = next;
 }
@@ -136,7 +137,9 @@ export function mergeShopItem(item: ShopItem): ShopEntry {
         type: isCard ? 'card' : 'background',
         typeName: visual.typeName,
         size: visual.size,
-        isRotation: visual.isRotation,
+        // Admin "rotate animation" flag drives the falling-card spin; falls back
+        // to the on-device visual default when the admin hasn't set it.
+        isRotation: item.rotateAnimation || visual.isRotation,
         images: visual.images,
         colors: visual.colors,
         animationType: visual.animationType,
@@ -176,7 +179,9 @@ function entryFromKey(
         type,
         typeName: visual.typeName,
         size: visual.size,
-        isRotation: visual.isRotation,
+        // Admin "rotate animation" flag (registered by key) drives the spin;
+        // falls back to the on-device visual default when unset.
+        isRotation: art.rotateAnimation || visual.isRotation,
         images: visual.images,
         colors: visual.colors,
         animationType: visual.animationType,

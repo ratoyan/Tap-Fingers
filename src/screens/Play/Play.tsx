@@ -84,6 +84,9 @@ function createBoxes(card: any, duration: number) {
         ty: 0,
         color: colors[Math.floor(Math.random() * colors.length)],
         duration,
+        // Seed the spin angle (same reason as spawnBox) so the very first batch
+        // of boxes rotates from the start instead of staying NaN until respawn.
+        rotation: 0,
         isBoom: false,
         isGolden: false,
     }));
@@ -100,6 +103,10 @@ function spawnBox(card: any, duration: number) {
         ty: 0,
         color: isGolden ? '#FFD700' : colors[Math.floor(Math.random() * colors.length)],
         duration,
+        // Seed the spin angle so the per-frame increment in the animation loop
+        // has a numeric base to grow from (cards flagged isRotation by the admin
+        // or their on-device visual). Without this it starts as NaN and never spins.
+        rotation: 0,
         isBoom: false,
         isGolden,
     };
@@ -845,10 +852,11 @@ export default function Play() {
                 width: card.width,
                 height: card.height,
                 randomColors: card.randomColors,
+                isRotation: card.isRotation,
                 trackColor: card.trackColor,
             }
         )));
-    }, [card.iconSvg, card.width, card.height, card.randomColors, card.trackColor]);
+    }, [card.iconSvg, card.width, card.height, card.randomColors, card.isRotation, card.trackColor]);
 
     useEffect(() => {
         if (!isPlaying) {

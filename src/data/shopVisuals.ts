@@ -137,9 +137,9 @@ export function mergeShopItem(item: ShopItem): ShopEntry {
         type: isCard ? 'card' : 'background',
         typeName: visual.typeName,
         size: visual.size,
-        // Admin "rotate animation" flag drives the falling-card spin; falls back
-        // to the on-device visual default when the admin hasn't set it.
-        isRotation: item.rotateAnimation || visual.isRotation,
+        // Admin "rotate animation" flag is the sole authority for the falling-card
+        // spin — a card rotates only when the admin has enabled it.
+        isRotation: item.rotateAnimation,
         images: visual.images,
         colors: visual.colors,
         animationType: visual.animationType,
@@ -179,9 +179,9 @@ function entryFromKey(
         type,
         typeName: visual.typeName,
         size: visual.size,
-        // Admin "rotate animation" flag (registered by key) drives the spin;
-        // falls back to the on-device visual default when unset.
-        isRotation: art.rotateAnimation || visual.isRotation,
+        // Admin "rotate animation" flag (registered by key) is the sole authority
+        // for the spin — a card rotates only when the admin has enabled it.
+        isRotation: art.rotateAnimation ?? false,
         images: visual.images,
         colors: visual.colors,
         animationType: visual.animationType,

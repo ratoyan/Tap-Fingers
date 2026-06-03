@@ -774,6 +774,12 @@ export default function Play() {
             bombCountRef.current = newBombs;
             setBombCount(newBombs);
             saveBombCount(newBombs);
+            // Clear the field the instant the boss level is reached: flag the
+            // boss fight (stops the spawn/animation loops from adding or moving
+            // boxes) and wipe every PlayBox now, so the boss intro plays on an
+            // empty arena. startBossFight() then reveals the boss after 2s.
+            isBossFightRef.current = true;
+            setBoxesData([]);
             setTimeout(() => startBossFight(levelRef.current), 2000);
         }
 

@@ -221,3 +221,24 @@ export interface HelperPurchaseResult {
     count: number;
     remainingCoins: number;
 }
+
+// Admin-managed boss (back-ends/tapfingers-server `bosses` table). The Play
+// screen renders these for the every-10-levels boss fight: HP is the taps
+// needed to defeat it, reward the coins granted, iconSvg the body artwork
+// (falls back to emoji), and the three colours + glow drive the orb gradient.
+export interface Boss {
+    id: number;
+    name: string;
+    emoji: string | null;
+    iconSvg: string | null;
+    colorStart: string;
+    colorMid: string;
+    colorEnd: string;
+    glow: string;
+    hp: number;
+    reward: number;
+    level: number | null;
+    isDefault: boolean;
+    sortOrder: number;
+    isActive: boolean;
+}

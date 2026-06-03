@@ -1,6 +1,8 @@
 import React, {useEffect, useRef, useState} from 'react';
 import {Animated, Dimensions, Easing, Text, TouchableOpacity, View} from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
+import {SvgXml} from 'react-native-svg';
+import {Boss} from '../../../services/types.ts';
 
 const {width, height} = Dimensions.get('window');
 export const BOSS_SIZE = 150;
@@ -34,6 +36,11 @@ interface Props {
     bossMaxHP: number;
     level:     number;
     onTap:     () => void;
+    // Admin-managed boss for this level (from the backend). When present its
+    // name, colours, glow and SVG/emoji art override the local tier so the
+    // fight shows exactly what the admin configured; null falls back to the
+    // bundled BOSS_TIERS look.
+    boss?:     Boss | null;
 }
 
 // ── Floating "-1" damage number ───────────────────────────────────────────────
@@ -75,7 +82,7 @@ function DamageFloat({onDone}: {onDone: () => void}) {
     );
 }
 
-export default function BossBox({bossHP, bossMaxHP, level, onTap}: Props) {
+export default function BossBox({bossHP, bossMaxHP, level, onTap, boss}: Props) {
     const posX        = useRef(new Animated.Value(width / 2 - BOSS_SIZE / 2)).current;
     const posY        = useRef(new Animated.Value(height / 2 - BOSS_SIZE / 2)).current;
     const scaleAnim   = useRef(new Animated.Value(0)).current;
@@ -99,6 +106,14 @@ export default function BossBox({bossHP, bossMaxHP, level, onTap}: Props) {
     const hpColorHi = hpRatio > 0.6 ? '#7bed9f' : hpRatio > 0.33 ? '#ffce6b' : '#ff7675';
     const moveDur   = Math.max(480, 1500 - Math.floor((level - 1) / 10) * 150);
     const tier      = getBossTier(level);
+
+    // Visuals: prefer the admin boss, fall back to the bundled tier. The aura
+    // ring has no admin field, so it always uses the tier accent.
+    const bossName    = boss?.name?.trim() ? boss.name.toUpperCase() : tier.name;
+    const bodyColors  = boss ? [boss.colorStart, boss.colorMid, boss.colorEnd] : tier.colors;
+    const haloColor   = boss?.glow || tier.glow;
+    const labelEmoji  = boss?.emoji || tier.emoji;          // shown on the HP banner
+    const iconSvg     = boss?.iconSvg || null;              // wins over the emoji on the body
 
     // Entry pop + perpetual halo pulse, idle breathing, and slow aura spin.
     useEffect(() => {
@@ -214,7 +229,7 @@ export default function BossBox({bossHP, bossMaxHP, level, onTap}: Props) {
                     textShadowColor:  '#000',
                     textShadowRadius: 6,
                 }}>
-                    {tier.emoji} {tier.name}
+                    {labelEmoji} {bossName}
                 </Text>
                 <View style={{
                     width:           '100%',
@@ -269,7 +284,7 @@ export default function BossBox({bossHP, bossMaxHP, level, onTap}: Props) {
                         width:           BOSS_SIZE + 36,
                         height:          BOSS_SIZE + 36,
                         borderRadius:    (BOSS_SIZE + 36) / 2,
-                        backgroundColor: isEnraged ? 'rgba(255,30,30,0.55)' : tier.glow,
+                        backgroundColor: isEnraged ? 'rgba(255,30,30,0.55)' : haloColor,
                         opacity:         glowOpacity,
                     }}
                 />
@@ -322,7 +337,7 @@ export default function BossBox({bossHP, bossMaxHP, level, onTap}: Props) {
                 {/* Boss body */}
                 <TouchableOpacity onPress={handleTap} activeOpacity={0.95}>
                     <LinearGradient
-                        colors={tier.colors}
+                        colors={bodyColors}
                         start={{x: 0.2, y: 0}}
                         end={{x: 0.8, y: 1}}
                         style={{
@@ -348,7 +363,11 @@ export default function BossBox({bossHP, bossMaxHP, level, onTap}: Props) {
                             }}
                         />
 
-                        <Text allowFontScaling={false} style={{fontSize: 76, lineHeight: 88}}>{tier.emoji}</Text>
+                        {iconSvg ? (
+                            <SvgXml xml={iconSvg} width={BOSS_SIZE * 0.62} height={BOSS_SIZE * 0.62}/>
+                        ) : (
+                            <Text allowFontScaling={false} style={{fontSize: 76, lineHeight: 88}}>{labelEmoji}</Text>
+                        )}
 
                         {/* Hit flash */}
                         <Animated.View

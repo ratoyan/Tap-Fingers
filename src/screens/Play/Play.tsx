@@ -20,6 +20,8 @@ import {useAuthStore} from '../../store/authStore.ts';
 import * as gameService from '../../services/gameService.ts';
 import * as userService from '../../services/userService.ts';
 import * as shopService from '../../services/shopService.ts';
+import * as bossService from '../../services/bossService.ts';
+import {Boss} from '../../services/types.ts';
 import {registerShopIcons, resolveCardEntry} from '../../data/shopVisuals.ts';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import uuId from 'react-native-uuid';
@@ -156,6 +158,12 @@ export default function Play() {
     const bossHPRef = useRef(0);
     const bossMaxHPRef = useRef(0);
     const bossRewardRef = useRef(0);
+    // The admin-managed boss for the current fight (null → local-tier fallback).
+    const bossRef = useRef<Boss | null>(null);
+    // Full admin boss catalog, prefetched once on screen focus so each boss
+    // fight picks its boss by level instantly — no per-fight network call that
+    // could fail/lag and drop the fight to the hardcoded fallback tier.
+    const bossListRef = useRef<Boss[]>([]);
 
     // ─── Backend game-session tracking ────────────────────────────────────────
     const sessionTokenRef = useRef<string | null>(null);
@@ -201,6 +209,7 @@ export default function Play() {
     const [isBossFight, setIsBossFight] = useState(false);
     const [bossHP, setBossHP] = useState(0);
     const [bossMaxHP, setBossMaxHP] = useState(0);
+    const [boss, setBoss] = useState<Boss | null>(null);
     const [showBossDefeated, setShowBossDefeated] = useState(false);
 
     const levelIndex = Math.min(level - 1, 4);
@@ -243,7 +252,7 @@ export default function Play() {
         maxComboRef.current = 0;
         sessionStartRef.current = Date.now();
         sessionTokenRef.current = null;
-        setLevelLength(30);
+        setLevelLength(1);
 
         try {
             // The token returned here is what lets submitGameSession() report the
@@ -489,6 +498,7 @@ export default function Play() {
         isBossFightRef.current = false;
         bossHPRef.current = 0;
         bossMaxHPRef.current = 0;
+        bossRef.current = null;
         setCount(0);
         setLevelCount(0);
         setLevel(1);
@@ -501,6 +511,7 @@ export default function Play() {
         setIsBossFight(false);
         setBossHP(0);
         setBossMaxHP(0);
+        setBoss(null);
         setShowBossDefeated(false);
         setIsPlaying(true);
         setIsLoseModal(false);
@@ -618,12 +629,41 @@ export default function Play() {
     }
 
     // ─── Boss fight ───────────────────────────────────────────────────────────
-    function startBossFight(lvl: number) {
-        const maxHP = 10 + Math.floor(lvl / 10) * 10;
+
+    // Picks the admin boss for a level from the prefetched catalog: the boss
+    // assigned to exactly this level → the default boss → null. Mirrors the
+    // backend's getBossForLevel so each level shows its own boss.
+    function pickBossForLevel(lvl: number): Boss | null {
+        const list = bossListRef.current;
+        if (!list.length) return null;
+        return list.find(b => b.isActive && b.level === lvl)
+            || list.find(b => b.isActive && b.isDefault)
+            || null;
+    }
+
+    async function startBossFight(lvl: number) {
+        // Pick the admin-configured boss for this level (assigned → default →
+        // null). HP (taps to defeat) and reward come straight from admin. Prefer
+        // the prefetched catalog (instant); only hit the network if it's empty,
+        // and only fall back to the local formula when both are unavailable.
+        let admin: Boss | null = pickBossForLevel(lvl);
+        if (!admin) {
+            try {
+                admin = await bossService.getBossForLevel(lvl);
+            } catch {
+                admin = null;
+            }
+        }
+
+        const maxHP  = admin && admin.hp > 0 ? admin.hp : 10 + Math.floor(lvl / 10) * 10;
+        const reward = admin ? admin.reward : Math.floor(lvl / 10) * 5;
+
+        bossRef.current = admin;
         bossHPRef.current = maxHP;
         bossMaxHPRef.current = maxHP;
-        bossRewardRef.current = Math.floor(lvl / 10) * 5;
+        bossRewardRef.current = reward;
         isBossFightRef.current = true;
+        setBoss(admin);
         setBossHP(maxHP);
         setBossMaxHP(maxHP);
         setIsBossFight(true);
@@ -781,6 +821,13 @@ export default function Play() {
                     const key = useAuthStore.getState().stats?.activeCardKey;
                     useShopStore.getState().setCard(resolveCardEntry(key));
                 })
+                .catch(() => {});
+
+            // Prefetch the admin boss catalog so every boss fight (levels 10, 20,
+            // 30 … 100) picks its own boss by level straight from cache — no
+            // per-fight network call to fail and drop to the fallback tier.
+            bossService.getBosses()
+                .then(list => { bossListRef.current = list; })
                 .catch(() => {});
 
             const loadTimeout = setTimeout(() => loadMusic('games1.mp3'), 100);
@@ -1028,7 +1075,7 @@ export default function Play() {
                         ⚔️ BOSS FIGHT ⚔️
                     </Text>
                     <Text allowFontScaling={false} style={styles.bossFightSub}>
-                        {getBossTier(level).name} • TAP TO DESTROY
+                        {(boss?.name || getBossTier(level).name).toUpperCase()} • TAP TO DESTROY
                     </Text>
                 </View>
             )}
@@ -1040,6 +1087,7 @@ export default function Play() {
                     bossMaxHP={bossMaxHP}
                     level={level}
                     onTap={handleBossTap}
+                    boss={boss}
                 />
             )}
 
@@ -1048,7 +1096,7 @@ export default function Play() {
                 <View style={styles.bossDefeatedOverlay}>
                     <Text allowFontScaling={false} style={styles.bossDefeatedEmoji}>🏆</Text>
                     <Text allowFontScaling={false} style={styles.bossDefeatedText}>
-                        {getBossTier(level).name} DEFEATED!
+                        {(boss?.name || getBossTier(level).name).toUpperCase()} DEFEATED!
                     </Text>
                     <Text allowFontScaling={false} style={styles.bossDefeatedReward}>
                         +{bossRewardRef.current} coins • ❤️ restored

@@ -23,7 +23,8 @@
       "Bash(timeout 40 npx sequelize-cli db:seed --seed 006-card-icon-svgs.js)",
       "Bash(netstat -ano)",
       "Bash(taskkill //PID 15132 //F)",
-      "Bash(powershell -Command \"Stop-Process -Id 15132 -Force\")"
+      "Bash(powershell -Command \"Stop-Process -Id 15132 -Force\")",
+      "Bash(curl -s \"http://localhost:3000/api/bosses\")"
     ]
   }
 }

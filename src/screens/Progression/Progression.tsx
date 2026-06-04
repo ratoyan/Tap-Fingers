@@ -137,6 +137,7 @@ function Progression() {
                             }}
                             topLevel={topLevel}
                             trophy={getTrophyEmoji(index)}
+                            index={index}
                         />
                     )}
                     accessibilityRole="list"

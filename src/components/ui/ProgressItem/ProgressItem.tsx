@@ -17,13 +17,15 @@ import {GRADIENT_DARK, GRADIENT_LIGHT} from "../../../constants/colors.ts";
 interface ProgressItemProps {
     item: any,
     trophy: any,
+    // Zero-based position in the leaderboard list; rendered as a 1-based rank.
+    index?: number,
     // Highest level reached across the leaderboard — used as the ceiling for
     // the progress-bar denominator (levelLength × topLevel). Defaults to this
     // entry's own level so the bar still renders if the parent forgets to pass it.
     topLevel?: number,
 }
 
-function ProgressItem({item, trophy, topLevel}: ProgressItemProps) {
+function ProgressItem({item, trophy, index, topLevel}: ProgressItemProps) {
     const {t} = useTranslation();
     const levelLength = useConfigStore(s => s.levelLength);
 
@@ -51,7 +53,11 @@ function ProgressItem({item, trophy, topLevel}: ProgressItemProps) {
     const primaryText = item.username
         ? `${item.username}`
         : `${t('level')} ${item.level}`;
-    const levelText = trophy ? `${trophy} ${primaryText}` : primaryText;
+    // The top 3 show a medal instead of a number; rank 4+ (index ≥ 3) gets the
+    // numeric 1-based rank prefix.
+    const rankPrefix = typeof index === 'number' && index >= 3 ? `${index + 1}. ` : '';
+    const trophyPrefix = trophy ? `${trophy} ` : '';
+    const levelText = `${rankPrefix}${trophyPrefix}${primaryText}`;
 
     const progressPercent = Math.round(progress * 100);
 

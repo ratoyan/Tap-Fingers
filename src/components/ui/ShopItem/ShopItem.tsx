@@ -167,11 +167,7 @@ function ShopItem({item, index = 0, handlePress, selected = false, purchased = f
 
     // State-tinted card border: green when equipped, gold when owned, purple
     // otherwise — a quick at-a-glance signal of the item's status.
-    const cardBorderColor = selected
-        ? 'rgba(127,255,127,0.55)'
-        : purchased
-            ? 'rgba(255,215,0,0.40)'
-            : 'rgba(142,45,226,0.30)';
+    const cardBorderColor = DARK_PURPLE;
 
     const renderPreview = () => {
         // Admin-authored SVG (backend) wins for cards — falls back to the

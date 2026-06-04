@@ -18,7 +18,7 @@ import styles from './Challenges.style.ts';
 import {DARK_PURPLE, PURPLE, WHITE} from "../../constants/colors.ts";
 
 // Challenges fetched per page; the backend caps `limit` at 100.
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 15;
 
 // Maps a backend challenge (+ per-player progress) onto the shape ChallengeCard
 // renders. `progress` is a 0–100 percentage; the backend has no "locked" concept,

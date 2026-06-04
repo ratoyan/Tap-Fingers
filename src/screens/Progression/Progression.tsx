@@ -23,7 +23,7 @@ import {WHITE} from "../../constants/colors.ts";
 
 // Rows fetched per page. The backend caps `limit` at 100; 10 keeps each
 // scroll-triggered request small so new rows stream in smoothly.
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 15;
 
 function Progression() {
     const {t} = useTranslation();
@@ -60,7 +60,14 @@ function Progression() {
 
             pageRef.current = board.page;
             totalPagesRef.current = board.totalPages;
-            setEntries(prev => (reset ? board.scores : [...prev, ...board.scores]));
+            // Drop any rows already in the list before appending. Offset paging
+            // (plus per-page server caching) can occasionally re-emit a row at a
+            // page boundary; deduping by id keeps FlatList keys unique.
+            setEntries(prev => {
+                if (reset) return board.scores;
+                const seen = new Set(prev.map(e => e.id));
+                return [...prev, ...board.scores.filter(e => !seen.has(e.id))];
+            });
 
             if (config?.TAPS_PER_LEVEL) {
                 setLevelLength(config.TAPS_PER_LEVEL);

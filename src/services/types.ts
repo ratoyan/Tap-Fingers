@@ -129,6 +129,13 @@ export interface ChallengeWithProgress extends Challenge {
     progress: ChallengeProgress;
 }
 
+export interface MyChallengesPage {
+    challenges: ChallengeWithProgress[];
+    total: number;
+    page: number;
+    totalPages: number;
+}
+
 export interface ScoreEntry {
     id: number;
     username: string;

@@ -1,5 +1,5 @@
 import api from './api';
-import { Challenge, ChallengeWithProgress } from './types';
+import { Challenge, MyChallengesPage } from './types';
 
 // ── Challenge service ─────────────────────────────────────────────────────────
 // Backend: GET /api/challenges (public catalog),
@@ -14,9 +14,9 @@ export async function getChallenges(): Promise<Challenge[]> {
     return data.data.challenges;
 }
 
-export async function getMyChallenges(): Promise<ChallengeWithProgress[]> {
-    const { data } = await api.get('/challenges/my');
-    return data.data.challenges;
+export async function getMyChallenges(page = 1, limit = 20): Promise<MyChallengesPage> {
+    const { data } = await api.get('/challenges/my', { params: { page, limit } });
+    return data.data;
 }
 
 export interface ClaimResult {

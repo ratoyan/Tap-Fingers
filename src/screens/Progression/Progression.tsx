@@ -1,4 +1,4 @@
-import React, {useCallback, useState} from 'react';
+import React, {useCallback, useRef, useState} from 'react';
 import {ActivityIndicator, FlatList, View} from 'react-native';
 import {useFocusEffect} from '@react-navigation/core';
 import {getTrophyEmoji} from "../../utils/helpers.ts";
@@ -21,36 +21,70 @@ import EmptyProgression from "../../components/ui/EmptyProgression/EmptyProgress
 import styles from './Progression.style.ts';
 import {WHITE} from "../../constants/colors.ts";
 
+// Rows fetched per page. The backend caps `limit` at 100; 10 keeps each
+// scroll-triggered request small so new rows stream in smoothly.
+const PAGE_SIZE = 10;
+
 function Progression() {
     const {t} = useTranslation();
 
     const [entries, setEntries] = useState<ScoreEntry[]>([]);
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(true);        // first page only
+    const [loadingMore, setLoadingMore] = useState(false); // footer spinner
+
+    // Pagination cursor kept in refs so onEndReached reads live values without
+    // having to be re-created (and re-bound) on every appended page.
+    const pageRef = useRef(0);          // highest page already loaded (0 = none yet)
+    const totalPagesRef = useRef(1);    // ceiling reported by the server
+    const inFlightRef = useRef(false);  // guards against overlapping fetches
 
     const setLevelLength = useConfigStore(s => s.setLevelLength);
 
-    const load = useCallback(async () => {
+    // Loads one leaderboard page. `reset` restarts from page 1 (focus refresh);
+    // otherwise it appends the next page for infinite scroll.
+    const loadPage = useCallback(async (reset: boolean) => {
+        if (inFlightRef.current) return;                              // already fetching
+        const nextPage = reset ? 1 : pageRef.current + 1;
+        if (!reset && nextPage > totalPagesRef.current) return;       // no more pages
+
+        inFlightRef.current = true;
+        if (reset) setLoading(true); else setLoadingMore(true);
+
         try {
+            // The game config only needs fetching once (on the reset/initial load);
+            // appended pages skip it.
             const [board, config] = await Promise.all([
-                scoreService.getLeaderboard(1, 50),
-                gameService.getGameConfig().catch(() => null),
+                scoreService.getLeaderboard(nextPage, PAGE_SIZE),
+                reset ? gameService.getGameConfig().catch(() => null) : Promise.resolve(null),
             ]);
-            setEntries(board.scores);
+
+            pageRef.current = board.page;
+            totalPagesRef.current = board.totalPages;
+            setEntries(prev => (reset ? board.scores : [...prev, ...board.scores]));
+
             if (config?.TAPS_PER_LEVEL) {
                 setLevelLength(config.TAPS_PER_LEVEL);
             }
         } catch (error) {
             console.error('Failed to load leaderboard:', error);
         } finally {
-            setLoading(false);
+            inFlightRef.current = false;
+            if (reset) setLoading(false); else setLoadingMore(false);
         }
     }, [setLevelLength]);
 
     useFocusEffect(
         useCallback(() => {
-            load();
-        }, [load])
+            // Refresh from the top each time the screen gains focus.
+            pageRef.current = 0;
+            totalPagesRef.current = 1;
+            loadPage(true);
+        }, [loadPage])
     );
+
+    const handleEndReached = useCallback(() => {
+        loadPage(false);
+    }, [loadPage]);
 
     // ProgressItem owns the bar math (reads levelLength from the global
     // configStore); we just hand it the leaderboard's level ceiling so every
@@ -59,6 +93,15 @@ function Progression() {
         (max, entry) => (entry.levelReached > max ? entry.levelReached : max),
         1,
     );
+
+    const renderFooter = () => {
+        if (!loadingMore) return null;
+        return (
+            <View style={{paddingVertical: 20}}>
+                <ActivityIndicator size="small" color={WHITE}/>
+            </View>
+        );
+    };
 
     return (
         <View
@@ -91,6 +134,9 @@ function Progression() {
                     )}
                     accessibilityRole="list"
                     showsVerticalScrollIndicator={false}
+                    onEndReached={handleEndReached}
+                    onEndReachedThreshold={0.4}
+                    ListFooterComponent={renderFooter}
                     contentContainerStyle={
                         entries.length === 0
                             ? {flexGrow: 1}

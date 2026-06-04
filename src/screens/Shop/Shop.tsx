@@ -22,7 +22,7 @@ import BackgroundsIcon from "../../assets/icons/BackgroundsIcon.tsx";
 
 // styles
 import styles from './Shop.style.ts';
-import {DARK_PURPLE, GRADIENT_DARK, GRADIENT_LIGHT, PURPLE, WHITE} from "../../constants/colors.ts";
+import {DARK_PURPLE, GRADIENT_DARK, GRADIENT_LIGHT, PURPLE, PURPLE_DARK, WHITE} from "../../constants/colors.ts";
 import {ms} from "../../utils/responsive.ts";
 import LinearGradient from "react-native-linear-gradient";
 
@@ -157,7 +157,7 @@ function Shop() {
 
     return (
         <LinearGradient
-            colors={[DARK_PURPLE, DARK_PURPLE, PURPLE]}
+            colors={[DARK_PURPLE, PURPLE_DARK, PURPLE_DARK, PURPLE]}
             style={styles.container}
         >
             <View style={{paddingHorizontal: HORIZONAL_OFFSET, marginBottom: 15}}>
@@ -196,7 +196,8 @@ function Shop() {
                 <TouchableOpacity style={styles.tab} onPress={() => switchTab('card')} activeOpacity={0.8}>
                     <View style={styles.tabInner}>
                         <CardsIcon size={ms(20)} color={activeTab === 'card' ? TAB_ICON_ACTIVE : TAB_ICON_INACTIVE}/>
-                        <Text allowFontScaling={false} style={[styles.tabText, activeTab === 'card' && styles.tabTextActive]}>
+                        <Text allowFontScaling={false}
+                              style={[styles.tabText, activeTab === 'card' && styles.tabTextActive]}>
                             {t('cards')}
                         </Text>
                     </View>
@@ -204,8 +205,10 @@ function Shop() {
 
                 <TouchableOpacity style={styles.tab} onPress={() => switchTab('background')} activeOpacity={0.8}>
                     <View style={styles.tabInner}>
-                        <BackgroundsIcon size={ms(20)} color={activeTab === 'background' ? TAB_ICON_ACTIVE : TAB_ICON_INACTIVE}/>
-                        <Text allowFontScaling={false} style={[styles.tabText, activeTab === 'background' && styles.tabTextActive]}>
+                        <BackgroundsIcon size={ms(20)}
+                                         color={activeTab === 'background' ? TAB_ICON_ACTIVE : TAB_ICON_INACTIVE}/>
+                        <Text allowFontScaling={false}
+                              style={[styles.tabText, activeTab === 'background' && styles.tabTextActive]}>
                             {t('backgrounds')}
                         </Text>
                     </View>

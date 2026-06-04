@@ -21,6 +21,11 @@ export default StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
     },
+    tabInner: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 7,
+    },
     tabActive: {
         borderRadius: 14,
     },

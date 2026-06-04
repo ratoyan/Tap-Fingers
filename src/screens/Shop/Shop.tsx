@@ -16,10 +16,19 @@ import BackHeader from "../../components/ui/BackHeader/BackHeader.tsx";
 import ShopItem from "../../components/ui/ShopItem/ShopItem.tsx";
 import WatchAdModal from "../../components/ui/WatchAdModal/WatchAdModal.tsx";
 
+// icons
+import CardsIcon from "../../assets/icons/CardsIcon.tsx";
+import BackgroundsIcon from "../../assets/icons/BackgroundsIcon.tsx";
+
 // styles
 import styles from './Shop.style.ts';
 import {DARK_PURPLE, GRADIENT_DARK, GRADIENT_LIGHT, PURPLE, WHITE} from "../../constants/colors.ts";
+import {ms} from "../../utils/responsive.ts";
 import LinearGradient from "react-native-linear-gradient";
+
+// Tab icon tints: bright when active, dimmed otherwise (matches tabText).
+const TAB_ICON_ACTIVE = WHITE;
+const TAB_ICON_INACTIVE = 'rgba(255,255,255,0.45)';
 
 type TabType = 'card' | 'background';
 
@@ -185,15 +194,21 @@ function Shop() {
                 </Animated.View>
 
                 <TouchableOpacity style={styles.tab} onPress={() => switchTab('card')} activeOpacity={0.8}>
-                    <Text allowFontScaling={false} style={[styles.tabText, activeTab === 'card' && styles.tabTextActive]}>
-                        🃏 {t('cards')}
-                    </Text>
+                    <View style={styles.tabInner}>
+                        <CardsIcon size={ms(20)} color={activeTab === 'card' ? TAB_ICON_ACTIVE : TAB_ICON_INACTIVE}/>
+                        <Text allowFontScaling={false} style={[styles.tabText, activeTab === 'card' && styles.tabTextActive]}>
+                            {t('cards')}
+                        </Text>
+                    </View>
                 </TouchableOpacity>
 
                 <TouchableOpacity style={styles.tab} onPress={() => switchTab('background')} activeOpacity={0.8}>
-                    <Text allowFontScaling={false} style={[styles.tabText, activeTab === 'background' && styles.tabTextActive]}>
-                        🖼 {t('backgrounds')}
-                    </Text>
+                    <View style={styles.tabInner}>
+                        <BackgroundsIcon size={ms(20)} color={activeTab === 'background' ? TAB_ICON_ACTIVE : TAB_ICON_INACTIVE}/>
+                        <Text allowFontScaling={false} style={[styles.tabText, activeTab === 'background' && styles.tabTextActive]}>
+                            {t('backgrounds')}
+                        </Text>
+                    </View>
                 </TouchableOpacity>
             </View>
 

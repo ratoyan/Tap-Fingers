@@ -1,5 +1,5 @@
-﻿import React, {useEffect, useRef} from "react";
-import {Animated, Easing, Image, Text, TouchableOpacity, View} from "react-native";
+﻿import React, {useEffect, useRef, useState} from "react";
+import {Animated, Easing, Image, StyleSheet, Text, TouchableOpacity, View} from "react-native";
 import {SvgXml} from "react-native-svg";
 
 // icons
@@ -37,7 +37,14 @@ function ShopItem({item, index = 0, handlePress, selected = false, purchased = f
     const glowAnim = useRef(new Animated.Value(0)).current;
     const badgeSpin = useRef(new Animated.Value(0)).current;
     const badgePulse = useRef(new Animated.Value(0)).current;
+    const shineAnim = useRef(new Animated.Value(0)).current;   // sweeping gloss
+    const floatAnim = useRef(new Animated.Value(0)).current;   // idle preview bob
     const isFirstRender = useRef(true);
+
+    // Measured card width, so the shine can travel exactly edge-to-edge.
+    const [cardWidth, setCardWidth] = useState(0);
+
+    const isBackground = item.typeName === 'background';
 
     // Random-colors badge: a slowly sweeping rainbow disc with a gentle pulse,
     // so the indicator feels alive and signals "colourful" at a glance.
@@ -102,6 +109,34 @@ function ShopItem({item, index = 0, handlePress, selected = false, purchased = f
         ]).start();
     }, [selected]);
 
+    // Glossy shine that sweeps across the card on a gentle, staggered loop.
+    useEffect(() => {
+        if (cardWidth === 0) return;
+        const loop = Animated.loop(
+            Animated.sequence([
+                Animated.delay(1600 + (index % 6) * 260),
+                Animated.timing(shineAnim, {toValue: 1, duration: 950, easing: Easing.inOut(Easing.ease), useNativeDriver: true}),
+                Animated.timing(shineAnim, {toValue: 0, duration: 0, useNativeDriver: true}),
+            ]),
+        );
+        loop.start();
+        return () => loop.stop();
+    }, [cardWidth, index]);
+
+    // Idle float — the card preview gently bobs (skip for full-bleed backgrounds,
+    // where shifting the image would expose an edge).
+    useEffect(() => {
+        if (isBackground) return;
+        const loop = Animated.loop(
+            Animated.sequence([
+                Animated.timing(floatAnim, {toValue: 1, duration: 1600, easing: Easing.inOut(Easing.ease), useNativeDriver: true}),
+                Animated.timing(floatAnim, {toValue: 0, duration: 1600, easing: Easing.inOut(Easing.ease), useNativeDriver: true}),
+            ]),
+        );
+        const t = setTimeout(() => loop.start(), (index % 6) * 120);
+        return () => { clearTimeout(t); loop.stop(); };
+    }, [isBackground, index]);
+
     function onPressIn() {
         Animated.spring(scaleAnim, {toValue: 0.93, friction: 8, useNativeDriver: true}).start();
     }
@@ -117,6 +152,26 @@ function ShopItem({item, index = 0, handlePress, selected = false, purchased = f
 
     const badgeRotate = badgeSpin.interpolate({inputRange: [0, 1], outputRange: ['0deg', '360deg']});
     const badgeScale = badgePulse.interpolate({inputRange: [0, 1], outputRange: [1, 1.12]});
+
+    // Shine travels from just off the left edge to just off the right edge, and
+    // is only visible mid-sweep (fades in then out).
+    const shineTranslate = shineAnim.interpolate({
+        inputRange: [0, 1],
+        outputRange: [-cardWidth * 0.6, cardWidth * 1.1],
+    });
+    const shineOpacity = shineAnim.interpolate({
+        inputRange: [0, 0.15, 0.85, 1],
+        outputRange: [0, 0.5, 0.5, 0],
+    });
+    const floatY = floatAnim.interpolate({inputRange: [0, 1], outputRange: [0, -5]});
+
+    // State-tinted card border: green when equipped, gold when owned, purple
+    // otherwise — a quick at-a-glance signal of the item's status.
+    const cardBorderColor = selected
+        ? 'rgba(127,255,127,0.55)'
+        : purchased
+            ? 'rgba(255,215,0,0.40)'
+            : 'rgba(142,45,226,0.30)';
 
     const renderPreview = () => {
         // Admin-authored SVG (backend) wins for cards — falls back to the
@@ -226,8 +281,6 @@ function ShopItem({item, index = 0, handlePress, selected = false, purchased = f
         );
     };
 
-    const isBackground = item.typeName === 'background';
-
     return (
         <Animated.View
             style={[
@@ -251,17 +304,41 @@ function ShopItem({item, index = 0, handlePress, selected = false, purchased = f
                 disabled={disabled}
             >
                 <LinearGradient
-                    colors={[PURPLE_DARK, DARK_PURPLE]}
+                    colors={['#3a0b5e', PURPLE_DARK, DARK_PURPLE]}
                     start={{x: 0, y: 0}}
                     end={{x: 1, y: 1}}
-                    style={styles.card}
+                    style={[styles.card, {borderColor: cardBorderColor}]}
+                    onLayout={e => setCardWidth(e.nativeEvent.layout.width)}
                 >
                     {/* Preview */}
                     <View style={[
                         styles.preview,
                         !isBackground && {paddingVertical: 10},
                     ]}>
-                        {renderPreview()}
+                        {/* Soft coloured backdrop behind card icons (hidden under
+                            full-bleed background previews, which paint over it). */}
+                        {!isBackground && (
+                            <LinearGradient
+                                colors={['rgba(142,45,226,0.22)', 'rgba(0,0,0,0)']}
+                                start={{x: 0.5, y: 0}}
+                                end={{x: 0.5, y: 1}}
+                                style={StyleSheet.absoluteFill}
+                                pointerEvents="none"
+                            />
+                        )}
+                        {/* Card icons gently float; full-bleed backgrounds render
+                            directly so their 100%-height fill still resolves. */}
+                        {isBackground ? renderPreview() : (
+                            <Animated.View style={{transform: [{translateY: floatY}]}}>
+                                {renderPreview()}
+                            </Animated.View>
+                        )}
+                        {/* Glossy sheen along the top edge. */}
+                        <LinearGradient
+                            colors={['rgba(255,255,255,0.12)', 'rgba(255,255,255,0)']}
+                            style={styles.previewSheen}
+                            pointerEvents="none"
+                        />
                     </View>
 
                     {/* Info */}
@@ -269,6 +346,21 @@ function ShopItem({item, index = 0, handlePress, selected = false, purchased = f
                         <Text allowFontScaling={false} style={styles.title} numberOfLines={1}>{item.title}</Text>
                         {renderBadge()}
                     </View>
+
+                    {/* Sweeping shine across the whole card. */}
+                    {cardWidth > 0 && (
+                        <Animated.View
+                            pointerEvents="none"
+                            style={[styles.shine, {opacity: shineOpacity, transform: [{translateX: shineTranslate}, {skewX: '-18deg'}]}]}
+                        >
+                            <LinearGradient
+                                colors={['rgba(255,255,255,0)', 'rgba(255,255,255,0.35)', 'rgba(255,255,255,0)']}
+                                start={{x: 0, y: 0}}
+                                end={{x: 1, y: 0}}
+                                style={{flex: 1}}
+                            />
+                        </Animated.View>
+                    )}
                 </LinearGradient>
 
                 {/* Random-colors indicator (top-left) — falling cards of this

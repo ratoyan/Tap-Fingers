@@ -30,6 +30,17 @@ export default StyleSheet.create({
         shadowOpacity: 0.8,
         shadowRadius: 10,
     },
+    avatarFallback: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        overflow: 'hidden',
+    },
+    avatarEmoji: {
+        fontSize: ms(30),
+        textShadowColor: 'rgba(0,0,0,0.25)',
+        textShadowOffset: {width: 0, height: 1},
+        textShadowRadius: 3,
+    },
     info: {
         flex: 1,
     },

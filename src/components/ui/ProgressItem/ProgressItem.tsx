@@ -5,10 +5,12 @@ import {useTranslation} from "react-i18next";
 
 // icons
 import Coin from "../../../assets/icons/Coin.tsx";
-import UserIcon from "../../../assets/icons/UserIcon.tsx";
 
 // store
 import {useConfigStore} from "../../../store/configStore.ts";
+
+// data
+import {avatarForId} from "../../../data/avatars.ts";
 
 // styles
 import styles from './ProgressItem.style.ts';
@@ -61,6 +63,10 @@ function ProgressItem({item, trophy, index, topLevel}: ProgressItemProps) {
 
     const progressPercent = Math.round(progress * 100);
 
+    // Same deterministic avatar the Profile screen shows (emoji on a gradient,
+    // keyed by the player's id) — so each row wears that player's own icon.
+    const avatar = avatarForId(item.playerId);
+
     return (
         <LinearGradient
             colors={[GRADIENT_LIGHT, GRADIENT_DARK]}
@@ -80,14 +86,17 @@ function ProgressItem({item, trophy, index, topLevel}: ProgressItemProps) {
                     accessibilityLabel={`${t('avatar')}`}
                 />
             ) : (
-                <View
-                    style={[styles.avatar, {alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.25)'}]}
+                <LinearGradient
+                    colors={avatar.colors}
+                    start={{x: 0, y: 0}}
+                    end={{x: 1, y: 1}}
+                    style={[styles.avatar, styles.avatarFallback]}
                     accessible={true}
                     accessibilityRole="image"
                     accessibilityLabel={`${t('avatar')}`}
                 >
-                    <UserIcon size={28} color="#fff"/>
-                </View>
+                    <Text allowFontScaling={false} style={styles.avatarEmoji}>{avatar.emoji}</Text>
+                </LinearGradient>
             )}
 
             <View style={styles.info} importantForAccessibility="no-hide-descendants">

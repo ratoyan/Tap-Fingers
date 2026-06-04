@@ -134,6 +134,7 @@ function Progression() {
                         <ProgressItem
                             item={{
                                 id: item.id,
+                                playerId: item.playerId,
                                 username: item.username,
                                 level: item.levelReached,
                                 score: item.score,
@@ -168,6 +169,7 @@ function Progression() {
                     <ProgressItem
                         item={{
                             id: myRank.entry.id,
+                            playerId: myRank.entry.playerId,
                             username: myRank.entry.username,
                             level: myRank.entry.levelReached,
                             score: myRank.entry.score,

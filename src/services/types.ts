@@ -138,6 +138,7 @@ export interface MyChallengesPage {
 
 export interface ScoreEntry {
     id: number;
+    playerId: string;
     username: string;
     score: number;
     taps: number;

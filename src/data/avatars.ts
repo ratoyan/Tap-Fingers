@@ -9,23 +9,26 @@ export interface AvatarOption {
     colors: [string, string]; // gradient background
 }
 
+// Game-themed avatars — the things players actually tap, dodge and chase in
+// TapFingers (balloons, bombs, stars, hearts, bosses…), each on a gradient
+// that matches the icon's vibe.
 export const AVATARS: AvatarOption[] = [
-    {emoji: '🦊', colors: ['#FF9A56', '#FF6A88']},
-    {emoji: '🐱', colors: ['#A18CD1', '#FBC2EB']},
-    {emoji: '🐼', colors: ['#84FAB0', '#8FD3F4']},
-    {emoji: '🦁', colors: ['#F6D365', '#FDA085']},
-    {emoji: '🐸', colors: ['#96E6A1', '#43C6AC']},
-    {emoji: '🦄', colors: ['#A1C4FD', '#C2E9FB']},
-    {emoji: '🐯', colors: ['#FBAB7E', '#F7CE68']},
-    {emoji: '🐧', colors: ['#5EE7DF', '#B490CA']},
-    {emoji: '🐵', colors: ['#FDCB82', '#E8A87C']},
-    {emoji: '🐨', colors: ['#9FA5D5', '#E8F5C8']},
-    {emoji: '🦉', colors: ['#FFD3A5', '#FD6585']},
-    {emoji: '🐙', colors: ['#FF6A88', '#FF99AC']},
-    {emoji: '🐢', colors: ['#56AB2F', '#A8E063']},
-    {emoji: '🐳', colors: ['#4FACFE', '#00F2FE']},
-    {emoji: '🦋', colors: ['#C471F5', '#FA71CD']},
-    {emoji: '🐝', colors: ['#F7971E', '#FFD200']},
+    {emoji: '👆', colors: ['#8E2DE2', '#4A00E0']}, // the tap itself
+    {emoji: '🎈', colors: ['#FF6A88', '#FF99AC']}, // balloon
+    {emoji: '💣', colors: ['#3A3A3A', '#FF6A00']}, // bomb
+    {emoji: '⭐', colors: ['#F7971E', '#FFD200']}, // star
+    {emoji: '💎', colors: ['#4FACFE', '#00F2FE']}, // diamond
+    {emoji: '❤️', colors: ['#FF512F', '#DD2476']}, // heart
+    {emoji: '👻', colors: ['#A18CD1', '#FBC2EB']}, // ghost
+    {emoji: '🔥', colors: ['#FF512F', '#F09819']}, // flame
+    {emoji: '⚡', colors: ['#F6D365', '#FDA085']}, // bolt
+    {emoji: '🎯', colors: ['#FF5858', '#FB2576']}, // target
+    {emoji: '🏆', colors: ['#FBAB7E', '#F7CE68']}, // trophy
+    {emoji: '👑', colors: ['#FFD200', '#F7971E']}, // crown
+    {emoji: '🚀', colors: ['#667EEA', '#764BA2']}, // rocket
+    {emoji: '💥', colors: ['#F12711', '#F5AF19']}, // boom
+    {emoji: '🃏', colors: ['#C471F5', '#FA71CD']}, // card
+    {emoji: '🎮', colors: ['#43C6AC', '#191654']}, // controller
 ];
 
 // Stable, evenly-distributed pick from the player's id (UUID/string).

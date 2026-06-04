@@ -148,7 +148,7 @@ function Shop() {
 
     return (
         <LinearGradient
-            colors={[DARK_PURPLE, PURPLE]}
+            colors={[DARK_PURPLE, DARK_PURPLE, PURPLE]}
             style={styles.container}
         >
             <View style={{paddingHorizontal: HORIZONAL_OFFSET, marginBottom: 15}}>

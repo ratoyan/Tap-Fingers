@@ -7,7 +7,7 @@ import {useTranslation} from "react-i18next";
 // services
 import * as scoreService from "../../services/scoreService.ts";
 import * as gameService from "../../services/gameService.ts";
-import {ScoreEntry} from "../../services/types.ts";
+import {MyRank, ScoreEntry} from "../../services/types.ts";
 
 // store
 import {useConfigStore} from "../../store/configStore.ts";
@@ -31,6 +31,7 @@ function Progression() {
     const [entries, setEntries] = useState<ScoreEntry[]>([]);
     const [loading, setLoading] = useState(true);        // first page only
     const [loadingMore, setLoadingMore] = useState(false); // footer spinner
+    const [myRank, setMyRank] = useState<MyRank | null>(null); // signed-in player's own standing
 
     // Pagination cursor kept in refs so onEndReached reads live values without
     // having to be re-created (and re-bound) on every appended page.
@@ -51,11 +52,12 @@ function Progression() {
         if (reset) setLoading(true); else setLoadingMore(true);
 
         try {
-            // The game config only needs fetching once (on the reset/initial load);
-            // appended pages skip it.
-            const [board, config] = await Promise.all([
+            // The game config and the player's own rank only need fetching once
+            // (on the reset/initial load); appended pages skip them.
+            const [board, config, rank] = await Promise.all([
                 scoreService.getLeaderboard(nextPage, PAGE_SIZE),
                 reset ? gameService.getGameConfig().catch(() => null) : Promise.resolve(null),
+                reset ? scoreService.getMyRank().catch(() => null) : Promise.resolve(null),
             ]);
 
             pageRef.current = board.page;
@@ -69,6 +71,7 @@ function Progression() {
                 return [...prev, ...board.scores.filter(e => !seen.has(e.id))];
             });
 
+            if (reset) setMyRank(rank);
             if (config?.TAPS_PER_LEVEL) {
                 setLevelLength(config.TAPS_PER_LEVEL);
             }
@@ -148,10 +151,30 @@ function Progression() {
                     contentContainerStyle={
                         entries.length === 0
                             ? {flexGrow: 1}
-                            : {paddingBottom: 40}
+                            // Leave room so the last rows can scroll clear of the
+                            // pinned "your rank" footer when it's shown.
+                            : {paddingBottom: myRank?.entry ? 120 : 40}
                     }
                     ListEmptyComponent={<EmptyProgression />}
                 />
+            )}
+
+            {/* Signed-in player's own row, pinned over the bottom of the list. */}
+            {!loading && myRank?.entry && (
+                <View style={styles.pinned} pointerEvents="box-none">
+                    <View style={styles.pinnedDivider} />
+                    <ProgressItem
+                        item={{
+                            id: myRank.entry.id,
+                            username: myRank.entry.username,
+                            level: myRank.entry.levelReached,
+                            score: myRank.entry.score,
+                        }}
+                        topLevel={topLevel}
+                        trophy={getTrophyEmoji((myRank.rank ?? 1) - 1)}
+                        index={(myRank.rank ?? 1) - 1}
+                    />
+                </View>
             )}
         </View>
     );

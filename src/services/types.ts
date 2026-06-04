@@ -154,6 +154,13 @@ export interface Leaderboard {
     totalPages: number;
 }
 
+export interface MyRank {
+    // null when the signed-in player has no ranked (verified) score yet.
+    rank: number | null;
+    total: number;
+    entry: ScoreEntry | null;
+}
+
 export interface GameConfig {
     INITIAL_LIVES: number;
     TAPS_PER_LEVEL: number;

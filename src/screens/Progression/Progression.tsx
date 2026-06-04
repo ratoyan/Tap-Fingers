@@ -119,7 +119,7 @@ function Progression() {
             accessible={true}
             accessibilityLabel="Progression screen"
         >
-            <BackHeader title={`🏆 ${t('progression')}`} />
+            <BackHeader title={`🏆 ${t('progression')}`}/>
 
             {loading ? (
                 <View style={{flex: 1, alignItems: 'center', justifyContent: 'center'}}>
@@ -128,9 +128,9 @@ function Progression() {
             ) : (
                 <FlatList
                     data={entries}
-                    style={{ marginTop: 20, flex: 1 }}
+                    style={{marginTop: 20, flex: 1}}
                     keyExtractor={(item) => item.id.toString()}
-                    renderItem={({ item, index }) => (
+                    renderItem={({item, index}) => (
                         <ProgressItem
                             item={{
                                 id: item.id,
@@ -155,14 +155,16 @@ function Progression() {
                             // pinned "your rank" footer when it's shown.
                             : {paddingBottom: myRank?.entry ? 120 : 40}
                     }
-                    ListEmptyComponent={<EmptyProgression />}
+                    ListEmptyComponent={<EmptyProgression/>}
                 />
             )}
+
+            <View style={{height: 50}}/>
 
             {/* Signed-in player's own row, pinned over the bottom of the list. */}
             {!loading && myRank?.entry && (
                 <View style={styles.pinned} pointerEvents="box-none">
-                    <View style={styles.pinnedDivider} />
+                    <View style={styles.pinnedDivider}/>
                     <ProgressItem
                         item={{
                             id: myRank.entry.id,

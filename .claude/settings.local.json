@@ -25,7 +25,10 @@
       "Bash(taskkill //PID 15132 //F)",
       "Bash(powershell -Command \"Stop-Process -Id 15132 -Force\")",
       "Bash(curl -s \"http://localhost:3000/api/bosses\")",
-      "Bash(echo \"exit: $?\")"
+      "Bash(echo \"exit: $?\")",
+      "Bash(npx knip *)",
+      "Bash(npx ts-prune *)",
+      "Bash(git rm *)"
     ]
   }
 }

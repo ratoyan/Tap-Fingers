@@ -407,7 +407,7 @@ function ShopItem({item, index = 0, handlePress, selected = false, purchased = f
                     which show their own coming-soon overlay instead. */}
                 {disabled && !comingSoon && (
                     <LinearGradient
-                        colors={['rgba(10,0,25,0.60)', 'rgba(10,0,25,0.82)']}
+                        colors={['rgba(10,0,25,0.60)', 'rgba(10,0,25,0.5)']}
                         start={{x: 0, y: 0}}
                         end={{x: 0, y: 1}}
                         style={styles.lockOverlay}

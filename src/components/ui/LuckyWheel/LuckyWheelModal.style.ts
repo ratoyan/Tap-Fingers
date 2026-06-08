@@ -54,18 +54,34 @@ export default StyleSheet.create({
 
     // ── Shine sweep ───────────────────────────────────────────────────────────
     shine: {
+        position: 'absolute',
+        top:      0,
+        bottom:   0,
+        width:    90,
+    },
+
+    // ── Wheel halo ────────────────────────────────────────────────────────────
+    // Soft golden glow behind the wheel so it reads as lit-up and premium.
+    wheelHalo: {
         position:        'absolute',
-        top:             0,
-        bottom:          0,
-        width:           90,
-        backgroundColor: 'rgba(255,255,255,0.045)',
-        transform:       [{skewX: '-18deg'}],
+        top:             -12,
+        left:            -12,
+        right:           -12,
+        bottom:          -12,
+        borderRadius:    999,
+        backgroundColor: 'rgba(255,200,0,0.10)',
+        shadowColor:     '#FFD700',
+        shadowOffset:    {width: 0, height: 0},
+        shadowOpacity:   0.9,
+        shadowRadius:    34,
+        elevation:       14,
     },
 
     // ── Pointer ───────────────────────────────────────────────────────────────
     pointerWrapper: {
-        marginBottom:  -4,
+        marginBottom:  -8,
         zIndex:        10,
+        alignItems:    'center',
         shadowColor:   '#FFD700',
         shadowOffset:  {width: 0, height: 0},
         shadowOpacity: 1,
@@ -75,17 +91,20 @@ export default StyleSheet.create({
     pointerArrow: {
         width:            0,
         height:           0,
-        borderLeftWidth:  14,
-        borderRightWidth: 14,
-        borderTopWidth:   22,
+        marginTop:        -5,
+        borderLeftWidth:  11,
+        borderRightWidth: 11,
+        borderTopWidth:   18,
         borderLeftColor:  'transparent',
         borderRightColor: 'transparent',
         borderTopColor:   '#FFD700',
     },
     pointerGem: {
-        width:        18,
-        height:       18,
-        borderRadius: 4,
+        width:        20,
+        height:       20,
+        borderRadius: 5,
+        borderWidth:  1.5,
+        borderColor:  'rgba(255,255,255,0.6)',
         transform:    [{rotate: '45deg'}],
     },
 

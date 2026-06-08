@@ -336,11 +336,18 @@ export default function LuckyWheelModal({visible, onClose, onSpinComplete}: Prop
                         start={{x: 0, y: 0}} end={{x: 1, y: 1}}
                         style={styles.card}
                     >
-                        {/* Shine sweep */}
+                        {/* Glossy shine sweep across the card. */}
                         <Animated.View
                             pointerEvents="none"
-                            style={[styles.shine, {transform: [{translateX: shineTranslate}]}]}
-                        />
+                            style={[styles.shine, {transform: [{translateX: shineTranslate}, {skewX: '-18deg'}]}]}
+                        >
+                            <LinearGradient
+                                colors={['rgba(255,215,0,0)', 'rgba(255,225,120,0.30)', 'rgba(255,215,0,0)']}
+                                start={{x: 0, y: 0}}
+                                end={{x: 1, y: 0}}
+                                style={{flex: 1}}
+                            />
+                        </Animated.View>
 
                         {/* Header */}
                         <Text allowFontScaling={false} style={styles.title}>🎡  {t('luckyWheel')}</Text>
@@ -357,11 +364,14 @@ export default function LuckyWheelModal({visible, onClose, onSpinComplete}: Prop
 
                         {/* Pointer */}
                         <Animated.View style={[styles.pointerWrapper, {transform: [{translateY: pointerBob}]}]}>
-                            <LinearGradient colors={['#FFE566', '#FFD700', '#cc8800']} style={styles.pointerGem}/>
+                            <LinearGradient colors={['#FFF6C2', '#FFE566', '#cc8800']} style={styles.pointerGem}/>
+                            <View style={styles.pointerArrow}/>
                         </Animated.View>
 
                         {/* Wheel */}
                         <View style={{width: WHEEL_SIZE, height: WHEEL_SIZE, marginVertical: 6}}>
+                            {/* Soft golden halo glowing behind the wheel. */}
+                            <View pointerEvents="none" style={styles.wheelHalo}/>
                             <Animated.View style={{
                                 position: 'absolute', width: WHEEL_SIZE, height: WHEEL_SIZE,
                                 borderRadius: CENTER, transform: [{rotate}],
@@ -378,7 +388,10 @@ export default function LuckyWheelModal({visible, onClose, onSpinComplete}: Prop
                                     ) : (
                                         <Circle cx={CENTER} cy={CENTER} r={RADIUS} fill="#2a1a4a"/>
                                     )}
-                                    <Circle cx={CENTER} cy={CENTER} r={RADIUS} fill="none" stroke="#FFD700" strokeWidth={5}/>
+                                    {/* Beveled metallic rim: dark base, gold band, bright highlight. */}
+                                    <Circle cx={CENTER} cy={CENTER} r={RADIUS} fill="none" stroke="#5c3a00" strokeWidth={8}/>
+                                    <Circle cx={CENTER} cy={CENTER} r={RADIUS} fill="none" stroke="#FFD700" strokeWidth={4}/>
+                                    <Circle cx={CENTER} cy={CENTER} r={RADIUS - 3} fill="none" stroke="rgba(255,255,255,0.45)" strokeWidth={1}/>
                                     <Circle cx={CENTER} cy={CENTER} r={RADIUS - 8} fill="none" stroke="rgba(255,215,0,0.18)" strokeWidth={1}/>
                                     {slices.length > 0 && ringDots.map((dot, i) => (
                                         <Circle key={`rd-${i}`} cx={dot.x} cy={dot.y} r={3} fill={slices[dot.seg]?.textColor ?? '#FFD700'} opacity={0.85}/>

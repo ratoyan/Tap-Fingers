@@ -86,6 +86,9 @@ export default function LuckyWheelButton({canSpin, top, onPress}: LuckyWheelButt
             <Animated.View style={{transform: [{scale: Animated.multiply(scaleAnim, pulseAnim)}]}}>
                 <TouchableOpacity
                     activeOpacity={0.9}
+                    accessible={true}
+                    accessibilityRole="button"
+                    accessibilityLabel={canSpin ? 'Lucky wheel, free spin available' : 'Lucky wheel'}
                     onPressIn={() =>
                         Animated.spring(scaleAnim, {toValue: 0.88, useNativeDriver: true}).start()
                     }

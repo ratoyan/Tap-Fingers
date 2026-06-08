@@ -193,7 +193,15 @@ function Shop() {
                     />
                 </Animated.View>
 
-                <TouchableOpacity style={styles.tab} onPress={() => switchTab('card')} activeOpacity={0.8}>
+                <TouchableOpacity
+                    style={styles.tab}
+                    onPress={() => switchTab('card')}
+                    activeOpacity={0.8}
+                    accessible={true}
+                    accessibilityRole="tab"
+                    accessibilityLabel={t('cards')}
+                    accessibilityState={{selected: activeTab === 'card'}}
+                >
                     <View style={styles.tabInner}>
                         <CardsIcon size={ms(20)} color={activeTab === 'card' ? TAB_ICON_ACTIVE : TAB_ICON_INACTIVE}/>
                         <Text allowFontScaling={false}
@@ -203,7 +211,15 @@ function Shop() {
                     </View>
                 </TouchableOpacity>
 
-                <TouchableOpacity style={styles.tab} onPress={() => switchTab('background')} activeOpacity={0.8}>
+                <TouchableOpacity
+                    style={styles.tab}
+                    onPress={() => switchTab('background')}
+                    activeOpacity={0.8}
+                    accessible={true}
+                    accessibilityRole="tab"
+                    accessibilityLabel={t('backgrounds')}
+                    accessibilityState={{selected: activeTab === 'background'}}
+                >
                     <View style={styles.tabInner}>
                         <BackgroundsIcon size={ms(20)}
                                          color={activeTab === 'background' ? TAB_ICON_ACTIVE : TAB_ICON_INACTIVE}/>

@@ -169,7 +169,13 @@ export default function LoseModal({visible, score, onRetry, onBack, onWatchAd, c
                 {/* Watch Ad button */}
                 {canWatchAd ? (
                     <Animated.View style={[styles.adBtnWrap, {transform: [{scale: adPulseAnim}]}]}>
-                        <TouchableOpacity onPress={onWatchAd} activeOpacity={0.85}>
+                        <TouchableOpacity
+                            onPress={onWatchAd}
+                            activeOpacity={0.85}
+                            accessible={true}
+                            accessibilityRole="button"
+                            accessibilityLabel={`${t('watchAd')}, ${t('getHeart')}`}
+                        >
                             <LinearGradient
                                 colors={['#f7971e', '#ffd200']}
                                 start={{x: 0, y: 0}}
@@ -195,11 +201,25 @@ export default function LoseModal({visible, score, onRetry, onBack, onWatchAd, c
 
                 {/* Retry + Back row */}
                 <View style={styles.actions}>
-                    <TouchableOpacity onPress={onBack} activeOpacity={0.75} style={styles.backBtn}>
+                    <TouchableOpacity
+                        onPress={onBack}
+                        activeOpacity={0.75}
+                        style={styles.backBtn}
+                        accessible={true}
+                        accessibilityRole="button"
+                        accessibilityLabel={t('back')}
+                    >
                         <Text allowFontScaling={false} style={styles.backBtnText}>← {t('back')}</Text>
                     </TouchableOpacity>
 
-                    <TouchableOpacity onPress={onRetry} activeOpacity={0.8} style={styles.retryWrap}>
+                    <TouchableOpacity
+                        onPress={onRetry}
+                        activeOpacity={0.8}
+                        style={styles.retryWrap}
+                        accessible={true}
+                        accessibilityRole="button"
+                        accessibilityLabel={t('retry')}
+                    >
                         <LinearGradient
                             colors={[GRADIENT_LIGHT, GRADIENT_DARK]}
                             start={{x: 0, y: 0}}

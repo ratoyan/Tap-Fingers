@@ -152,6 +152,10 @@ export default function BuyHelperModal({visible, helperType, coins, watchAdUsed,
                         onPress={() => onWatchAd(helperType)}
                         activeOpacity={0.82}
                         disabled={adDisabled}
+                        accessible={true}
+                        accessibilityRole="button"
+                        accessibilityLabel={adDisabled ? `Ad limit reached, ${watchAdUsed} of 2 ads used` : `Watch ad to get one free ${cfg.name}`}
+                        accessibilityState={{disabled: adDisabled}}
                     >
                         <LinearGradient
                             colors={adDisabled ? ['#555', '#333'] : ['#f7971e', '#ffd200']}
@@ -174,7 +178,14 @@ export default function BuyHelperModal({visible, helperType, coins, watchAdUsed,
 
                 {/* Buy + Cancel */}
                 <View style={styles.actions}>
-                    <TouchableOpacity onPress={onClose} activeOpacity={0.75} style={styles.cancelBtn}>
+                    <TouchableOpacity
+                        onPress={onClose}
+                        activeOpacity={0.75}
+                        style={styles.cancelBtn}
+                        accessible={true}
+                        accessibilityRole="button"
+                        accessibilityLabel="Cancel"
+                    >
                         <Text allowFontScaling={false} style={styles.cancelText}>Cancel</Text>
                     </TouchableOpacity>
 
@@ -182,6 +193,10 @@ export default function BuyHelperModal({visible, helperType, coins, watchAdUsed,
                         onPress={() => canAfford && onBuy(helperType)}
                         activeOpacity={canAfford ? 0.8 : 1}
                         style={[styles.buyWrap, !canAfford && {opacity: 0.4}]}
+                        accessible={true}
+                        accessibilityRole="button"
+                        accessibilityLabel={`Buy ${cfg.name} for ${cfg.price} coins`}
+                        accessibilityState={{disabled: !canAfford}}
                     >
                         <LinearGradient
                             colors={canAfford ? [GRADIENT_LIGHT, GRADIENT_DARK] : ['#555', '#333']}

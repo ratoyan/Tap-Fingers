@@ -42,10 +42,19 @@ export default function ExitModal({visible, onConfirm, onCancel}: ExitModalProps
                         onPress={onConfirm}
                         activeOpacity={0.8}
                         style={styles.loseModalBackAction}
+                        accessible={true}
+                        accessibilityRole="button"
+                        accessibilityLabel={t('yes')}
                     >
                         <Text allowFontScaling={false} style={{color: WHITE, fontSize: 16}}>{t('yes')}</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity onPress={onCancel} activeOpacity={0.8}>
+                    <TouchableOpacity
+                        onPress={onCancel}
+                        activeOpacity={0.8}
+                        accessible={true}
+                        accessibilityRole="button"
+                        accessibilityLabel={t('no')}
+                    >
                         <LinearGradient
                             colors={[GRADIENT_LIGHT, GRADIENT_DARK]}
                             start={{x: 0, y: 0}}

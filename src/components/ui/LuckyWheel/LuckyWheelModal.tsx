@@ -399,7 +399,15 @@ export default function LuckyWheelModal({visible, onClose, onSpinComplete}: Prop
                             {/* Spin button */}
                             <View style={[styles.spinButtonFixed, {left: CENTER - 38, top: CENTER - 38}]}>
                                 <Animated.View style={{transform: [{scale: isActive ? pulseAnim : 1}]}}>
-                                    <TouchableOpacity onPress={spin} disabled={spinning || !canSpin || !wheelReady} activeOpacity={0.82}>
+                                    <TouchableOpacity
+                                        onPress={spin}
+                                        disabled={spinning || !canSpin || !wheelReady}
+                                        activeOpacity={0.82}
+                                        accessible={true}
+                                        accessibilityRole="button"
+                                        accessibilityLabel={canSpin ? 'Spin the lucky wheel' : 'Already spun today'}
+                                        accessibilityState={{disabled: spinning || !canSpin || !wheelReady}}
+                                    >
                                         <LinearGradient
                                             colors={isActive ? ['#FFE566', '#FFD700', '#cc8800'] : ['#333', '#222', '#111']}
                                             style={[styles.spinGradient, isActive ? styles.spinGradientActive : styles.spinGradientInactive]}
@@ -468,7 +476,14 @@ export default function LuckyWheelModal({visible, onClose, onSpinComplete}: Prop
                         )}
 
                         {/* Close */}
-                        <TouchableOpacity onPress={onClose} activeOpacity={0.8} style={styles.closeButton}>
+                        <TouchableOpacity
+                            onPress={onClose}
+                            activeOpacity={0.8}
+                            style={styles.closeButton}
+                            accessible={true}
+                            accessibilityRole="button"
+                            accessibilityLabel="Close"
+                        >
                             <LinearGradient
                                 colors={['rgba(255,215,0,0.18)', 'rgba(255,215,0,0.06)']}
                                 start={{x: 0, y: 0}} end={{x: 1, y: 1}}

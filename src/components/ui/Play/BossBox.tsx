@@ -335,7 +335,13 @@ export default function BossBox({bossHP, bossMaxHP, level, onTap, boss}: Props) 
                 />
 
                 {/* Boss body */}
-                <TouchableOpacity onPress={handleTap} activeOpacity={0.95}>
+                <TouchableOpacity
+                    onPress={handleTap}
+                    activeOpacity={0.95}
+                    accessible={true}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Attack ${bossName}, ${bossHP} of ${bossMaxHP} health`}
+                >
                     <LinearGradient
                         colors={bodyColors}
                         start={{x: 0.2, y: 0}}

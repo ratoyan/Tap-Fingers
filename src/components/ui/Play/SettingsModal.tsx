@@ -113,7 +113,14 @@ export default function SettingsModal({visible, onClose}: SettingsModalProps) {
                     />
                 </View>
 
-                <TouchableOpacity onPress={onClose} activeOpacity={0.85} style={styles.closeBtn}>
+                <TouchableOpacity
+                    onPress={onClose}
+                    activeOpacity={0.85}
+                    style={styles.closeBtn}
+                    accessible={true}
+                    accessibilityRole="button"
+                    accessibilityLabel={t('close')}
+                >
                     <LinearGradient
                         colors={['#3a0060', '#6a0dad']}
                         start={{x: 0, y: 0}}

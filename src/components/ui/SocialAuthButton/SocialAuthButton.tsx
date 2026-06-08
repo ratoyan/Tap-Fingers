@@ -38,7 +38,13 @@ function SocialAuthButton({type, handlePress}: SocialAuthButtonProps) {
     const {colors, text, Icon, isGhost} = config[type];
 
     return (
-        <TouchableOpacity style={styles.button} onPress={handlePress}>
+        <TouchableOpacity
+            style={styles.button}
+            onPress={handlePress}
+            accessible={true}
+            accessibilityRole="button"
+            accessibilityLabel={text}
+        >
             <LinearGradient
                 colors={colors}
                 start={{x: 0, y: 0}}

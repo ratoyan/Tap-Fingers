@@ -1031,7 +1031,13 @@ export default function Play() {
 
             <View style={[styles.headerLeftView, {top: insets.top, zIndex: 2}]}>
                 <View style={styles.headerTopRow}>
-                    <TouchableOpacity onPress={menuHandler} style={styles.menuBtn}>
+                    <TouchableOpacity
+                        onPress={menuHandler}
+                        style={styles.menuBtn}
+                        accessible={true}
+                        accessibilityRole="button"
+                        accessibilityLabel="Open game menu"
+                    >
                         <MenuIcon size={18} color="#fff"/>
                     </TouchableOpacity>
                 </View>
@@ -1126,6 +1132,10 @@ export default function Play() {
                         }}
                         disabled={shieldActive}
                         activeOpacity={0.75}
+                        accessible={true}
+                        accessibilityRole="button"
+                        accessibilityLabel={shieldActive ? 'Shield active' : shieldCount > 0 ? `Use shield, ${shieldCount} available` : 'Buy shield'}
+                        accessibilityState={{disabled: shieldActive}}
                         style={[
                             styles.helperButton,
                             {borderColor: shieldActive ? '#00e5ff' : shieldCount > 0 ? '#4fc3f7' : '#1a5276'},
@@ -1151,6 +1161,9 @@ export default function Play() {
                             }
                         }}
                         activeOpacity={0.75}
+                        accessible={true}
+                        accessibilityRole="button"
+                        accessibilityLabel={bombCount > 0 ? `Use bomb, ${bombCount} available` : 'Buy bomb'}
                         style={[
                             styles.helperButton,
                             styles.helperButtonBomb,
@@ -1177,6 +1190,10 @@ export default function Play() {
                         }}
                         disabled={slowActive}
                         activeOpacity={0.75}
+                        accessible={true}
+                        accessibilityRole="button"
+                        accessibilityLabel={slowActive ? 'Slow motion active' : slowCount > 0 ? `Use slow motion, ${slowCount} available` : 'Buy slow motion'}
+                        accessibilityState={{disabled: slowActive}}
                         style={[
                             styles.helperButton,
                             {borderColor: slowActive ? '#b39ddb' : slowCount > 0 ? LILAC : '#4a2060'},

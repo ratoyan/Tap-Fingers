@@ -81,7 +81,14 @@ export default function WatchAdModal({visible, onClose, onCollect}: WatchAdModal
                             ))}
                         </View>
 
-                        <TouchableOpacity onPress={onClose} activeOpacity={0.8} style={styles.closeBtnFull}>
+                        <TouchableOpacity
+                            onPress={onClose}
+                            activeOpacity={0.8}
+                            style={styles.closeBtnFull}
+                            accessible={true}
+                            accessibilityRole="button"
+                            accessibilityLabel={t('close')}
+                        >
                             <Text allowFontScaling={false} style={styles.closeBtnFullText}>{t('close')}</Text>
                         </TouchableOpacity>
                     </>
@@ -102,7 +109,14 @@ export default function WatchAdModal({visible, onClose, onCollect}: WatchAdModal
                         </View>
 
                         <View style={styles.confirmActions}>
-                            <TouchableOpacity onPress={onClose} activeOpacity={0.75} style={styles.noBtn}>
+                            <TouchableOpacity
+                                onPress={onClose}
+                                activeOpacity={0.75}
+                                style={styles.noBtn}
+                                accessible={true}
+                                accessibilityRole="button"
+                                accessibilityLabel={t('cancel')}
+                            >
                                 <Text allowFontScaling={false} style={styles.noBtnText}>{t('cancel')}</Text>
                             </TouchableOpacity>
                             <TouchableOpacity
@@ -114,6 +128,9 @@ export default function WatchAdModal({visible, onClose, onCollect}: WatchAdModal
                                 }}
                                 activeOpacity={0.85}
                                 style={styles.yesWrap}
+                                accessible={true}
+                                accessibilityRole="button"
+                                accessibilityLabel={t('watchAd')}
                             >
                                 <LinearGradient
                                     colors={['#f7971e', '#ffd200']}

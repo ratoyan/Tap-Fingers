@@ -71,7 +71,12 @@ export default function PhotoPickerSheet({
     return (
         <Modal transparent visible={visible} animationType="none" onRequestClose={onClose}>
             {/* Backdrop */}
-            <TouchableWithoutFeedback onPress={onClose}>
+            <TouchableWithoutFeedback
+                onPress={onClose}
+                accessible={true}
+                accessibilityRole="button"
+                accessibilityLabel={t('close')}
+            >
                 <Animated.View style={[styles.backdrop, {opacity: backdropAnim}]} />
             </TouchableWithoutFeedback>
 
@@ -89,6 +94,9 @@ export default function PhotoPickerSheet({
                     onPress={onCamera}
                     activeOpacity={0.85}
                     style={styles.optionBtn}
+                    accessible={true}
+                    accessibilityRole="button"
+                    accessibilityLabel={t('camera')}
                 >
                     <LinearGradient
                         colors={[GRADIENT_LIGHT, GRADIENT_DARK]}
@@ -108,6 +116,9 @@ export default function PhotoPickerSheet({
                     onPress={onGallery}
                     activeOpacity={0.85}
                     style={styles.optionBtn}
+                    accessible={true}
+                    accessibilityRole="button"
+                    accessibilityLabel={t('gallery')}
                 >
                     <LinearGradient
                         colors={['#8e44ad', '#6c3483']}
@@ -123,7 +134,14 @@ export default function PhotoPickerSheet({
                 </TouchableOpacity>
 
                 {/* Cancel */}
-                <TouchableOpacity onPress={onClose} activeOpacity={0.7} style={styles.cancelBtn}>
+                <TouchableOpacity
+                    onPress={onClose}
+                    activeOpacity={0.7}
+                    style={styles.cancelBtn}
+                    accessible={true}
+                    accessibilityRole="button"
+                    accessibilityLabel={t('cancel')}
+                >
                     <Text allowFontScaling={false} style={styles.cancelText}>{t('cancel')}</Text>
                 </TouchableOpacity>
             </Animated.View>

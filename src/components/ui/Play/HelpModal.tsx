@@ -120,7 +120,14 @@ export default function HelpModal({visible, onClose}: HelpModalProps) {
                 </View>
 
                 {/* Close button */}
-                <TouchableOpacity onPress={onClose} activeOpacity={0.8} style={styles.closeWrap}>
+                <TouchableOpacity
+                    onPress={onClose}
+                    activeOpacity={0.8}
+                    style={styles.closeWrap}
+                    accessible={true}
+                    accessibilityRole="button"
+                    accessibilityLabel="Got it, close help"
+                >
                     <LinearGradient
                         colors={[GRADIENT_LIGHT, GRADIENT_DARK]}
                         start={{x: 0, y: 0}}

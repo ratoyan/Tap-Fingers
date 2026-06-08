@@ -51,11 +51,25 @@ export default function CameraModal({visible, onCapture, onClose}: CameraModalPr
                 )}
 
                 <View style={styles.controls}>
-                    <TouchableOpacity onPress={onClose} activeOpacity={0.8} style={styles.closeBtn}>
+                    <TouchableOpacity
+                        onPress={onClose}
+                        activeOpacity={0.8}
+                        style={styles.closeBtn}
+                        accessible={true}
+                        accessibilityRole="button"
+                        accessibilityLabel="Close camera"
+                    >
                         <Text allowFontScaling={false} style={styles.closeTxt}>✕</Text>
                     </TouchableOpacity>
 
-                    <TouchableOpacity onPress={takePhoto} activeOpacity={0.85} style={styles.captureBtn}>
+                    <TouchableOpacity
+                        onPress={takePhoto}
+                        activeOpacity={0.85}
+                        style={styles.captureBtn}
+                        accessible={true}
+                        accessibilityRole="button"
+                        accessibilityLabel="Take photo"
+                    >
                         <View style={styles.captureInner}/>
                     </TouchableOpacity>
 

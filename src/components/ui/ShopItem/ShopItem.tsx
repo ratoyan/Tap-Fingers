@@ -35,6 +35,7 @@ function ShopItem({item, index = 0, handlePress, selected = false, purchased = f
     const entranceOpacity = useRef(new Animated.Value(0)).current;
     const entranceY = useRef(new Animated.Value(30)).current;
     const glowAnim = useRef(new Animated.Value(0)).current;
+
     const badgeSpin = useRef(new Animated.Value(0)).current;
     const badgePulse = useRef(new Animated.Value(0)).current;
     const shineAnim = useRef(new Animated.Value(0)).current;   // sweeping gloss
@@ -298,6 +299,18 @@ function ShopItem({item, index = 0, handlePress, selected = false, purchased = f
                 onPressOut={onPressOut}
                 activeOpacity={1}
                 disabled={disabled}
+                accessible={true}
+                accessibilityRole="button"
+                accessibilityLabel={
+                    disabled
+                        ? `${item.title}, locked, needs ${item.coins} coins`
+                        : selected
+                            ? `${item.title}, equipped`
+                            : purchased
+                                ? `${item.title}, owned, tap to equip`
+                                : `${item.title}, ${item.coins} coins`
+                }
+                accessibilityState={{selected, disabled}}
             >
                 <LinearGradient
                     colors={['#3a0b5e', PURPLE_DARK, DARK_PURPLE]}

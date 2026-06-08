@@ -22,6 +22,9 @@ export default function ReviewButton({top}: ReviewButtonProps) {
             <Animated.View style={{transform: [{scale: scaleAnim}]}}>
                 <TouchableOpacity
                     activeOpacity={0.9}
+                    accessible={true}
+                    accessibilityRole="button"
+                    accessibilityLabel="Rate the app"
                     onPressIn={() =>
                         Animated.spring(scaleAnim, {toValue: 0.88, useNativeDriver: true}).start()
                     }

@@ -190,6 +190,9 @@ function Settings() {
                 style={styles.buttonWrapper}
                 onPress={() => setLogoutModal(true)}
                 activeOpacity={0.75}
+                accessible={true}
+                accessibilityRole="button"
+                accessibilityLabel={t('exitGame')}
             >
                 <LinearGradient
                     colors={['#1a0030', '#5B0EA6', VIOLET_MEDIUM]}

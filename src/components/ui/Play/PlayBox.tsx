@@ -119,7 +119,12 @@ function PlayBox({box, handlePress}: PlayBoxProps) {
                     color={box.randomColors ? randomColor : (box.trackColor ?? box.color ?? DARK_NAVY)}/>
             </View>
         ) : (
-            <Pressable onPress={handlePress} style={[svgStyle, {zIndex: 1}]}>
+            <Pressable
+                onPress={handlePress}
+                style={[svgStyle, {zIndex: 1}]}
+                accessibilityRole="button"
+                accessibilityLabel="Tap card"
+            >
                 <SvgXml xml={tintedSvg} width={svgW} height={svgH}
                     color={box.randomColors ? randomColor : undefined}
                     preserveAspectRatio={hasAdminDims ? "none" : "xMidYMid meet"}/>
@@ -140,6 +145,8 @@ function PlayBox({box, handlePress}: PlayBoxProps) {
             (
                 <Pressable
                     onPress={handlePress}
+                    accessibilityRole="button"
+                    accessibilityLabel="Tap card"
                     style={[
                         commonStyle,
                         {
@@ -163,7 +170,12 @@ function PlayBox({box, handlePress}: PlayBoxProps) {
         )
         :
         (
-            <Pressable onPress={handlePress} style={[commonStyle, {zIndex: 1}]}>
+            <Pressable
+                onPress={handlePress}
+                style={[commonStyle, {zIndex: 1}]}
+                accessibilityRole="button"
+                accessibilityLabel="Tap card"
+            >
                 <Card1 width={100} height={100}/>
             </Pressable>
         )

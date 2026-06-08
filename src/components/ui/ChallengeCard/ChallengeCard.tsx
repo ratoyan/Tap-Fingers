@@ -160,7 +160,14 @@ function ChallengeCard({item, index = 0, onCollect}: ChallengeCardProps) {
 
                         {item.finished && !item.taken && (
                             <Animated.View style={{transform: [{scale: collectPulse}]}}>
-                                <TouchableOpacity style={styles.collectBtn} activeOpacity={0.8} onPress={onCollect}>
+                                <TouchableOpacity
+                                    style={styles.collectBtn}
+                                    activeOpacity={0.8}
+                                    onPress={onCollect}
+                                    accessible={true}
+                                    accessibilityRole="button"
+                                    accessibilityLabel={`Collect ${item.reward} coins reward for ${item.title}`}
+                                >
                                     <Coin width={16} height={14}/>
                                     <Text allowFontScaling={false} style={styles.collectText}>Collect</Text>
                                 </TouchableOpacity>

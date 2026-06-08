@@ -43,7 +43,14 @@ export default function GameMenuModal({visible, onClose, onExit}: GameMenuModalP
                 <Animated.View style={[styles.modal, {transform: [{scale: scaleAnim}]}]}>
 
                     {/* Resume */}
-                    <TouchableOpacity onPress={onClose} activeOpacity={0.85} style={styles.btn}>
+                    <TouchableOpacity
+                        onPress={onClose}
+                        activeOpacity={0.85}
+                        style={styles.btn}
+                        accessible={true}
+                        accessibilityRole="button"
+                        accessibilityLabel={t('play')}
+                    >
                         <LinearGradient
                             colors={[GRADIENT_LIGHT, GRADIENT_DARK]}
                             start={{x: 0, y: 0}}
@@ -60,12 +67,22 @@ export default function GameMenuModal({visible, onClose, onExit}: GameMenuModalP
                         onPress={() => setSettingsVisible(true)}
                         activeOpacity={0.85}
                         style={[styles.btn, styles.settingsBtn]}
+                        accessible={true}
+                        accessibilityRole="button"
+                        accessibilityLabel={t('settings')}
                     >
                         <Text allowFontScaling={false} style={styles.settingsText}>⚙️  {t('settings')}</Text>
                     </TouchableOpacity>
 
                     {/* Exit Game */}
-                    <TouchableOpacity onPress={onExit} activeOpacity={0.85} style={styles.exitBtnWrapper}>
+                    <TouchableOpacity
+                        onPress={onExit}
+                        activeOpacity={0.85}
+                        style={styles.exitBtnWrapper}
+                        accessible={true}
+                        accessibilityRole="button"
+                        accessibilityLabel={t('exitGame')}
+                    >
                         <LinearGradient
                             colors={['#3a0060', '#6a0dad']}
                             start={{x: 0, y: 0}}

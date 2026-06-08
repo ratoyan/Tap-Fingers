@@ -86,7 +86,14 @@ export default function UpdateModal({visible, storeUrl}: UpdateModalProps) {
 
                         {/* Update button */}
                         <Animated.View style={{transform: [{scale: pulseAnim}], width: '100%'}}>
-                            <TouchableOpacity onPress={openStore} activeOpacity={0.85} style={styles.updateBtn}>
+                            <TouchableOpacity
+                                onPress={openStore}
+                                activeOpacity={0.85}
+                                style={styles.updateBtn}
+                                accessible={true}
+                                accessibilityRole="button"
+                                accessibilityLabel={Platform.OS === 'ios' ? 'Update on App Store' : 'Update on Play Store'}
+                            >
                                 <LinearGradient
                                     colors={['#FFE566', '#FFD700', '#cc8800']}
                                     start={{x: 0, y: 0}}

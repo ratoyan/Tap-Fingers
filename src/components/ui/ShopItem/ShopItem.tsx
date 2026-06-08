@@ -20,6 +20,8 @@ import SuccessIcon from "../../../assets/icons/SuccessIcon.tsx";
 import styles from './ShopItem.style.ts';
 import {DARK_PURPLE, GRADIENT_DARK, GRADIENT_LIGHT, MEDIUM_PURPLE, PURPLE_DARK} from "../../../constants/colors.ts";
 import LinearGradient from "react-native-linear-gradient";
+import LockIcon from "../../../assets/icons/LockIcon.tsx";
+import {ms} from "../../../utils/responsive.ts";
 
 interface ShopItemProps {
     item: any;
@@ -404,10 +406,23 @@ function ShopItem({item, index = 0, handlePress, selected = false, purchased = f
                 {/* Lock overlay (insufficient coins) — suppressed for teasers,
                     which show their own coming-soon overlay instead. */}
                 {disabled && !comingSoon && (
-                    <View style={styles.lockOverlay}>
-                        <Text allowFontScaling={false} style={styles.lockText}>🔒</Text>
-                        <Text allowFontScaling={false} style={styles.lockPrice}>{t('coinsNeeded', {count: item.coins})}</Text>
-                    </View>
+                    <LinearGradient
+                        colors={['rgba(10,0,25,0.60)', 'rgba(10,0,25,0.82)']}
+                        start={{x: 0, y: 0}}
+                        end={{x: 0, y: 1}}
+                        style={styles.lockOverlay}
+                    >
+                        {/* Small lock tucked in the corner. */}
+                        <View style={styles.lockCorner}>
+                            <LockIcon size={ms(15)} color="rgba(255,255,255,0.92)"/>
+                        </View>
+                        {/* Big centred price — clearly shows how many coins this item costs. */}
+                        <View style={styles.lockPricePill}>
+                            <Text allowFontScaling={false} style={styles.lockPrice}>{item.coins}</Text>
+                            <Coin width={22} height={20}/>
+                        </View>
+                        <Text allowFontScaling={false} style={styles.lockHint}>{t('notEnoughCoins')}</Text>
+                    </LinearGradient>
                 )}
 
                 {/* Coming-soon teaser: frosted overlay + corner ribbon. */}

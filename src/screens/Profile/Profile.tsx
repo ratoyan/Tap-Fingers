@@ -99,13 +99,13 @@ function Profile() {
     // username 3-32 alphanumeric/underscore, valid email, password 6-72.
     function validateRegistration(): string | null {
         if (!/^[a-zA-Z0-9_]{3,32}$/.test(regName.trim())) {
-            return 'Name must be 3-32 letters, numbers or underscores';
+            return t('nameRuleError');
         }
         if (!/^\S+@\S+\.\S+$/.test(regEmail.trim())) {
-            return 'Please enter a valid email address';
+            return t('validEmailError');
         }
         if (regPassword.length < 6) {
-            return 'Password must be at least 6 characters';
+            return t('passwordMinError');
         }
         return null;
     }
@@ -114,7 +114,7 @@ function Profile() {
         if (linking) return;
         const validationError = validateRegistration();
         if (validationError) {
-            notice.error('Check your details', validationError);
+            notice.error(t('checkDetails'), validationError);
             return;
         }
         setLinking(true);
@@ -124,9 +124,9 @@ function Profile() {
             await authService.linkEmail(regName.trim(), regEmail.trim(), regPassword);
             Keyboard.dismiss();
             await setSession();
-            notice.success('Welcome!', 'Your progress is now saved to your account.');
+            notice.success(t('welcomeExclaim'), t('progressSavedMsg'));
         } catch (error: any) {
-            notice.error('Sign-up failed', error?.message ?? 'Please try again');
+            notice.error(t('signUpFailed'), error?.message ?? t('tryAgain'));
         } finally {
             setLinking(false);
         }
@@ -138,7 +138,7 @@ function Profile() {
         const next = nameInput.trim();
         if (!next || next === player?.username) return;
         if (!/^[a-zA-Z0-9_]{3,32}$/.test(next)) {
-            notice.error('Invalid name', 'Use 3–32 letters, numbers or underscores.');
+            notice.error(t('invalidName'), t('invalidNameMsg'));
             return;
         }
         setSavingName(true);
@@ -146,9 +146,9 @@ function Profile() {
             await userService.updateProfile(next);
             await setSession();
             Keyboard.dismiss();
-            notice.success('Saved', 'Your name has been updated.');
+            notice.success(t('saved'), t('nameUpdatedMsg'));
         } catch (error: any) {
-            notice.error('Could not save', error?.message ?? 'Please try again');
+            notice.error(t('couldNotSave'), error?.message ?? t('tryAgain'));
         } finally {
             setSavingName(false);
         }
@@ -160,11 +160,11 @@ function Profile() {
         if (savingEmail) return;
         const email = newEmail.trim();
         if (emailPwd.length < 6) {
-            notice.error('Password required', 'Enter your current password.');
+            notice.error(t('passwordRequired'), t('enterCurrentPassword'));
             return;
         }
         if (!/^\S+@\S+\.\S+$/.test(email)) {
-            notice.error('Invalid email', 'Please enter a valid email address.');
+            notice.error(t('invalidEmail'), t('invalidEmailMsg'));
             return;
         }
         setSavingEmail(true);
@@ -174,9 +174,9 @@ function Profile() {
             setEmailPwd('');
             setNewEmail('');
             Keyboard.dismiss();
-            notice.success('Saved', 'Your email has been updated.');
+            notice.success(t('saved'), t('emailUpdatedMsg'));
         } catch (error: any) {
-            notice.error('Could not update', error?.message ?? 'Please try again');
+            notice.error(t('couldNotUpdate'), error?.message ?? t('tryAgain'));
         } finally {
             setSavingEmail(false);
         }
@@ -185,11 +185,11 @@ function Profile() {
     async function handleChangePassword() {
         if (savingPwd) return;
         if (curPwd.length < 6) {
-            notice.error('Password required', 'Enter your current password.');
+            notice.error(t('passwordRequired'), t('enterCurrentPassword'));
             return;
         }
         if (newPwd.length < 6) {
-            notice.error('Weak password', 'New password must be at least 6 characters.');
+            notice.error(t('weakPassword'), t('weakPasswordMsg'));
             return;
         }
         setSavingPwd(true);
@@ -198,9 +198,9 @@ function Profile() {
             setCurPwd('');
             setNewPwd('');
             Keyboard.dismiss();
-            notice.success('Saved', 'Your password has been updated.');
+            notice.success(t('saved'), t('passwordUpdatedMsg'));
         } catch (error: any) {
-            notice.error('Could not update', error?.message ?? 'Please try again');
+            notice.error(t('couldNotUpdate'), error?.message ?? t('tryAgain'));
         } finally {
             setSavingPwd(false);
         }
@@ -211,7 +211,7 @@ function Profile() {
     async function handleDeleteAccount() {
         if (deleting) return;
         if (isEmailAccount && deletePassword.length < 6) {
-            notice.error('Password required', 'Enter your password to delete your account.');
+            notice.error(t('passwordRequired'), t('enterPasswordToDelete'));
             return;
         }
         setDeleting(true);
@@ -223,7 +223,7 @@ function Profile() {
             setDeleteModal(false);
             navigation.reset({index: 0, routes: [{name: 'Welcome'}]});
         } catch (error: any) {
-            notice.error('Could not delete', error?.message ?? 'Please try again');
+            notice.error(t('couldNotDelete'), error?.message ?? t('tryAgain'));
             setDeleting(false);
         }
     }
@@ -285,20 +285,20 @@ function Profile() {
                                 <Ghost size={110} color="rgba(255,255,255,0.9)" eyeColor="#6a0dad" />
                             </View>
 
-                            <Text allowFontScaling={false} style={styles.guestName}>👻 Guest Player</Text>
+                            <Text allowFontScaling={false} style={styles.guestName}>👻 {t('guestPlayer')}</Text>
                             <Text allowFontScaling={false} style={styles.guestHint}>
-                                Create an account to save your progress
+                                {t('guestSaveHint')}
                             </Text>
 
                             {/* Email sign-up form */}
                             <View style={styles.guestForm}>
-                                <Text allowFontScaling={false} style={styles.formTitle}>✨ Create your account</Text>
+                                <Text allowFontScaling={false} style={styles.formTitle}>✨ {t('createYourAccount')}</Text>
 
                                 <View style={[styles.fieldRow, focusedField === 'name' && styles.fieldRowFocused]}>
                                     <Text allowFontScaling={false} style={styles.fieldIcon}>👤</Text>
                                     <TextInput
                                         style={styles.fieldInput}
-                                        placeholder="Name"
+                                        placeholder={t('name')}
                                         placeholderTextColor="rgba(255,255,255,0.45)"
                                         value={regName}
                                         onChangeText={setRegName}
@@ -316,7 +316,7 @@ function Profile() {
                                     <Text allowFontScaling={false} style={styles.fieldIcon}>✉️</Text>
                                     <TextInput
                                         style={styles.fieldInput}
-                                        placeholder="Email"
+                                        placeholder={t('email')}
                                         placeholderTextColor="rgba(255,255,255,0.45)"
                                         value={regEmail}
                                         onChangeText={setRegEmail}
@@ -335,7 +335,7 @@ function Profile() {
                                     <Text allowFontScaling={false} style={styles.fieldIcon}>🔒</Text>
                                     <TextInput
                                         style={styles.fieldInput}
-                                        placeholder="Password"
+                                        placeholder={t('password')}
                                         placeholderTextColor="rgba(255,255,255,0.45)"
                                         value={regPassword}
                                         onChangeText={setRegPassword}
@@ -365,12 +365,12 @@ function Profile() {
                                     >
                                         {linking
                                             ? <ActivityIndicator color="#fff" />
-                                            : <Text allowFontScaling={false} style={styles.linkButtonText}>Create Account</Text>}
+                                            : <Text allowFontScaling={false} style={styles.linkButtonText}>{t('createAccount')}</Text>}
                                     </LinearGradient>
                                 </TouchableOpacity>
 
                                 <Text allowFontScaling={false} style={styles.formFootnote}>
-                                    🔒 Your progress stays safe and synced
+                                    🔒 {t('progressSafeNote')}
                                 </Text>
                             </View>
                         </View>
@@ -412,16 +412,16 @@ function Profile() {
                                 <Text allowFontScaling={false} style={styles.changePhotoText}>{t('changePhoto')}</Text>
                             </View>
 
-                            <Text allowFontScaling={false} style={styles.greeting}>Hello, {displayName}!</Text>
+                            <Text allowFontScaling={false} style={styles.greeting}>{t('greeting', {name: displayName})}</Text>
 
                             {/* Editable, server-owned username */}
                             <View style={styles.inputCard}>
-                                <Text allowFontScaling={false} style={styles.inputLabel}>✏️  Name</Text>
+                                <Text allowFontScaling={false} style={styles.inputLabel}>✏️  {t('name')}</Text>
                                 <TextInput
                                     value={nameInput}
                                     onChangeText={setNameInput}
                                     style={styles.input}
-                                    placeholder="Enter your name"
+                                    placeholder={t('enterYourName')}
                                     placeholderTextColor={VIOLET}
                                     autoCapitalize="none"
                                     maxLength={32}
@@ -437,33 +437,33 @@ function Profile() {
                                 >
                                     {savingName
                                         ? <ActivityIndicator size="small" color="#fff"/>
-                                        : <Text allowFontScaling={false} style={saveBtnText}>Save</Text>}
+                                        : <Text allowFontScaling={false} style={saveBtnText}>{t('save')}</Text>}
                                 </TouchableOpacity>
                             </View>
 
                             {/* Read-only server stats */}
                             <View style={[styles.inputCard, {marginTop: 14}]}>
-                                <Text allowFontScaling={false} style={styles.inputLabel}>📊  Stats</Text>
+                                <Text allowFontScaling={false} style={styles.inputLabel}>📊  {t('stats')}</Text>
                                 <View style={statRow}>
-                                    <Text allowFontScaling={false} style={statKey}>Account type</Text>
+                                    <Text allowFontScaling={false} style={statKey}>{t('accountType')}</Text>
                                     <Text allowFontScaling={false} style={statVal}>{player?.accountType ?? '—'}</Text>
                                 </View>
                                 {!!player?.email && (
                                     <View style={statRow}>
-                                        <Text allowFontScaling={false} style={statKey}>Email</Text>
+                                        <Text allowFontScaling={false} style={statKey}>{t('email')}</Text>
                                         <Text allowFontScaling={false} style={statVal} numberOfLines={1}>{player.email}</Text>
                                     </View>
                                 )}
                                 <View style={statRow}>
-                                    <Text allowFontScaling={false} style={statKey}>High score</Text>
+                                    <Text allowFontScaling={false} style={statKey}>{t('highScore')}</Text>
                                     <Text allowFontScaling={false} style={statVal}>{stats?.highScore ?? 0}</Text>
                                 </View>
                                 <View style={statRow}>
-                                    <Text allowFontScaling={false} style={statKey}>Games played</Text>
+                                    <Text allowFontScaling={false} style={statKey}>{t('gamesPlayed')}</Text>
                                     <Text allowFontScaling={false} style={statVal}>{stats?.totalGames ?? 0}</Text>
                                 </View>
                                 <View style={statRow}>
-                                    <Text allowFontScaling={false} style={statKey}>Coins</Text>
+                                    <Text allowFontScaling={false} style={statKey}>{t('coins')}</Text>
                                     <Text allowFontScaling={false} style={statVal}>{stats?.coins ?? 0}</Text>
                                 </View>
                             </View>
@@ -471,12 +471,12 @@ function Profile() {
                             {/* Change email — email accounts only */}
                             {isEmailAccount && (
                                 <View style={[styles.inputCard, {marginTop: 14}]}>
-                                    <Text allowFontScaling={false} style={styles.inputLabel}>✉️  Change Email</Text>
+                                    <Text allowFontScaling={false} style={styles.inputLabel}>✉️  {t('changeEmail')}</Text>
                                     <TextInput
                                         value={emailPwd}
                                         onChangeText={setEmailPwd}
                                         style={styles.accountInput}
-                                        placeholder="Current password"
+                                        placeholder={t('currentPassword')}
                                         placeholderTextColor={VIOLET}
                                         secureTextEntry
                                         autoCapitalize="none"
@@ -488,7 +488,7 @@ function Profile() {
                                         value={newEmail}
                                         onChangeText={setNewEmail}
                                         style={styles.accountInput}
-                                        placeholder="New email"
+                                        placeholder={t('newEmail')}
                                         placeholderTextColor={VIOLET}
                                         keyboardType="email-address"
                                         autoCapitalize="none"
@@ -506,7 +506,7 @@ function Profile() {
                                     >
                                         {savingEmail
                                             ? <ActivityIndicator size="small" color="#fff"/>
-                                            : <Text allowFontScaling={false} style={saveBtnText}>Update Email</Text>}
+                                            : <Text allowFontScaling={false} style={saveBtnText}>{t('updateEmail')}</Text>}
                                     </TouchableOpacity>
                                 </View>
                             )}
@@ -514,12 +514,12 @@ function Profile() {
                             {/* Change password — email accounts only */}
                             {isEmailAccount && (
                                 <View style={[styles.inputCard, {marginTop: 14}]}>
-                                    <Text allowFontScaling={false} style={styles.inputLabel}>🔒  Change Password</Text>
+                                    <Text allowFontScaling={false} style={styles.inputLabel}>🔒  {t('changePassword')}</Text>
                                     <TextInput
                                         value={curPwd}
                                         onChangeText={setCurPwd}
                                         style={styles.accountInput}
-                                        placeholder="Current password"
+                                        placeholder={t('currentPassword')}
                                         placeholderTextColor={VIOLET}
                                         secureTextEntry
                                         autoCapitalize="none"
@@ -531,7 +531,7 @@ function Profile() {
                                         value={newPwd}
                                         onChangeText={setNewPwd}
                                         style={styles.accountInput}
-                                        placeholder="New password"
+                                        placeholder={t('newPassword')}
                                         placeholderTextColor={VIOLET}
                                         secureTextEntry
                                         autoCapitalize="none"
@@ -549,7 +549,7 @@ function Profile() {
                                     >
                                         {savingPwd
                                             ? <ActivityIndicator size="small" color="#fff"/>
-                                            : <Text allowFontScaling={false} style={saveBtnText}>Update Password</Text>}
+                                            : <Text allowFontScaling={false} style={saveBtnText}>{t('updatePassword')}</Text>}
                                     </TouchableOpacity>
                                 </View>
                             )}
@@ -560,7 +560,7 @@ function Profile() {
                                 onPress={() => { setDeletePassword(''); setDeleteModal(true); }}
                                 activeOpacity={0.85}
                             >
-                                <Text allowFontScaling={false} style={styles.deleteButtonText}>🗑  Delete Account</Text>
+                                <Text allowFontScaling={false} style={styles.deleteButtonText}>🗑  {t('deleteAccount')}</Text>
                             </TouchableOpacity>
                         </>
                     )}
@@ -590,15 +590,15 @@ function Profile() {
                     onPress={() => !deleting && setDeleteModal(false)}
                 >
                     <Pressable style={styles.modalCard} onPress={() => {}}>
-                        <Text allowFontScaling={false} style={styles.modalTitle}>⚠️ Delete account?</Text>
+                        <Text allowFontScaling={false} style={styles.modalTitle}>⚠️ {t('deleteAccountQuestion')}</Text>
                         <Text allowFontScaling={false} style={styles.modalMessage}>
-                            This permanently deletes your account and all of your progress. This cannot be undone.
+                            {t('deleteAccountWarning')}
                         </Text>
 
                         {isEmailAccount && (
                             <TextInput
                                 style={styles.modalInput}
-                                placeholder="Enter your password"
+                                placeholder={t('enterYourPassword')}
                                 placeholderTextColor="rgba(255,255,255,0.45)"
                                 value={deletePassword}
                                 onChangeText={setDeletePassword}
@@ -617,7 +617,7 @@ function Profile() {
                                 disabled={deleting}
                                 activeOpacity={0.8}
                             >
-                                <Text allowFontScaling={false} style={styles.modalCancelText}>Cancel</Text>
+                                <Text allowFontScaling={false} style={styles.modalCancelText}>{t('cancel')}</Text>
                             </TouchableOpacity>
                             <TouchableOpacity
                                 style={[styles.modalBtn, styles.modalDelete]}
@@ -627,7 +627,7 @@ function Profile() {
                             >
                                 {deleting
                                     ? <ActivityIndicator color="#fff" />
-                                    : <Text allowFontScaling={false} style={styles.modalDeleteText}>Delete</Text>}
+                                    : <Text allowFontScaling={false} style={styles.modalDeleteText}>{t('delete')}</Text>}
                             </TouchableOpacity>
                         </View>
                     </Pressable>

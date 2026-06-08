@@ -14,6 +14,7 @@ import {
     View,
 } from 'react-native';
 import {notice} from '../../utils/notice.ts';
+import {useTranslation} from 'react-i18next';
 import {useFocusEffect, useNavigation} from "@react-navigation/core";
 import {loadMusic, playMusic, releaseMusic, stopMusic} from "../../utils/helpers.ts";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -51,6 +52,7 @@ const {width, height} = Dimensions.get('window');
 type AuthMode = 'login' | 'register';
 
 function Welcome() {
+    const {t} = useTranslation();
     const navigation = useNavigation<any>();
     const setSession = useAuthStore(s => s.setSession);
     const [busy, setBusy] = useState(false);
@@ -133,13 +135,13 @@ function Welcome() {
     function validateForm(): string | null {
         const trimmedEmail = email.trim();
         if (!/^\S+@\S+\.\S+$/.test(trimmedEmail)) {
-            return 'Please enter a valid email address';
+            return t('validEmailError');
         }
         if (password.length < 6) {
-            return 'Password must be at least 6 characters';
+            return t('passwordMinError');
         }
         if (mode === 'register' && !/^[a-zA-Z0-9_]{3,32}$/.test(name.trim())) {
-            return 'Name must be 3-32 letters, numbers or underscores';
+            return t('nameRuleError');
         }
         return null;
     }
@@ -148,7 +150,7 @@ function Welcome() {
         if (busy) return;
         const validationError = validateForm();
         if (validationError) {
-            notice.error('Check your details', validationError);
+            notice.error(t('checkDetails'), validationError);
             return;
         }
         setBusy(true);
@@ -160,7 +162,7 @@ function Welcome() {
             }
             await enterApp();
         } catch (error: any) {
-            notice.error('Sign-in failed', error?.message ?? 'Please try again');
+            notice.error(t('signInFailed'), error?.message ?? t('tryAgain'));
         } finally {
             setBusy(false);
         }
@@ -178,7 +180,7 @@ function Welcome() {
             await authService.guestLogin();
             await enterApp();
         } catch (error: any) {
-            notice.error('Sign-in failed', error?.message ?? 'Please try again');
+            notice.error(t('signInFailed'), error?.message ?? t('tryAgain'));
         } finally {
             setBusy(false);
         }
@@ -314,7 +316,7 @@ function Welcome() {
                             }}
                         >
                             <Text allowFontScaling={false} style={styles.title}>Tap Fingers</Text>
-                            <Text allowFontScaling={false} style={styles.subtitle}>TAP FAST · SCORE HIGH</Text>
+                            <Text allowFontScaling={false} style={styles.subtitle}>{t('tapFast')}</Text>
                         </Animated.View>
 
                         {/* Logo + Ghost side by side */}
@@ -337,7 +339,7 @@ function Welcome() {
                             style={[styles.card, {transform: [{translateY: slideButtons}], opacity: buttonsOpacity}]}
                         >
                             <Text allowFontScaling={false} style={styles.cardTitle}>
-                                {mode === 'register' ? '✨ Create your account' : '👋 Welcome back'}
+                                {mode === 'register' ? `✨ ${t('createYourAccount')}` : `👋 ${t('welcomeBack')}`}
                             </Text>
 
                             {mode === 'register' && (
@@ -345,7 +347,7 @@ function Welcome() {
                                     <PersonIcon size={fieldIconSize} color={iconColor('name')} style={styles.fieldIcon} />
                                     <TextInput
                                         style={styles.fieldInput}
-                                        placeholder="Name"
+                                        placeholder={t('name')}
                                         placeholderTextColor="rgba(255,255,255,0.45)"
                                         value={name}
                                         onChangeText={setName}
@@ -364,7 +366,7 @@ function Welcome() {
                                 <MailIcon size={fieldIconSize} color={iconColor('email')} style={styles.fieldIcon} />
                                 <TextInput
                                     style={styles.fieldInput}
-                                    placeholder="Email"
+                                    placeholder={t('email')}
                                     placeholderTextColor="rgba(255,255,255,0.45)"
                                     value={email}
                                     onChangeText={setEmail}
@@ -383,7 +385,7 @@ function Welcome() {
                                 <LockIcon size={fieldIconSize} color={iconColor('password')} style={styles.fieldIcon} />
                                 <TextInput
                                     style={styles.fieldInput}
-                                    placeholder="Password"
+                                    placeholder={t('password')}
                                     placeholderTextColor="rgba(255,255,255,0.45)"
                                     value={password}
                                     onChangeText={setPassword}
@@ -416,7 +418,7 @@ function Welcome() {
                                             ? <ActivityIndicator color="#fff" />
                                             : (
                                                 <Text allowFontScaling={false} style={styles.primaryText}>
-                                                    {mode === 'register' ? 'Create Account' : 'Sign In'}
+                                                    {mode === 'register' ? t('createAccount') : t('signIn')}
                                                 </Text>
                                             )}
                                     </LinearGradient>
@@ -428,9 +430,9 @@ function Welcome() {
                                 hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}
                             >
                                 <Text allowFontScaling={false} style={styles.toggleText}>
-                                    {mode === 'login' ? "Don't have an account? " : 'Already have an account? '}
+                                    {mode === 'login' ? t('noAccount') : t('haveAccount')}
                                     <Text style={styles.toggleTextAccent}>
-                                        {mode === 'login' ? 'Sign up' : 'Sign in'}
+                                        {mode === 'login' ? t('signUp') : t('signInAction')}
                                     </Text>
                                 </Text>
                             </TouchableOpacity>
@@ -439,7 +441,7 @@ function Welcome() {
                         {/* Divider */}
                         <Animated.View style={[styles.dividerRow, {opacity: buttonsOpacity}]}>
                             <View style={styles.dividerLine} />
-                            <Text allowFontScaling={false} style={styles.dividerText}>OR</Text>
+                            <Text allowFontScaling={false} style={styles.dividerText}>{t('or')}</Text>
                             <View style={styles.dividerLine} />
                         </Animated.View>
 
@@ -458,7 +460,7 @@ function Welcome() {
                                 activeOpacity={0.8}
                             >
                                 <Ghost size={24} color="rgba(255,255,255,0.85)" eyeColor="#9370DB" />
-                                <Text allowFontScaling={false} style={styles.guestButtonText}>Continue as Guest</Text>
+                                <Text allowFontScaling={false} style={styles.guestButtonText}>{t('continueAsGuest')}</Text>
                             </TouchableOpacity>
                         </Animated.View>
                     </View>

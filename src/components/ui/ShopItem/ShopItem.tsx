@@ -1,5 +1,6 @@
 ﻿import React, {useEffect, useRef, useState} from "react";
 import {Animated, Easing, Image, StyleSheet, Text, TouchableOpacity, View} from "react-native";
+import {useTranslation} from "react-i18next";
 import {SvgXml} from "react-native-svg";
 
 // icons
@@ -31,6 +32,7 @@ interface ShopItemProps {
 
 function ShopItem({item, index = 0, handlePress, selected = false, purchased = false, disabled = false}: ShopItemProps) {
 
+    const {t} = useTranslation();
     const scaleAnim = useRef(new Animated.Value(1)).current;
     const entranceOpacity = useRef(new Animated.Value(0)).current;
     const entranceY = useRef(new Animated.Value(30)).current;
@@ -206,7 +208,7 @@ function ShopItem({item, index = 0, handlePress, selected = false, purchased = f
                     return (
                         <LinearGradient colors={['#020012', '#090040']} style={{width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center'}}>
                             <Text allowFontScaling={false} style={{fontSize: 32}}>✨</Text>
-                            <Text allowFontScaling={false} style={{color: '#aaaaff', fontSize: 10, marginTop: 4}}>ANIMATED</Text>
+                            <Text allowFontScaling={false} style={{color: '#aaaaff', fontSize: 10, marginTop: 4}}>{t('animated')}</Text>
                         </LinearGradient>
                     );
                 }
@@ -214,7 +216,7 @@ function ShopItem({item, index = 0, handlePress, selected = false, purchased = f
                     return (
                         <LinearGradient colors={['#010008', '#0d2040', '#1a0030']} style={{width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center'}}>
                             <Text allowFontScaling={false} style={{fontSize: 32}}>🌌</Text>
-                            <Text allowFontScaling={false} style={{color: '#80ffb0', fontSize: 10, marginTop: 4}}>ANIMATED</Text>
+                            <Text allowFontScaling={false} style={{color: '#80ffb0', fontSize: 10, marginTop: 4}}>{t('animated')}</Text>
                         </LinearGradient>
                     );
                 }
@@ -222,7 +224,7 @@ function ShopItem({item, index = 0, handlePress, selected = false, purchased = f
                     return (
                         <LinearGradient colors={['#0d0000', '#4d0000', '#ff3300']} style={{width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center'}}>
                             <Text allowFontScaling={false} style={{fontSize: 32}}>🔥</Text>
-                            <Text allowFontScaling={false} style={{color: '#ffaa44', fontSize: 10, marginTop: 4}}>ANIMATED</Text>
+                            <Text allowFontScaling={false} style={{color: '#ffaa44', fontSize: 10, marginTop: 4}}>{t('animated')}</Text>
                         </LinearGradient>
                     );
                 }
@@ -230,7 +232,7 @@ function ShopItem({item, index = 0, handlePress, selected = false, purchased = f
                     return (
                         <LinearGradient colors={['#000900', '#001a00']} style={{width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center'}}>
                             <Text allowFontScaling={false} style={{fontSize: 32}}>💚</Text>
-                            <Text allowFontScaling={false} style={{color: '#00ff41', fontSize: 10, marginTop: 4}}>ANIMATED</Text>
+                            <Text allowFontScaling={false} style={{color: '#00ff41', fontSize: 10, marginTop: 4}}>{t('animated')}</Text>
                         </LinearGradient>
                     );
                 }
@@ -256,21 +258,21 @@ function ShopItem({item, index = 0, handlePress, selected = false, purchased = f
         if (comingSoon) {
             return (
                 <View style={styles.comingSoonBadge}>
-                    <Text allowFontScaling={false} style={styles.comingSoonBadgeText}>🔜 Coming Soon</Text>
+                    <Text allowFontScaling={false} style={styles.comingSoonBadgeText}>🔜 {t('comingSoon')}</Text>
                 </View>
             );
         }
         if (selected) {
             return (
                 <View style={styles.equippedBadge}>
-                    <Text allowFontScaling={false} style={styles.equippedText}>✓ Equipped</Text>
+                    <Text allowFontScaling={false} style={styles.equippedText}>✓ {t('equipped')}</Text>
                 </View>
             );
         }
         if (purchased) {
             return (
                 <View style={styles.ownedBadge}>
-                    <Text allowFontScaling={false} style={styles.ownedText}>Tap to equip</Text>
+                    <Text allowFontScaling={false} style={styles.ownedText}>{t('tapToEquip')}</Text>
                 </View>
             );
         }
@@ -404,7 +406,7 @@ function ShopItem({item, index = 0, handlePress, selected = false, purchased = f
                 {disabled && !comingSoon && (
                     <View style={styles.lockOverlay}>
                         <Text allowFontScaling={false} style={styles.lockText}>🔒</Text>
-                        <Text allowFontScaling={false} style={styles.lockPrice}>{item.coins} coins needed</Text>
+                        <Text allowFontScaling={false} style={styles.lockPrice}>{t('coinsNeeded', {count: item.coins})}</Text>
                     </View>
                 )}
 
@@ -414,7 +416,7 @@ function ShopItem({item, index = 0, handlePress, selected = false, purchased = f
                         <View style={styles.comingSoonOverlay}>
                             <Text allowFontScaling={false} style={styles.comingSoonLock}>🔒</Text>
                             <View style={styles.comingSoonPill}>
-                                <Text allowFontScaling={false} style={styles.comingSoonPillText}>COMING SOON</Text>
+                                <Text allowFontScaling={false} style={styles.comingSoonPillText}>{t('comingSoonUpper')}</Text>
                             </View>
                         </View>
                         <LinearGradient
@@ -423,7 +425,7 @@ function ShopItem({item, index = 0, handlePress, selected = false, purchased = f
                             end={{x: 1, y: 0}}
                             style={styles.comingSoonRibbon}
                         >
-                            <Text allowFontScaling={false} style={styles.comingSoonRibbonText}>SOON</Text>
+                            <Text allowFontScaling={false} style={styles.comingSoonRibbonText}>{t('soon')}</Text>
                         </LinearGradient>
                     </>
                 )}

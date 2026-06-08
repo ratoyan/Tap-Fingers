@@ -7,6 +7,7 @@ import {
     StyleSheet,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
+import {useTranslation} from 'react-i18next';
 import {ms, vs} from '../../../utils/responsive.ts';
 import {
     BLUISH_PURPLE,
@@ -28,6 +29,7 @@ export type HelperType = 'bomb' | 'shield' | 'slow';
 
 interface HelperConfig {
     icon: string;
+    // i18n keys — resolved with t() at render time.
     name: string;
     desc: string;
     price: number;
@@ -38,24 +40,24 @@ interface HelperConfig {
 export const HELPER_CONFIGS: Record<HelperType, HelperConfig> = {
     bomb: {
         icon: '💣',
-        name: 'Bomb Booster',
-        desc: 'Instantly destroys all visible cards and scores the points.',
+        name: 'bombBooster',
+        desc: 'bombBoosterDesc',
         price: 20,
         gradient: [ORANGE, '#ee0979'],
         badgeColor: ORANGE_RED,
     },
     shield: {
         icon: '🛡️',
-        name: 'Shield',
-        desc: 'Absorbs one missed card without losing a life.',
+        name: 'shield',
+        desc: 'shieldDesc',
         price: 15,
         gradient: ['#0288d1', '#00b4d8'],
         badgeColor: '#0288d1',
     },
     slow: {
         icon: '⏱️',
-        name: 'Slow Motion',
-        desc: 'Slows down all falling cards for 8 seconds.',
+        name: 'slowMotion',
+        desc: 'slowMotionDesc',
         price: 10,
         gradient: ['#7b1fa2', LILAC],
         badgeColor: '#7b1fa2',
@@ -73,6 +75,7 @@ interface BuyHelperModalProps {
 }
 
 export default function BuyHelperModal({visible, helperType, coins, watchAdUsed, onBuy, onWatchAd, onClose}: BuyHelperModalProps) {
+    const {t} = useTranslation();
     const scaleAnim   = useRef(new Animated.Value(0.8)).current;
     const fadeAnim    = useRef(new Animated.Value(0)).current;
     const adPulseAnim = useRef(new Animated.Value(1)).current;
@@ -116,12 +119,12 @@ export default function BuyHelperModal({visible, helperType, coins, watchAdUsed,
 
                 {/* Title + desc */}
                 <View style={styles.body}>
-                    <Text allowFontScaling={false} style={styles.title}>{cfg.name}</Text>
-                    <Text allowFontScaling={false} style={styles.desc}>{cfg.desc}</Text>
+                    <Text allowFontScaling={false} style={styles.title}>{t(cfg.name)}</Text>
+                    <Text allowFontScaling={false} style={styles.desc}>{t(cfg.desc)}</Text>
 
                     {/* Coin balance */}
                     <View style={styles.balanceRow}>
-                        <Text allowFontScaling={false} style={styles.balanceLabel}>Your coins</Text>
+                        <Text allowFontScaling={false} style={styles.balanceLabel}>{t('yourCoins')}</Text>
                         <View style={styles.balanceBadge}>
                             <Coin width={18} height={18}/>
                             <Text allowFontScaling={false} style={styles.balanceValue}>{coins}</Text>
@@ -133,7 +136,7 @@ export default function BuyHelperModal({visible, helperType, coins, watchAdUsed,
                         colors={canAfford ? ['rgba(255,215,0,0.12)', 'rgba(255,215,0,0.04)'] : ['rgba(255,255,255,0.06)', 'rgba(255,255,255,0.02)']}
                         style={styles.priceCard}
                     >
-                        <Text allowFontScaling={false} style={styles.priceLabel}>Cost</Text>
+                        <Text allowFontScaling={false} style={styles.priceLabel}>{t('cost')}</Text>
                         <View style={styles.priceRow}>
                             <Coin width={22} height={22}/>
                             <Text allowFontScaling={false} style={[styles.priceValue, !canAfford && styles.priceValueInsufficient]}>
@@ -141,7 +144,7 @@ export default function BuyHelperModal({visible, helperType, coins, watchAdUsed,
                             </Text>
                         </View>
                         {!canAfford && (
-                            <Text allowFontScaling={false} style={styles.insufficientText}>Not enough coins</Text>
+                            <Text allowFontScaling={false} style={styles.insufficientText}>{t('notEnoughCoins')}</Text>
                         )}
                     </LinearGradient>
                 </View>
@@ -154,7 +157,7 @@ export default function BuyHelperModal({visible, helperType, coins, watchAdUsed,
                         disabled={adDisabled}
                         accessible={true}
                         accessibilityRole="button"
-                        accessibilityLabel={adDisabled ? `Ad limit reached, ${watchAdUsed} of 2 ads used` : `Watch ad to get one free ${cfg.name}`}
+                        accessibilityLabel={adDisabled ? `${t('adLimitReached')}, ${t('adsUsed', {used: watchAdUsed})}` : t('getFreeHelper', {name: t(cfg.name)})}
                         accessibilityState={{disabled: adDisabled}}
                     >
                         <LinearGradient
@@ -166,10 +169,10 @@ export default function BuyHelperModal({visible, helperType, coins, watchAdUsed,
                             <Text allowFontScaling={false} style={styles.adIcon}>📺</Text>
                             <View>
                                 <Text allowFontScaling={false} style={[styles.adTitle, adDisabled && {color: 'rgba(255,255,255,0.5)'}]}>
-                                    {adDisabled ? 'Ad limit reached' : 'Watch Ad'}
+                                    {adDisabled ? t('adLimitReached') : t('watchAd')}
                                 </Text>
                                 <Text allowFontScaling={false} style={[styles.adSub, adDisabled && {color: 'rgba(255,255,255,0.35)'}]}>
-                                    {adDisabled ? `${watchAdUsed}/2 ads used` : `Get +1 ${cfg.name} for free`}
+                                    {adDisabled ? t('adsUsed', {used: watchAdUsed}) : t('getFreeHelper', {name: t(cfg.name)})}
                                 </Text>
                             </View>
                         </LinearGradient>
@@ -184,9 +187,9 @@ export default function BuyHelperModal({visible, helperType, coins, watchAdUsed,
                         style={styles.cancelBtn}
                         accessible={true}
                         accessibilityRole="button"
-                        accessibilityLabel="Cancel"
+                        accessibilityLabel={t('cancel')}
                     >
-                        <Text allowFontScaling={false} style={styles.cancelText}>Cancel</Text>
+                        <Text allowFontScaling={false} style={styles.cancelText}>{t('cancel')}</Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity
@@ -195,7 +198,7 @@ export default function BuyHelperModal({visible, helperType, coins, watchAdUsed,
                         style={[styles.buyWrap, !canAfford && {opacity: 0.4}]}
                         accessible={true}
                         accessibilityRole="button"
-                        accessibilityLabel={`Buy ${cfg.name} for ${cfg.price} coins`}
+                        accessibilityLabel={`${t('buy')} ${t(cfg.name)} ${cfg.price}`}
                         accessibilityState={{disabled: !canAfford}}
                     >
                         <LinearGradient
@@ -205,7 +208,7 @@ export default function BuyHelperModal({visible, helperType, coins, watchAdUsed,
                             style={styles.buyBtn}
                         >
                             <Coin width={16} height={16}/>
-                            <Text allowFontScaling={false} style={styles.buyBtnText}>Buy  {cfg.price}</Text>
+                            <Text allowFontScaling={false} style={styles.buyBtnText}>{t('buy')}  {cfg.price}</Text>
                         </LinearGradient>
                     </TouchableOpacity>
                 </View>

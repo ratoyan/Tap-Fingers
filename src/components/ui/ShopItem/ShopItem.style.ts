@@ -127,6 +127,7 @@ export default StyleSheet.create({
         fontSize: ms(11),
         fontWeight: '700',
         letterSpacing: 0.3,
+        textAlign: 'center'
     },
     randomBadge: {
         position: 'absolute',

@@ -1,5 +1,6 @@
 ﻿import React, {useEffect, useRef} from "react";
 import {Animated, Text, TouchableOpacity, View} from "react-native";
+import {useTranslation} from "react-i18next";
 
 // icons
 import Coin from "../../../assets/icons/Coin.tsx";
@@ -24,6 +25,7 @@ interface ChallengeCardProps {
 
 function ChallengeCard({item, index = 0, onCollect}: ChallengeCardProps) {
 
+    const {t} = useTranslation();
     const entranceOpacity = useRef(new Animated.Value(0)).current;
     const entranceX = useRef(new Animated.Value(-30)).current;
     const progressAnim = useRef(new Animated.Value(0)).current;
@@ -70,10 +72,10 @@ function ChallengeCard({item, index = 0, onCollect}: ChallengeCardProps) {
     }, [item.finished]);
 
     const getStatus = () => {
-        if (item.locked)    return {label: '🔒 Locked',   bg: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.5)'};
-        if (item.taken)     return {label: '✅ Claimed',   bg: 'rgba(50,205,50,0.2)',  color: LIGHT_GREEN};
-        if (item.finished)  return {label: '🎁 Ready',    bg: 'rgba(255,215,0,0.2)',  color: GOLD};
-        return               {label: '⚡ Active',          bg: 'rgba(142,45,226,0.3)', color: '#d4aaff'};
+        if (item.locked)    return {label: `🔒 ${t('challengeLocked')}`,   bg: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.5)'};
+        if (item.taken)     return {label: `✅ ${t('challengeClaimed')}`,   bg: 'rgba(50,205,50,0.2)',  color: LIGHT_GREEN};
+        if (item.finished)  return {label: `🎁 ${t('challengeReady')}`,    bg: 'rgba(255,215,0,0.2)',  color: GOLD};
+        return               {label: `⚡ ${t('challengeActive')}`,          bg: 'rgba(142,45,226,0.3)', color: '#d4aaff'};
     };
 
     const getIcon = () => {
@@ -119,8 +121,8 @@ function ChallengeCard({item, index = 0, onCollect}: ChallengeCardProps) {
                     <View style={styles.headerText}>
                         <Text allowFontScaling={false} style={styles.title} numberOfLines={1}>{item.title}</Text>
                         {item.locked
-                            ? <Text allowFontScaling={false} style={styles.lockedSubtitle}>Complete previous challenge</Text>
-                            : <Text allowFontScaling={false} style={styles.subtitle}>{item.progress}% completed</Text>
+                            ? <Text allowFontScaling={false} style={styles.lockedSubtitle}>{t('completePrevious')}</Text>
+                            : <Text allowFontScaling={false} style={styles.subtitle}>{t('percentCompleted', {percent: item.progress})}</Text>
                         }
                     </View>
 
@@ -144,7 +146,7 @@ function ChallengeCard({item, index = 0, onCollect}: ChallengeCardProps) {
                             />
                         </View>
                         <View style={styles.progressLabel}>
-                            <Text allowFontScaling={false} style={styles.progressText}>Progress</Text>
+                            <Text allowFontScaling={false} style={styles.progressText}>{t('progress')}</Text>
                             <Text allowFontScaling={false} style={styles.progressText}>{item.progress} / 100</Text>
                         </View>
                     </>
@@ -155,7 +157,7 @@ function ChallengeCard({item, index = 0, onCollect}: ChallengeCardProps) {
                     <View style={styles.footer}>
                         <View style={styles.rewardRow}>
                             <Coin width={18} height={16}/>
-                            <Text allowFontScaling={false} style={styles.rewardText}>+{item.reward} coins</Text>
+                            <Text allowFontScaling={false} style={styles.rewardText}>{t('coinsReward', {count: item.reward})}</Text>
                         </View>
 
                         {item.finished && !item.taken && (
@@ -166,17 +168,17 @@ function ChallengeCard({item, index = 0, onCollect}: ChallengeCardProps) {
                                     onPress={onCollect}
                                     accessible={true}
                                     accessibilityRole="button"
-                                    accessibilityLabel={`Collect ${item.reward} coins reward for ${item.title}`}
+                                    accessibilityLabel={`${t('collect')} ${item.reward}`}
                                 >
                                     <Coin width={16} height={14}/>
-                                    <Text allowFontScaling={false} style={styles.collectText}>Collect</Text>
+                                    <Text allowFontScaling={false} style={styles.collectText}>{t('collect')}</Text>
                                 </TouchableOpacity>
                             </Animated.View>
                         )}
 
                         {item.taken && (
                             <View style={[styles.badge, {backgroundColor: 'rgba(50,205,50,0.15)'}]}>
-                                <Text allowFontScaling={false} style={[styles.badgeText, {color: LIGHT_GREEN}]}>✓ Done</Text>
+                                <Text allowFontScaling={false} style={[styles.badgeText, {color: LIGHT_GREEN}]}>✓ {t('done')}</Text>
                             </View>
                         )}
                     </View>

@@ -3,6 +3,7 @@ import Sound from 'react-native-sound';
 import LinearGradient from 'react-native-linear-gradient';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {useFocusEffect, useNavigation} from '@react-navigation/core';
+import {useTranslation} from 'react-i18next';
 import {loadMusic, pauceMusic, playMusic, releaseMusic, stopMusic} from '../../utils/helpers.ts';
 import {
     Animated,
@@ -115,6 +116,7 @@ function spawnBox(card: any, duration: number) {
 }
 
 export default function Play() {
+    const {t} = useTranslation();
     const navigation = useNavigation();
     const insets = useSafeAreaInsets();
     const storeCard = useShopStore(s => s.card);
@@ -1036,7 +1038,7 @@ export default function Play() {
                         style={styles.menuBtn}
                         accessible={true}
                         accessibilityRole="button"
-                        accessibilityLabel="Open game menu"
+                        accessibilityLabel={t('openGameMenu')}
                     >
                         <MenuIcon size={18} color="#fff"/>
                     </TouchableOpacity>
@@ -1134,7 +1136,7 @@ export default function Play() {
                         activeOpacity={0.75}
                         accessible={true}
                         accessibilityRole="button"
-                        accessibilityLabel={shieldActive ? 'Shield active' : shieldCount > 0 ? `Use shield, ${shieldCount} available` : 'Buy shield'}
+                        accessibilityLabel={shieldActive ? t('shieldActive') : shieldCount > 0 ? `${t('useShield')}, ${shieldCount} ${t('available')}` : t('buyShield')}
                         accessibilityState={{disabled: shieldActive}}
                         style={[
                             styles.helperButton,
@@ -1163,7 +1165,7 @@ export default function Play() {
                         activeOpacity={0.75}
                         accessible={true}
                         accessibilityRole="button"
-                        accessibilityLabel={bombCount > 0 ? `Use bomb, ${bombCount} available` : 'Buy bomb'}
+                        accessibilityLabel={bombCount > 0 ? `${t('useBomb')}, ${bombCount} ${t('available')}` : t('buyBomb')}
                         style={[
                             styles.helperButton,
                             styles.helperButtonBomb,
@@ -1192,7 +1194,7 @@ export default function Play() {
                         activeOpacity={0.75}
                         accessible={true}
                         accessibilityRole="button"
-                        accessibilityLabel={slowActive ? 'Slow motion active' : slowCount > 0 ? `Use slow motion, ${slowCount} available` : 'Buy slow motion'}
+                        accessibilityLabel={slowActive ? t('slowMotionActive') : slowCount > 0 ? `${t('useSlowMotion')}, ${slowCount} ${t('available')}` : t('buySlowMotion')}
                         accessibilityState={{disabled: slowActive}}
                         style={[
                             styles.helperButton,

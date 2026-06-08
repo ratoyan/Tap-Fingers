@@ -1,5 +1,6 @@
 import React, {useEffect, useMemo, useRef, useState} from 'react';
 import {Animated, Easing, Modal, Text, TouchableOpacity, View} from 'react-native';
+import {useTranslation} from 'react-i18next';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import LinearGradient from 'react-native-linear-gradient';
 import Svg, {Circle, G, Line, Path, Text as SvgText} from 'react-native-svg';
@@ -114,6 +115,7 @@ interface Props {
 }
 
 export default function LuckyWheelModal({visible, onClose, onSpinComplete}: Props) {
+    const {t} = useTranslation();
     const patchStats = useAuthStore(s => s.patchStats);
 
     const spinAnim        = useRef(new Animated.Value(0)).current;
@@ -307,8 +309,8 @@ export default function LuckyWheelModal({visible, onClose, onSpinComplete}: Prop
     const shineTranslate = shineAnim.interpolate({inputRange: [-1, 2], outputRange: [-350, 350]});
 
     const rewardLabel = result
-        ? result.type === 'coins' ? `+${result.value} Coins!`
-            : result.type === 'bomb' ? '+1 Bomb!' : result.type === 'shield' ? '+1 Shield!' : '+1 Slow Mo!'
+        ? result.type === 'coins' ? t('coinsWon', {count: result.value})
+            : result.type === 'bomb' ? t('bombWon') : result.type === 'shield' ? t('shieldWon') : t('slowMoWon')
         : '';
 
     const wheelReady = segments !== null && slices.length > 0;
@@ -341,13 +343,13 @@ export default function LuckyWheelModal({visible, onClose, onSpinComplete}: Prop
                         />
 
                         {/* Header */}
-                        <Text allowFontScaling={false} style={styles.title}>🎡  LUCKY WHEEL</Text>
-                        {isActive && <Text allowFontScaling={false} style={styles.subtitle}>Your daily free spin!</Text>}
-                        {!canSpin && !spinning && wheelReady && <Text allowFontScaling={false} style={styles.subtitleDisabled}>⏰  Next spin in {timeLeft}</Text>}
-                        {segments === null && <Text allowFontScaling={false} style={styles.subtitleDisabled}>Loading…</Text>}
+                        <Text allowFontScaling={false} style={styles.title}>🎡  {t('luckyWheel')}</Text>
+                        {isActive && <Text allowFontScaling={false} style={styles.subtitle}>{t('dailyFreeSpin')}</Text>}
+                        {!canSpin && !spinning && wheelReady && <Text allowFontScaling={false} style={styles.subtitleDisabled}>⏰  {t('nextSpinIn', {time: timeLeft})}</Text>}
+                        {segments === null && <Text allowFontScaling={false} style={styles.subtitleDisabled}>{t('loading')}</Text>}
                         {segments !== null && slices.length === 0 && (
                             <Text allowFontScaling={false} style={styles.subtitleDisabled}>
-                                {loadError ? 'Could not load wheel — try again later.' : 'Wheel is currently unavailable.'}
+                                {loadError ? t('wheelLoadError') : t('wheelUnavailable')}
                             </Text>
                         )}
 
@@ -405,7 +407,7 @@ export default function LuckyWheelModal({visible, onClose, onSpinComplete}: Prop
                                         activeOpacity={0.82}
                                         accessible={true}
                                         accessibilityRole="button"
-                                        accessibilityLabel={canSpin ? 'Spin the lucky wheel' : 'Already spun today'}
+                                        accessibilityLabel={t('luckyWheel')}
                                         accessibilityState={{disabled: spinning || !canSpin || !wheelReady}}
                                     >
                                         <LinearGradient
@@ -418,7 +420,7 @@ export default function LuckyWheelModal({visible, onClose, onSpinComplete}: Prop
                                                 </Animated.Text>
                                             ) : (
                                                 <Text allowFontScaling={false} style={[styles.spinText, isActive ? styles.spinTextActive : styles.spinTextInactive]}>
-                                                    {canSpin ? 'SPIN!' : '✓'}
+                                                    {canSpin ? t('spin') : '✓'}
                                                 </Text>
                                             )}
                                         </LinearGradient>
@@ -458,7 +460,7 @@ export default function LuckyWheelModal({visible, onClose, onSpinComplete}: Prop
                                     start={{x: 0, y: 0}} end={{x: 1, y: 0}}
                                     style={[styles.resultGradient, {borderColor: glowColor}]}
                                 >
-                                    <Text allowFontScaling={false} style={styles.resultYouWon}>✨  YOU WON  ✨</Text>
+                                    <Text allowFontScaling={false} style={styles.resultYouWon}>✨  {t('youWon')}  ✨</Text>
                                     <Text allowFontScaling={false} style={styles.resultIcon}>{result.icon}</Text>
                                     <Text allowFontScaling={false} style={[styles.resultLabel, {color: glowColor, textShadowColor: glowColor}]}>
                                         {rewardLabel}
@@ -471,7 +473,7 @@ export default function LuckyWheelModal({visible, onClose, onSpinComplete}: Prop
                         {!canSpin && !spinning && !result && (
                             <View style={styles.cooldownBox}>
                                 <Text allowFontScaling={false} style={styles.cooldownIcon}>⏳</Text>
-                                <Text allowFontScaling={false} style={styles.cooldownText}>Come back in {timeLeft} for your next spin!</Text>
+                                <Text allowFontScaling={false} style={styles.cooldownText}>{t('comeBackForSpin', {time: timeLeft})}</Text>
                             </View>
                         )}
 
@@ -482,14 +484,14 @@ export default function LuckyWheelModal({visible, onClose, onSpinComplete}: Prop
                             style={styles.closeButton}
                             accessible={true}
                             accessibilityRole="button"
-                            accessibilityLabel="Close"
+                            accessibilityLabel={t('close')}
                         >
                             <LinearGradient
                                 colors={['rgba(255,215,0,0.18)', 'rgba(255,215,0,0.06)']}
                                 start={{x: 0, y: 0}} end={{x: 1, y: 1}}
                                 style={styles.closeGradient}
                             >
-                                <Text allowFontScaling={false} style={styles.closeText}>CLOSE</Text>
+                                <Text allowFontScaling={false} style={styles.closeText}>{t('close')}</Text>
                             </LinearGradient>
                         </TouchableOpacity>
 

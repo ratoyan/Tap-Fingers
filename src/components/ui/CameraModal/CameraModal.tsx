@@ -1,5 +1,6 @@
 import React, {useEffect, useRef} from 'react';
 import {Modal, Platform, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import {useTranslation} from 'react-i18next';
 import {Camera, useCameraDevice, useCameraPermission} from 'react-native-vision-camera';
 
 interface CameraModalProps {
@@ -9,6 +10,7 @@ interface CameraModalProps {
 }
 
 export default function CameraModal({visible, onCapture, onClose}: CameraModalProps) {
+    const {t} = useTranslation();
     const {hasPermission, requestPermission} = useCameraPermission();
     const device = useCameraDevice('back');
     const cameraRef = useRef<Camera>(null);
@@ -45,7 +47,7 @@ export default function CameraModal({visible, onCapture, onClose}: CameraModalPr
                 ) : (
                     <View style={styles.noPermission}>
                         <Text allowFontScaling={false} style={styles.noPermissionText}>
-                            {hasPermission ? 'No camera found' : 'Camera permission required'}
+                            {hasPermission ? t('noCameraFound') : t('cameraPermission')}
                         </Text>
                     </View>
                 )}
@@ -57,7 +59,7 @@ export default function CameraModal({visible, onCapture, onClose}: CameraModalPr
                         style={styles.closeBtn}
                         accessible={true}
                         accessibilityRole="button"
-                        accessibilityLabel="Close camera"
+                        accessibilityLabel={t('closeCamera')}
                     >
                         <Text allowFontScaling={false} style={styles.closeTxt}>✕</Text>
                     </TouchableOpacity>
@@ -68,7 +70,7 @@ export default function CameraModal({visible, onCapture, onClose}: CameraModalPr
                         style={styles.captureBtn}
                         accessible={true}
                         accessibilityRole="button"
-                        accessibilityLabel="Take photo"
+                        accessibilityLabel={t('takePhoto')}
                     >
                         <View style={styles.captureInner}/>
                     </TouchableOpacity>

@@ -11,6 +11,7 @@ import {
     View,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
+import {useTranslation} from 'react-i18next';
 import {DARK_PURPLE, GOLD, PURPLE} from '../../../constants/colors.ts';
 
 interface UpdateModalProps {
@@ -19,6 +20,7 @@ interface UpdateModalProps {
 }
 
 export default function UpdateModal({visible, storeUrl}: UpdateModalProps) {
+    const {t} = useTranslation();
     const scaleAnim   = useRef(new Animated.Value(0.75)).current;
     const opacityAnim = useRef(new Animated.Value(0)).current;
     const pulseAnim   = useRef(new Animated.Value(1)).current;
@@ -78,10 +80,10 @@ export default function UpdateModal({visible, storeUrl}: UpdateModalProps) {
                         </View>
 
                         {/* Title */}
-                        <Text allowFontScaling={false} style={styles.title}>New Update!</Text>
+                        <Text allowFontScaling={false} style={styles.title}>{t('newUpdate')}</Text>
                         <View style={styles.divider}/>
                         <Text allowFontScaling={false} style={styles.subtitle}>
-                            A new version of TapFingers is available. Update now for the latest features and improvements!
+                            {t('updateMessage')}
                         </Text>
 
                         {/* Update button */}
@@ -92,7 +94,7 @@ export default function UpdateModal({visible, storeUrl}: UpdateModalProps) {
                                 style={styles.updateBtn}
                                 accessible={true}
                                 accessibilityRole="button"
-                                accessibilityLabel={Platform.OS === 'ios' ? 'Update on App Store' : 'Update on Play Store'}
+                                accessibilityLabel={Platform.OS === 'ios' ? t('updateAppStore') : t('updatePlayStore')}
                             >
                                 <LinearGradient
                                     colors={['#FFE566', '#FFD700', '#cc8800']}
@@ -101,7 +103,7 @@ export default function UpdateModal({visible, storeUrl}: UpdateModalProps) {
                                     style={styles.updateGradient}
                                 >
                                     <Text allowFontScaling={false} style={styles.updateText}>
-                                        {Platform.OS === 'ios' ? '🍎  Update on App Store' : '▶  Update on Play Store'}
+                                        {Platform.OS === 'ios' ? `🍎  ${t('updateAppStore')}` : `▶  ${t('updatePlayStore')}`}
                                     </Text>
                                 </LinearGradient>
                             </TouchableOpacity>

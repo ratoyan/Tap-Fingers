@@ -94,6 +94,9 @@ export interface ShopItem {
     sortOrder: number;
     isActive: boolean;
     isPremium: boolean;
+    // When true, the item is shown in the shop as a locked "coming soon" teaser
+    // and cannot be purchased or equipped (also enforced server-side).
+    comingSoon: boolean;
 }
 
 export interface InventoryEntry {

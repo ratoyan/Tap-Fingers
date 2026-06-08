@@ -56,6 +56,9 @@ export interface ShopEntry {
     randomColors?: boolean;
     // Admin colour (backend shop_items.track_color) for the destroy burst in Play.
     trackColor?: string | null;
+    // Admin flag (backend shop_items.coming_soon). When set, the Shop renders
+    // this as a locked "coming soon" teaser that can't be bought or equipped.
+    comingSoon?: boolean;
 }
 
 export const DEFAULT_CARD_KEY = 'card_default';
@@ -71,6 +74,11 @@ export const SHOP_VISUALS: Record<string, ShopVisual> = {
     card_diamond: { typeName: 'diamond', size: 100, isRotation: false },
     card_bomb: { typeName: 'bomb', size: 100, isRotation: false },
     card_ghost: { typeName: 'ghost', size: 100, isRotation: false },
+
+    // ── Coming-soon cards (admin-authored SVG artwork drives the preview) ──────
+    card_phoenix: { typeName: 'card', size: 100, isRotation: false },
+    card_crown: { typeName: 'card', size: 100, isRotation: false },
+    card_lightning: { typeName: 'card', size: 100, isRotation: false },
 
     // ── Image backgrounds ─────────────────────────────────────────────────────
     bg_default: { typeName: 'background', images: [bg1, bg2, bg3, bg4, bg1] },
@@ -88,6 +96,11 @@ export const SHOP_VISUALS: Record<string, ShopVisual> = {
     bg_fire: { typeName: 'background', colors: ['#1a0000', '#4d0000', '#800000', '#b33000', '#cc5200'] },
     bg_galaxy: { typeName: 'background', colors: ['#04001a', '#0d0033', '#1a004d', '#280066', '#360080'] },
     bg_neon: { typeName: 'background', colors: ['#0d001a', '#1a0033', '#33004d', '#4d0066', '#660080'] },
+
+    // ── Coming-soon backgrounds (premium gradients) ───────────────────────────
+    bg_rainbow: { typeName: 'background', colors: ['#ff0040', '#ff8c00', '#ffe000', '#00d26a', '#0088ff', '#8a2be2'] },
+    bg_nebula: { typeName: 'background', colors: ['#0b0033', '#2a0a5e', '#5e1a8a', '#b13aa6', '#ff6ec7'] },
+    bg_mirage: { typeName: 'background', colors: ['#1a0d00', '#5e3a00', '#a86a1a', '#e0a850', '#ffe0a0'] },
 
     // ── Animated backgrounds ──────────────────────────────────────────────────
     bg_starfield: { typeName: 'background', animationType: 'stars', isRare: true },
@@ -150,6 +163,7 @@ export function mergeShopItem(item: ShopItem): ShopEntry {
         height: item.height ?? null,
         randomColors: item.randomColors ?? false,
         trackColor: item.trackColor ?? null,
+        comingSoon: item.comingSoon ?? false,
     };
 }
 

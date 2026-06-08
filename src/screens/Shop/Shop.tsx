@@ -122,6 +122,8 @@ function Shop() {
     }
 
     async function handleItemPress(entry: ShopEntry) {
+        // Teasers are locked — visible but not purchasable/equippable.
+        if (entry.comingSoon) return;
         if (busyKey) return;
         setBusyKey(entry.key);
         try {

@@ -46,6 +46,8 @@ function ShopItem({item, index = 0, handlePress, selected = false, purchased = f
     const [cardWidth, setCardWidth] = useState(0);
 
     const isBackground = item.typeName === 'background';
+    // Admin-flagged teaser: shown but locked — can't be bought or equipped.
+    const comingSoon = item.comingSoon === true;
 
     // Random-colors badge: a slowly sweeping rainbow disc with a gentle pulse,
     // so the indicator feels alive and signals "colourful" at a glance.
@@ -251,6 +253,13 @@ function ShopItem({item, index = 0, handlePress, selected = false, purchased = f
     };
 
     const renderBadge = () => {
+        if (comingSoon) {
+            return (
+                <View style={styles.comingSoonBadge}>
+                    <Text allowFontScaling={false} style={styles.comingSoonBadgeText}>🔜 Coming Soon</Text>
+                </View>
+            );
+        }
         if (selected) {
             return (
                 <View style={styles.equippedBadge}>
@@ -298,19 +307,21 @@ function ShopItem({item, index = 0, handlePress, selected = false, purchased = f
                 onPressIn={onPressIn}
                 onPressOut={onPressOut}
                 activeOpacity={1}
-                disabled={disabled}
+                disabled={disabled || comingSoon}
                 accessible={true}
                 accessibilityRole="button"
                 accessibilityLabel={
-                    disabled
-                        ? `${item.title}, locked, needs ${item.coins} coins`
-                        : selected
-                            ? `${item.title}, equipped`
-                            : purchased
-                                ? `${item.title}, owned, tap to equip`
-                                : `${item.title}, ${item.coins} coins`
+                    comingSoon
+                        ? `${item.title}, coming soon, not available yet`
+                        : disabled
+                            ? `${item.title}, locked, needs ${item.coins} coins`
+                            : selected
+                                ? `${item.title}, equipped`
+                                : purchased
+                                    ? `${item.title}, owned, tap to equip`
+                                    : `${item.title}, ${item.coins} coins`
                 }
-                accessibilityState={{selected, disabled}}
+                accessibilityState={{selected, disabled: disabled || comingSoon}}
             >
                 <LinearGradient
                     colors={['#3a0b5e', PURPLE_DARK, DARK_PURPLE]}
@@ -374,7 +385,7 @@ function ShopItem({item, index = 0, handlePress, selected = false, purchased = f
 
                 {/* Random-colors indicator (top-left) — falling cards of this
                     skin render in random colours in Play. */}
-                {item.randomColors && (
+                {item.randomColors && !comingSoon && (
                     <Animated.View style={[styles.randomBadge, {transform: [{scale: badgeScale}]}]}>
                         <Animated.View style={[styles.randomBadgeGradientWrap, {transform: [{rotate: badgeRotate}]}]}>
                             <LinearGradient
@@ -388,12 +399,33 @@ function ShopItem({item, index = 0, handlePress, selected = false, purchased = f
                     </Animated.View>
                 )}
 
-                {/* Lock overlay */}
-                {disabled && (
+                {/* Lock overlay (insufficient coins) — suppressed for teasers,
+                    which show their own coming-soon overlay instead. */}
+                {disabled && !comingSoon && (
                     <View style={styles.lockOverlay}>
                         <Text allowFontScaling={false} style={styles.lockText}>🔒</Text>
                         <Text allowFontScaling={false} style={styles.lockPrice}>{item.coins} coins needed</Text>
                     </View>
+                )}
+
+                {/* Coming-soon teaser: frosted overlay + corner ribbon. */}
+                {comingSoon && (
+                    <>
+                        <View style={styles.comingSoonOverlay}>
+                            <Text allowFontScaling={false} style={styles.comingSoonLock}>🔒</Text>
+                            <View style={styles.comingSoonPill}>
+                                <Text allowFontScaling={false} style={styles.comingSoonPillText}>COMING SOON</Text>
+                            </View>
+                        </View>
+                        <LinearGradient
+                            colors={[GRADIENT_LIGHT, GRADIENT_DARK]}
+                            start={{x: 0, y: 0}}
+                            end={{x: 1, y: 0}}
+                            style={styles.comingSoonRibbon}
+                        >
+                            <Text allowFontScaling={false} style={styles.comingSoonRibbonText}>SOON</Text>
+                        </LinearGradient>
+                    </>
                 )}
             </TouchableOpacity>
 

@@ -161,6 +161,69 @@ export default StyleSheet.create({
         textShadowOffset: {width: 0, height: 1},
         textShadowRadius: 2,
     },
+    // ── Coming-soon teaser ────────────────────────────────────────────────────
+    // A frosted overlay over the whole card so the artwork shows through faintly
+    // while clearly reading as "not available yet".
+    comingSoonOverlay: {
+        ...StyleSheet.absoluteFillObject,
+        backgroundColor: 'rgba(10,0,25,0.55)',
+        borderRadius: ms(24),
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 6,
+    },
+    comingSoonLock: {
+        fontSize: ms(26),
+        marginBottom: ms(8),
+        opacity: 0.95,
+    },
+    comingSoonPill: {
+        paddingHorizontal: ms(12),
+        paddingVertical: ms(6),
+        borderRadius: ms(20),
+        backgroundColor: 'rgba(255,215,0,0.16)',
+        borderWidth: 1,
+        borderColor: 'rgba(255,215,0,0.45)',
+    },
+    comingSoonPillText: {
+        color: GOLD,
+        fontWeight: '900',
+        fontSize: ms(11),
+        letterSpacing: 1,
+        textAlign: 'center',
+    },
+    // Corner ribbon across the top-right of the card.
+    comingSoonRibbon: {
+        position: 'absolute',
+        top: ms(12),
+        right: -ms(28),
+        width: ms(110),
+        paddingVertical: ms(4),
+        transform: [{rotate: '45deg'}],
+        alignItems: 'center',
+        zIndex: 9,
+    },
+    comingSoonRibbonText: {
+        color: '#1a0533',
+        fontWeight: '900',
+        fontSize: ms(9),
+        letterSpacing: 0.8,
+    },
+    // Bottom badge replacing the price for coming-soon items.
+    comingSoonBadge: {
+        paddingHorizontal: ms(14),
+        paddingVertical: ms(6),
+        borderRadius: ms(20),
+        backgroundColor: 'rgba(255,255,255,0.10)',
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.22)',
+    },
+    comingSoonBadgeText: {
+        color: 'rgba(255,255,255,0.85)',
+        fontWeight: '800',
+        fontSize: ms(12),
+        letterSpacing: 0.3,
+    },
     squareGrid: {
         flexDirection: 'row',
         flexWrap: 'wrap',

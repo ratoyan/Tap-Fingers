@@ -32,10 +32,24 @@ const TAB_ICON_INACTIVE = 'rgba(255,255,255,0.45)';
 
 type TabType = 'card' | 'background';
 
-// Equipped item on top, then everything else by price ascending. Applied once
-// per screen entry (in loadShop) so the order stays stable while equipping.
-function sortByActive(list: ShopEntry[], activeKey: string): ShopEntry[] {
+// Tier order: buyable/owned items on top, then unaffordable ("disabled") items,
+// then coming-soon teasers at the very bottom. Lower number sorts first.
+function sortTier(entry: ShopEntry, ownedKeys: Set<string>, coins: number): number {
+    if (entry.comingSoon) return 2;
+    const owned = ownedKeys.has(entry.key) || entry.priceCoins === 0;
+    if (!owned && coins < entry.priceCoins) return 1;
+    return 0;
+}
+
+// Coming-soon last, then disabled, then the rest — equipped on top and price
+// ascending within each tier. Applied once per screen entry (in loadShop) so the
+// order stays stable while equipping.
+function sortByActive(list: ShopEntry[], activeKey: string, ownedKeys: Set<string>, coins: number): ShopEntry[] {
     return [...list].sort((a, b) => {
+        const aTier = sortTier(a, ownedKeys, coins);
+        const bTier = sortTier(b, ownedKeys, coins);
+        if (aTier !== bTier) return aTier - bTier;
+
         const aActive = a.key === activeKey;
         const bActive = b.key === activeKey;
         if (aActive !== bActive) return aActive ? -1 : 1;
@@ -76,15 +90,19 @@ function Shop() {
             registerShopIcons(items);
             const merged = items.map(mergeShopItem);
 
-            setOwnedKeys(new Set(inventory.map(e => e.item.key)));
+            const owned = new Set(inventory.map(e => e.item.key));
+            setOwnedKeys(owned);
             const cardKey = inventory.find(e => e.isActiveCard)?.item.key ?? DEFAULT_CARD_KEY;
             const bgKey = inventory.find(e => e.isActiveBackground)?.item.key ?? DEFAULT_BG_KEY;
 
-            // Sort once, here on entry — equipped on top, then price ascending.
+            // Sort once, here on entry — buyable on top, then disabled, then
+            // coming-soon; equipped on top and price ascending within each tier.
+            // Read coins straight from the store to avoid a stale closure value.
             // The order is frozen until the next focus, so equipping mid-session
             // doesn't make the list jump around under the user's finger.
-            setCardItems(sortByActive(merged.filter(e => e.type === 'card'), cardKey));
-            setBgItems(sortByActive(merged.filter(e => e.type === 'background'), bgKey));
+            const coins = useGlobalStore.getState().coins;
+            setCardItems(sortByActive(merged.filter(e => e.type === 'card'), cardKey, owned, coins));
+            setBgItems(sortByActive(merged.filter(e => e.type === 'background'), bgKey, owned, coins));
             setActiveCardKey(cardKey);
             setActiveBgKey(bgKey);
         } catch (error) {

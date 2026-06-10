@@ -8,6 +8,7 @@ import styles from './NoticeModal.style.ts';
 interface Palette {
     gradient: [string, string, string];
     border: string;
+    glow: string;            // solid accent used for the card / icon glow shadow
     iconBg: string;
     iconBorder: string;
     titleColor: string;
@@ -22,11 +23,12 @@ const PALETTES: Record<NoticeType, Palette> = {
     success: {
         gradient: ['#0c2a1a', '#0a1f1c', '#0d2a22'],
         border: 'rgba(127, 255, 127, 0.45)',
+        glow: '#25ae88',
         iconBg: 'rgba(37, 174, 136, 0.18)',
         iconBorder: 'rgba(127, 255, 127, 0.55)',
         titleColor: '#7FFF7F',
         titleGlow: 'rgba(37, 174, 136, 0.85)',
-        divider: 'rgba(127, 255, 127, 0.35)',
+        divider: 'rgba(127, 255, 127, 0.55)',
         buttonGradient: ['#25ae88', '#0f8a66'],
         emoji: '🎉',
         defaultTitle: 'Success',
@@ -34,11 +36,12 @@ const PALETTES: Record<NoticeType, Palette> = {
     error: {
         gradient: ['#3a0a18', '#26050f', '#3a0a18'],
         border: 'rgba(255, 105, 140, 0.45)',
+        glow: '#ff4d6d',
         iconBg: 'rgba(255, 70, 90, 0.18)',
         iconBorder: 'rgba(255, 105, 140, 0.55)',
         titleColor: '#FF8FA8',
         titleGlow: 'rgba(255, 70, 90, 0.85)',
-        divider: 'rgba(255, 105, 140, 0.35)',
+        divider: 'rgba(255, 105, 140, 0.55)',
         buttonGradient: ['#ff4d6d', '#c9184a'],
         emoji: '⚠️',
         defaultTitle: 'Oops',
@@ -46,11 +49,12 @@ const PALETTES: Record<NoticeType, Palette> = {
     info: {
         gradient: ['#1e0040', '#0d0020', '#1a0038'],
         border: 'rgba(218, 112, 214, 0.45)',
+        glow: '#8e2de2',
         iconBg: 'rgba(142, 45, 226, 0.18)',
         iconBorder: 'rgba(218, 112, 214, 0.55)',
         titleColor: '#DA70D6',
         titleGlow: 'rgba(255, 0, 255, 0.85)',
-        divider: 'rgba(218, 112, 214, 0.35)',
+        divider: 'rgba(218, 112, 214, 0.55)',
         buttonGradient: ['#8e2de2', '#4a00e0'],
         emoji: 'ℹ️',
         defaultTitle: 'Notice',
@@ -122,32 +126,61 @@ export default function NoticeModal() {
             <Pressable style={styles.backdrop} onPress={hide}>
                 <Animated.View style={[styles.backdrop, {opacity: opacityAnim, position: 'absolute', top: 0, left: 0, right: 0, bottom: 0}]} />
                 <Pressable onPress={() => {}}>
-                    <Animated.View style={[styles.cardWrapper, {transform: [{scale: scaleAnim}], opacity: opacityAnim}]}>
+                    <Animated.View
+                        style={[
+                            styles.cardWrapper,
+                            {shadowColor: palette.glow, transform: [{scale: scaleAnim}], opacity: opacityAnim},
+                        ]}
+                    >
                         <LinearGradient
                             colors={palette.gradient}
                             start={{x: 0, y: 0}}
                             end={{x: 1, y: 1}}
                             style={[styles.card, {borderColor: palette.border}]}
                         >
+                            {/* Glossy top sheen for depth */}
+                            <LinearGradient
+                                pointerEvents="none"
+                                colors={['rgba(255,255,255,0.12)', 'rgba(255,255,255,0)']}
+                                style={styles.sheen}
+                            />
+
                             <Animated.View
                                 pointerEvents="none"
                                 style={[styles.shine, {transform: [{translateX: shineTranslate}, {skewX: '-20deg'}]}]}
                             />
 
-                            <Animated.View
-                                style={[
-                                    styles.iconRing,
-                                    {
-                                        backgroundColor: palette.iconBg,
-                                        borderColor: palette.iconBorder,
-                                        transform: [{scale: pulseAnim}],
-                                    },
-                                ]}
+                            {/* Close button */}
+                            <TouchableOpacity
+                                onPress={hide}
+                                hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}
+                                style={styles.closeBtn}
+                                accessibilityRole="button"
+                                accessibilityLabel="Close"
                             >
-                                <Text allowFontScaling={false} style={styles.iconEmoji}>
-                                    {palette.emoji}
-                                </Text>
-                            </Animated.View>
+                                <Text allowFontScaling={false} style={styles.closeText}>✕</Text>
+                            </TouchableOpacity>
+
+                            {/* Icon with a soft halo behind it */}
+                            <View style={styles.iconWrap}>
+                                <Animated.View
+                                    pointerEvents="none"
+                                    style={[
+                                        styles.iconHalo,
+                                        {borderColor: palette.iconBorder, transform: [{scale: pulseAnim}]},
+                                    ]}
+                                />
+                                <View
+                                    style={[
+                                        styles.iconRing,
+                                        {backgroundColor: palette.iconBg, borderColor: palette.iconBorder, shadowColor: palette.glow},
+                                    ]}
+                                >
+                                    <Text allowFontScaling={false} style={styles.iconEmoji}>
+                                        {palette.emoji}
+                                    </Text>
+                                </View>
+                            </View>
 
                             <Text
                                 allowFontScaling={false}
@@ -162,7 +195,12 @@ export default function NoticeModal() {
 
                             {message ? (
                                 <>
-                                    <View style={[styles.divider, {backgroundColor: palette.divider}]} />
+                                    <LinearGradient
+                                        colors={['rgba(255,255,255,0)', palette.divider, 'rgba(255,255,255,0)']}
+                                        start={{x: 0, y: 0}}
+                                        end={{x: 1, y: 0}}
+                                        style={styles.divider}
+                                    />
                                     <Text allowFontScaling={false} style={styles.message}>
                                         {message}
                                     </Text>
@@ -174,7 +212,7 @@ export default function NoticeModal() {
                             <TouchableOpacity
                                 onPress={hide}
                                 activeOpacity={0.85}
-                                style={styles.button}
+                                style={[styles.button, {shadowColor: palette.glow}]}
                                 accessibilityRole="button"
                                 accessibilityLabel={confirmLabel}
                             >

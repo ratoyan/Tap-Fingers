@@ -32,7 +32,7 @@ export interface SetActiveResult {
     type: ShopItemType;
 }
 
-export async function setActiveItem(itemKey: string): Promise<SetActiveResult> {
-    const { data } = await api.post('/shop/active', { itemKey });
-    return data.data;
-}
+// export async function setActiveItem(itemKey: string): Promise<SetActiveResult> {
+//     const { data } = await api.post('/shop/active', { itemKey });
+//     return data.data;
+// }

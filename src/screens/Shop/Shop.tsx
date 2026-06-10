@@ -9,6 +9,7 @@ import {HORIZONAL_OFFSET} from "../../constants/uiConstants.ts";
 // services / data
 import * as shopService from "../../services/shopService.ts";
 import * as userService from "../../services/userService.ts";
+import * as equippedRepo from "../../db/equippedRepo.ts";
 import {DEFAULT_BG_KEY, DEFAULT_CARD_KEY, mergeShopItem, registerShopIcons, ShopEntry} from "../../data/shopVisuals.ts";
 
 // components
@@ -92,8 +93,13 @@ function Shop() {
 
             const owned = new Set(inventory.map(e => e.item.key));
             setOwnedKeys(owned);
-            const cardKey = inventory.find(e => e.isActiveCard)?.item.key ?? DEFAULT_CARD_KEY;
-            const bgKey = inventory.find(e => e.isActiveBackground)?.item.key ?? DEFAULT_BG_KEY;
+            // Equipped skins are read from Realm first (the player's last local
+            // equip), falling back to the server's active item, then the default.
+            const realmEquipped = await equippedRepo.loadEquipped();
+            const cardKey = realmEquipped.cardKey
+                ?? inventory.find(e => e.isActiveCard)?.item.key ?? DEFAULT_CARD_KEY;
+            const bgKey = realmEquipped.backgroundKey
+                ?? inventory.find(e => e.isActiveBackground)?.item.key ?? DEFAULT_BG_KEY;
 
             // Sort once, here on entry — buyable on top, then disabled, then
             // coming-soon; equipped on top and price ascending within each tier.
@@ -129,11 +135,15 @@ function Shop() {
     }
 
     async function equip(entry: ShopEntry) {
-        await shopService.setActiveItem(entry.key);
+        // await shopService.setActiveItem(entry.key);
         if (entry.type === 'card') {
+            // Save the equipped card to Realm so it survives restarts and is
+            // read back locally (see loadShop).
+            await equippedRepo.saveEquippedCard(entry.key);
             setActiveCardKey(entry.key);
             patchStats({activeCardKey: entry.key});
         } else {
+            await equippedRepo.saveEquippedBackground(entry.key);
             setActiveBgKey(entry.key);
             patchStats({activeBackgroundKey: entry.key});
         }

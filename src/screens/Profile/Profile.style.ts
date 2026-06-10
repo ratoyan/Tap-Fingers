@@ -1,5 +1,5 @@
 import {StyleSheet} from 'react-native';
-import {DARK_PURPLE, ORCHID, PURPLE_DARK, VIOLET, WHITE} from '../../constants/colors.ts';
+import {DARK_PURPLE, GRADIENT_LIGHT, ORCHID, PURPLE_DARK, VIOLET, WHITE} from '../../constants/colors.ts';
 import {HORIZONAL_OFFSET} from '../../constants/uiConstants.ts';
 import {ms, scale, vs, SW} from '../../utils/responsive.ts';
 
@@ -194,11 +194,10 @@ export default StyleSheet.create({
         marginBottom: vs(12),
     },
     fieldRowFocused: {
-        borderColor: ORCHID,
+        borderColor: VIOLET,
         backgroundColor: 'rgba(255,255,255,0.18)',
     },
     fieldIcon: {
-        fontSize: ms(18),
         marginRight: ms(10),
     },
     fieldInput: {
@@ -211,7 +210,7 @@ export default StyleSheet.create({
         width: '100%',
         borderRadius: ms(16),
         marginTop: vs(6),
-        shadowColor: ORCHID,
+        shadowColor: GRADIENT_LIGHT,
         shadowOffset: {width: 0, height: 6},
         shadowOpacity: 0.5,
         shadowRadius: 12,

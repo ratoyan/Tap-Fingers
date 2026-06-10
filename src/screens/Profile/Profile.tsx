@@ -30,13 +30,17 @@ import BackHeader from '../../components/ui/BackHeader/BackHeader.tsx';
 import PhotoPickerSheet from '../../components/ui/PhotoPickerSheet/PhotoPickerSheet.tsx';
 import CameraModal from '../../components/ui/CameraModal/CameraModal.tsx';
 import Ghost from '../../assets/icons/Ghost.tsx';
+import PersonIcon from '../../assets/icons/PersonIcon.tsx';
+import MailIcon from '../../assets/icons/MailIcon.tsx';
+import LockIcon from '../../assets/icons/LockIcon.tsx';
 
 // data
 import {avatarForId} from '../../data/avatars.ts';
+import {isTablet} from '../../utils/responsive.ts';
 
 // styles
 import styles from './Profile.style.ts';
-import {GRADIENT_LIGHT, ORCHID, PURPLE, PURPLE_DARK, VIOLET} from '../../constants/colors.ts';
+import {GRADIENT_LIGHT, PURPLE, PURPLE_DARK, VIOLET} from '../../constants/colors.ts';
 
 // The profile photo has no backend counterpart — it stays device-local.
 // Shared with BackHeader (Settings) so both read the same picture.
@@ -82,6 +86,11 @@ function Profile() {
     const displayName = player?.username || 'Player';
     // Stable per-user avatar, shown when no photo has been uploaded.
     const avatar = avatarForId(player?.id);
+
+    // Field icon sizing/colour — mirrors the Welcome register form.
+    const fieldIconSize = isTablet ? 24 : 21;
+    const iconColor = (field: 'name' | 'email' | 'password') =>
+        focusedField === field ? VIOLET : 'rgba(255,255,255,0.55)';
 
     useEffect(() => {
         (async () => {
@@ -297,7 +306,7 @@ function Profile() {
                                 <Text allowFontScaling={false} style={styles.formTitle}>✨ {t('createYourAccount')}</Text>
 
                                 <View style={[styles.fieldRow, focusedField === 'name' && styles.fieldRowFocused]}>
-                                    <Text allowFontScaling={false} style={styles.fieldIcon}>👤</Text>
+                                    <PersonIcon size={fieldIconSize} color={iconColor('name')} style={styles.fieldIcon} />
                                     <TextInput
                                         style={styles.fieldInput}
                                         placeholder={t('name')}
@@ -315,7 +324,7 @@ function Profile() {
                                 </View>
 
                                 <View style={[styles.fieldRow, focusedField === 'email' && styles.fieldRowFocused]}>
-                                    <Text allowFontScaling={false} style={styles.fieldIcon}>✉️</Text>
+                                    <MailIcon size={fieldIconSize} color={iconColor('email')} style={styles.fieldIcon} />
                                     <TextInput
                                         style={styles.fieldInput}
                                         placeholder={t('email')}
@@ -334,7 +343,7 @@ function Profile() {
                                 </View>
 
                                 <View style={[styles.fieldRow, focusedField === 'password' && styles.fieldRowFocused]}>
-                                    <Text allowFontScaling={false} style={styles.fieldIcon}>🔒</Text>
+                                    <LockIcon size={fieldIconSize} color={iconColor('password')} style={styles.fieldIcon} />
                                     <TextInput
                                         style={styles.fieldInput}
                                         placeholder={t('password')}
@@ -360,7 +369,7 @@ function Profile() {
                                     activeOpacity={0.85}
                                 >
                                     <LinearGradient
-                                        colors={[ORCHID, VIOLET]}
+                                        colors={[PURPLE_DARK, GRADIENT_LIGHT]}
                                         start={{x: 0, y: 0}}
                                         end={{x: 1, y: 1}}
                                         style={styles.linkButtonGradient}

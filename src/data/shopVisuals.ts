@@ -54,6 +54,9 @@ export interface ShopEntry {
     // Admin flag (backend shop_items.random_colors). When set, the Play screen
     // recolours each falling instance of this card's SVG to a random hue.
     randomColors?: boolean;
+    // Admin flag (backend shop_items.fall_from_bottom). When set, the Play screen
+    // spawns this card at the bottom and floats it up instead of falling down.
+    fallFromBottom?: boolean;
     // Admin colour (backend shop_items.track_color) for the destroy burst in Play.
     trackColor?: string | null;
     // Admin flag (backend shop_items.coming_soon). When set, the Shop renders
@@ -124,6 +127,7 @@ interface ShopArt {
     height?: number | null;
     randomColors?: boolean;
     rotateAnimation?: boolean;
+    fallFromBottom?: boolean;
     trackColor?: string | null;
 }
 let shopArtByKey: Record<string, ShopArt> = {};
@@ -131,7 +135,7 @@ let shopArtByKey: Record<string, ShopArt> = {};
 export function registerShopIcons(items: ShopItem[]): void {
     const next: Record<string, ShopArt> = {};
     for (const it of items) {
-        next[it.key] = { iconSvg: it.iconSvg, width: it.width, height: it.height, randomColors: it.randomColors, rotateAnimation: it.rotateAnimation, trackColor: it.trackColor };
+        next[it.key] = { iconSvg: it.iconSvg, width: it.width, height: it.height, randomColors: it.randomColors, rotateAnimation: it.rotateAnimation, fallFromBottom: it.fallFromBottom, trackColor: it.trackColor };
     }
     shopArtByKey = next;
 }
@@ -162,6 +166,7 @@ export function mergeShopItem(item: ShopItem): ShopEntry {
         width: item.width ?? null,
         height: item.height ?? null,
         randomColors: item.randomColors ?? false,
+        fallFromBottom: item.fallFromBottom ?? false,
         trackColor: item.trackColor ?? null,
         comingSoon: item.comingSoon ?? false,
     };
@@ -205,6 +210,7 @@ function entryFromKey(
         width: art.width ?? null,
         height: art.height ?? null,
         randomColors: art.randomColors ?? false,
+        fallFromBottom: art.fallFromBottom ?? false,
         trackColor: art.trackColor ?? null,
     };
 }

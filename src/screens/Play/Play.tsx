@@ -77,14 +77,21 @@ function getDefaultBackground(level: number) {
     return require('../../assets/images/background1.jpg');
 }
 
-function createBoxes(card: any, duration: number) {
-    return Array.from({length: MAX_ITEMS}, (_, i) => ({
+function createBoxes(card: any, duration: number, fromBottom = false) {
+    return Array.from({length: MAX_ITEMS}, (_, i) => {
+        // fromBottom: stagger the spawn below the screen so the batch floats up;
+        // otherwise stagger above the screen so it falls down.
+        const y = fromBottom ? height + (i * 280 + Math.random() * 80) : -(i * 280 + Math.random() * 80);
+        return {
         ...card,
         id: uuId.v4(),
         x: Math.random() * (width - card.size),
-        y: -(i * 280 + Math.random() * 80),
+        y,
         tx: Math.random() * (width - card.size),
-        ty: 0,
+        // Seed the vertical target in the travel direction so the box drifts on
+        // screen smoothly from frame one (a flat 0 would yank a bottom-spawned
+        // box upward across the whole screen in a single step).
+        ty: fromBottom ? y - (duration + 10) : 0,
         color: colors[Math.floor(Math.random() * colors.length)],
         duration,
         // Seed the spin angle (same reason as spawnBox) so the very first batch
@@ -92,18 +99,23 @@ function createBoxes(card: any, duration: number) {
         rotation: 0,
         isBoom: false,
         isGolden: false,
-    }));
+        };
+    });
 }
 
-function spawnBox(card: any, duration: number) {
+function spawnBox(card: any, duration: number, fromBottom = false) {
     const isGolden = Math.random() < GOLDEN_SPAWN_CHANCE;
+    // fromBottom: spawn below the screen so the box floats up into view;
+    // otherwise spawn above the screen so it falls down.
+    const y = fromBottom ? height + Math.random() * 1000 : Math.random() * -1000;
     return {
         ...card,
         id: uuId.v4(),
         x: Math.random() * (width - card.size),
-        y: Math.random() * -1000,
+        y,
         tx: Math.random() * (width - card.size),
-        ty: 0,
+        // Seed the vertical target in the travel direction (see createBoxes).
+        ty: fromBottom ? y - (duration + 10) : 0,
         color: isGolden ? '#FFD700' : colors[Math.floor(Math.random() * colors.length)],
         duration,
         // Seed the spin angle so the per-frame increment in the animation loop
@@ -198,7 +210,7 @@ export default function Play() {
     const [isExitModal, setIsExitModal] = useState(false);
     const [isMenuModal, setIsMenuModal] = useState(false);
     const [buyModal, setBuyModal] = useState<HelperType | null>(null);
-    const [boxesData, setBoxesData] = useState(() => createBoxes(card, durationRef.current));
+    const [boxesData, setBoxesData] = useState(() => createBoxes(card, durationRef.current, !!card.fallFromBottom));
     const [bombCount, setBombCount] = useState(INITIAL_BOMBS);
     const [combo, setCombo] = useState(0);
     const [watchAdUsed, setWatchAdUsed] = useState(0);
@@ -254,7 +266,7 @@ export default function Play() {
         maxComboRef.current = 0;
         sessionStartRef.current = Date.now();
         sessionTokenRef.current = null;
-        setLevelLength(30);
+        setLevelLength(2);
 
         try {
             // The token returned here is what lets submitGameSession() report the
@@ -482,7 +494,7 @@ export default function Play() {
         setIsLoseModal(false);
         setIsPlaying(true);
         setBoxesData([]);
-        setTimeout(() => setBoxesData(createBoxes(card, durationRef.current)), 0);
+        setTimeout(() => setBoxesData(createBoxes(card, durationRef.current, !!card.fallFromBottom)), 0);
     }
 
     function handleRetry() {
@@ -517,7 +529,7 @@ export default function Play() {
         setShowBossDefeated(false);
         setIsPlaying(true);
         setIsLoseModal(false);
-        setBoxesData(createBoxes(card, durationRef.current));
+        setBoxesData(createBoxes(card, durationRef.current, !!card.fallFromBottom));
         // startGameSession() reloads the helper stock from the server (with an
         // offline AsyncStorage fallback).
         startGameSession();
@@ -558,7 +570,7 @@ export default function Play() {
             setLevelCount(c => c + pts);
             return [];
         });
-        setTimeout(() => setBoxesData(createBoxes(card, durationRef.current)), 150);
+        setTimeout(() => setBoxesData(createBoxes(card, durationRef.current, !!card.fallFromBottom)), 150);
     }
 
     // ─── Shield helper ───────────────────────────────────────────────────────
@@ -708,7 +720,7 @@ export default function Play() {
         setTimeout(() => {
             isBossFightRef.current = false;
             setShowBossDefeated(false);
-            setBoxesData(createBoxes(card, durationRef.current));
+            setBoxesData(createBoxes(card, durationRef.current, !!card.fallFromBottom));
         }, 2500);
     }
 
@@ -938,6 +950,12 @@ export default function Play() {
 
             missHappenedRef.current = false;
 
+            // Per-card travel direction (admin-managed). fromBottom → the box
+            // floats UP and is "missed" when its top edge leaves the screen top;
+            // otherwise it falls DOWN and is missed when its bottom passes the
+            // screen bottom. The leading edge crosses the far boundary in both.
+            const fromBottom = !!cardRef.current.fallFromBottom;
+
             setBoxesData(prev =>
                 prev.map((b: any) => {
                     if (b.isBoom) return b;
@@ -946,7 +964,8 @@ export default function Play() {
                     const newX = b.x + (b.tx - b.x) * speed;
                     const newY = b.y + (b.ty - b.y) * speed;
 
-                    if (newY + b.size > height) {
+                    const missed = fromBottom ? newY < 0 : newY + b.size > height;
+                    if (missed) {
                         if (shieldActiveRef.current) {
                             shieldActiveRef.current = false;
                             setShieldActive(false);
@@ -956,12 +975,17 @@ export default function Play() {
                         }
                         missHappenedRef.current = true;
 
+                        const respawnY = fromBottom
+                            ? height + Math.random() * 500
+                            : -Math.random() * 500;
                         return {
                             ...b,
                             x: Math.random() * (width - b.size),
-                            y: -Math.random() * 500,
+                            y: respawnY,
                             tx: Math.random() * (width - b.size),
-                            ty: durationRef.current + 10,
+                            ty: fromBottom
+                                ? respawnY - (durationRef.current + 10)
+                                : durationRef.current + 10,
                             color: colors[Math.floor(Math.random() * colors.length)],
                             rotation: b.isRotation ? (b.rotation + 2) % 360 : b.rotation,
                             isGolden: false,
@@ -973,7 +997,9 @@ export default function Play() {
                         x: newX,
                         y: newY,
                         tx: Math.abs(b.tx - b.x) < 1 ? Math.random() * (width - b.size) : b.tx,
-                        ty: b.y + durationRef.current + 10,
+                        ty: fromBottom
+                            ? b.y - (durationRef.current + 10)
+                            : b.y + durationRef.current + 10,
                         rotation: b.isRotation ? (b.rotation + 2) % 360 : b.rotation,
                     };
                 })
@@ -1001,7 +1027,7 @@ export default function Play() {
                 const slots = MAX_ITEMS - prev.length;
                 if (slots <= 0) return prev;
                 const toSpawn = Math.min(slots, Math.random() < 0.35 ? 2 : 1);
-                return [...prev, ...Array.from({length: toSpawn}, () => spawnBox(cardRef.current, durationRef.current))];
+                return [...prev, ...Array.from({length: toSpawn}, () => spawnBox(cardRef.current, durationRef.current, !!cardRef.current.fallFromBottom))];
             });
         }, 800);
 

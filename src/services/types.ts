@@ -89,6 +89,9 @@ export interface ShopItem {
     // When true, the Play screen spins each falling instance of this card
     // (continuous rotate animation) instead of letting it fall upright.
     rotateAnimation: boolean;
+    // When true, the Play screen spawns this card at the bottom and floats it
+    // up instead of the default top→bottom fall.
+    fallFromBottom: boolean;
     // Hex colour for the card's destroy burst (TrackIcon) in Play; null = default.
     trackColor: string | null;
     sortOrder: number;

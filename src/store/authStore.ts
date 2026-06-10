@@ -2,7 +2,8 @@ import {create} from 'zustand';
 import {tokenManager} from '../services/tokenManager';
 import * as authService from '../services/authService';
 import * as userService from '../services/userService';
-import {InventoryEntry, Player, PlayerStats} from '../services/types';
+import * as profileRepo from '../db/profileRepo';
+import {InventoryEntry, Player, Profile, PlayerStats} from '../services/types';
 import {resolveBackgroundEntry, resolveCardEntry} from '../data/shopVisuals';
 import {useGlobalStore} from './globalStore';
 import {useShopStore} from './shopStore';
@@ -41,43 +42,10 @@ function fanOutStats(stats: PlayerStats | null) {
     useShopStore.getState().setBackground(resolveBackgroundEntry(stats.activeBackgroundKey));
 }
 
-export const useAuthStore = create<AuthState>((set, get) => ({
-    status: 'idle',
-    player: null,
-    stats: null,
-    inventory: [],
-
-    bootstrap: async () => {
-        set({status: 'loading'});
-        const hasToken = await tokenManager.isLoggedIn();
-        if (!hasToken) {
-            set({status: 'unauthed'});
-            return;
-        }
-        try {
-            const profile = await userService.getProfile();
-            fanOutStats(profile.stats);
-            set({
-                status: 'authed',
-                player: profile.player,
-                stats: profile.stats,
-                inventory: profile.inventory ?? [],
-            });
-        } catch {
-            // A genuine auth failure (401 + failed refresh) has already cleared
-            // the tokens inside the axios interceptor. A plain network error
-            // leaves them intact — don't wipe them here, just fall back to the
-            // sign-in screen so the next launch can retry.
-            set({status: 'unauthed', player: null, stats: null, inventory: []});
-        }
-    },
-
-    setSession: async () => {
-        await get().refreshProfile();
-    },
-
-    refreshProfile: async () => {
-        const profile = await userService.getProfile();
+export const useAuthStore = create<AuthState>((set, get) => {
+    // Pushes a profile into the store and fans the relevant stats out to the
+    // other stores (coins/gems → globalStore, equipped skins → shopStore).
+    function applyProfile(profile: Profile) {
         fanOutStats(profile.stats);
         set({
             status: 'authed',
@@ -85,22 +53,82 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             stats: profile.stats,
             inventory: profile.inventory ?? [],
         });
-    },
+    }
 
-    patchStats: (patch) => {
-        const current = get().stats;
-        if (!current) return;
-        const next = {...current, ...patch};
-        fanOutStats(next);
-        set({stats: next});
-    },
+    // The ONE place that fetches the profile from the backend: pull it, mirror
+    // it into the local Realm cache, then apply it. Every later read goes
+    // through the cache (see bootstrap) so the app doesn't re-hit the backend.
+    async function fetchAndCacheProfile() {
+        const profile = await userService.getProfile();
+        profileRepo.saveProfile(profile);
+        applyProfile(profile);
+    }
 
-    logout: async () => {
-        await authService.logout();
-        useGlobalStore.getState().setCoins(0);
-        useGlobalStore.getState().setGems(0);
-        useShopStore.getState().setCard(null);
-        useShopStore.getState().setBackground(null);
-        set({status: 'unauthed', player: null, stats: null, inventory: []});
-    },
-}));
+    return {
+        status: 'idle',
+        player: null,
+        stats: null,
+        inventory: [],
+
+        bootstrap: async () => {
+            set({status: 'loading'});
+            const hasToken = await tokenManager.isLoggedIn();
+            if (!hasToken) {
+                set({status: 'unauthed'});
+                return;
+            }
+            // Read the profile from Realm — no backend call on launch. The
+            // network is only touched once, at the very first login (setSession)
+            // or here as a fallback if the cache is somehow empty.
+            const cached = profileRepo.loadProfile();
+            if (cached) {
+                applyProfile(cached);
+                return;
+            }
+            try {
+                await fetchAndCacheProfile();
+            } catch {
+                // A genuine auth failure (401 + failed refresh) has already
+                // cleared the tokens inside the axios interceptor. A plain
+                // network error leaves them intact — don't wipe them here, just
+                // fall back to the sign-in screen so the next launch can retry.
+                set({status: 'unauthed', player: null, stats: null, inventory: []});
+            }
+        },
+
+        // Called right after a successful login: fetch the profile once and
+        // cache it in Realm so subsequent launches read locally.
+        setSession: async () => {
+            await fetchAndCacheProfile();
+        },
+
+        // Forces a fresh backend fetch and re-caches it. Used by the profile
+        // mutations (name/email change, guest upgrade) that need the updated
+        // server profile right away.
+        refreshProfile: async () => {
+            await fetchAndCacheProfile();
+        },
+
+        patchStats: (patch) => {
+            const current = get().stats;
+            if (!current) return;
+            const next = {...current, ...patch};
+            fanOutStats(next);
+            set({stats: next});
+            // Keep the Realm cache in step with optimistic stat changes (coins
+            // after a game, balance after a purchase) so they survive a restart.
+            const {player, inventory} = get();
+            if (player) profileRepo.saveProfile({player, stats: next, inventory});
+        },
+
+        logout: async () => {
+            await authService.logout();
+            profileRepo.clearProfile();
+            useGlobalStore.getState().setCoins(0);
+            useGlobalStore.getState().setGems(0);
+            useShopStore.getState().setCard(null);
+            useShopStore.getState().setBackground(null);
+            set({status: 'unauthed', player: null, stats: null, inventory: []});
+        },
+    };
+});

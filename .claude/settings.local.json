@@ -29,7 +29,8 @@
       "Bash(npx knip *)",
       "Bash(npx ts-prune *)",
       "Bash(git rm *)",
-      "PowerShell(Get-ChildItem C:\\\\rob-project\\\\ | Select-Object Name; \"---\"; Get-ChildItem C:\\\\rob-project\\\\mobile\\\\ | Select-Object Name)"
+      "PowerShell(Get-ChildItem C:\\\\rob-project\\\\ | Select-Object Name; \"---\"; Get-ChildItem C:\\\\rob-project\\\\mobile\\\\ | Select-Object Name)",
+      "Bash(grep -iE \"authStore|profileRepo|db/realm|db\\\\\\\\\\\\\\\\realm\")"
     ]
   }
 }

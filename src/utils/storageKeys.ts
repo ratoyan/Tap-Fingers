@@ -16,4 +16,5 @@ export const STORAGE_KEYS = {
     LUCKY_SPIN_DATE: 'lucky_spin_date',
     DAILY_AD_WATCHES: 'daily_ad_watches',
     LAST_REVIEW_DATE: 'last_review_date',
+    PROFILE_PHOTO:    'profile_photo',  // device-local profile picture (no backend)
 };

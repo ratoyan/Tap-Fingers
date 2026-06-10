@@ -44,6 +44,10 @@ export default StyleSheet.create({
         backgroundColor: 'rgba(255,255,255,0.15)',
         alignItems: 'center',
         justifyContent: 'center',
+        overflow: 'hidden',
+    },
+    avatarEmoji: {
+        fontSize: ms(18),
     },
     avatarRing: {
         position: 'absolute',

@@ -18,6 +18,7 @@ import {useNavigation} from '@react-navigation/core';
 import LinearGradient from 'react-native-linear-gradient';
 import {launchImageLibrary} from 'react-native-image-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import {STORAGE_KEYS} from '../../utils/storageKeys.ts';
 
 // services / store
 import * as authService from '../../services/authService.ts';
@@ -38,7 +39,8 @@ import styles from './Profile.style.ts';
 import {GRADIENT_LIGHT, ORCHID, PURPLE, PURPLE_DARK, VIOLET} from '../../constants/colors.ts';
 
 // The profile photo has no backend counterpart — it stays device-local.
-const STORAGE_KEY_PHOTO = 'profile_photo';
+// Shared with BackHeader (Settings) so both read the same picture.
+const STORAGE_KEY_PHOTO = STORAGE_KEYS.PROFILE_PHOTO;
 
 function Profile() {
     const {t} = useTranslation();

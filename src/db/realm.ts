@@ -46,13 +46,28 @@ export class KeyValue extends Realm.Object<KeyValue> {
 
 let realmInstance: Realm | null = null;
 
-// Lazily opens (and memoises) the single Realm instance for the app.
+// Must stay >= every schemaVersion ever shipped. A dev build briefly ran with
+// version 3 (an extra `Equipped` table that was later removed); opening that
+// on-disk file with a LOWER version makes Realm throw, which silently broke all
+// persistence (so a logged-in user landed on Welcome after a restart). Keeping
+// this above 3 lets Realm open + migrate the old file instead of throwing.
+const REALM_CONFIG: Realm.Configuration = {
+    schema: [CachedProfile, KeyValue],
+    schemaVersion: 4,
+};
+
+// Lazily opens (and memoises) the single Realm instance for the app. If the
+// on-disk file can't be opened (corrupt, or an incompatible schema from an
+// older build), recreate it so the app keeps working — the only loss is the
+// local cache, which is re-fetched from the backend on the next login.
 export function getRealm(): Realm {
     if (!realmInstance) {
-        realmInstance = new Realm({
-            schema: [CachedProfile, KeyValue],
-            schemaVersion: 2,
-        });
+        try {
+            realmInstance = new Realm(REALM_CONFIG);
+        } catch {
+            try { Realm.deleteFile(REALM_CONFIG); } catch {}
+            realmInstance = new Realm(REALM_CONFIG);
+        }
     }
     return realmInstance;
 }

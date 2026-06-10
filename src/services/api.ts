@@ -24,12 +24,20 @@ function processQueue(error: any, token: string | null = null) {
     pendingQueue = [];
 }
 
+// The unauthenticated auth endpoints: a 401 here is a real credential/sign-up
+// failure (e.g. wrong password), NOT an expired access token — so they must
+// skip the auto-refresh path. Otherwise a failed login would try to refresh,
+// find no refresh token (you're not logged in yet) and surface a confusing
+// "No refresh token" instead of the actual error.
+const AUTH_NO_REFRESH = /\/auth\/(login|register|guest|google|apple|refresh)/;
+
 api.interceptors.response.use(
     res => res,
     async (error: any) => {
         const original = error.config;
 
-        if (error.response?.status !== 401 || original._retry) {
+        const isAuthRoute = AUTH_NO_REFRESH.test(original?.url || '');
+        if (error.response?.status !== 401 || original._retry || isAuthRoute) {
             return Promise.reject(normaliseError(error));
         }
 
@@ -47,7 +55,12 @@ api.interceptors.response.use(
 
         try {
             const refreshToken = await tokenManager.getRefreshToken();
-            if (!refreshToken) throw new Error('No refresh token');
+            if (!refreshToken) {
+                // No session to refresh — surface the original 401 (its real
+                // message), not a synthetic "No refresh token".
+                processQueue(error, null);
+                return Promise.reject(normaliseError(error));
+            }
 
             const { data } = await axios.post(`${API_BASE_URL}/auth/refresh`, { refreshToken });
             const { accessToken, refreshToken: newRefresh } = data.data;

@@ -72,17 +72,23 @@ export const useAuthStore = create<AuthState>((set, get) => {
 
         bootstrap: async () => {
             set({status: 'loading'});
-            const hasToken = await tokenManager.isLoggedIn();
-            if (!hasToken) {
-                set({status: 'unauthed'});
-                return;
-            }
-            // Read the profile from Realm — no backend call on launch. The
-            // network is only touched once, at the very first login (setSession)
-            // or here as a fallback if the cache is somehow empty.
+
+            // If the player has logged in before, their profile is cached in
+            // Realm. Its presence means "logged in" (it's only written after a
+            // successful login and wiped on logout), so restore the session
+            // straight from Realm and land on Home — no token check, no network.
             const cached = profileRepo.loadProfile();
             if (cached) {
                 applyProfile(cached);
+                return;
+            }
+
+            // No cached profile. If a token still exists (e.g. the cache was
+            // cleared but the session is valid), fetch the profile once;
+            // otherwise drop to the sign-in screen.
+            const hasToken = await tokenManager.isLoggedIn();
+            if (!hasToken) {
+                set({status: 'unauthed'});
                 return;
             }
             try {

@@ -185,22 +185,30 @@ function Settings() {
                 />
             </View>
 
-            {/* Exit Button — small & centered */}
+            {/* Exit Button — premium pill, centered */}
             <TouchableOpacity
                 style={styles.buttonWrapper}
                 onPress={() => setLogoutModal(true)}
-                activeOpacity={0.75}
+                activeOpacity={0.85}
                 accessible={true}
                 accessibilityRole="button"
                 accessibilityLabel={t('exitGame')}
             >
                 <LinearGradient
-                    colors={['#1a0030', '#5B0EA6', VIOLET_MEDIUM]}
+                    colors={['#2a0845', '#6a1b9a', VIOLET_MEDIUM]}
                     start={{x: 0, y: 0}}
-                    end={{x: 1, y: 0}}
+                    end={{x: 1, y: 1}}
                     style={styles.button}
                 >
-                    <ExitIcon size={20} color="#DDA0DD"/>
+                    {/* Glossy top sheen */}
+                    <LinearGradient
+                        pointerEvents="none"
+                        colors={['rgba(255,255,255,0.18)', 'rgba(255,255,255,0)']}
+                        style={styles.buttonSheen}
+                    />
+                    <View style={styles.buttonIconChip}>
+                        <ExitIcon size={18} color="#fff"/>
+                    </View>
                     <Text allowFontScaling={false} style={styles.buttonText}>{t('exitGame')}</Text>
                 </LinearGradient>
             </TouchableOpacity>

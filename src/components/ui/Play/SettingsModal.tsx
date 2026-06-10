@@ -1,7 +1,7 @@
 ﻿import React, {useEffect, useRef, useState} from 'react';
 import {Animated, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import {storage} from '../../../db/kvStore.ts';
 import {useTranslation} from 'react-i18next';
 import {STORAGE_KEYS} from '../../../utils/storageKeys.ts';
 import {loadMusic, playMusic, stopMusic} from '../../../utils/helpers.ts';
@@ -43,9 +43,9 @@ export default function SettingsModal({visible, onClose}: SettingsModalProps) {
     }, [visible]);
 
     async function loadCurrentSettings() {
-        const musicData = await AsyncStorage.getItem(STORAGE_KEYS.MUSIC);
-        const soundData = await AsyncStorage.getItem(STORAGE_KEYS.SOUND);
-        const vibrationData = await AsyncStorage.getItem(STORAGE_KEYS.VIBRATION);
+        const musicData = await storage.getItem(STORAGE_KEYS.MUSIC);
+        const soundData = await storage.getItem(STORAGE_KEYS.SOUND);
+        const vibrationData = await storage.getItem(STORAGE_KEYS.VIBRATION);
         setMusic(!musicData);
         setSound(!soundData);
         setVibration(!!vibrationData);
@@ -54,11 +54,11 @@ export default function SettingsModal({visible, onClose}: SettingsModalProps) {
     const toggleMusic = async (val: boolean) => {
         setMusic(val);
         if (val) {
-            await AsyncStorage.removeItem(STORAGE_KEYS.MUSIC);
+            await storage.removeItem(STORAGE_KEYS.MUSIC);
             loadMusic('games1.mp3');
             setTimeout(() => playMusic(), 200);
         } else {
-            await AsyncStorage.setItem(STORAGE_KEYS.MUSIC, 'STOP');
+            await storage.setItem(STORAGE_KEYS.MUSIC, 'STOP');
             stopMusic();
         }
     };
@@ -66,18 +66,18 @@ export default function SettingsModal({visible, onClose}: SettingsModalProps) {
     const toggleSound = async (val: boolean) => {
         setSound(val);
         if (val) {
-            await AsyncStorage.removeItem(STORAGE_KEYS.SOUND);
+            await storage.removeItem(STORAGE_KEYS.SOUND);
         } else {
-            await AsyncStorage.setItem(STORAGE_KEYS.SOUND, 'STOP');
+            await storage.setItem(STORAGE_KEYS.SOUND, 'STOP');
         }
     };
 
     const toggleVibration = async (val: boolean) => {
         setVibration(val);
         if (val) {
-            await AsyncStorage.setItem(STORAGE_KEYS.VIBRATION, 'STOP');
+            await storage.setItem(STORAGE_KEYS.VIBRATION, 'STOP');
         } else {
-            await AsyncStorage.removeItem(STORAGE_KEYS.VIBRATION);
+            await storage.removeItem(STORAGE_KEYS.VIBRATION);
         }
     };
 

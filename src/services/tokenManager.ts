@@ -1,4 +1,4 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import {storage} from '../db/kvStore.ts';
 
 const KEYS = {
     ACCESS:   'tf_access_token',
@@ -9,7 +9,7 @@ const KEYS = {
 
 export const tokenManager = {
     async saveAuth(accessToken: string, refreshToken: string, playerId: string, accountType: string) {
-        await AsyncStorage.multiSet([
+        await storage.multiSet([
             [KEYS.ACCESS,    accessToken],
             [KEYS.REFRESH,   refreshToken],
             [KEYS.PLAYER_ID, playerId],
@@ -18,27 +18,27 @@ export const tokenManager = {
     },
 
     async getAccessToken(): Promise<string | null> {
-        return AsyncStorage.getItem(KEYS.ACCESS);
+        return storage.getItem(KEYS.ACCESS);
     },
 
     async getRefreshToken(): Promise<string | null> {
-        return AsyncStorage.getItem(KEYS.REFRESH);
+        return storage.getItem(KEYS.REFRESH);
     },
 
     async getPlayerId(): Promise<string | null> {
-        return AsyncStorage.getItem(KEYS.PLAYER_ID);
+        return storage.getItem(KEYS.PLAYER_ID);
     },
 
     async getAccountType(): Promise<string | null> {
-        return AsyncStorage.getItem(KEYS.ACCOUNT);
+        return storage.getItem(KEYS.ACCOUNT);
     },
 
     async isLoggedIn(): Promise<boolean> {
-        const token = await AsyncStorage.getItem(KEYS.ACCESS);
+        const token = await storage.getItem(KEYS.ACCESS);
         return !!token;
     },
 
     async clear() {
-        await AsyncStorage.multiRemove([KEYS.ACCESS, KEYS.REFRESH, KEYS.PLAYER_ID, KEYS.ACCOUNT]);
+        await storage.multiRemove([KEYS.ACCESS, KEYS.REFRESH, KEYS.PLAYER_ID, KEYS.ACCOUNT]);
     },
 };

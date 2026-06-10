@@ -2,7 +2,7 @@ import React, {useEffect, useRef, useState} from 'react';
 import {Animated, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import {useTranslation} from 'react-i18next';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import {storage} from '../../../db/kvStore.ts';
 import {isTablet, ms, SW, vs} from '../../../utils/responsive.ts';
 import {STORAGE_KEYS} from '../../../utils/storageKeys.ts';
 import Coin from '../../../assets/icons/Coin.tsx';
@@ -21,7 +21,7 @@ function todayStr() {
 }
 
 async function loadTodayData(): Promise<DailyAdData> {
-    const raw = await AsyncStorage.getItem(STORAGE_KEYS.DAILY_AD_WATCHES);
+    const raw = await storage.getItem(STORAGE_KEYS.DAILY_AD_WATCHES);
     if (!raw) return {date: todayStr(), times: []};
     const parsed: DailyAdData = JSON.parse(raw);
     if (parsed.date !== todayStr()) return {date: todayStr(), times: []};
@@ -32,7 +32,7 @@ async function saveWatch(data: DailyAdData): Promise<void> {
     const d = new Date();
     const time = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
     const updated = {...data, times: [...data.times, time]};
-    await AsyncStorage.setItem(STORAGE_KEYS.DAILY_AD_WATCHES, JSON.stringify(updated));
+    await storage.setItem(STORAGE_KEYS.DAILY_AD_WATCHES, JSON.stringify(updated));
 }
 
 interface WatchAdModalProps {

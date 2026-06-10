@@ -1,7 +1,7 @@
 import React, {useEffect, useMemo, useRef, useState} from 'react';
 import {Animated, Easing, Modal, Text, TouchableOpacity, View} from 'react-native';
 import {useTranslation} from 'react-i18next';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import {storage} from '../../../db/kvStore.ts';
 import LinearGradient from 'react-native-linear-gradient';
 import Svg, {Circle, G, Line, Path, Text as SvgText} from 'react-native-svg';
 import {STORAGE_KEYS} from '../../../utils/storageKeys.ts';
@@ -242,7 +242,7 @@ export default function LuckyWheelModal({visible, onClose, onSpinComplete}: Prop
     }
 
     async function checkCanSpin() {
-        const raw = await AsyncStorage.getItem(STORAGE_KEYS.LUCKY_SPIN_DATE);
+        const raw = await storage.getItem(STORAGE_KEYS.LUCKY_SPIN_DATE);
         if (!raw) { setCanSpin(true); return; }
         const last = new Date(raw), now = new Date();
         const same = last.getFullYear() === now.getFullYear() && last.getMonth() === now.getMonth() && last.getDate() === now.getDate();
@@ -299,7 +299,7 @@ export default function LuckyWheelModal({visible, onClose, onSpinComplete}: Prop
                 slowCount:   serverResult.stats.slowCount,
                 shieldCount: serverResult.stats.shieldCount,
             });
-            await AsyncStorage.setItem(STORAGE_KEYS.LUCKY_SPIN_DATE, new Date().toISOString());
+            await storage.setItem(STORAGE_KEYS.LUCKY_SPIN_DATE, new Date().toISOString());
             onSpinComplete?.();
         });
     }

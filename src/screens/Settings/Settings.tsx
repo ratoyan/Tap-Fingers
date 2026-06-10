@@ -12,7 +12,7 @@ import {loadMusic, playMusic, stopMusic} from "../../utils/helpers.ts";
 import {useTranslation} from "react-i18next";
 import {languages} from "../../data/language.ts";
 import {STORAGE_KEYS} from "../../utils/storageKeys.ts";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import {storage} from "../../db/kvStore.ts";
 import {useAuthStore} from "../../store/authStore.ts";
 
 // components
@@ -53,7 +53,7 @@ function Settings() {
         // Revoke the refresh token server-side, clear tokens + reset the stores...
         await useAuthStore.getState().logout();
         // ...then wipe the remaining device-local data (settings, helper counts).
-        await AsyncStorage.clear();
+        await storage.clear();
         setLogoutModal(false);
         navigation.reset({index: 0, routes: [{name: 'Welcome'}]});
     };
@@ -61,11 +61,11 @@ function Settings() {
     const toggleMusic = async (val: boolean) => {
         setMusic(val);
         if (val) {
-            await AsyncStorage.removeItem(STORAGE_KEYS.MUSIC);
+            await storage.removeItem(STORAGE_KEYS.MUSIC);
             loadMusic("gamemusic2.mp3");
             setTimeout(() => { playMusic(); }, 200);
         } else {
-            await AsyncStorage.setItem(STORAGE_KEYS.MUSIC, 'STOP');
+            await storage.setItem(STORAGE_KEYS.MUSIC, 'STOP');
             stopMusic();
         }
     };
@@ -73,26 +73,26 @@ function Settings() {
     const toggleSound = async (val: boolean) => {
         setSound(val);
         if (val) {
-            await AsyncStorage.removeItem(STORAGE_KEYS.SOUND);
+            await storage.removeItem(STORAGE_KEYS.SOUND);
         } else {
-            await AsyncStorage.setItem(STORAGE_KEYS.SOUND, 'STOP');
+            await storage.setItem(STORAGE_KEYS.SOUND, 'STOP');
         }
     };
 
     const toggleVibration = async (val: boolean) => {
         setVibration(val);
         if (val) {
-            await AsyncStorage.setItem(STORAGE_KEYS.VIBRATION, 'STOP');
+            await storage.setItem(STORAGE_KEYS.VIBRATION, 'STOP');
         } else {
-            await AsyncStorage.removeItem(STORAGE_KEYS.VIBRATION);
+            await storage.removeItem(STORAGE_KEYS.VIBRATION);
         }
     };
 
     const getStorageData = async () => {
         try {
-            const musicData = await AsyncStorage.getItem(STORAGE_KEYS.MUSIC);
-            const soundData = await AsyncStorage.getItem(STORAGE_KEYS.SOUND);
-            const vibrationData = await AsyncStorage.getItem(STORAGE_KEYS.VIBRATION);
+            const musicData = await storage.getItem(STORAGE_KEYS.MUSIC);
+            const soundData = await storage.getItem(STORAGE_KEYS.SOUND);
+            const vibrationData = await storage.getItem(STORAGE_KEYS.VIBRATION);
             setMusic(!musicData);
             setSound(!soundData);
             setVibration(!vibrationData);

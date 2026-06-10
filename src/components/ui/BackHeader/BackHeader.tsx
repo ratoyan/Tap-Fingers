@@ -3,7 +3,7 @@ import {Image, Text, TouchableOpacity, View, ViewStyle} from "react-native";
 import {useSafeAreaInsets} from "react-native-safe-area-context";
 import {useFocusEffect, useNavigation} from "@react-navigation/core";
 import LinearGradient from "react-native-linear-gradient";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import {storage} from "../../../db/kvStore.ts";
 import {TOP_OFFSET} from "../../../constants/uiConstants.ts";
 import {STORAGE_KEYS} from "../../../utils/storageKeys.ts";
 
@@ -55,7 +55,7 @@ function BackHeader({
     useFocusEffect(
         useCallback(() => {
             if (!isProfile) return;
-            AsyncStorage.getItem(STORAGE_KEYS.PROFILE_PHOTO)
+            storage.getItem(STORAGE_KEYS.PROFILE_PHOTO)
                 .then(uri => setPhotoUri(uri || ''))
                 .catch(() => {});
         }, [isProfile])

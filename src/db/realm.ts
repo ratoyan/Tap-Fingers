@@ -26,14 +26,32 @@ export class CachedProfile extends Realm.Object<CachedProfile> {
     };
 }
 
+// Generic string key→value row. Backs the AsyncStorage-compatible KV store
+// (src/db/kvStore.ts) so every simple setting/flag the app used to keep in
+// AsyncStorage (language, audio toggles, helper counts, auth tokens, profile
+// photo, daily-limit dates…) now lives in Realm.
+export class KeyValue extends Realm.Object<KeyValue> {
+    key!: string;
+    value!: string;
+
+    static schema: Realm.ObjectSchema = {
+        name: 'KeyValue',
+        primaryKey: 'key',
+        properties: {
+            key: 'string',
+            value: 'string',
+        },
+    };
+}
+
 let realmInstance: Realm | null = null;
 
 // Lazily opens (and memoises) the single Realm instance for the app.
 export function getRealm(): Realm {
     if (!realmInstance) {
         realmInstance = new Realm({
-            schema: [CachedProfile],
-            schemaVersion: 1,
+            schema: [CachedProfile, KeyValue],
+            schemaVersion: 2,
         });
     }
     return realmInstance;

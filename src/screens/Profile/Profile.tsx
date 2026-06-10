@@ -17,7 +17,7 @@ import {useTranslation} from 'react-i18next';
 import {useNavigation} from '@react-navigation/core';
 import LinearGradient from 'react-native-linear-gradient';
 import {launchImageLibrary} from 'react-native-image-picker';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import {storage} from '../../db/kvStore.ts';
 import {STORAGE_KEYS} from '../../utils/storageKeys.ts';
 
 // services / store
@@ -85,7 +85,7 @@ function Profile() {
 
     useEffect(() => {
         (async () => {
-            const savedPhoto = await AsyncStorage.getItem(STORAGE_KEY_PHOTO);
+            const savedPhoto = await storage.getItem(STORAGE_KEY_PHOTO);
             if (savedPhoto) setPhotoUri(savedPhoto);
         })();
     }, []);
@@ -221,7 +221,7 @@ function Profile() {
             await userService.deleteAccount(isEmailAccount ? deletePassword : undefined);
             // Clear the session + device-local data, then drop back to Welcome.
             await useAuthStore.getState().logout();
-            await AsyncStorage.clear();
+            await storage.clear();
             setDeleteModal(false);
             navigation.reset({index: 0, routes: [{name: 'Welcome'}]});
         } catch (error: any) {
@@ -234,7 +234,7 @@ function Profile() {
 
     async function handlePickResult(uri: string) {
         setPhotoUri(uri);
-        await AsyncStorage.setItem(STORAGE_KEY_PHOTO, uri);
+        await storage.setItem(STORAGE_KEY_PHOTO, uri);
         setSheetVisible(false);
     }
 
@@ -246,7 +246,7 @@ function Profile() {
     function handleCameraCapture(uri: string) {
         setCameraVisible(false);
         setPhotoUri(uri);
-        AsyncStorage.setItem(STORAGE_KEY_PHOTO, uri);
+        storage.setItem(STORAGE_KEY_PHOTO, uri);
     }
 
     function handleGallery() {

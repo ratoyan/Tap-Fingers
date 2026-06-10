@@ -17,7 +17,7 @@ import {notice} from '../../utils/notice.ts';
 import {useTranslation} from 'react-i18next';
 import {useFocusEffect, useNavigation} from "@react-navigation/core";
 import {loadMusic, playMusic, releaseMusic, stopMusic} from "../../utils/helpers.ts";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import {storage} from "../../db/kvStore.ts";
 import {STORAGE_KEYS} from "../../utils/storageKeys.ts";
 
 // services / store
@@ -89,12 +89,12 @@ function Welcome() {
 
     async function toggleSound() {
         if (muted) {
-            await AsyncStorage.removeItem(STORAGE_KEYS.MUSIC);
+            await storage.removeItem(STORAGE_KEYS.MUSIC);
             loadMusic('gamemusic.wav');
             playMusic();
             setMuted(false);
         } else {
-            await AsyncStorage.setItem(STORAGE_KEYS.MUSIC, 'STOP');
+            await storage.setItem(STORAGE_KEYS.MUSIC, 'STOP');
             stopMusic();
             setMuted(true);
         }
@@ -111,9 +111,9 @@ function Welcome() {
     // seed the starter stock so a brand-new player has one of each.
     async function seedHelperDefaults() {
         try {
-            const existing = await AsyncStorage.getItem(STORAGE_KEYS.BOMB_COUNT);
+            const existing = await storage.getItem(STORAGE_KEYS.BOMB_COUNT);
             if (existing != null) return;
-            await AsyncStorage.multiSet([
+            await storage.multiSet([
                 [STORAGE_KEYS.BOMB_COUNT, JSON.stringify(1)],
                 [STORAGE_KEYS.SLOW_COUNT, JSON.stringify(1)],
                 [STORAGE_KEYS.SHIELD_COUNT, JSON.stringify(1)],
@@ -190,7 +190,7 @@ function Welcome() {
         React.useCallback(() => {
             seedHelperDefaults();
             // Reflect the stored music preference on the toggle.
-            AsyncStorage.getItem(STORAGE_KEYS.MUSIC).then(cancel => setMuted(!!cancel));
+            storage.getItem(STORAGE_KEYS.MUSIC).then(cancel => setMuted(!!cancel));
             releaseMusic();
             loadMusic("gamemusic.wav");
             const timeout = setTimeout(() => playMusic(), 200);

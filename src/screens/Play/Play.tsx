@@ -24,7 +24,7 @@ import * as shopService from '../../services/shopService.ts';
 import * as bossService from '../../services/bossService.ts';
 import {Boss} from '../../services/types.ts';
 import {registerShopIcons, resolveCardEntry} from '../../data/shopVisuals.ts';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import {storage} from '../../db/kvStore.ts';
 import uuId from 'react-native-uuid';
 import useMusicAppState from '../../hooks/useMusicAppState.tsx';
 
@@ -245,7 +245,7 @@ export default function Play() {
     // ─── Backend game session ─────────────────────────────────────────────────
 
     // Loads the server's helper stock into refs/state, and keeps the local
-    // AsyncStorage cache warm for the offline fallback path.
+    // local (Realm) cache warm for the offline fallback path.
     function applyHelperCounts(bomb: number, slow: number, shield: number) {
         bombCountRef.current = bomb;
         slowCountRef.current = slow;
@@ -253,7 +253,7 @@ export default function Play() {
         setBombCount(bomb);
         setSlowCount(slow);
         setShieldCount(shield);
-        AsyncStorage.multiSet([
+        storage.multiSet([
             [STORAGE_KEYS.BOMB_COUNT, JSON.stringify(bomb)],
             [STORAGE_KEYS.SLOW_COUNT, JSON.stringify(slow)],
             [STORAGE_KEYS.SHIELD_COUNT, JSON.stringify(shield)],
@@ -327,8 +327,8 @@ export default function Play() {
 
     // ─── Storage helpers ──────────────────────────────────────────────────────
     async function loadSettings() {
-        const s = await AsyncStorage.getItem(STORAGE_KEYS.SOUND);
-        const v = await AsyncStorage.getItem(STORAGE_KEYS.VIBRATION);
+        const s = await storage.getItem(STORAGE_KEYS.SOUND);
+        const v = await storage.getItem(STORAGE_KEYS.VIBRATION);
         cancelSoundRef.current = !!s;
         cancelVibrationRef.current = !!v;
     }
@@ -389,7 +389,7 @@ export default function Play() {
     }
 
     async function loadBombCount() {
-        const stored = await AsyncStorage.getItem(STORAGE_KEYS.BOMB_COUNT);
+        const stored = await storage.getItem(STORAGE_KEYS.BOMB_COUNT);
         const saved = stored ? JSON.parse(stored) : INITIAL_BOMBS;
         const value = Math.max(saved, INITIAL_BOMBS);
         bombCountRef.current = value;
@@ -397,12 +397,12 @@ export default function Play() {
     }
 
     async function saveBombCount(n: number) {
-        await AsyncStorage.setItem(STORAGE_KEYS.BOMB_COUNT, JSON.stringify(n));
+        await storage.setItem(STORAGE_KEYS.BOMB_COUNT, JSON.stringify(n));
     }
 
     async function loadHelperCounts() {
-        const slow = await AsyncStorage.getItem(STORAGE_KEYS.SLOW_COUNT);
-        const shield = await AsyncStorage.getItem(STORAGE_KEYS.SHIELD_COUNT);
+        const slow = await storage.getItem(STORAGE_KEYS.SLOW_COUNT);
+        const shield = await storage.getItem(STORAGE_KEYS.SHIELD_COUNT);
         const s = slow ? JSON.parse(slow) : 0;
         const h = shield ? JSON.parse(shield) : 0;
         slowCountRef.current = s;
@@ -412,11 +412,11 @@ export default function Play() {
     }
 
     async function saveSlowCount(n: number) {
-        await AsyncStorage.setItem(STORAGE_KEYS.SLOW_COUNT, JSON.stringify(n));
+        await storage.setItem(STORAGE_KEYS.SLOW_COUNT, JSON.stringify(n));
     }
 
     async function saveShieldCount(n: number) {
-        await AsyncStorage.setItem(STORAGE_KEYS.SHIELD_COUNT, JSON.stringify(n));
+        await storage.setItem(STORAGE_KEYS.SHIELD_COUNT, JSON.stringify(n));
     }
 
     // ─── Animations ───────────────────────────────────────────────────────────
@@ -531,7 +531,7 @@ export default function Play() {
         setIsLoseModal(false);
         setBoxesData(createBoxes(card, durationRef.current, !!card.fallFromBottom));
         // startGameSession() reloads the helper stock from the server (with an
-        // offline AsyncStorage fallback).
+        // offline local (Realm) fallback).
         startGameSession();
     }
 
@@ -829,7 +829,7 @@ export default function Play() {
             releaseMusic();
             loadSettings();
             // startGameSession() loads the helper stock from the server, with
-            // an AsyncStorage fallback (loadBombCount/loadHelperCounts) on error.
+            // a local (Realm) fallback (loadBombCount/loadHelperCounts) on error.
             startGameSession();
 
             // Fetch the latest card art and refresh the equipped card so the

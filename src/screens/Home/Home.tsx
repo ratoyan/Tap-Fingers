@@ -11,7 +11,7 @@ import {TOP_OFFSET} from "../../constants/uiConstants.ts";
 import {useGlobalStore} from "../../store/globalStore.ts";
 import {useAuthStore} from "../../store/authStore.ts";
 import * as userService from "../../services/userService.ts";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import {storage} from "../../db/kvStore.ts";
 import {STORAGE_KEYS} from "../../utils/storageKeys.ts";
 import InAppReview from 'react-native-in-app-review';
 
@@ -42,7 +42,7 @@ const Home: React.FC<Props> = () => {
     const [showAdModal, setShowAdModal] = useState(false);
     const [showExitModal, setShowExitModal] = useState(false);
     const checkCanSpin = useCallback(async () => {
-        const raw = await AsyncStorage.getItem(STORAGE_KEYS.LUCKY_SPIN_DATE);
+        const raw = await storage.getItem(STORAGE_KEYS.LUCKY_SPIN_DATE);
         if (!raw) { setCanSpin(true); return; }
         const last = new Date(raw);
         const now = new Date();
@@ -98,14 +98,14 @@ const Home: React.FC<Props> = () => {
         useCallback(() => {
             const requestReviewIfNeeded = async () => {
                 if (!InAppReview.isAvailable()) return;
-                const raw = await AsyncStorage.getItem(STORAGE_KEYS.LAST_REVIEW_DATE);
+                const raw = await storage.getItem(STORAGE_KEYS.LAST_REVIEW_DATE);
                 const now = new Date();
                 if (raw) {
                     const last = new Date(raw);
                     const diffDays = (now.getTime() - last.getTime()) / (1000 * 60 * 60 * 24);
                     if (diffDays < 3) return;
                 }
-                await AsyncStorage.setItem(STORAGE_KEYS.LAST_REVIEW_DATE, now.toISOString());
+                await storage.setItem(STORAGE_KEYS.LAST_REVIEW_DATE, now.toISOString());
                 await InAppReview.RequestInAppReview().catch(() => {});
             };
             requestReviewIfNeeded();

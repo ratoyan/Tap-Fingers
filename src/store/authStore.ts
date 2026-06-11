@@ -3,6 +3,7 @@ import {tokenManager} from '../services/tokenManager';
 import * as authService from '../services/authService';
 import * as userService from '../services/userService';
 import * as profileRepo from '../db/profileRepo';
+import * as equippedRepo from '../db/equippedRepo';
 import {InventoryEntry, Player, Profile, PlayerStats} from '../services/types';
 import {resolveBackgroundEntry, resolveCardEntry} from '../data/shopVisuals';
 import {useGlobalStore} from './globalStore';
@@ -60,6 +61,16 @@ export const useAuthStore = create<AuthState>((set, get) => {
     // through the cache (see bootstrap) so the app doesn't re-hit the backend.
     async function fetchAndCacheProfile() {
         const profile = await userService.getProfile();
+        // Equipping is local-only (the Shop saves the equipped keys to Realm but
+        // never pushes them to the server), so the server's activeCardKey /
+        // activeBackgroundKey are stale. Overlay the locally-equipped keys onto
+        // the fetched profile — same "Realm first, server fallback" rule the Shop
+        // uses (see Shop.loadShop) — otherwise this refresh reverts a fresh equip.
+        const equipped = await equippedRepo.loadEquipped();
+        if (profile.stats) {
+            if (equipped.cardKey) profile.stats.activeCardKey = equipped.cardKey;
+            if (equipped.backgroundKey) profile.stats.activeBackgroundKey = equipped.backgroundKey;
+        }
         profileRepo.saveProfile(profile);
         applyProfile(profile);
     }

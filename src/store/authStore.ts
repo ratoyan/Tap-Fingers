@@ -8,6 +8,8 @@ import {InventoryEntry, Player, Profile, PlayerStats} from '../services/types';
 import {resolveBackgroundEntry, resolveCardEntry} from '../data/shopVisuals';
 import {useGlobalStore} from './globalStore';
 import {useShopStore} from './shopStore';
+import {setUnauthorizedHandler} from '../services/sessionEvents';
+import {resetToWelcome} from '../navigation/navigationRef';
 
 // ── Auth / session store ──────────────────────────────────────────────────────
 // Single source of truth for "who is signed in" and the server-authoritative
@@ -33,6 +35,9 @@ interface AuthState {
     // Optimistically merges a stats patch (e.g. after a game / purchase).
     patchStats: (patch: Partial<PlayerStats>) => void;
     logout: () => Promise<void>;
+    // Tears down the local session after an unrecoverable 401 (tokens already
+    // cleared by the axios interceptor) and bounces back to Welcome.
+    sessionExpired: () => void;
 }
 
 function fanOutStats(stats: PlayerStats | null) {
@@ -147,5 +152,21 @@ export const useAuthStore = create<AuthState>((set, get) => {
             useShopStore.getState().setBackground(null);
             set({status: 'unauthed', player: null, stats: null, inventory: []});
         },
+
+        sessionExpired: () => {
+            // The interceptor already cleared the (dead) tokens, so there's no
+            // server logout to call — just wipe the local caches/state and reset
+            // navigation to the sign-in screen.
+            profileRepo.clearProfile();
+            useGlobalStore.getState().setCoins(0);
+            useGlobalStore.getState().setGems(0);
+            useShopStore.getState().setCard(null);
+            useShopStore.getState().setBackground(null);
+            set({status: 'unauthed', player: null, stats: null, inventory: []});
+            resetToWelcome();
+        },
     };
 });
+
+// Wire the axios layer's "unrecoverable 401" event to the session teardown.
+setUnauthorizedHandler(() => useAuthStore.getState().sessionExpired());

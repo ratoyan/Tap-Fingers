@@ -30,7 +30,14 @@
       "Bash(npx ts-prune *)",
       "Bash(git rm *)",
       "PowerShell(Get-ChildItem C:\\\\rob-project\\\\ | Select-Object Name; \"---\"; Get-ChildItem C:\\\\rob-project\\\\mobile\\\\ | Select-Object Name)",
-      "Bash(grep -iE \"authStore|profileRepo|db/realm|db\\\\\\\\\\\\\\\\realm\")"
+      "Bash(grep -iE \"authStore|profileRepo|db/realm|db\\\\\\\\\\\\\\\\realm\")",
+      "PowerShell(foreach \\($p in 8000,3002,3000\\) { $c = Get-NetTCPConnection -State Listen -LocalPort $p -ErrorAction SilentlyContinue; if \\($c\\) { \"Port $p : LISTENING\" } else { \"Port $p : \\(nothing\\)\" } })",
+      "PowerShell(Get-Process *)",
+      "Bash(curl -s -m 5 -i http://localhost:3002/)",
+      "Bash(curl -s -m 5 -i -X POST http://localhost:3002/api/auth/guest -H \"Content-Type: application/json\")",
+      "Bash(curl -s -m 5 http://localhost:3002/api/player/profile)",
+      "Bash(curl -s -m 5 http://localhost:3002/api/player/profile -H \"Authorization: Bearer garbage\")",
+      "Bash(curl -s -m 5 -X POST http://localhost:3002/api/auth/login -H \"Content-Type: application/json\" -d '{\"email\":\"nope@x.com\",\"password\":\"wrongpass\"}')"
     ]
   }
 }

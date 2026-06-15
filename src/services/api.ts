@@ -1,6 +1,7 @@
 import axios, { InternalAxiosRequestConfig } from 'axios';
 import { API_BASE_URL } from './config';
 import { tokenManager } from './tokenManager';
+import { emitUnauthorized } from './sessionEvents';
 
 const api = axios.create({
     baseURL: API_BASE_URL,
@@ -57,8 +58,10 @@ api.interceptors.response.use(
             const refreshToken = await tokenManager.getRefreshToken();
             if (!refreshToken) {
                 // No session to refresh — surface the original 401 (its real
-                // message), not a synthetic "No refresh token".
+                // message), not a synthetic "No refresh token". The session is
+                // unrecoverable, so send the user back to Welcome.
                 processQueue(error, null);
+                emitUnauthorized();
                 return Promise.reject(normaliseError(error));
             }
 
@@ -73,8 +76,11 @@ api.interceptors.response.use(
             original.headers.Authorization = `Bearer ${accessToken}`;
             return api(original);
         } catch (err) {
+            // Refresh failed — the session is dead. Clear tokens and bounce the
+            // user back to Welcome.
             processQueue(err, null);
             await tokenManager.clear();
+            emitUnauthorized();
             return Promise.reject(normaliseError(err));
         } finally {
             isRefreshing = false;

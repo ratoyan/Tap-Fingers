@@ -1,4 +1,4 @@
-import React, {useCallback, useRef, useState} from 'react';
+import React, {useCallback, useMemo, useRef, useState} from 'react';
 import {ActivityIndicator, FlatList, Text, View} from 'react-native';
 import {useFocusEffect} from '@react-navigation/core';
 import {useTranslation} from "react-i18next";
@@ -36,6 +36,15 @@ function toCardItem(c: ChallengeWithProgress) {
         finished: c.progress.isCompleted,
         taken: c.progress.isRewardClaimed,
     };
+}
+
+// Display ordering: collectable challenges first (finished, reward not yet
+// claimed), then the ones already claimed ("done"), then everything still in
+// progress. Lower rank sorts earlier.
+function sortRank(c: ChallengeWithProgress): number {
+    if (c.progress.isCompleted && !c.progress.isRewardClaimed) return 0; // collectable
+    if (c.progress.isRewardClaimed) return 1;                            // done
+    return 2;                                                            // in progress
 }
 
 function Challenges() {
@@ -109,6 +118,15 @@ function Challenges() {
         }
     }
 
+    // Stable sort by rank so the within-group order (server order) is preserved.
+    const sortedItems = useMemo(
+        () => items
+            .map((item, index) => ({item, index}))
+            .sort((a, b) => sortRank(a.item) - sortRank(b.item) || a.index - b.index)
+            .map(({item}) => item),
+        [items],
+    );
+
     const renderFooter = () => {
         if (!loadingMore) return null;
         return (
@@ -133,7 +151,7 @@ function Challenges() {
                 </View>
             ) : (
                 <FlatList
-                    data={items}
+                    data={sortedItems}
                     keyExtractor={(item) => item.id.toString()}
                     renderItem={({item, index}) => (
                         <ChallengeCard

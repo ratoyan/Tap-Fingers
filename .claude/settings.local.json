@@ -37,7 +37,9 @@
       "Bash(curl -s -m 5 -i -X POST http://localhost:3002/api/auth/guest -H \"Content-Type: application/json\")",
       "Bash(curl -s -m 5 http://localhost:3002/api/player/profile)",
       "Bash(curl -s -m 5 http://localhost:3002/api/player/profile -H \"Authorization: Bearer garbage\")",
-      "Bash(curl -s -m 5 -X POST http://localhost:3002/api/auth/login -H \"Content-Type: application/json\" -d '{\"email\":\"nope@x.com\",\"password\":\"wrongpass\"}')"
+      "Bash(curl -s -m 5 -X POST http://localhost:3002/api/auth/login -H \"Content-Type: application/json\" -d '{\"email\":\"nope@x.com\",\"password\":\"wrongpass\"}')",
+      "Bash(export MSYS_NO_PATHCONV=1)",
+      "Bash(adb devices *)"
     ]
   }
 }

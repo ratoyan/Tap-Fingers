@@ -4,6 +4,16 @@
     <style name="AppTheme" parent="Theme.AppCompat.DayNight.NoActionBar">
         <!-- Customize your theme here. -->
         <item name="android:editTextBackground">@drawable/rn_edit_text_material</item>
+        <!-- Holds the splash colour until the first JS frame paints, otherwise
+             the window flashes white between the splash and the RN root view. -->
+        <item name="android:windowBackground">@color/splash_background</item>
+    </style>
+
+    <!-- Launch theme. Backported below API 31 by androidx.core:core-splashscreen. -->
+    <style name="SplashTheme" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/splash_background</item>
+        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_foreground</item>
+        <item name="postSplashScreenTheme">@style/AppTheme</item>
     </style>
 
 </resources>

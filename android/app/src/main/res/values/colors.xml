@@ -1,0 +1,5 @@
+<resources>
+  <!-- Matches DARK_PURPLE in src/constants/colors.ts, the start of the Home
+       screen gradient, so the splash hands off to the app with no seam. -->
+  <color name="splash_background">#4B0082</color>
+</resources>

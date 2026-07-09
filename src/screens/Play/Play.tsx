@@ -63,7 +63,11 @@ import {GRADIENT_LIGHT, LILAC, ORANGE, ORANGE_RED} from '../../constants/colors.
 const {width, height} = Dimensions.get('window');
 
 const HEARTS_LENGTH = 7;
-const MAX_ITEMS = 3;
+// Gap between two consecutive drops. Tightens as the level climbs, and is
+// stretched by the slow-mo helper so the stream thins out with the fall speed.
+const SPAWN_INTERVAL_MS = 900;
+const SPAWN_INTERVAL_MIN_MS = 380;
+const SPAWN_INTERVAL_STEP_MS = 45;
 const INITIAL_DURATION = 20;
 const DURATION_STEP = 20;
 const INITIAL_BOMBS = 0;
@@ -78,12 +82,15 @@ function getDefaultBackground(level: number) {
     return require('../../assets/images/background1.jpg');
 }
 
-function createBoxes(card: any, duration: number, fromBottom = false) {
-    return Array.from({length: MAX_ITEMS}, (_, i) => {
-        // fromBottom: stagger the spawn below the screen so the batch floats up;
-        // otherwise stagger above the screen so it falls down.
-        const y = fromBottom ? height + (i * 280 + Math.random() * 80) : -(i * 280 + Math.random() * 80);
-        return {
+function spawnBox(card: any, duration: number, fromBottom = false) {
+    const isGolden = Math.random() < GOLDEN_SPAWN_CHANCE;
+    // Spawn just off the edge the box travels from (below for fromBottom, above
+    // otherwise) so it slides into view right away. The spacing between boxes
+    // comes from the spawn cadence, not from a random head start off-screen —
+    // that is what makes them arrive one after another like falling snow.
+    const offset = card.size + Math.random() * 120;
+    const y = fromBottom ? height + offset : -offset;
+    return {
         ...card,
         id: uuId.v4(),
         x: Math.random() * (width - card.size),
@@ -92,30 +99,6 @@ function createBoxes(card: any, duration: number, fromBottom = false) {
         // Seed the vertical target in the travel direction so the box drifts on
         // screen smoothly from frame one (a flat 0 would yank a bottom-spawned
         // box upward across the whole screen in a single step).
-        ty: fromBottom ? y - (duration + 10) : 0,
-        color: colors[Math.floor(Math.random() * colors.length)],
-        duration,
-        // Seed the spin angle (same reason as spawnBox) so the very first batch
-        // of boxes rotates from the start instead of staying NaN until respawn.
-        rotation: 0,
-        isBoom: false,
-        isGolden: false,
-        };
-    });
-}
-
-function spawnBox(card: any, duration: number, fromBottom = false) {
-    const isGolden = Math.random() < GOLDEN_SPAWN_CHANCE;
-    // fromBottom: spawn below the screen so the box floats up into view;
-    // otherwise spawn above the screen so it falls down.
-    const y = fromBottom ? height + Math.random() * 1000 : Math.random() * -1000;
-    return {
-        ...card,
-        id: uuId.v4(),
-        x: Math.random() * (width - card.size),
-        y,
-        tx: Math.random() * (width - card.size),
-        // Seed the vertical target in the travel direction (see createBoxes).
         ty: fromBottom ? y - (duration + 10) : 0,
         color: isGolden ? '#FFD700' : colors[Math.floor(Math.random() * colors.length)],
         duration,
@@ -219,7 +202,8 @@ export default function Play() {
     const [isExitModal, setIsExitModal] = useState(false);
     const [isMenuModal, setIsMenuModal] = useState(false);
     const [buyModal, setBuyModal] = useState<HelperType | null>(null);
-    const [boxesData, setBoxesData] = useState(() => createBoxes(card, durationRef.current, !!card.fallFromBottom));
+    // Starts empty — the spawn effect drips the first box in immediately.
+    const [boxesData, setBoxesData] = useState<any[]>([]);
     const [bombCount, setBombCount] = useState(INITIAL_BOMBS);
     const [combo, setCombo] = useState(0);
     const [watchAdUsed, setWatchAdUsed] = useState(0);
@@ -509,7 +493,6 @@ export default function Play() {
         setIsLoseModal(false);
         setIsPlaying(true);
         setBoxesData([]);
-        setTimeout(() => setBoxesData(createBoxes(card, durationRef.current, !!card.fallFromBottom)), 0);
     }
 
     function handleRetry() {
@@ -544,7 +527,7 @@ export default function Play() {
         setShowBossDefeated(false);
         setIsPlaying(true);
         setIsLoseModal(false);
-        setBoxesData(createBoxes(card, durationRef.current, !!card.fallFromBottom));
+        setBoxesData([]);
         // startGameSession() reloads the helper stock from the server (with an
         // offline local (Realm) fallback).
         startGameSession();
@@ -587,7 +570,6 @@ export default function Play() {
             setLevelCount(c => c + pts);
             return [];
         });
-        setTimeout(() => setBoxesData(createBoxes(card, durationRef.current, !!card.fallFromBottom)), 150);
     }
 
     // ─── Shield helper ───────────────────────────────────────────────────────
@@ -741,7 +723,6 @@ export default function Play() {
         setTimeout(() => {
             isBossFightRef.current = false;
             setShowBossDefeated(false);
-            setBoxesData(createBoxes(card, durationRef.current, !!card.fallFromBottom));
         }, 2500);
     }
 
@@ -981,45 +962,35 @@ export default function Play() {
             const fromBottom = !!cardRef.current.fallFromBottom;
 
             setBoxesData(prev =>
-                prev.map((b: any) => {
+                prev.filter((b: any) => {
+                    if (b.isBoom) return true;
+
+                    const speed = 0.05 * slowSpeedRef.current;
+                    const newY = b.y + (b.ty - b.y) * speed;
+                    const missed = fromBottom ? newY < 0 : newY + b.size > height;
+                    if (!missed) return true;
+
+                    if (shieldActiveRef.current) {
+                        shieldActiveRef.current = false;
+                        setShieldActive(false);
+                    } else {
+                        if (!cancelVibrationRef.current) Vibration.vibrate(500);
+                        setEmptyHeartCount(prev => prev + 1);
+                    }
+                    missHappenedRef.current = true;
+                    // Drop the box instead of teleporting it back to the far edge:
+                    // the spawner feeds the next one on its own cadence, so boxes
+                    // keep arriving one at a time rather than in a re-synced batch.
+                    return false;
+                }).map((b: any) => {
                     if (b.isBoom) return b;
 
                     const speed = 0.05 * slowSpeedRef.current;
-                    const newX = b.x + (b.tx - b.x) * speed;
-                    const newY = b.y + (b.ty - b.y) * speed;
-
-                    const missed = fromBottom ? newY < 0 : newY + b.size > height;
-                    if (missed) {
-                        if (shieldActiveRef.current) {
-                            shieldActiveRef.current = false;
-                            setShieldActive(false);
-                        } else {
-                            if (!cancelVibrationRef.current) Vibration.vibrate(500);
-                            setEmptyHeartCount(prev => prev + 1);
-                        }
-                        missHappenedRef.current = true;
-
-                        const respawnY = fromBottom
-                            ? height + Math.random() * 500
-                            : -Math.random() * 500;
-                        return {
-                            ...b,
-                            x: Math.random() * (width - b.size),
-                            y: respawnY,
-                            tx: Math.random() * (width - b.size),
-                            ty: fromBottom
-                                ? respawnY - (durationRef.current + 10)
-                                : durationRef.current + 10,
-                            color: colors[Math.floor(Math.random() * colors.length)],
-                            rotation: b.isRotation ? (b.rotation + 2) % 360 : b.rotation,
-                            isGolden: false,
-                        };
-                    }
 
                     return {
                         ...b,
-                        x: newX,
-                        y: newY,
+                        x: b.x + (b.tx - b.x) * speed,
+                        y: b.y + (b.ty - b.y) * speed,
                         tx: Math.abs(b.tx - b.x) < 1 ? Math.random() * (width - b.size) : b.tx,
                         ty: fromBottom
                             ? b.y - (durationRef.current + 10)
@@ -1041,21 +1012,40 @@ export default function Play() {
         return () => cancelAnimationFrame(animationFrameId);
     }, [isPlaying]);
 
-    // Spawn new boxes
+    // Spawn new boxes — exactly one per tick, so they trickle down one after
+    // another like snow instead of arriving as a batch. A self-rescheduling
+    // timeout (not setInterval) lets each gap read the live level and slow-mo
+    // factor: higher levels drip faster, slow-mo stretches the gap to match the
+    // slower fall.
     useEffect(() => {
         if (!isPlaying) return;
 
-        const interval = setInterval(() => {
-            if (isBossFightRef.current) return;
-            setBoxesData(prev => {
-                const slots = MAX_ITEMS - prev.length;
-                if (slots <= 0) return prev;
-                const toSpawn = Math.min(slots, Math.random() < 0.35 ? 2 : 1);
-                return [...prev, ...Array.from({length: toSpawn}, () => spawnBox(cardRef.current, durationRef.current, !!cardRef.current.fallFromBottom))];
-            });
-        }, 800);
+        let timeoutId: ReturnType<typeof setTimeout>;
 
-        return () => clearInterval(interval);
+        const nextDelay = () => {
+            const base = Math.max(
+                SPAWN_INTERVAL_MIN_MS,
+                SPAWN_INTERVAL_MS - (levelRef.current - 1) * SPAWN_INTERVAL_STEP_MS,
+            );
+            return base / slowSpeedRef.current;
+        };
+
+        const spawnOne = () => {
+            if (!isBossFightRef.current) {
+                // No cap on how many are in the air: the stream is bounded only by
+                // how long a box takes to cross the screen versus the spawn gap.
+                setBoxesData(prev => [
+                    ...prev,
+                    spawnBox(cardRef.current, durationRef.current, !!cardRef.current.fallFromBottom),
+                ]);
+            }
+            timeoutId = setTimeout(spawnOne, nextDelay());
+        };
+
+        // First box drops right away — the field starts empty.
+        timeoutId = setTimeout(spawnOne, 0);
+
+        return () => clearTimeout(timeoutId);
     }, [isPlaying]);
 
     // ─── Render helpers ───────────────────────────────────────────────────────

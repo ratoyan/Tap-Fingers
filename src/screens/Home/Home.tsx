@@ -161,48 +161,47 @@ const Home: React.FC<Props> = () => {
             >
                 <Logo width={160} height={160} viewStyles={styles.logo}/>
 
-                {/* Guest banner — a discoverable shortcut to the register / login
-                    block (otherwise buried in Settings → Profile). */}
-                {isGuestNoEmail && (
-                    <TouchableOpacity
-                        onPress={() => navigation.navigate('Profile')}
-                        activeOpacity={0.85}
-                        style={guestBanner.wrap}
-                        accessibilityRole="button"
-                        accessibilityLabel={t('createYourAccount')}
-                    >
-                        <Text allowFontScaling={false} style={guestBanner.icon}>👻</Text>
-                        <View style={{flex: 1}}>
-                            <Text allowFontScaling={false} style={guestBanner.title}>✨ {t('createYourAccount')}</Text>
-                            <Text allowFontScaling={false} style={guestBanner.sub}>{t('guestSaveHint')}</Text>
-                        </View>
-                        <Text allowFontScaling={false} style={guestBanner.arrow}>›</Text>
-                    </TouchableOpacity>
-                )}
-
-                {/* Unverified email banner — shortcut to the confirm-email card in Profile. */}
-                {needsEmailVerify && (
-                    <TouchableOpacity
-                        onPress={() => navigation.navigate('Profile')}
-                        activeOpacity={0.85}
-                        style={[guestBanner.wrap, verifyBanner.wrap]}
-                        accessibilityRole="button"
-                        accessibilityLabel={t('confirmEmailBanner')}
-                    >
-                        <Text allowFontScaling={false} style={guestBanner.icon}>📧</Text>
-                        <View style={{flex: 1}}>
-                            <Text allowFontScaling={false} style={guestBanner.title}>{t('confirmEmailBanner')}</Text>
-                            <Text allowFontScaling={false} style={guestBanner.sub}>{t('confirmEmail')}</Text>
-                        </View>
-                        <Text allowFontScaling={false} style={guestBanner.arrow}>›</Text>
-                    </TouchableOpacity>
-                )}
-
                 <View accessible={true} accessibilityLabel="Main menu options">
                     {menus.map((menu: MenuType, index: number) => (
                         <MenuButton menu={menu} key={index}/>
                     ))}
                 </View>
+
+                {/* Account hints live *below* the menu so they never shift the
+                    buttons around. Guest with no email → create an account;
+                    email pending confirmation → confirm it. Both go to Profile,
+                    which is otherwise buried in Settings. */}
+                {isGuestNoEmail && (
+                    <TouchableOpacity
+                        onPress={() => navigation.navigate('Profile')}
+                        activeOpacity={0.85}
+                        style={accountHint.wrap}
+                        accessibilityRole="button"
+                        accessibilityLabel={t('createYourAccount')}
+                    >
+                        <Text allowFontScaling={false} style={accountHint.icon}>👻</Text>
+                        <Text allowFontScaling={false} style={accountHint.label} numberOfLines={1}>
+                            {t('createYourAccount')}
+                        </Text>
+                        <Text allowFontScaling={false} style={accountHint.arrow}>›</Text>
+                    </TouchableOpacity>
+                )}
+
+                {needsEmailVerify && (
+                    <TouchableOpacity
+                        onPress={() => navigation.navigate('Profile')}
+                        activeOpacity={0.85}
+                        style={[accountHint.wrap, verifyHint.wrap]}
+                        accessibilityRole="button"
+                        accessibilityLabel={t('confirmEmailBanner')}
+                    >
+                        <Text allowFontScaling={false} style={accountHint.icon}>📧</Text>
+                        <Text allowFontScaling={false} style={accountHint.label} numberOfLines={1}>
+                            {t('confirmEmailBanner')}
+                        </Text>
+                        <Text allowFontScaling={false} style={accountHint.arrow}>›</Text>
+                    </TouchableOpacity>
+                )}
 
             </ScrollView>
 
@@ -247,31 +246,29 @@ const Home: React.FC<Props> = () => {
     );
 };
 
-const guestBanner = {
+const accountHint = {
     wrap: {
         flexDirection: 'row' as const,
         alignItems: 'center' as const,
         alignSelf: 'center' as const,
-        width: '90%' as const,
-        backgroundColor: 'rgba(255,255,255,0.10)',
-        borderColor: 'rgba(255,255,255,0.20)',
+        backgroundColor: 'rgba(255,255,255,0.08)',
+        borderColor: 'rgba(255,255,255,0.16)',
         borderWidth: 1,
-        borderRadius: 18,
-        paddingVertical: 12,
+        borderRadius: 999,
+        paddingVertical: 8,
         paddingHorizontal: 14,
-        marginBottom: 18,
-        gap: 12,
+        marginTop: 14,
+        gap: 8,
     },
-    icon: {fontSize: 28},
-    title: {color: '#fff', fontSize: 15, fontWeight: '800' as const, letterSpacing: 0.3},
-    sub: {color: 'rgba(255,255,255,0.7)', fontSize: 12, marginTop: 2},
-    arrow: {color: 'rgba(255,255,255,0.7)', fontSize: 28, fontWeight: '700' as const},
+    icon: {fontSize: 16},
+    label: {color: 'rgba(255,255,255,0.85)', fontSize: 13, fontWeight: '600' as const},
+    arrow: {color: 'rgba(255,255,255,0.55)', fontSize: 18, fontWeight: '700' as const},
 };
 
-const verifyBanner = {
+const verifyHint = {
     wrap: {
         backgroundColor: 'rgba(247,151,30,0.14)',
-        borderColor: 'rgba(247,151,30,0.55)',
+        borderColor: 'rgba(247,151,30,0.45)',
     },
 };
 

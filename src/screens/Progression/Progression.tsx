@@ -1,4 +1,4 @@
-import React, {useCallback, useRef, useState} from 'react';
+import React, {useCallback, useMemo, useRef, useState} from 'react';
 import {ActivityIndicator, FlatList, View} from 'react-native';
 import {useFocusEffect} from '@react-navigation/core';
 import {getTrophyEmoji} from "../../utils/helpers.ts";
@@ -11,6 +11,7 @@ import {MyRank, ScoreEntry} from "../../services/types.ts";
 
 // store
 import {useConfigStore} from "../../store/configStore.ts";
+import {useAuthStore} from "../../store/authStore.ts";
 
 // components
 import BackHeader from "../../components/ui/BackHeader/BackHeader.tsx";
@@ -40,6 +41,11 @@ function Progression() {
     const inFlightRef = useRef(false);  // guards against overlapping fetches
 
     const setLevelLength = useConfigStore(s => s.setLevelLength);
+    const setAdsEnabled = useConfigStore(s => s.setAdsEnabled);
+
+    // The signed-in player's id — used to highlight their own row(s) in the
+    // list now that usernames are no longer unique.
+    const myPlayerId = useAuthStore(s => s.player?.id);
 
     // Loads one leaderboard page. `reset` restarts from page 1 (focus refresh);
     // otherwise it appends the next page for infinite scroll.
@@ -75,6 +81,9 @@ function Progression() {
             if (config?.TAPS_PER_LEVEL) {
                 setLevelLength(config.TAPS_PER_LEVEL);
             }
+            if (config && typeof config.adsEnabled === 'boolean') {
+                setAdsEnabled(config.adsEnabled);
+            }
         } catch (error) {
             console.error('Failed to load leaderboard:', error);
         } finally {
@@ -99,9 +108,12 @@ function Progression() {
     // ProgressItem owns the bar math (reads levelLength from the global
     // configStore); we just hand it the leaderboard's level ceiling so every
     // row fills relative to the highest level reached.
-    const topLevel = entries.reduce(
-        (max, entry) => (entry.levelReached > max ? entry.levelReached : max),
-        1,
+    const topLevel = useMemo(
+        () => entries.reduce(
+            (max, entry) => (entry.levelReached > max ? entry.levelReached : max),
+            1,
+        ),
+        [entries],
     );
 
     const renderFooter = () => {
@@ -142,6 +154,7 @@ function Progression() {
                             topLevel={topLevel}
                             trophy={getTrophyEmoji(index)}
                             index={index}
+                            isMe={!!myPlayerId && item.playerId === myPlayerId}
                         />
                     )}
                     accessibilityRole="list"
@@ -177,6 +190,7 @@ function Progression() {
                         topLevel={topLevel}
                         trophy={getTrophyEmoji((myRank.rank ?? 1) - 1)}
                         index={(myRank.rank ?? 1) - 1}
+                        isMe
                     />
                 </View>
             )}

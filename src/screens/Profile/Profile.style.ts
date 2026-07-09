@@ -59,6 +59,9 @@ export default StyleSheet.create({
     cameraIcon: {
         fontSize: ms(16),
     },
+    avatarUploading: {
+        backgroundColor: PURPLE_DARK,
+    },
     changePhotoText: {
         color: 'rgba(255,255,255,0.65)',
         fontSize: ms(13),
@@ -100,6 +103,20 @@ export default StyleSheet.create({
         color: WHITE,
         marginBottom: vs(12),
         letterSpacing: 0.5,
+    },
+    guestUsername: {
+        color: WHITE,
+        fontSize: ms(16),
+        fontWeight: '700',
+        textAlign: 'center',
+        marginBottom: vs(4),
+    },
+    guestIdText: {
+        color: 'rgba(255,255,255,0.5)',
+        fontSize: ms(11),
+        textAlign: 'center',
+        marginBottom: vs(12),
+        letterSpacing: 0.3,
     },
     guestHint: {
         color: 'rgba(255,255,255,0.55)',
@@ -236,6 +253,35 @@ export default StyleSheet.create({
         marginTop: vs(14),
         letterSpacing: 0.3,
     },
+    guestToggleText: {
+        color: 'rgba(255,255,255,0.7)',
+        fontSize: ms(14),
+        textAlign: 'center',
+        marginTop: vs(16),
+    },
+    guestToggleAccent: {
+        color: GRADIENT_LIGHT,
+        fontWeight: '800',
+    },
+
+    /* ── Confirm email card ─────────────────────────── */
+    verifyCard: {
+        borderColor: 'rgba(247,151,30,0.6)',
+        backgroundColor: 'rgba(247,151,30,0.12)',
+    },
+    verifyHint: {
+        color: 'rgba(255,255,255,0.7)',
+        fontSize: ms(13),
+        lineHeight: ms(19),
+        marginBottom: vs(10),
+    },
+    resendText: {
+        color: GRADIENT_LIGHT,
+        fontSize: ms(13),
+        fontWeight: '700',
+        textAlign: 'center',
+        marginTop: vs(12),
+    },
 
     /* ── Account credential inputs ──────────────────── */
     accountInput: {
@@ -278,6 +324,13 @@ export default StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         paddingHorizontal: ms(28),
+    },
+    // Wraps the modal card so it lifts above the keyboard when an input is focused.
+    modalAvoider: {
+        flex: 1,
+        width: '100%',
+        alignItems: 'center',
+        justifyContent: 'center',
     },
     modalCard: {
         width: '100%',

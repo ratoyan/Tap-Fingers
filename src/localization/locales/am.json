@@ -65,6 +65,8 @@
   "checkDetails": "Ստուգեք տվյալները",
   "signInFailed": "Մուտքը ձախողվեց",
   "tryAgain": "Խնդրում ենք կրկին փորձել",
+  "signInToAccount": "Մուտք գործեք ձեր հաշիվ",
+  "signedInMsg": "Դուք մուտք գործեցիք ձեր հաշիվ։",
 
   "guestPlayer": "Հյուր խաղացող",
   "guestSaveHint": "Ստեղծեք հաշիվ՝ առաջընթացը պահպանելու համար",
@@ -96,6 +98,7 @@
   "invalidNameMsg": "Օգտագործեք 3–32 տառ, թիվ կամ ընդգծում։",
   "saved": "Պահպանված է",
   "nameUpdatedMsg": "Ձեր անունը թարմացվեց։",
+  "photoUpdatedMsg": "Ձեր լուսանկարը թարմացվեց։",
   "couldNotSave": "Չհաջողվեց պահպանել",
   "passwordRequired": "Պահանջվում է գաղտնաբառ",
   "enterCurrentPassword": "Մուտքագրեք ձեր ընթացիկ գաղտնաբառը։",
@@ -106,6 +109,16 @@
   "weakPassword": "Թույլ գաղտնաբառ",
   "weakPasswordMsg": "Նոր գաղտնաբառը պետք է լինի առնվազն 6 նիշ։",
   "passwordUpdatedMsg": "Ձեր գաղտնաբառը թարմացվեց։",
+  "confirmEmail": "Հաստատեք ձեր email-ը",
+  "confirmEmailHint": "Մուտքագրեք {{email}}-ին ուղարկված 6-նիշ կոդը։",
+  "confirm": "Հաստատել",
+  "resendCode": "Կրկին ուղարկել կոդը",
+  "codeSent": "Կոդն ուղարկվեց",
+  "codeSentMsg": "Նոր կոդը ճանապարհին է ձեր email-ին։",
+  "emailConfirmed": "Email-ը հաստատվեց",
+  "emailConfirmedMsg": "Ձեր email հասցեն այժմ հաստատված է։",
+  "enterCode6": "Մուտքագրեք 6-նիշ կոդը։",
+  "confirmEmailBanner": "Հաստատեք ձեր email հասցեն",
   "enterPasswordToDelete": "Մուտքագրեք գաղտնաբառը՝ հաշիվը ջնջելու համար։",
   "couldNotDelete": "Չհաջողվեց ջնջել",
 
@@ -175,5 +188,6 @@
   "useSlowMotion": "Օգտագործել դանդաղեցումը",
   "buySlowMotion": "Գնել դանդաղեցում",
   "slowMotionActive": "Դանդաղեցումն ակտիվ է",
-  "available": "հասանելի"
+  "available": "հասանելի",
+  "you": "Դուք"
 }

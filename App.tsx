@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react';
-import {ActivityIndicator, Platform, View} from 'react-native';
+import {ActivityIndicator, AppState, Platform, View} from 'react-native';
 import {NavigationContainer} from "@react-navigation/native";
 // @ts-ignore
 import VersionCheck from 'react-native-version-check';
@@ -11,6 +11,7 @@ import UpdateModal from "./src/components/ui/UpdateModal/UpdateModal.tsx";
 import NoticeModal from "./src/components/ui/NoticeModal/NoticeModal.tsx";
 import Splash from "./src/screens/Splash/Splash.tsx";
 import {useAuthStore} from "./src/store/authStore.ts";
+import {syncGlobalConfig} from "./src/services/configSync.ts";
 import {navigationRef} from "./src/navigation/navigationRef.ts";
 import {DARK_PURPLE} from "./src/constants/colors.ts";
 
@@ -31,6 +32,18 @@ function App() {
     useEffect(() => {
         bootstrap();
     }, [bootstrap]);
+
+    // Pull the admin-controlled global config (ads on/off, level length) at
+    // startup AND every time the app returns to the foreground, so an admin
+    // toggle of the ad switch reaches an already-running app — not just on a
+    // fresh launch. (Home also re-syncs on focus for in-session navigation.)
+    useEffect(() => {
+        syncGlobalConfig();
+        const sub = AppState.addEventListener('change', state => {
+            if (state === 'active') syncGlobalConfig();
+        });
+        return () => sub.remove();
+    }, []);
 
     useEffect(() => {
         (async () => {

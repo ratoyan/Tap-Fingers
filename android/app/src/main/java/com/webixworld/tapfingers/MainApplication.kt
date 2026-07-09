@@ -1,4 +1,4 @@
-package com.tapfingers
+package com.webixworld.tapfingers
 
 import android.app.Application
 import com.facebook.react.PackageList

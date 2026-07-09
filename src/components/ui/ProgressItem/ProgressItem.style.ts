@@ -18,6 +18,29 @@ export default StyleSheet.create({
         borderWidth: 1,
         borderColor: 'rgba(255,255,255,0.15)',
     },
+    // Applied on top of `progressItem` for the signed-in player's own row, so
+    // they can spot themselves while scrolling even when another player shares
+    // the same (no-longer-unique) username.
+    progressItemMe: {
+        borderWidth: 2,
+        borderColor: GOLD,
+        backgroundColor: 'rgba(255,215,0,0.10)',
+        shadowColor: GOLD,
+        shadowOpacity: 0.6,
+    },
+    youBadge: {
+        marginLeft: ms(8),
+        paddingHorizontal: ms(8),
+        paddingVertical: vs(2),
+        borderRadius: ms(10),
+        backgroundColor: GOLD,
+    },
+    youBadgeText: {
+        fontSize: ms(11),
+        fontWeight: '800',
+        color: '#3A2A00',
+        letterSpacing: 0.4,
+    },
     avatar: {
         width: ms(64),
         height: ms(64),
@@ -50,11 +73,18 @@ export default StyleSheet.create({
         justifyContent: 'space-between',
         marginBottom: vs(8),
     },
+    nameRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        flexShrink: 1,
+        marginRight: ms(8),
+    },
     level: {
         fontSize: ms(18),
         color: WHITE,
         fontWeight: '800',
         letterSpacing: 0.3,
+        flexShrink: 1,
     },
     progressWrapper: {
         marginBottom: vs(8),

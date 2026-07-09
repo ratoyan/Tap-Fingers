@@ -65,6 +65,8 @@
   "checkDetails": "Check your details",
   "signInFailed": "Sign-in failed",
   "tryAgain": "Please try again",
+  "signInToAccount": "Sign in to your account",
+  "signedInMsg": "You're signed in to your account.",
 
   "guestPlayer": "Guest Player",
   "guestSaveHint": "Create an account to save your progress",
@@ -96,6 +98,7 @@
   "invalidNameMsg": "Use 3–32 letters, numbers or underscores.",
   "saved": "Saved",
   "nameUpdatedMsg": "Your name has been updated.",
+  "photoUpdatedMsg": "Your photo has been updated.",
   "couldNotSave": "Could not save",
   "passwordRequired": "Password required",
   "enterCurrentPassword": "Enter your current password.",
@@ -106,6 +109,16 @@
   "weakPassword": "Weak password",
   "weakPasswordMsg": "New password must be at least 6 characters.",
   "passwordUpdatedMsg": "Your password has been updated.",
+  "confirmEmail": "Confirm your email",
+  "confirmEmailHint": "Enter the 6-digit code we sent to {{email}}.",
+  "confirm": "Confirm",
+  "resendCode": "Resend code",
+  "codeSent": "Code sent",
+  "codeSentMsg": "A new code is on its way to your email.",
+  "emailConfirmed": "Email confirmed",
+  "emailConfirmedMsg": "Your email address is now verified.",
+  "enterCode6": "Enter the 6-digit code.",
+  "confirmEmailBanner": "Confirm your email address",
   "enterPasswordToDelete": "Enter your password to delete your account.",
   "couldNotDelete": "Could not delete",
 
@@ -175,5 +188,6 @@
   "useSlowMotion": "Use slow motion",
   "buySlowMotion": "Buy slow motion",
   "slowMotionActive": "Slow motion active",
-  "available": "available"
+  "available": "available",
+  "you": "You"
 }

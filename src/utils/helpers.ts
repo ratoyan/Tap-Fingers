@@ -5,6 +5,23 @@ import {STORAGE_KEYS} from "./storageKeys.ts";
 let music: Sound | null = null;
 let isPlaying = false;
 
+// Gives a brand-new player one of each gameplay helper (bomb / slow / shield).
+// Idempotent: a no-op once the counts have been written, so it's safe to call
+// from every entry point (Welcome's guest button and the auto-guest bootstrap).
+export async function seedHelperDefaults(): Promise<void> {
+    try {
+        const existing = await storage.getItem(STORAGE_KEYS.BOMB_COUNT);
+        if (existing != null) return;
+        await storage.multiSet([
+            [STORAGE_KEYS.BOMB_COUNT, JSON.stringify(1)],
+            [STORAGE_KEYS.SLOW_COUNT, JSON.stringify(1)],
+            [STORAGE_KEYS.SHIELD_COUNT, JSON.stringify(1)],
+        ]);
+    } catch (error) {
+        console.log('Seed error:', error);
+    }
+}
+
 export function getTrophyEmoji(index: any) {
     switch (index) {
         case 0:

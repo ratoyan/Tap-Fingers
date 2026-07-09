@@ -65,6 +65,8 @@
   "checkDetails": "Проверьте данные",
   "signInFailed": "Не удалось войти",
   "tryAgain": "Попробуйте ещё раз",
+  "signInToAccount": "Войдите в свой аккаунт",
+  "signedInMsg": "Вы вошли в свой аккаунт.",
 
   "guestPlayer": "Гость",
   "guestSaveHint": "Создайте аккаунт, чтобы сохранить прогресс",
@@ -96,6 +98,7 @@
   "invalidNameMsg": "Используйте 3–32 буквы, цифры или подчёркивания.",
   "saved": "Сохранено",
   "nameUpdatedMsg": "Ваше имя обновлено.",
+  "photoUpdatedMsg": "Ваше фото обновлено.",
   "couldNotSave": "Не удалось сохранить",
   "passwordRequired": "Требуется пароль",
   "enterCurrentPassword": "Введите текущий пароль.",
@@ -106,6 +109,16 @@
   "weakPassword": "Слабый пароль",
   "weakPasswordMsg": "Новый пароль должен содержать не менее 6 символов.",
   "passwordUpdatedMsg": "Ваш пароль обновлён.",
+  "confirmEmail": "Подтвердите email",
+  "confirmEmailHint": "Введите 6-значный код, отправленный на {{email}}.",
+  "confirm": "Подтвердить",
+  "resendCode": "Отправить код ещё раз",
+  "codeSent": "Код отправлен",
+  "codeSentMsg": "Новый код уже летит на вашу почту.",
+  "emailConfirmed": "Email подтверждён",
+  "emailConfirmedMsg": "Ваш email теперь подтверждён.",
+  "enterCode6": "Введите 6-значный код.",
+  "confirmEmailBanner": "Подтвердите ваш email",
   "enterPasswordToDelete": "Введите пароль, чтобы удалить аккаунт.",
   "couldNotDelete": "Не удалось удалить",
 
@@ -175,5 +188,6 @@
   "useSlowMotion": "Использовать замедление",
   "buySlowMotion": "Купить замедление",
   "slowMotionActive": "Замедление активно",
-  "available": "доступно"
+  "available": "доступно",
+  "you": "Вы"
 }

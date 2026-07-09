@@ -18,7 +18,6 @@ import {useNavigation} from '@react-navigation/core';
 import LinearGradient from 'react-native-linear-gradient';
 import {launchImageLibrary} from 'react-native-image-picker';
 import {storage} from '../../db/kvStore.ts';
-import {STORAGE_KEYS} from '../../utils/storageKeys.ts';
 
 // services / store
 import * as authService from '../../services/authService.ts';
@@ -33,18 +32,16 @@ import Ghost from '../../assets/icons/Ghost.tsx';
 import PersonIcon from '../../assets/icons/PersonIcon.tsx';
 import MailIcon from '../../assets/icons/MailIcon.tsx';
 import LockIcon from '../../assets/icons/LockIcon.tsx';
+import EyeIcon from '../../assets/icons/EyeIcon.tsx';
 
 // data
 import {avatarForId} from '../../data/avatars.ts';
 import {isTablet} from '../../utils/responsive.ts';
+import {useKeyboardAwareScroll} from '../../hooks/useKeyboardAwareScroll.ts';
 
 // styles
 import styles from './Profile.style.ts';
 import {GRADIENT_LIGHT, PURPLE, PURPLE_DARK, VIOLET} from '../../constants/colors.ts';
-
-// The profile photo has no backend counterpart — it stays device-local.
-// Shared with BackHeader (Settings) so both read the same picture.
-const STORAGE_KEY_PHOTO = STORAGE_KEYS.PROFILE_PHOTO;
 
 function Profile() {
     const {t} = useTranslation();
@@ -52,17 +49,28 @@ function Profile() {
     const player = useAuthStore(s => s.player);
     const stats = useAuthStore(s => s.stats);
     const setSession = useAuthStore(s => s.setSession);
+    const refreshProfile = useAuthStore(s => s.refreshProfile);
 
-    const [photoUri,      setPhotoUri]      = useState<string>('');
+    // The profile photo is server-stored. `serverAvatar` is the authoritative
+    // URL from the backend; `localPreview` shows the just-picked image instantly
+    // while the upload is in flight, then clears once the server copy is live.
+    const serverAvatar = userService.resolveAvatarUrl(player);
+    const [localPreview,   setLocalPreview]   = useState<string>('');
+    const [uploadingPhoto, setUploadingPhoto] = useState(false);
+    const shownPhoto = localPreview || serverAvatar || '';
+
     const [sheetVisible,  setSheetVisible]  = useState(false);
     const [cameraVisible, setCameraVisible] = useState(false);
     const [nameInput,     setNameInput]     = useState('');
     const [savingName,    setSavingName]    = useState(false);
 
-    // Guest → email/password sign-up form
+    // Guest account block — either create a new account (keeps guest progress)
+    // or sign in to a different existing account (replaces the guest session).
+    const [authMode,    setAuthMode]    = useState<'register' | 'login'>('register');
     const [regName,     setRegName]     = useState('');
     const [regEmail,    setRegEmail]    = useState('');
     const [regPassword, setRegPassword] = useState('');
+    const [showRegPassword, setShowRegPassword] = useState(false);
     const [linking,     setLinking]     = useState(false);
     const [focusedField, setFocusedField] = useState<'name' | 'email' | 'password' | null>(null);
 
@@ -81,23 +89,31 @@ function Profile() {
     const [deletePassword, setDeletePassword] = useState('');
     const [deleting,       setDeleting]       = useState(false);
 
+    // Email confirmation
+    const [verifyCode, setVerifyCode] = useState('');
+    const [verifying,  setVerifying]  = useState(false);
+    const [resending,  setResending]  = useState(false);
+
     const isGuest = player?.accountType === 'guest';
     const isEmailAccount = player?.accountType === 'email';
+    // Email accounts that haven't confirmed their address yet.
+    const needsEmailVerify = isEmailAccount && player?.emailVerified === false;
+    // A guest that has entered an email but not yet confirmed it — stays a guest
+    // (per the backend) until the code is verified, so we show the confirm card
+    // inside the guest view rather than the sign-up form.
+    const guestPendingEmail = isGuest && !!player?.email && player?.emailVerified === false;
     const displayName = player?.username || 'Player';
     // Stable per-user avatar, shown when no photo has been uploaded.
     const avatar = avatarForId(player?.id);
+
+    // Keep the focused input above the keyboard (edge-to-edge disables the
+    // native resize on Android SDK 36 / RN 0.84, so we handle it in JS).
+    const {scrollRef, onScroll, onInputFocus, keyboardSpacerStyle} = useKeyboardAwareScroll();
 
     // Field icon sizing/colour — mirrors the Welcome register form.
     const fieldIconSize = isTablet ? 24 : 21;
     const iconColor = (field: 'name' | 'email' | 'password') =>
         focusedField === field ? VIOLET : 'rgba(255,255,255,0.55)';
-
-    useEffect(() => {
-        (async () => {
-            const savedPhoto = await storage.getItem(STORAGE_KEY_PHOTO);
-            if (savedPhoto) setPhotoUri(savedPhoto);
-        })();
-    }, []);
 
     // Keep the editable name field in sync with the server username.
     useEffect(() => {
@@ -135,12 +151,49 @@ function Profile() {
             await authService.linkEmail(regName.trim(), regEmail.trim(), regPassword);
             Keyboard.dismiss();
             await setSession();
-            notice.success(t('welcomeExclaim'), t('progressSavedMsg'));
+            // Still a guest until the email is confirmed — prompt for the code.
+            notice.success(t('confirmEmail'), t('confirmEmailHint', {email: regEmail.trim()}));
         } catch (error: any) {
             notice.error(t('signUpFailed'), error?.message ?? t('tryAgain'));
         } finally {
             setLinking(false);
         }
+    }
+
+    // Signs the guest into a DIFFERENT, already-existing account. Unlike the
+    // sign-up above (which upgrades this guest in place), this swaps to another
+    // account's session, so the guest's local progress is left behind on the
+    // server under its own guest_id.
+    async function handleEmailLogin() {
+        if (linking) return;
+        const email = regEmail.trim();
+        if (!/^\S+@\S+\.\S+$/.test(email)) {
+            notice.error(t('checkDetails'), t('validEmailError'));
+            return;
+        }
+        if (regPassword.length < 6) {
+            notice.error(t('checkDetails'), t('passwordMinError'));
+            return;
+        }
+        setLinking(true);
+        try {
+            await authService.emailLogin(email, regPassword);
+            Keyboard.dismiss();
+            await setSession();
+            notice.success(t('welcomeBack'), t('signedInMsg'));
+            // Reset to Home so the whole app reflects the new account cleanly.
+            navigation.reset({index: 0, routes: [{name: 'Home'}]});
+        } catch (error: any) {
+            notice.error(t('signInFailed'), error?.message ?? t('tryAgain'));
+        } finally {
+            setLinking(false);
+        }
+    }
+
+    function toggleAuthMode() {
+        if (linking) return;
+        setFocusedField(null);
+        setAuthMode(prev => (prev === 'register' ? 'login' : 'register'));
     }
 
     // ── Username (server-owned) ─────────────────────────────
@@ -217,6 +270,41 @@ function Profile() {
         }
     }
 
+    // ── Email confirmation ──────────────────────────────────
+
+    async function handleVerifyEmail() {
+        if (verifying) return;
+        if (verifyCode.trim().length !== 6) {
+            notice.error(t('checkDetails'), t('enterCode6'));
+            return;
+        }
+        setVerifying(true);
+        try {
+            await authService.verifyEmail(verifyCode.trim());
+            await setSession();
+            setVerifyCode('');
+            Keyboard.dismiss();
+            notice.success(t('emailConfirmed'), t('emailConfirmedMsg'));
+        } catch (error: any) {
+            notice.error(t('couldNotUpdate'), error?.message ?? t('tryAgain'));
+        } finally {
+            setVerifying(false);
+        }
+    }
+
+    async function handleResendCode() {
+        if (resending) return;
+        setResending(true);
+        try {
+            await authService.resendVerification();
+            notice.success(t('codeSent'), t('codeSentMsg'));
+        } catch (error: any) {
+            notice.error(t('couldNotUpdate'), error?.message ?? t('tryAgain'));
+        } finally {
+            setResending(false);
+        }
+    }
+
     // ── Delete account ──────────────────────────────────────
 
     async function handleDeleteAccount() {
@@ -241,10 +329,24 @@ function Profile() {
 
     // ── Photo (device-local) ────────────────────────────────
 
-    async function handlePickResult(uri: string) {
-        setPhotoUri(uri);
-        await storage.setItem(STORAGE_KEY_PHOTO, uri);
+    // Uploads the picked/captured image to the backend, showing it immediately
+    // as an optimistic preview and refreshing the profile once it's stored.
+    async function changeAvatar(uri: string) {
+        if (uploadingPhoto) return;
         setSheetVisible(false);
+        setLocalPreview(uri);
+        setUploadingPhoto(true);
+        try {
+            await userService.uploadAvatar(uri);
+            await refreshProfile();
+            setLocalPreview('');
+            notice.success(t('saved'), t('photoUpdatedMsg'));
+        } catch (error: any) {
+            setLocalPreview('');
+            notice.error(t('couldNotSave'), error?.message ?? t('tryAgain'));
+        } finally {
+            setUploadingPhoto(false);
+        }
     }
 
     function handleCamera() {
@@ -254,18 +356,58 @@ function Profile() {
 
     function handleCameraCapture(uri: string) {
         setCameraVisible(false);
-        setPhotoUri(uri);
-        storage.setItem(STORAGE_KEY_PHOTO, uri);
+        changeAvatar(uri);
     }
 
     function handleGallery() {
         launchImageLibrary({mediaType: 'photo', quality: 0.8, selectionLimit: 1}, response => {
             const uri = response.assets?.[0]?.uri;
-            if (uri) handlePickResult(uri);
+            if (uri) changeAvatar(uri);
         });
     }
 
     const nameChanged = nameInput.trim() !== (player?.username || '');
+
+    // Confirm-email card — shared by the guest (pending) and email (unverified) views.
+    function renderVerifyCard() {
+        return (
+            <View style={[styles.inputCard, styles.verifyCard, {marginBottom: 14}]}>
+                <Text allowFontScaling={false} style={styles.inputLabel}>📧  {t('confirmEmail')}</Text>
+                <Text allowFontScaling={false} style={styles.verifyHint}>
+                    {t('confirmEmailHint', {email: player?.email ?? ''})}
+                </Text>
+                <TextInput
+                    value={verifyCode}
+                    onChangeText={(v) => setVerifyCode(v.replace(/[^0-9]/g, '').slice(0, 6))}
+                    style={[styles.accountInput, {textAlign: 'center', letterSpacing: 6, fontSize: 22}]}
+                    placeholder="••••••"
+                    placeholderTextColor={VIOLET}
+                    keyboardType="number-pad"
+                    maxLength={6}
+                    onFocus={onInputFocus}
+                    editable={!verifying}
+                    allowFontScaling={false}
+                    returnKeyType="done"
+                    onSubmitEditing={handleVerifyEmail}
+                />
+                <TouchableOpacity
+                    onPress={handleVerifyEmail}
+                    disabled={verifying}
+                    activeOpacity={0.8}
+                    style={[saveBtn, verifying && {opacity: 0.4}]}
+                >
+                    {verifying
+                        ? <ActivityIndicator size="small" color="#fff"/>
+                        : <Text allowFontScaling={false} style={saveBtnText}>{t('confirm')}</Text>}
+                </TouchableOpacity>
+                <TouchableOpacity onPress={handleResendCode} disabled={resending} hitSlop={{top: 8, bottom: 8, left: 8, right: 8}}>
+                    <Text allowFontScaling={false} style={styles.resendText}>
+                        {resending ? t('loading') : t('resendCode')}
+                    </Text>
+                </TouchableOpacity>
+            </View>
+        );
+    }
 
     // ── Render ──────────────────────────────────────────────
 
@@ -283,7 +425,10 @@ function Profile() {
                 behavior={Platform.OS === 'ios' ? 'padding' : undefined}
             >
                 <ScrollView
-                    contentContainerStyle={styles.scrollContainer}
+                    ref={scrollRef}
+                    onScroll={onScroll}
+                    scrollEventThrottle={16}
+                    contentContainerStyle={[styles.scrollContainer, keyboardSpacerStyle]}
                     keyboardShouldPersistTaps="handled"
                     keyboardDismissMode="on-drag"
                     showsVerticalScrollIndicator={false}
@@ -297,31 +442,47 @@ function Profile() {
                             </View>
 
                             <Text allowFontScaling={false} style={styles.guestName}>👻 {t('guestPlayer')}</Text>
+                            {!!player?.username && (
+                                <Text allowFontScaling={false} style={styles.guestUsername}>{player.username}</Text>
+                            )}
+                            {!!player?.guestId && (
+                                <Text allowFontScaling={false} style={styles.guestIdText} selectable>
+                                    ID: {player.guestId}
+                                </Text>
+                            )}
                             <Text allowFontScaling={false} style={styles.guestHint}>
                                 {t('guestSaveHint')}
                             </Text>
 
-                            {/* Email sign-up form */}
+                            {/* A guest with a pending email confirms it here (and only
+                                then becomes a real account); otherwise the sign-up/in form. */}
+                            {guestPendingEmail ? renderVerifyCard() : (
                             <View style={styles.guestForm}>
-                                <Text allowFontScaling={false} style={styles.formTitle}>✨ {t('createYourAccount')}</Text>
+                                <Text allowFontScaling={false} style={styles.formTitle}>
+                                    {authMode === 'register'
+                                        ? `✨ ${t('createYourAccount')}`
+                                        : `👋 ${t('signInToAccount')}`}
+                                </Text>
 
-                                <View style={[styles.fieldRow, focusedField === 'name' && styles.fieldRowFocused]}>
-                                    <PersonIcon size={fieldIconSize} color={iconColor('name')} style={styles.fieldIcon} />
-                                    <TextInput
-                                        style={styles.fieldInput}
-                                        placeholder={t('name')}
-                                        placeholderTextColor="rgba(255,255,255,0.45)"
-                                        value={regName}
-                                        onChangeText={setRegName}
-                                        onFocus={() => setFocusedField('name')}
-                                        onBlur={() => setFocusedField(null)}
-                                        autoCapitalize="none"
-                                        autoCorrect={false}
-                                        editable={!linking}
-                                        allowFontScaling={false}
-                                        returnKeyType="next"
-                                    />
-                                </View>
+                                {authMode === 'register' && (
+                                    <View style={[styles.fieldRow, focusedField === 'name' && styles.fieldRowFocused]}>
+                                        <PersonIcon size={fieldIconSize} color={iconColor('name')} style={styles.fieldIcon} />
+                                        <TextInput
+                                            style={styles.fieldInput}
+                                            placeholder={t('name')}
+                                            placeholderTextColor="rgba(255,255,255,0.45)"
+                                            value={regName}
+                                            onChangeText={setRegName}
+                                            onFocus={() => { setFocusedField('name'); onInputFocus(); }}
+                                            onBlur={() => setFocusedField(null)}
+                                            autoCapitalize="none"
+                                            autoCorrect={false}
+                                            editable={!linking}
+                                            allowFontScaling={false}
+                                            returnKeyType="next"
+                                        />
+                                    </View>
+                                )}
 
                                 <View style={[styles.fieldRow, focusedField === 'email' && styles.fieldRowFocused]}>
                                     <MailIcon size={fieldIconSize} color={iconColor('email')} style={styles.fieldIcon} />
@@ -331,7 +492,7 @@ function Profile() {
                                         placeholderTextColor="rgba(255,255,255,0.45)"
                                         value={regEmail}
                                         onChangeText={setRegEmail}
-                                        onFocus={() => setFocusedField('email')}
+                                        onFocus={() => { setFocusedField('email'); onInputFocus(); }}
                                         onBlur={() => setFocusedField(null)}
                                         keyboardType="email-address"
                                         autoCapitalize="none"
@@ -350,21 +511,29 @@ function Profile() {
                                         placeholderTextColor="rgba(255,255,255,0.45)"
                                         value={regPassword}
                                         onChangeText={setRegPassword}
-                                        onFocus={() => setFocusedField('password')}
+                                        onFocus={() => { setFocusedField('password'); onInputFocus(); }}
                                         onBlur={() => setFocusedField(null)}
-                                        secureTextEntry
+                                        secureTextEntry={!showRegPassword}
                                         autoCapitalize="none"
                                         autoCorrect={false}
                                         editable={!linking}
                                         allowFontScaling={false}
                                         returnKeyType="done"
-                                        onSubmitEditing={handleEmailSignUp}
+                                        onSubmitEditing={authMode === 'register' ? handleEmailSignUp : handleEmailLogin}
                                     />
+                                    <TouchableOpacity
+                                        onPress={() => setShowRegPassword(v => !v)}
+                                        hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}
+                                        accessibilityRole="button"
+                                        accessibilityLabel={showRegPassword ? 'Hide password' : 'Show password'}
+                                    >
+                                        <EyeIcon size={fieldIconSize} off={!showRegPassword} color={iconColor('password')} />
+                                    </TouchableOpacity>
                                 </View>
 
                                 <TouchableOpacity
                                     style={styles.linkButton}
-                                    onPress={handleEmailSignUp}
+                                    onPress={authMode === 'register' ? handleEmailSignUp : handleEmailLogin}
                                     disabled={linking}
                                     activeOpacity={0.85}
                                 >
@@ -376,14 +545,42 @@ function Profile() {
                                     >
                                         {linking
                                             ? <ActivityIndicator color="#fff" />
-                                            : <Text allowFontScaling={false} style={styles.linkButtonText}>{t('createAccount')}</Text>}
+                                            : <Text allowFontScaling={false} style={styles.linkButtonText}>
+                                                {authMode === 'register' ? t('createAccount') : t('signIn')}
+                                            </Text>}
                                     </LinearGradient>
                                 </TouchableOpacity>
 
-                                <Text allowFontScaling={false} style={styles.formFootnote}>
-                                    🔒 {t('progressSafeNote')}
-                                </Text>
+                                {/* Switch between "create account" and "sign in to another account" */}
+                                <TouchableOpacity
+                                    onPress={toggleAuthMode}
+                                    disabled={linking}
+                                    hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}
+                                >
+                                    <Text allowFontScaling={false} style={styles.guestToggleText}>
+                                        {authMode === 'register' ? t('haveAccount') : t('noAccount')}
+                                        <Text style={styles.guestToggleAccent}>
+                                            {authMode === 'register' ? t('signInAction') : t('signUp')}
+                                        </Text>
+                                    </Text>
+                                </TouchableOpacity>
+
+                                {authMode === 'register' && (
+                                    <Text allowFontScaling={false} style={styles.formFootnote}>
+                                        🔒 {t('progressSafeNote')}
+                                    </Text>
+                                )}
                             </View>
+                            )}
+
+                            {/* Delete guest account — wipes this guest session and its progress */}
+                            <TouchableOpacity
+                                style={styles.deleteButton}
+                                onPress={() => { setDeletePassword(''); setDeleteModal(true); }}
+                                activeOpacity={0.85}
+                            >
+                                <Text allowFontScaling={false} style={styles.deleteButtonText}>🗑  {t('deleteAccount')}</Text>
+                            </TouchableOpacity>
                         </View>
                     ) : (
                         /* ── Logged-in view ──────────────────── */
@@ -396,9 +593,9 @@ function Profile() {
                                     accessibilityLabel={t('changePhoto')}
                                 >
                                     <View style={styles.avatarWrapper}>
-                                        {photoUri ? (
+                                        {shownPhoto ? (
                                             <Image
-                                                source={{uri: photoUri}}
+                                                source={{uri: shownPhoto}}
                                                 style={styles.avatar}
                                                 accessibilityRole="image"
                                                 accessibilityLabel="User profile picture"
@@ -415,15 +612,24 @@ function Profile() {
                                                 </Text>
                                             </LinearGradient>
                                         )}
-                                        <View style={styles.cameraOverlay}>
-                                            <Text allowFontScaling={false} style={styles.cameraIcon}>📷</Text>
-                                        </View>
+                                        {uploadingPhoto ? (
+                                            <View style={[styles.cameraOverlay, styles.avatarUploading]}>
+                                                <ActivityIndicator size="small" color="#fff" />
+                                            </View>
+                                        ) : (
+                                            <View style={styles.cameraOverlay}>
+                                                <Text allowFontScaling={false} style={styles.cameraIcon}>📷</Text>
+                                            </View>
+                                        )}
                                     </View>
                                 </TouchableOpacity>
                                 <Text allowFontScaling={false} style={styles.changePhotoText}>{t('changePhoto')}</Text>
                             </View>
 
                             <Text allowFontScaling={false} style={styles.greeting}>{t('greeting', {name: displayName})}</Text>
+
+                            {/* Confirm email — shown only for unverified email accounts */}
+                            {needsEmailVerify && renderVerifyCard()}
 
                             {/* Editable, server-owned username */}
                             <View style={styles.inputCard}>
@@ -437,6 +643,7 @@ function Profile() {
                                     autoCapitalize="none"
                                     maxLength={32}
                                     returnKeyType="done"
+                                    onFocus={onInputFocus}
                                     onSubmitEditing={handleSaveName}
                                     accessibilityLabel="Username input field"
                                 />
@@ -494,6 +701,7 @@ function Profile() {
                                         autoCorrect={false}
                                         editable={!savingEmail}
                                         allowFontScaling={false}
+                                        onFocus={onInputFocus}
                                     />
                                     <TextInput
                                         value={newEmail}
@@ -507,6 +715,7 @@ function Profile() {
                                         editable={!savingEmail}
                                         allowFontScaling={false}
                                         returnKeyType="done"
+                                        onFocus={onInputFocus}
                                         onSubmitEditing={handleChangeEmail}
                                     />
                                     <TouchableOpacity
@@ -537,6 +746,7 @@ function Profile() {
                                         autoCorrect={false}
                                         editable={!savingPwd}
                                         allowFontScaling={false}
+                                        onFocus={onInputFocus}
                                     />
                                     <TextInput
                                         value={newPwd}
@@ -550,6 +760,7 @@ function Profile() {
                                         editable={!savingPwd}
                                         allowFontScaling={false}
                                         returnKeyType="done"
+                                        onFocus={onInputFocus}
                                         onSubmitEditing={handleChangePassword}
                                     />
                                     <TouchableOpacity
@@ -600,6 +811,10 @@ function Profile() {
                     style={styles.modalOverlay}
                     onPress={() => !deleting && setDeleteModal(false)}
                 >
+                    <KeyboardAvoidingView
+                        style={styles.modalAvoider}
+                        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                    >
                     <Pressable style={styles.modalCard} onPress={() => {}}>
                         <Text allowFontScaling={false} style={styles.modalTitle}>⚠️ {t('deleteAccountQuestion')}</Text>
                         <Text allowFontScaling={false} style={styles.modalMessage}>
@@ -642,6 +857,7 @@ function Profile() {
                             </TouchableOpacity>
                         </View>
                     </Pressable>
+                    </KeyboardAvoidingView>
                 </Pressable>
             )}
         </LinearGradient>

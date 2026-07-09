@@ -10,6 +10,8 @@ import {useGlobalStore} from './globalStore';
 import {useShopStore} from './shopStore';
 import {setUnauthorizedHandler} from '../services/sessionEvents';
 import {resetToWelcome} from '../navigation/navigationRef';
+import {seedHelperDefaults} from '../utils/helpers';
+import {withRetry} from '../utils/withRetry';
 
 // ── Auth / session store ──────────────────────────────────────────────────────
 // Single source of truth for "who is signed in" and the server-authoritative
@@ -100,20 +102,39 @@ export const useAuthStore = create<AuthState>((set, get) => {
             }
 
             // No cached profile. If a token still exists (e.g. the cache was
-            // cleared but the session is valid), fetch the profile once;
-            // otherwise drop to the sign-in screen.
+            // cleared but the session is valid), fetch the profile once.
             const hasToken = await tokenManager.isLoggedIn();
-            if (!hasToken) {
-                set({status: 'unauthed'});
+            if (hasToken) {
+                try {
+                    await withRetry(() => fetchAndCacheProfile());
+                } catch {
+                    // A genuine auth failure (401 + failed refresh) has already
+                    // cleared the tokens inside the axios interceptor. A plain
+                    // network error leaves them intact — don't wipe them here,
+                    // just fall back to the sign-in screen so the next launch
+                    // can retry.
+                    set({status: 'unauthed', player: null, stats: null, inventory: []});
+                }
                 return;
             }
+
+            // Brand-new launch (or a post-logout start) with no session at all:
+            // silently create a guest account so the player lands straight in
+            // the game — no sign-in wall. The backend mints a unique guest_id
+            // (persisted via tokenManager) that the leaderboard and every authed
+            // endpoint key off; the player can later upgrade or switch accounts
+            // from the in-game Profile screen. If the network is down we fall
+            // back to Welcome, whose guest button offers a manual retry.
             try {
-                await fetchAndCacheProfile();
+                // Retry each network step: a shared-host overload can briefly
+                // block the guest mint or the profile fetch, and we'd rather
+                // wait a few seconds than strand the player on Welcome.
+                await withRetry(() => authService.guestLogin());
+                // Give the fresh guest the same starter helper stock the manual
+                // "Continue as Guest" button seeds on the Welcome screen.
+                await seedHelperDefaults();
+                await withRetry(() => fetchAndCacheProfile());
             } catch {
-                // A genuine auth failure (401 + failed refresh) has already
-                // cleared the tokens inside the axios interceptor. A plain
-                // network error leaves them intact — don't wipe them here, just
-                // fall back to the sign-in screen so the next launch can retry.
                 set({status: 'unauthed', player: null, stats: null, inventory: []});
             }
         },

@@ -25,9 +25,12 @@ interface ProgressItemProps {
     // the progress-bar denominator (levelLength × topLevel). Defaults to this
     // entry's own level so the bar still renders if the parent forgets to pass it.
     topLevel?: number,
+    // True for the signed-in player's own row — highlights it (gold border +
+    // "You" badge) so they can find themselves even when usernames collide.
+    isMe?: boolean,
 }
 
-function ProgressItem({item, trophy, index, topLevel}: ProgressItemProps) {
+function ProgressItem({item, trophy, index, topLevel, isMe}: ProgressItemProps) {
     const {t} = useTranslation();
     const levelLength = useConfigStore(s => s.levelLength);
 
@@ -72,7 +75,7 @@ function ProgressItem({item, trophy, index, topLevel}: ProgressItemProps) {
             colors={[GRADIENT_LIGHT, GRADIENT_DARK]}
             start={{x: 0, y: 0}}
             end={{x: 1, y: 1}}
-            style={styles.progressItem}
+            style={[styles.progressItem, isMe && styles.progressItemMe]}
             accessible={true}
             accessibilityRole="summary"
             accessibilityLabel={`${levelText}. ${t('score')} ${item.score}. ${t('progress')} ${progressPercent}%`}
@@ -102,7 +105,14 @@ function ProgressItem({item, trophy, index, topLevel}: ProgressItemProps) {
             <View style={styles.info} importantForAccessibility="no-hide-descendants">
                 {/* Level row */}
                 <View style={styles.levelRow}>
-                    <Text allowFontScaling={false} style={styles.level}>{levelText}</Text>
+                    <View style={styles.nameRow}>
+                        <Text allowFontScaling={false} style={styles.level} numberOfLines={1}>{levelText}</Text>
+                        {isMe && (
+                            <View style={styles.youBadge}>
+                                <Text allowFontScaling={false} style={styles.youBadgeText}>{t('you')}</Text>
+                            </View>
+                        )}
+                    </View>
                     <View style={styles.scoreRow}>
                         <Text allowFontScaling={false} style={styles.score}>{item.score}</Text>
                         <Coin width={18} height={18}/>
@@ -121,4 +131,17 @@ function ProgressItem({item, trophy, index, topLevel}: ProgressItemProps) {
     );
 }
 
-export default ProgressItem;
+// Memoized so the per-render new item object literal in Progression's renderItem
+// stops re-rendering/re-animating already-visible rows. Compares every field the
+// row actually renders (including topLevel, which rescales the progress bar).
+export default React.memo(ProgressItem, (prev, next) =>
+    prev.item.id === next.item.id &&
+    prev.item.score === next.item.score &&
+    prev.item.level === next.item.level &&
+    prev.item.username === next.item.username &&
+    prev.item.playerId === next.item.playerId &&
+    prev.trophy === next.trophy &&
+    prev.index === next.index &&
+    prev.topLevel === next.topLevel &&
+    prev.isMe === next.isMe
+);

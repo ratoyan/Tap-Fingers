@@ -1,4 +1,4 @@
-﻿import React from "react";
+﻿import React, {useRef} from "react";
 import {Animated, Text, TouchableOpacity} from "react-native";
 import {MenuType} from "../../../types/menu.type.ts";
 import {useTranslation} from "react-i18next";
@@ -16,7 +16,7 @@ interface MenuProps {
 function MenuButton({menu}: MenuProps){
     const {t} = useTranslation();
     const navigation = useNavigation();
-    const scale = new Animated.Value(1);
+    const scale = useRef(new Animated.Value(1)).current;
 
     const handlePressIn = () => {
         Animated.spring(scale, {
@@ -61,4 +61,4 @@ function MenuButton({menu}: MenuProps){
     )
 }
 
-export default MenuButton;
+export default React.memo(MenuButton);

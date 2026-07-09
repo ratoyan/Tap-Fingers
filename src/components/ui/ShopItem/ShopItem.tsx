@@ -26,7 +26,7 @@ import {ms} from "../../../utils/responsive.ts";
 interface ShopItemProps {
     item: any;
     index?: number;
-    handlePress?: () => void;
+    handlePress?: (item: any) => void;
     selected?: boolean;
     purchased?: boolean;
     disabled?: boolean;
@@ -307,7 +307,7 @@ function ShopItem({item, index = 0, handlePress, selected = false, purchased = f
             )}
 
             <TouchableOpacity
-                onPress={handlePress}
+                onPress={() => handlePress?.(item)}
                 onPressIn={onPressIn}
                 onPressOut={onPressOut}
                 activeOpacity={1}
@@ -456,4 +456,4 @@ function ShopItem({item, index = 0, handlePress, selected = false, purchased = f
     );
 }
 
-export default ShopItem;
+export default React.memo(ShopItem);

@@ -1,4 +1,4 @@
-﻿import React, {useCallback, useEffect, useRef, useState} from 'react';
+﻿import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import Sound from 'react-native-sound';
 import LinearGradient from 'react-native-linear-gradient';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
@@ -19,6 +19,7 @@ import {STORAGE_KEYS} from '../../utils/storageKeys.ts';
 import {useShopStore} from '../../store/shopStore.ts';
 import {useAuthStore} from '../../store/authStore.ts';
 import * as gameService from '../../services/gameService.ts';
+import {withRetry} from '../../utils/withRetry.ts';
 import * as userService from '../../services/userService.ts';
 import * as shopService from '../../services/shopService.ts';
 import * as bossService from '../../services/bossService.ts';
@@ -135,14 +136,22 @@ export default function Play() {
     const background = useShopStore(s => s.background);
     // shopStore.card is hydrated from the server profile; guard against the
     // brief window before that resolves so box spawning never sees a null card.
-    const card = storeCard ?? resolveCardEntry(null);
+    const card = useMemo(() => storeCard ?? resolveCardEntry(null), [storeCard]);
     // Continuously-spawned boxes read the card through this ref so the spawn
     // loop (whose effect deps don't include `card`) always uses the latest art.
     const cardRef = useRef(card);
     cardRef.current = card;
-    const {coins, addCoins} = useGlobalStore();
+    const coins = useGlobalStore(s => s.coins);
+    const addCoins = useGlobalStore(s => s.addCoins);
+    // Stable press handler for the memoized PlayBox rows — forwards to the live
+    // handleTap (a hoisted function below) without changing identity each render,
+    // so falling boxes don't all re-render 60×/sec.
+    const handleTapRef = useRef<(box: any) => void>(() => {});
+    const onBoxPress = useCallback((box: any) => handleTapRef.current(box), []);
+    handleTapRef.current = (box: any) => handleTap(box);
     const levelLength = useConfigStore(s => s.levelLength);
     const setLevelLength = useConfigStore(s => s.setLevelLength);
+    const adsEnabled = useConfigStore(s => s.adsEnabled);
     const patchStats = useAuthStore(s => s.patchStats);
 
     // ─── Refs ─────────────────────────────────────────────────────────────────
@@ -260,6 +269,18 @@ export default function Play() {
         ]).catch(() => {});
     }
 
+    // Reconciles a single helper count to the server-authoritative value
+    // returned by /player/helpers/{use,grant,purchase}.
+    function applyServerHelperCount(type: HelperType, count: number) {
+        if (type === 'bomb') {
+            bombCountRef.current = count; setBombCount(count); saveBombCount(count);
+        } else if (type === 'shield') {
+            shieldCountRef.current = count; setShieldCount(count); saveShieldCount(count);
+        } else if (type === 'slow') {
+            slowCountRef.current = count; setSlowCount(count); saveSlowCount(count);
+        }
+    }
+
     async function startGameSession() {
         sessionEndedRef.current = false;
         tapsRef.current = 0;
@@ -290,6 +311,11 @@ export default function Play() {
 
         const token = sessionTokenRef.current;
         const taps = tapsRef.current;
+        // The on-screen coin counter ("what you see is what you get"): every
+        // point — taps, golden boxes, bomb clears, boss rewards — is banked 1:1
+        // as coins on /game/end, even when the player quits mid-run. countRef
+        // mirrors the live `count` so this stale-closure cleanup reads it too.
+        const score = countRef.current;
         const maxCombo = maxComboRef.current;
         const livesLost = Math.min(7, emptyHeartCountRef.current);
         const durationSecs = Math.max(
@@ -297,31 +323,33 @@ export default function Play() {
             Math.min(600, Math.round((Date.now() - sessionStartRef.current) / 1000)),
         );
 
-        // Final device-side helper stock — server stores this snapshot.
-        const bombCountFinal   = bombCountRef.current;
-        const slowCountFinal   = slowCountRef.current;
-        const shieldCountFinal = shieldCountRef.current;
-
         // Nothing to report: no server session, or the player never tapped.
         if (!token || taps <= 0) return;
 
-        // Anti-cheat requires score ≈ taps, so submit the honest tap count for both.
-        gameService
-            .endSession({
+        // `score` is the real in-game score (≥ taps); `taps` is the honest tap
+        // count the server uses for the tap-rate / coin-ceiling anti-cheat.
+        // Helper counts are no longer sent — they're updated live via /player/helpers/*.
+        // Bank the run through withRetry so a transient Imunify360 bot-protection
+        // block on the shared host doesn't silently drop the round's coins. Unlike
+        // the auth flow, /game/end had no retry: a single shed request left the
+        // session stuck 'active' and the coins lost for good. Idempotent — if the
+        // run already banked (response lost, not the request), the retry gets
+        // "Session already finalized" and the next profile refresh reconciles.
+        withRetry(() =>
+            gameService.endSession({
                 sessionToken: token,
-                score: taps,
+                score,
                 taps,
                 durationSecs,
                 livesLost,
                 maxCombo,
-                bombCount: bombCountFinal,
-                slowCount: slowCountFinal,
-                shieldCount: shieldCountFinal,
-            })
+            }),
+        )
             .then(result => patchStats({coins: result.totalCoins}))
             .catch(() => {
-                // Rejected by anti-cheat or a network error — coins simply won't
-                // update for this round; the next profile refresh reconciles.
+                // Still failing after retries (anti-cheat rejection or a longer
+                // outage) — coins won't update this round; the next profile
+                // refresh reconciles.
             });
     }
 
@@ -353,6 +381,8 @@ export default function Play() {
             setSlowCount(n);
             saveSlowCount(n);
         }
+        // Persist the free (ad-reward) helper on the server too.
+        userService.grantHelper(type).then(r => applyServerHelperCount(type, r.count)).catch(() => {});
         setBuyModal(null);
         setIsPlaying(true);
     }
@@ -361,28 +391,13 @@ export default function Play() {
         const {price} = HELPER_CONFIGS[type];
         if (coins < price) return;
         try {
-            // Server validates the balance, charges the coins and returns the new total.
+            // Server charges coins, increments the helper and returns both totals.
             const result = await userService.purchaseHelper(type);
             patchStats({coins: result.remainingCoins});
+            applyServerHelperCount(type, result.count);
         } catch {
             // Rejected server-side (insufficient coins) or offline — don't grant.
             return;
-        }
-        if (type === 'bomb') {
-            const n = bombCountRef.current + 1;
-            bombCountRef.current = n;
-            setBombCount(n);
-            saveBombCount(n);
-        } else if (type === 'shield') {
-            const n = shieldCountRef.current + 1;
-            shieldCountRef.current = n;
-            setShieldCount(n);
-            saveShieldCount(n);
-        } else if (type === 'slow') {
-            const n = slowCountRef.current + 1;
-            slowCountRef.current = n;
-            setSlowCount(n);
-            saveSlowCount(n);
         }
         setBuyModal(null);
         setIsPlaying(true);
@@ -548,6 +563,8 @@ export default function Play() {
         bombCountRef.current = newBombs;
         setBombCount(newBombs);
         saveBombCount(newBombs);
+        // Decrement the server stock (authoritative) and reconcile the count.
+        userService.useHelper('bomb').then(r => applyServerHelperCount('bomb', r.count)).catch(() => {});
 
         tapsRef.current += 1;
         streakRef.current = 0;
@@ -580,6 +597,7 @@ export default function Play() {
         shieldCountRef.current -= 1;
         setShieldCount(shieldCountRef.current);
         saveShieldCount(shieldCountRef.current);
+        userService.useHelper('shield').then(r => applyServerHelperCount('shield', r.count)).catch(() => {});
         shieldActiveRef.current = true;
         setShieldActive(true);
 
@@ -602,6 +620,7 @@ export default function Play() {
         slowCountRef.current -= 1;
         setSlowCount(slowCountRef.current);
         saveSlowCount(slowCountRef.current);
+        userService.useHelper('slow').then(r => applyServerHelperCount('slow', r.count)).catch(() => {});
         slowActiveRef.current = true;
         slowSpeedRef.current = 0.25;
         setSlowActive(true);
@@ -710,9 +729,11 @@ export default function Play() {
         setShowBossDefeated(true);
 
         const reward = bossRewardRef.current;
+        // The boss bonus is added to the score, so it's banked as coins on
+        // /game/end like every other point. addCoins() just keeps the Home coin
+        // balance optimistically in step until the next profile reconcile.
         countRef.current += reward;
         setCount(c => c + reward);
-        // Optimistic only — the boss bonus isn't part of the server score model.
         addCoins(reward);
 
         setEmptyHeartCount(prev => Math.max(0, prev - 1));
@@ -788,6 +809,7 @@ export default function Play() {
             bombCountRef.current = newBombs;
             setBombCount(newBombs);
             saveBombCount(newBombs);
+            userService.grantHelper('bomb').then(r => applyServerHelperCount('bomb', r.count)).catch(() => {});
             // Clear the field the instant the boss level is reached: flag the
             // boss fight (stops the spawn/animation loops from adding or moving
             // boxes) and wipe every PlayBox now, so the boss intro plays on an
@@ -802,6 +824,7 @@ export default function Play() {
             slowCountRef.current = newSlow;
             setSlowCount(newSlow);
             saveSlowCount(newSlow);
+            userService.grantHelper('slow').then(r => applyServerHelperCount('slow', r.count)).catch(() => {});
         }
 
         if (levelRef.current % 20 === 0) {
@@ -809,6 +832,7 @@ export default function Play() {
             shieldCountRef.current = newShield;
             setShieldCount(newShield);
             saveShieldCount(newShield);
+            userService.grantHelper('shield').then(r => applyServerHelperCount('shield', r.count)).catch(() => {});
         }
 
         setBoxesData(prev => prev.map(b => ({...b, duration: durationRef.current})));
@@ -1263,6 +1287,7 @@ export default function Play() {
                 onBack={handleExitConfirm}
                 onWatchAd={handleWatchAd}
                 canWatchAd={watchAdUsed < 2}
+                adsEnabled={adsEnabled}
             />
             <ExitModal visible={isExitModal} onConfirm={handleExitConfirm} onCancel={handleExitCancel}/>
             <GameMenuModal visible={isMenuModal} onClose={handleMenuClose} onExit={handleMenuExit}/>
@@ -1273,6 +1298,7 @@ export default function Play() {
                 watchAdUsed={watchAdUsed}
                 onBuy={handleBuyHelper}
                 onWatchAd={handleWatchAdHelper}
+                adsEnabled={adsEnabled}
                 onClose={() => {
                     setBuyModal(null);
                     setIsPlaying(true);
@@ -1283,7 +1309,7 @@ export default function Play() {
                 .slice()
                 .reverse()
                 .map(box => (
-                    <PlayBox key={box.id} box={box} handlePress={() => handleTap(box)}/>
+                    <PlayBox key={box.id} box={box} handlePress={onBoxPress}/>
                 ))}
         </Animated.View>
     );

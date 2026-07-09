@@ -37,9 +37,11 @@ interface LoseModalProps {
     onBack: () => void;
     onWatchAd: () => void;
     canWatchAd?: boolean;
+    // Admin global ad switch — when false the whole watch-ad-for-heart block is hidden.
+    adsEnabled?: boolean;
 }
 
-export default function LoseModal({visible, score, onRetry, onBack, onWatchAd, canWatchAd = true}: LoseModalProps) {
+export default function LoseModal({visible, score, onRetry, onBack, onWatchAd, canWatchAd = true, adsEnabled = true}: LoseModalProps) {
     const {t} = useTranslation();
 
     const scaleAnim = useRef(new Animated.Value(0)).current;
@@ -166,8 +168,8 @@ export default function LoseModal({visible, score, onRetry, onBack, onWatchAd, c
                     </View>
                 </LinearGradient>
 
-                {/* Watch Ad button */}
-                {canWatchAd ? (
+                {/* Watch Ad button — entire block hidden when ads disabled by admin */}
+                {adsEnabled && (canWatchAd ? (
                     <Animated.View style={[styles.adBtnWrap, {transform: [{scale: adPulseAnim}]}]}>
                         <TouchableOpacity
                             onPress={onWatchAd}
@@ -197,7 +199,7 @@ export default function LoseModal({visible, score, onRetry, onBack, onWatchAd, c
                     <View style={styles.adBtnDisabled}>
                         <Text allowFontScaling={false} style={styles.adBtnDisabledText}>📺 {t('watchAd')} (0/2)</Text>
                     </View>
-                )}
+                ))}
 
                 {/* Retry + Back row */}
                 <View style={styles.actions}>

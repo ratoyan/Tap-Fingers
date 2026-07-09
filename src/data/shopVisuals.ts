@@ -129,21 +129,46 @@ interface ShopArt {
     rotateAnimation?: boolean;
     fallFromBottom?: boolean;
     trackColor?: string | null;
+    // Admin-defined background appearance (see mergeShopItem / entryFromKey).
+    bgColors?: string[] | null;
+    bgAnimation?: string | null;
 }
 let shopArtByKey: Record<string, ShopArt> = {};
 
 export function registerShopIcons(items: ShopItem[]): void {
     const next: Record<string, ShopArt> = {};
     for (const it of items) {
-        next[it.key] = { iconSvg: it.iconSvg, width: it.width, height: it.height, randomColors: it.randomColors, rotateAnimation: it.rotateAnimation, fallFromBottom: it.fallFromBottom, trackColor: it.trackColor };
+        next[it.key] = { iconSvg: it.iconSvg, width: it.width, height: it.height, randomColors: it.randomColors, rotateAnimation: it.rotateAnimation, fallFromBottom: it.fallFromBottom, trackColor: it.trackColor, bgColors: it.bgColors, bgAnimation: it.bgAnimation };
     }
     shopArtByKey = next;
+}
+
+// Resolves a background's images/colors/animationType. Admin-defined values win
+// over the bundled visual so an admin-created background looks the way it was
+// configured; an animation overrides a gradient. A no-op for cards.
+function resolveBgVisual(
+    isCard: boolean,
+    bgColors: string[] | null | undefined,
+    bgAnimation: string | null | undefined,
+    visual: ShopVisual,
+): { images?: any[]; colors?: string[]; animationType?: string } {
+    if (!isCard && bgAnimation) {
+        return { animationType: bgAnimation };
+    }
+    if (!isCard && bgColors && bgColors.length >= 2) {
+        return { colors: bgColors };
+    }
+    return { images: visual.images, colors: visual.colors, animationType: visual.animationType };
 }
 
 // Merges a backend ShopItem with its visual into a UI-ready ShopEntry.
 export function mergeShopItem(item: ShopItem): ShopEntry {
     const isCard = item.type === 'card';
     const visual = SHOP_VISUALS[item.key] ?? (isCard ? FALLBACK_CARD : FALLBACK_BG);
+    // Background appearance: admin-defined values (gradient or animation) win
+    // over the bundled visual, so a background created from the admin actually
+    // looks the way the admin set it. Animation overrides a gradient.
+    const bg = resolveBgVisual(isCard, item.bgColors, item.bgAnimation, visual);
     return {
         id: item.key,
         key: item.key,
@@ -157,9 +182,9 @@ export function mergeShopItem(item: ShopItem): ShopEntry {
         // Admin "rotate animation" flag is the sole authority for the falling-card
         // spin — a card rotates only when the admin has enabled it.
         isRotation: item.rotateAnimation,
-        images: visual.images,
-        colors: visual.colors,
-        animationType: visual.animationType,
+        images: bg.images,
+        colors: bg.colors,
+        animationType: bg.animationType,
         isRare: visual.isRare,
         isPremium: item.isPremium,
         iconSvg: item.iconSvg ?? null,
@@ -188,6 +213,10 @@ function entryFromKey(
     // artwork (SVG + size), keyed by the *real* equipped key. Prefer that so a
     // custom card shows its own SVG/dimensions instead of the starter skin's.
     const art = (key && shopArtByKey[key]) || shopArtByKey[resolvedKey] || {};
+    // Admin-created backgrounds aren't in SHOP_VISUALS, so prefer the artwork the
+    // backend registered for the *real* equipped key (gradient/animation) over
+    // the default skin's look.
+    const bg = resolveBgVisual(type === 'card', art.bgColors, art.bgAnimation, visual);
     return {
         id: key || resolvedKey,
         key: key || resolvedKey,
@@ -201,9 +230,9 @@ function entryFromKey(
         // Admin "rotate animation" flag (registered by key) is the sole authority
         // for the spin — a card rotates only when the admin has enabled it.
         isRotation: art.rotateAnimation ?? false,
-        images: visual.images,
-        colors: visual.colors,
-        animationType: visual.animationType,
+        images: bg.images,
+        colors: bg.colors,
+        animationType: bg.animationType,
         isRare: visual.isRare,
         isPremium: false,
         iconSvg: art.iconSvg ?? null,

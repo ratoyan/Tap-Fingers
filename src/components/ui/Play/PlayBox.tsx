@@ -19,7 +19,7 @@ import BoltIcon from "../../../assets/icons/BoltIcon";
 
 interface PlayBoxProps {
     box: any;
-    handlePress: () => void;
+    handlePress: (box: any) => void;
 }
 
 // Vibrant hues used when a card is flagged "random colors" in admin.
@@ -120,7 +120,7 @@ function PlayBox({box, handlePress}: PlayBoxProps) {
             </View>
         ) : (
             <Pressable
-                onPress={handlePress}
+                onPress={() => handlePress(box)}
                 style={[svgStyle, {zIndex: 1}]}
                 accessibilityRole="button"
                 accessibilityLabel="Tap card"
@@ -144,7 +144,7 @@ function PlayBox({box, handlePress}: PlayBoxProps) {
             :
             (
                 <Pressable
-                    onPress={handlePress}
+                    onPress={() => handlePress(box)}
                     accessibilityRole="button"
                     accessibilityLabel="Tap card"
                     style={[
@@ -171,7 +171,7 @@ function PlayBox({box, handlePress}: PlayBoxProps) {
         :
         (
             <Pressable
-                onPress={handlePress}
+                onPress={() => handlePress(box)}
                 style={[commonStyle, {zIndex: 1}]}
                 accessibilityRole="button"
                 accessibilityLabel="Tap card"
@@ -181,4 +181,4 @@ function PlayBox({box, handlePress}: PlayBoxProps) {
         )
 }
 
-export default PlayBox;
+export default React.memo(PlayBox);

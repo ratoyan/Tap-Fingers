@@ -8,6 +8,11 @@ const DEFAULT_LEVEL_LENGTH = 30;
 interface ConfigState {
     levelLength: number;
     setLevelLength: (value: number) => void;
+    // Admin-controlled global ad switch (from /game/config). When false the app
+    // hides every "watch ad" affordance. Defaults to true so behaviour is
+    // unchanged until the real config loads.
+    adsEnabled: boolean;
+    setAdsEnabled: (value: boolean) => void;
 }
 
 export const useConfigStore = create<ConfigState>((set) => ({
@@ -17,4 +22,7 @@ export const useConfigStore = create<ConfigState>((set) => ({
         if (!Number.isFinite(value) || value <= 0) return;
         set({levelLength: Math.round(value)});
     },
+
+    adsEnabled: true,
+    setAdsEnabled: (value: boolean) => set({adsEnabled: !!value}),
 }));

@@ -1,4 +1,4 @@
-package com.tapfingers
+package com.webixworld.tapfingers
 
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate

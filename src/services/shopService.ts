@@ -32,7 +32,9 @@ export interface SetActiveResult {
     type: ShopItemType;
 }
 
-// export async function setActiveItem(itemKey: string): Promise<SetActiveResult> {
-//     const { data } = await api.post('/shop/active', { itemKey });
-//     return data.data;
-// }
+// Marks a card/background as the player's active one server-side (so the choice
+// survives a reinstall and syncs across devices). The server enforces ownership.
+export async function setActiveItem(itemKey: string): Promise<SetActiveResult> {
+    const { data } = await api.post('/shop/active', { itemKey });
+    return data.data;
+}

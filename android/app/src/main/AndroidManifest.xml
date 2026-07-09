@@ -2,8 +2,16 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.VIBRATE" />
-    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
+    <!-- Advertising ID — required so the (planned) ads SDK can read the Google
+         Advertising ID on Android 13+. Without it Play replaces the ID with
+         zeros, breaking ad serving/attribution. Keep the Play Console
+         "advertising ID" declaration set to YES to match this. -->
+    <uses-permission android:name="com.google.android.gms.permission.AD_ID" />
+    <!-- Avatar picking uses the Android system Photo Picker (react-native-image-picker
+         launchImageLibrary), which needs no storage/media permission. Declaring
+         READ_MEDIA_IMAGES / READ_EXTERNAL_STORAGE would trigger Google Play's
+         Photo & Video Permissions policy declaration for no benefit, so they're
+         intentionally omitted. -->
     <uses-permission android:name="android.permission.CAMERA" />
 
     <application

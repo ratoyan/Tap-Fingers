@@ -125,7 +125,7 @@ export default function NoticeModal() {
         <Modal visible={visible} transparent animationType="none" onRequestClose={hide}>
             <Pressable style={styles.backdrop} onPress={hide}>
                 <Animated.View style={[styles.backdrop, {opacity: opacityAnim, position: 'absolute', top: 0, left: 0, right: 0, bottom: 0}]} />
-                <Pressable onPress={() => {}}>
+                <Pressable style={styles.cardPress} onPress={() => {}}>
                     <Animated.View
                         style={[
                             styles.cardWrapper,

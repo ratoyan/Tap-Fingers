@@ -72,9 +72,12 @@ interface BuyHelperModalProps {
     onBuy: (type: HelperType) => void;
     onWatchAd: (type: HelperType) => void;
     onClose: () => void;
+    // Admin global ad switch — when false the "watch ad" button is hidden
+    // (the coin-purchase option stays available).
+    adsEnabled?: boolean;
 }
 
-export default function BuyHelperModal({visible, helperType, coins, watchAdUsed, onBuy, onWatchAd, onClose}: BuyHelperModalProps) {
+export default function BuyHelperModal({visible, helperType, coins, watchAdUsed, onBuy, onWatchAd, onClose, adsEnabled = true}: BuyHelperModalProps) {
     const {t} = useTranslation();
     const scaleAnim   = useRef(new Animated.Value(0.8)).current;
     const fadeAnim    = useRef(new Animated.Value(0)).current;
@@ -149,7 +152,8 @@ export default function BuyHelperModal({visible, helperType, coins, watchAdUsed,
                     </LinearGradient>
                 </View>
 
-                {/* Watch Ad button */}
+                {/* Watch Ad button — hidden entirely when ads are disabled by admin */}
+                {adsEnabled && (
                 <Animated.View style={[styles.adWrap, {transform: [{scale: adDisabled ? 1 : adPulseAnim}]}, adDisabled && {opacity: 0.35}]}>
                     <TouchableOpacity
                         onPress={() => onWatchAd(helperType)}
@@ -178,6 +182,7 @@ export default function BuyHelperModal({visible, helperType, coins, watchAdUsed,
                         </LinearGradient>
                     </TouchableOpacity>
                 </Animated.View>
+                )}
 
                 {/* Buy + Cancel */}
                 <View style={styles.actions}>

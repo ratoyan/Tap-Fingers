@@ -4,6 +4,7 @@ import {useTranslation} from "react-i18next";
 import {useFocusEffect} from "@react-navigation/core";
 import {useGlobalStore} from "../../store/globalStore.ts";
 import {useAuthStore} from "../../store/authStore.ts";
+import {useConfigStore} from "../../store/configStore.ts";
 import {HORIZONAL_OFFSET} from "../../constants/uiConstants.ts";
 
 // services / data
@@ -60,7 +61,8 @@ function sortByActive(list: ShopEntry[], activeKey: string, ownedKeys: Set<strin
 
 function Shop() {
     const {t} = useTranslation();
-    const {coins} = useGlobalStore();
+    const coins = useGlobalStore(s => s.coins);
+    const adsEnabled = useConfigStore(s => s.adsEnabled);
     const patchStats = useAuthStore(s => s.patchStats);
 
     const [activeTab, setActiveTab] = useState<TabType>('card');
@@ -135,7 +137,6 @@ function Shop() {
     }
 
     async function equip(entry: ShopEntry) {
-        // await shopService.setActiveItem(entry.key);
         if (entry.type === 'card') {
             // Save the equipped card to Realm so it survives restarts and is
             // read back locally (see loadShop).
@@ -146,6 +147,15 @@ function Shop() {
             await equippedRepo.saveEquippedBackground(entry.key);
             setActiveBgKey(entry.key);
             patchStats({activeBackgroundKey: entry.key});
+        }
+        // Mirror the equip to the backend so it persists server-side (fresh
+        // installs, other devices). Best-effort: equipping stays instant and
+        // offline-friendly — Realm is the local source of truth; this just syncs.
+        try {
+            await shopService.setActiveItem(entry.key);
+        } catch {
+            // Offline, or the server doesn't see it as owned yet — the local
+            // equip still stands and will re-sync next time.
         }
     }
 
@@ -174,6 +184,13 @@ function Shop() {
         }
     }
 
+    // Stable identity for the memoized ShopItem rows — the ref keeps the live
+    // handleItemPress closure (busyKey lock, coins gate, ownedKeys) while
+    // onItemPress itself never changes, so cards don't re-render on every tap.
+    const handleItemPressRef = useRef(handleItemPress);
+    handleItemPressRef.current = handleItemPress;
+    const onItemPress = useCallback((entry: ShopEntry) => handleItemPressRef.current(entry), []);
+
     const tabIndicatorLeft = tabAnim.interpolate({
         inputRange: [0, 1],
         outputRange: ['0%', '50%'],
@@ -196,7 +213,7 @@ function Shop() {
                     isShowCoin={true}
                     textStyle={{marginRight: 25}}
                     coins={coins}
-                    onCoinPress={() => setShowAdModal(true)}
+                    onCoinPress={adsEnabled ? () => setShowAdModal(true) : undefined}
                 />
             </View>
 
@@ -280,7 +297,7 @@ function Shop() {
                                 selected={item.key === activeKey}
                                 purchased={isOwned(item)}
                                 disabled={!isOwned(item) && coins < item.priceCoins}
-                                handlePress={() => handleItemPress(item)}
+                                handlePress={onItemPress}
                                 item={item}
                             />
                         ))}

@@ -1,10 +1,12 @@
 import api from './api';
+import { API_ORIGIN } from './config';
 import {
     AdRewardResult,
     HelperPurchaseResult,
     HelperType,
     LuckyWheelResult,
     LuckyWheelSegment,
+    Player,
     Profile,
     ScoreEntry,
 } from './types';
@@ -26,6 +28,35 @@ export async function getProfile(): Promise<Profile> {
 
 export async function updateProfile(username: string): Promise<Profile> {
     const { data } = await api.put('/player/profile', { username });
+    return data.data;
+}
+
+// Turns the backend's relative avatar URL (player.avatarUrl) into an absolute,
+// loadable URL, or null when the player has no photo.
+export function resolveAvatarUrl(player?: Player | null): string | null {
+    return player?.avatarUrl ? `${API_ORIGIN}${player.avatarUrl}` : null;
+}
+
+// Uploads a picked/captured image (local file uri) as the player's avatar.
+// Returns the refreshed profile (with the new avatarUrl).
+export async function uploadAvatar(uri: string): Promise<Profile> {
+    const name = uri.split('/').pop() || `avatar_${Date.now()}.jpg`;
+    const ext  = (/\.(\w+)$/.exec(name)?.[1] || 'jpg').toLowerCase();
+    const type = ext === 'png' ? 'image/png' : ext === 'webp' ? 'image/webp' : 'image/jpeg';
+
+    const form = new FormData();
+    // RN's FormData file part: { uri, name, type }.
+    form.append('avatar', { uri, name, type } as any);
+
+    // Override the default JSON content-type so the multipart boundary is set.
+    const { data } = await api.post('/player/avatar', form, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return data.data;
+}
+
+export async function deleteAvatar(): Promise<Profile> {
+    const { data } = await api.delete('/player/avatar');
     return data.data;
 }
 
@@ -67,5 +98,20 @@ export async function spinLuckyWheel(): Promise<LuckyWheelResult> {
 
 export async function purchaseHelper(type: HelperType): Promise<HelperPurchaseResult> {
     const { data } = await api.post('/player/helpers/purchase', { type });
+    return data.data;
+}
+
+// Server-authoritative helper count changes (the stock lives in player_stats).
+export interface HelperCountResult { type: HelperType; count: number; used?: boolean; }
+
+// Consumes one helper when used in-game; server decrements (never below 0).
+export async function useHelper(type: HelperType): Promise<HelperCountResult> {
+    const { data } = await api.post('/player/helpers/use', { type });
+    return data.data;
+}
+
+// Grants one free helper (rewarded-ad watch); server increments.
+export async function grantHelper(type: HelperType): Promise<HelperCountResult> {
+    const { data } = await api.post('/player/helpers/grant', { type });
     return data.data;
 }

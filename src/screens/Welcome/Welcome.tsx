@@ -3,7 +3,6 @@ import {
     ActivityIndicator,
     Animated,
     Dimensions,
-    Keyboard,
     KeyboardAvoidingView,
     Platform,
     ScrollView,
@@ -16,7 +15,7 @@ import {
 import {notice} from '../../utils/notice.ts';
 import {useTranslation} from 'react-i18next';
 import {useFocusEffect, useNavigation} from "@react-navigation/core";
-import {loadMusic, playMusic, releaseMusic, stopMusic} from "../../utils/helpers.ts";
+import {loadMusic, playMusic, releaseMusic, seedHelperDefaults, stopMusic} from "../../utils/helpers.ts";
 import {storage} from "../../db/kvStore.ts";
 import {STORAGE_KEYS} from "../../utils/storageKeys.ts";
 
@@ -33,7 +32,9 @@ import SoundOffIcon from "../../assets/icons/SoundOffIcon.tsx";
 import PersonIcon from "../../assets/icons/PersonIcon.tsx";
 import MailIcon from "../../assets/icons/MailIcon.tsx";
 import LockIcon from "../../assets/icons/LockIcon.tsx";
-import {isTablet, vs} from "../../utils/responsive.ts";
+import EyeIcon from "../../assets/icons/EyeIcon.tsx";
+import {isTablet} from "../../utils/responsive.ts";
+import {useKeyboardAwareScroll} from "../../hooks/useKeyboardAwareScroll.ts";
 
 // styles
 import styles from './Welcome.style.ts';
@@ -62,17 +63,16 @@ function Welcome() {
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [focusedField, setFocusedField] = useState<'name' | 'email' | 'password' | null>(null);
 
-    // Keyboard handling: track its height so we can pad the scroll content,
-    // and scroll the focused input into view when the keyboard opens.
-    const scrollRef = useRef<ScrollView>(null);
-    const [keyboardHeight, setKeyboardHeight] = useState(0);
+    // Keyboard handling: keep the focused input above the keyboard. Needed
+    // because edge-to-edge (Android SDK 36 / RN 0.84) disables native resize.
+    const {scrollRef, onScroll, onInputFocus, keyboardSpacerStyle} = useKeyboardAwareScroll();
 
     function handleFieldFocus(field: 'name' | 'email' | 'password') {
         setFocusedField(field);
-        // Wait for the keyboard/padding to settle, then reveal the form.
-        setTimeout(() => scrollRef.current?.scrollToEnd({animated: true}), 120);
+        onInputFocus();
     }
 
     // Responsive logo sizing — smaller share of the screen on tablets.
@@ -106,22 +106,6 @@ function Welcome() {
     const ghostFloat  = useRef(new Animated.Value(0)).current;
     const ghostOpacity = useRef(new Animated.Value(0)).current;
     const ctaPulse    = useRef(new Animated.Value(1)).current;
-
-    // Local-only gameplay helpers (bomb/slow/shield) are still device-side —
-    // seed the starter stock so a brand-new player has one of each.
-    async function seedHelperDefaults() {
-        try {
-            const existing = await storage.getItem(STORAGE_KEYS.BOMB_COUNT);
-            if (existing != null) return;
-            await storage.multiSet([
-                [STORAGE_KEYS.BOMB_COUNT, JSON.stringify(1)],
-                [STORAGE_KEYS.SLOW_COUNT, JSON.stringify(1)],
-                [STORAGE_KEYS.SHIELD_COUNT, JSON.stringify(1)],
-            ]);
-        } catch (error) {
-            console.log('Seed error:', error);
-        }
-    }
 
     // After a successful auth: hydrate the session from the backend profile,
     // then drop the auth screen from the stack so Back can't return here.
@@ -197,20 +181,6 @@ function Welcome() {
             return () => clearTimeout(timeout);
         }, [])
     );
-
-    useEffect(() => {
-        const showEvt = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
-        const hideEvt = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
-        const showSub = Keyboard.addListener(showEvt, e => {
-            setKeyboardHeight(e.endCoordinates?.height ?? 0);
-            setTimeout(() => scrollRef.current?.scrollToEnd({animated: true}), 60);
-        });
-        const hideSub = Keyboard.addListener(hideEvt, () => setKeyboardHeight(0));
-        return () => {
-            showSub.remove();
-            hideSub.remove();
-        };
-    }, []);
 
     useEffect(() => {
         // Title fade in
@@ -297,10 +267,9 @@ function Welcome() {
             >
                 <ScrollView
                     ref={scrollRef}
-                    contentContainerStyle={[
-                        styles.scrollContent,
-                        Platform.OS === 'android' && {paddingBottom: vs(28) + keyboardHeight},
-                    ]}
+                    onScroll={onScroll}
+                    scrollEventThrottle={16}
+                    contentContainerStyle={[styles.scrollContent, keyboardSpacerStyle]}
                     keyboardShouldPersistTaps="handled"
                     showsVerticalScrollIndicator={false}
                 >
@@ -391,7 +360,7 @@ function Welcome() {
                                     onChangeText={setPassword}
                                     onFocus={() => handleFieldFocus('password')}
                                     onBlur={() => setFocusedField(null)}
-                                    secureTextEntry
+                                    secureTextEntry={!showPassword}
                                     autoCapitalize="none"
                                     autoCorrect={false}
                                     editable={!busy}
@@ -399,6 +368,14 @@ function Welcome() {
                                     returnKeyType="done"
                                     onSubmitEditing={submitEmailAuth}
                                 />
+                                <TouchableOpacity
+                                    onPress={() => setShowPassword(v => !v)}
+                                    hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}
+                                    accessibilityRole="button"
+                                    accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
+                                >
+                                    <EyeIcon size={fieldIconSize} off={!showPassword} color={iconColor('password')} />
+                                </TouchableOpacity>
                             </View>
 
                             <Animated.View style={{width: '100%', transform: [{scale: ctaPulse}]}}>

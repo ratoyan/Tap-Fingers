@@ -42,6 +42,11 @@ export interface Player {
     username: string | null;
     email: string | null;
     accountType: AccountType;
+    // True once the email account has confirmed its address (see /auth/verify-email).
+    emailVerified?: boolean;
+    // Relative URL to the server-stored profile photo (null when none). Compose
+    // with API_ORIGIN before loading — see userService.resolveAvatarUrl.
+    avatarUrl?: string | null;
     googlePlayId?: string | null;
     guestId?: string | null;
     appleId?: string | null;
@@ -100,6 +105,11 @@ export interface ShopItem {
     // When true, the item is shown in the shop as a locked "coming soon" teaser
     // and cannot be purchased or equipped (also enforced server-side).
     comingSoon: boolean;
+    // Background-only: admin-defined appearance. bgColors is a gradient (2–6 hex
+    // stops); bgAnimation is one of the app's built-in animation keys and, when
+    // set, overrides the gradient. Both null → fall back to the bundled visual.
+    bgColors?: string[] | null;
+    bgAnimation?: string | null;
 }
 
 export interface InventoryEntry {
@@ -182,6 +192,10 @@ export interface GameConfig {
     BACKGROUND_THRESHOLDS: number[];
     SPAWN_INTERVAL_MS: Record<string, number>;
     FALL_DURATION_MS: Record<string, number>;
+    // Admin-controlled global ad switch. When false the app hides every
+    // "watch ad" affordance (free coins, free helpers, extra life).
+    // Optional: the /game/start config payload omits it; /game/config includes it.
+    adsEnabled?: boolean;
 }
 
 export interface GameStartResult {

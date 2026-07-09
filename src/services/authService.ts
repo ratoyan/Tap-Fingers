@@ -68,6 +68,23 @@ export async function linkEmail(
     return persistSession(data.data);
 }
 
+// Confirms the player's email with the 6-digit code sent on register/link-email.
+// On success the backend re-issues tokens reflecting the (possibly upgraded)
+// account type — a pending guest becomes a real 'email' account here — so we
+// persist the new pair before returning.
+export async function verifyEmail(code: string): Promise<void> {
+    const { data } = await api.post('/auth/verify-email', { code });
+    const r = data.data;
+    if (r?.accessToken && r?.refreshToken && r?.player) {
+        await tokenManager.saveAuth(r.accessToken, r.refreshToken, r.player.id, r.player.accountType);
+    }
+}
+
+// Re-sends a fresh confirmation code to the player's email.
+export async function resendVerification(): Promise<void> {
+    await api.post('/auth/resend-verification');
+}
+
 export async function logout(): Promise<void> {
     try {
         const refreshToken = await tokenManager.getRefreshToken();

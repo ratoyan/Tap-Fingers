@@ -1,11 +1,9 @@
-﻿import React, {useCallback, useState} from "react";
+﻿import React from "react";
 import {Image, Text, TouchableOpacity, View, ViewStyle} from "react-native";
 import {useSafeAreaInsets} from "react-native-safe-area-context";
-import {useFocusEffect, useNavigation} from "@react-navigation/core";
+import {useNavigation} from "@react-navigation/core";
 import LinearGradient from "react-native-linear-gradient";
-import {storage} from "../../../db/kvStore.ts";
 import {TOP_OFFSET} from "../../../constants/uiConstants.ts";
-import {STORAGE_KEYS} from "../../../utils/storageKeys.ts";
 
 // icons
 import Back from "../../../assets/icons/Back.tsx";
@@ -15,6 +13,7 @@ import CoinCount from "../CoinCount/CoinCount.tsx";
 
 // store / data
 import {useAuthStore} from "../../../store/authStore.ts";
+import {resolveAvatarUrl} from "../../../services/userService.ts";
 import {avatarForId} from "../../../data/avatars.ts";
 
 // styles
@@ -44,24 +43,13 @@ function BackHeader({
     const insets = useSafeAreaInsets();
     const navigation = useNavigation();
 
-    // Show the same profile picture the Profile screen uses: the device-local
-    // uploaded photo if there is one, otherwise the stable per-user gradient
-    // avatar. Only needed when the profile button is shown (isProfile).
-    const playerId = useAuthStore(s => s.player?.id);
-    const [photoUri, setPhotoUri] = useState<string>('');
-
-    // Reload on focus so a photo changed on the Profile screen is reflected
-    // here as soon as the user returns.
-    useFocusEffect(
-        useCallback(() => {
-            if (!isProfile) return;
-            storage.getItem(STORAGE_KEYS.PROFILE_PHOTO)
-                .then(uri => setPhotoUri(uri || ''))
-                .catch(() => {});
-        }, [isProfile])
-    );
-
-    const avatar = avatarForId(playerId);
+    // Show the same profile picture the Profile screen uses: the server-stored
+    // avatar if there is one, otherwise the stable per-user gradient avatar.
+    // Reading straight from the auth store means a photo changed on the Profile
+    // screen is reflected here as soon as the store refreshes — no manual reload.
+    const player = useAuthStore(s => s.player);
+    const photoUri = resolveAvatarUrl(player) || '';
+    const avatar = avatarForId(player?.id);
 
     return (
         <View

@@ -8,7 +8,6 @@ import Svg, {
     LinearGradient,
     Stop
 } from "react-native-svg"
-import SvgImage from "react-native-svg/src/elements/Image.tsx";
 
 function Card1(props: any) {
     return (
@@ -38,7 +37,7 @@ function Card1(props: any) {
                 height={160}
                 preserveAspectRatio="xMidYMid slice"
             />
-            <SvgImage
+            <Image
                 href={require('../../assets/images/logo.png')}
                 x={40}
                 y={20}
@@ -58,4 +57,4 @@ function Card1(props: any) {
     )
 }
 
-export default Card1;
+export default React.memo(Card1);

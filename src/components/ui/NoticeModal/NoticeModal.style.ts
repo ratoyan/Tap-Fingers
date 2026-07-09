@@ -10,9 +10,16 @@ export default StyleSheet.create({
         justifyContent: 'center',
         paddingHorizontal: ms(18),
     },
-    cardWrapper: {
+    // Direct child of the centered backdrop — it owns the width so the card
+    // can't stretch to fit a long message line. (Percent widths need a sized
+    // parent; the wrapping Pressable previously had none, so the card grew to
+    // its content width.)
+    cardPress: {
         width: isTablet ? Math.min(SW * 0.55, 420) : '100%',
         maxWidth: 420,
+    },
+    cardWrapper: {
+        width: '100%',
         // Coloured glow around the card (tint set per-palette inline).
         shadowOffset: {width: 0, height: 12},
         shadowOpacity: 0.55,

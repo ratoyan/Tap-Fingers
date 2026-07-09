@@ -30,10 +30,8 @@ export interface EndSessionPayload {
     durationSecs: number;
     livesLost: number;
     maxCombo: number;
-    // Final device-side helper stock — server stores this snapshot.
-    bombCount?: number;
-    slowCount?: number;
-    shieldCount?: number;
+    // Helper counts are server-owned now (changed via /player/helpers/*), so the
+    // client no longer reports a snapshot here.
 }
 
 export async function endSession(payload: EndSessionPayload): Promise<GameEndResult> {

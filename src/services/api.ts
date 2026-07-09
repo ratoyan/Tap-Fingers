@@ -1,4 +1,5 @@
 import axios, { InternalAxiosRequestConfig } from 'axios';
+import { Platform } from 'react-native';
 import { API_BASE_URL } from './config';
 import { tokenManager } from './tokenManager';
 import { emitUnauthorized } from './sessionEvents';
@@ -6,7 +7,14 @@ import { emitUnauthorized } from './sessionEvents';
 const api = axios.create({
     baseURL: API_BASE_URL,
     timeout: 12000,
-    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+    headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+        // Lets the backend record which mobile OS an account signed up from
+        // (shown in the admin panel). 'ios' | 'android' on device; the server
+        // treats anything else as unknown.
+        'X-Platform': Platform.OS,
+    },
 });
 
 // ── Inject access token ───────────────────────────────────────────────────────

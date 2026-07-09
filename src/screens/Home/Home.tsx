@@ -1,15 +1,18 @@
 import React, {useCallback, useState} from 'react';
-import {BackHandler, Platform, ScrollView, View} from "react-native";
+import {BackHandler, Platform, ScrollView, Text, TouchableOpacity, View} from "react-native";
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {RootStackParamList} from '../../types/RootStackParamList';
 import {MenuType} from "../../types/menu.type.ts";
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
+import {useTranslation} from 'react-i18next';
 import {loadMusic, playMusic, releaseMusic} from "../../utils/helpers.ts";
-import {useFocusEffect} from "@react-navigation/core";
+import {useFocusEffect, useNavigation} from "@react-navigation/core";
 import {menus} from "../../data/menu.ts";
 import {TOP_OFFSET} from "../../constants/uiConstants.ts";
 import {useGlobalStore} from "../../store/globalStore.ts";
 import {useAuthStore} from "../../store/authStore.ts";
+import {useConfigStore} from "../../store/configStore.ts";
+import {syncGlobalConfig} from "../../services/configSync.ts";
 import * as userService from "../../services/userService.ts";
 import {storage} from "../../db/kvStore.ts";
 import {STORAGE_KEYS} from "../../utils/storageKeys.ts";
@@ -32,9 +35,26 @@ import LinearGradient from 'react-native-linear-gradient';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Home'>;
 
+// Throttle the focus-driven profile reconcile so rapid Home re-entries (after
+// every round / shop visit / profile peek) don't spam GET /player/profile.
+// Module-level so it survives remounts; 30s is well under any window where a
+// stale balance would matter, and optimistic patchStats keeps coins/gems live
+// in between.
+const PROFILE_REFRESH_MS = 30_000;
+let lastProfileRefresh = 0;
+
 const Home: React.FC<Props> = () => {
     const insets = useSafeAreaInsets();
-    const {coins} = useGlobalStore();
+    const {t} = useTranslation();
+    const navigation = useNavigation<any>();
+    const coins = useGlobalStore(s => s.coins);
+    const adsEnabled = useConfigStore(s => s.adsEnabled);
+    const player = useAuthStore(s => s.player);
+    // A guest with no email yet → prompt to create an account. A player with a
+    // pending (unconfirmed) email → prompt to confirm it. A pending guest is
+    // still accountType 'guest' but already has an email, so it shows the latter.
+    const needsEmailVerify = !!player?.email && player?.emailVerified === false;
+    const isGuestNoEmail = player?.accountType === 'guest' && !player?.email;
     const refreshProfile = useAuthStore(s => s.refreshProfile);
     const patchStats = useAuthStore(s => s.patchStats);
     const [showWheel, setShowWheel] = useState(false);
@@ -73,6 +93,10 @@ const Home: React.FC<Props> = () => {
 
     useFocusEffect(useCallback(() => { checkCanSpin(); }, [checkCanSpin]));
 
+    // Re-pull the admin global config (ad switch / level length) on every Home
+    // focus so an admin toggle reflects without a full app restart.
+    useFocusEffect(useCallback(() => { syncGlobalConfig(); }, []));
+
     useFocusEffect(
         useCallback(() => {
             if (Platform.OS !== 'android') return;
@@ -84,12 +108,20 @@ const Home: React.FC<Props> = () => {
         }, [])
     );
 
-    // Pull the server-authoritative profile (coins, gems, equipped card/bg)
-    // every time the menu regains focus — it may have changed in Play/Shop.
+    // Reconcile with the server-authoritative profile (coins, gems, equipped
+    // card/bg) when the menu regains focus — but at most once per
+    // PROFILE_REFRESH_MS. Firing on *every* focus hammered /player/profile each
+    // time the player bounced back to Home; coins/gems already update
+    // optimistically via patchStats, so this is just a periodic safety reconcile.
     useFocusEffect(
         useCallback(() => {
+            const now = Date.now();
+            if (now - lastProfileRefresh < PROFILE_REFRESH_MS) return;
+            lastProfileRefresh = now;
             refreshProfile().catch(() => {
-                // Offline / transient error — keep showing the last known state.
+                // Offline / transient error — keep showing the last known state,
+                // and let the next focus retry right away.
+                lastProfileRefresh = 0;
             });
         }, [refreshProfile])
     );
@@ -129,6 +161,43 @@ const Home: React.FC<Props> = () => {
             >
                 <Logo width={160} height={160} viewStyles={styles.logo}/>
 
+                {/* Guest banner — a discoverable shortcut to the register / login
+                    block (otherwise buried in Settings → Profile). */}
+                {isGuestNoEmail && (
+                    <TouchableOpacity
+                        onPress={() => navigation.navigate('Profile')}
+                        activeOpacity={0.85}
+                        style={guestBanner.wrap}
+                        accessibilityRole="button"
+                        accessibilityLabel={t('createYourAccount')}
+                    >
+                        <Text allowFontScaling={false} style={guestBanner.icon}>👻</Text>
+                        <View style={{flex: 1}}>
+                            <Text allowFontScaling={false} style={guestBanner.title}>✨ {t('createYourAccount')}</Text>
+                            <Text allowFontScaling={false} style={guestBanner.sub}>{t('guestSaveHint')}</Text>
+                        </View>
+                        <Text allowFontScaling={false} style={guestBanner.arrow}>›</Text>
+                    </TouchableOpacity>
+                )}
+
+                {/* Unverified email banner — shortcut to the confirm-email card in Profile. */}
+                {needsEmailVerify && (
+                    <TouchableOpacity
+                        onPress={() => navigation.navigate('Profile')}
+                        activeOpacity={0.85}
+                        style={[guestBanner.wrap, verifyBanner.wrap]}
+                        accessibilityRole="button"
+                        accessibilityLabel={t('confirmEmailBanner')}
+                    >
+                        <Text allowFontScaling={false} style={guestBanner.icon}>📧</Text>
+                        <View style={{flex: 1}}>
+                            <Text allowFontScaling={false} style={guestBanner.title}>{t('confirmEmailBanner')}</Text>
+                            <Text allowFontScaling={false} style={guestBanner.sub}>{t('confirmEmail')}</Text>
+                        </View>
+                        <Text allowFontScaling={false} style={guestBanner.arrow}>›</Text>
+                    </TouchableOpacity>
+                )}
+
                 <View accessible={true} accessibilityLabel="Main menu options">
                     {menus.map((menu: MenuType, index: number) => (
                         <MenuButton menu={menu} key={index}/>
@@ -140,7 +209,7 @@ const Home: React.FC<Props> = () => {
             <CoinCount
                 count={coins}
                 viewStyles={[globalStyles.coinView, {top: insets.top + TOP_OFFSET}]}
-                onPress={() => setShowAdModal(true)}
+                onPress={adsEnabled ? () => setShowAdModal(true) : undefined}
             />
 
             <LuckyWheelButton
@@ -176,6 +245,34 @@ const Home: React.FC<Props> = () => {
             />
         </LinearGradient>
     );
+};
+
+const guestBanner = {
+    wrap: {
+        flexDirection: 'row' as const,
+        alignItems: 'center' as const,
+        alignSelf: 'center' as const,
+        width: '90%' as const,
+        backgroundColor: 'rgba(255,255,255,0.10)',
+        borderColor: 'rgba(255,255,255,0.20)',
+        borderWidth: 1,
+        borderRadius: 18,
+        paddingVertical: 12,
+        paddingHorizontal: 14,
+        marginBottom: 18,
+        gap: 12,
+    },
+    icon: {fontSize: 28},
+    title: {color: '#fff', fontSize: 15, fontWeight: '800' as const, letterSpacing: 0.3},
+    sub: {color: 'rgba(255,255,255,0.7)', fontSize: 12, marginTop: 2},
+    arrow: {color: 'rgba(255,255,255,0.7)', fontSize: 28, fontWeight: '700' as const},
+};
+
+const verifyBanner = {
+    wrap: {
+        backgroundColor: 'rgba(247,151,30,0.14)',
+        borderColor: 'rgba(247,151,30,0.55)',
+    },
 };
 
 export default Home;

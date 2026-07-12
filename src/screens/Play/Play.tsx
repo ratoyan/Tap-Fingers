@@ -282,7 +282,7 @@ export default function Play() {
         maxComboRef.current = 0;
         sessionStartRef.current = Date.now();
         sessionTokenRef.current = null;
-        setLevelLength(2);
+        setLevelLength(30);
 
         try {
             // The token returned here is what lets submitGameSession() report the

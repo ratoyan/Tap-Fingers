@@ -15,6 +15,7 @@ import {ms, vs, isTablet, SW} from '../../../utils/responsive.ts';
 import Coin from '../../../assets/icons/Coin.tsx';
 import FullHeart from '../../../assets/icons/FullHeart.tsx';
 import RetryIcon from '../../../assets/icons/RetryIcon.tsx';
+import BackArrowIcon from '../../../assets/icons/BackArrowIcon.tsx';
 
 // colors
 import {
@@ -233,7 +234,8 @@ export default function LoseModal({visible, score, onRetry, onBack, onWatchAd, c
                         accessibilityRole="button"
                         accessibilityLabel={t('back')}
                     >
-                        <Text allowFontScaling={false} style={styles.backBtnText}>← {t('back')}</Text>
+                        <BackArrowIcon size={ms(18)} color={WHITE}/>
+                        <Text allowFontScaling={false} style={styles.backBtnText}>{t('back')}</Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity
@@ -408,11 +410,14 @@ const styles = StyleSheet.create({
     },
     backBtn: {
         flex: 1,
+        flexDirection: 'row',
         paddingVertical: vs(14),
         borderRadius: ms(16),
         borderWidth: 1.5,
         borderColor: PURPLE,
         alignItems: 'center',
+        justifyContent: 'center',
+        gap: ms(6),
     },
     backBtnText: {
         color: WHITE,

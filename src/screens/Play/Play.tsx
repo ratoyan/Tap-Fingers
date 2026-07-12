@@ -74,11 +74,12 @@ const INITIAL_BOMBS = 0;
 const COMBO_WINDOW_MS = 550;
 const COMBO_RESET_MS = 850;
 const GOLDEN_SPAWN_CHANCE = 0.13;
-// Using the bomb drops the fall duration to this fraction of the level's value,
-// then it climbs back linearly over BOMB_DURATION_RECOVER_MS — the arena starts
-// out gentle after the blast and eases back to the level's real pace.
-const BOMB_DURATION_FACTOR = 0.4;
-const BOMB_DURATION_RECOVER_MS = 4000;
+// Clearing the field (bomb blast, boss defeated) drops the fall duration to this
+// fraction of the level's value, then it climbs back linearly over
+// DURATION_DIP_RECOVER_MS — the arena restarts gentle and eases back to the
+// level's real pace instead of throwing full-speed boxes at a fresh screen.
+const DURATION_DIP_FACTOR = 0.4;
+const DURATION_DIP_RECOVER_MS = 4000;
 
 function getDefaultBackground(level: number) {
     if (level > 4) return require('../../assets/images/background4.jpg');
@@ -146,8 +147,8 @@ export default function Play() {
     const cancelSoundRef = useRef(true);
     const cancelVibrationRef = useRef(true);
     // durationRef = the level's duration (target). durationEffRef = what the boxes
-    // actually travel with right now; the bomb pulls it down and the animation loop
-    // walks it back up to durationRef.
+    // actually travel with right now; a bomb or a boss defeat pulls it down and the
+    // animation loop walks it back up to durationRef.
     const durationRef = useRef(INITIAL_DURATION);
     const durationEffRef = useRef(INITIAL_DURATION);
     const lastFrameTsRef = useRef(0);
@@ -281,7 +282,7 @@ export default function Play() {
         maxComboRef.current = 0;
         sessionStartRef.current = Date.now();
         sessionTokenRef.current = null;
-        setLevelLength(2);
+        setLevelLength(30);
 
         try {
             // The token returned here is what lets submitGameSession() report the
@@ -566,7 +567,7 @@ export default function Play() {
         // Blast aftermath: the boxes that spawn next travel with a shortened
         // duration (slower fall) and the animation loop lifts it back to the
         // level's duration over the next few seconds.
-        durationEffRef.current = durationRef.current * BOMB_DURATION_FACTOR;
+        durationEffRef.current = durationRef.current * DURATION_DIP_FACTOR;
 
         if (!cancelSoundRef.current && musicBombRef.current) {
             musicBombRef.current.setCurrentTime(0);
@@ -737,6 +738,9 @@ export default function Play() {
         setEmptyHeartCount(prev => Math.max(0, prev - 1));
 
         setTimeout(() => {
+            // Boxes resume on an empty arena — restart them slowed down and let the
+            // animation loop ramp the duration back to the level's value.
+            durationEffRef.current = durationRef.current * DURATION_DIP_FACTOR;
             isBossFightRef.current = false;
             setShowBossDefeated(false);
         }, 2500);
@@ -972,15 +976,15 @@ export default function Play() {
 
         const animate = (ts: number) => {
             // Walk the effective duration back up to the level's duration after a
-            // bomb, covering the whole gap in BOMB_DURATION_RECOVER_MS. dt is
-            // clamped so one stalled frame can't skip the recovery.
+            // dip (bomb / boss), covering the whole gap in DURATION_DIP_RECOVER_MS.
+            // dt is clamped so one stalled frame can't skip the recovery.
             const prevTs = lastFrameTsRef.current;
             lastFrameTsRef.current = ts;
             const dt = prevTs ? Math.min(ts - prevTs, 100) : 16;
             if (durationEffRef.current < durationRef.current) {
                 const step =
-                    (durationRef.current * (1 - BOMB_DURATION_FACTOR) * dt) /
-                    BOMB_DURATION_RECOVER_MS;
+                    (durationRef.current * (1 - DURATION_DIP_FACTOR) * dt) /
+                    DURATION_DIP_RECOVER_MS;
                 durationEffRef.current = Math.min(
                     durationRef.current,
                     durationEffRef.current + step,

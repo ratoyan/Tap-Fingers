@@ -80,6 +80,10 @@ const GOLDEN_SPAWN_CHANCE = 0.13;
 // level's real pace instead of throwing full-speed boxes at a fresh screen.
 const DURATION_DIP_FACTOR = 0.4;
 const DURATION_DIP_RECOVER_MS = 4000;
+// Free helpers (bomb every 10 levels, slow every 15, shield every 20) only start
+// dropping once the player reaches this level — the early game is meant to be
+// played without them. The boss fight still triggers on its own every 10 levels.
+const HELPER_GRANT_MIN_LEVEL = 20;
 
 function getDefaultBackground(level: number) {
     if (level > 4) return require('../../assets/images/background4.jpg');
@@ -282,7 +286,7 @@ export default function Play() {
         maxComboRef.current = 0;
         sessionStartRef.current = Date.now();
         sessionTokenRef.current = null;
-        setLevelLength(30);
+        setLevelLength(2);
 
         try {
             // The token returned here is what lets submitGameSession() report the
@@ -817,12 +821,19 @@ export default function Play() {
         setLevel(levelRef.current);
         triggerLevelUp(levelRef.current);
 
-        if (levelRef.current % 10 === 0) {
+        // Free helpers are withheld until HELPER_GRANT_MIN_LEVEL — the boss below
+        // still spawns on its own 10-level cadence regardless.
+        const helpersUnlocked = levelRef.current >= HELPER_GRANT_MIN_LEVEL;
+
+        if (helpersUnlocked && levelRef.current % 10 === 0) {
             const newBombs = bombCountRef.current + 1;
             bombCountRef.current = newBombs;
             setBombCount(newBombs);
             saveBombCount(newBombs);
             userService.grantHelper('bomb').then(r => applyServerHelperCount('bomb', r.count)).catch(() => {});
+        }
+
+        if (levelRef.current % 10 === 0) {
             // Clear the field the instant the boss level is reached: flag the
             // boss fight (stops the spawn/animation loops from adding or moving
             // boxes) and wipe every PlayBox now, so the boss intro plays on an
@@ -832,7 +843,7 @@ export default function Play() {
             setTimeout(() => startBossFight(levelRef.current), 2000);
         }
 
-        if (levelRef.current % 15 === 0) {
+        if (helpersUnlocked && levelRef.current % 15 === 0) {
             const newSlow = slowCountRef.current + 1;
             slowCountRef.current = newSlow;
             setSlowCount(newSlow);
@@ -840,7 +851,7 @@ export default function Play() {
             userService.grantHelper('slow').then(r => applyServerHelperCount('slow', r.count)).catch(() => {});
         }
 
-        if (levelRef.current % 20 === 0) {
+        if (helpersUnlocked && levelRef.current % 20 === 0) {
             const newShield = shieldCountRef.current + 1;
             shieldCountRef.current = newShield;
             setShieldCount(newShield);

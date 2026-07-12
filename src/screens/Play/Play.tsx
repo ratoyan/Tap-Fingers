@@ -74,6 +74,11 @@ const INITIAL_BOMBS = 0;
 const COMBO_WINDOW_MS = 550;
 const COMBO_RESET_MS = 850;
 const GOLDEN_SPAWN_CHANCE = 0.13;
+// Using the bomb drops the fall duration to this fraction of the level's value,
+// then it climbs back linearly over BOMB_DURATION_RECOVER_MS — the arena starts
+// out gentle after the blast and eases back to the level's real pace.
+const BOMB_DURATION_FACTOR = 0.4;
+const BOMB_DURATION_RECOVER_MS = 4000;
 
 function getDefaultBackground(level: number) {
     if (level > 4) return require('../../assets/images/background4.jpg');
@@ -140,7 +145,12 @@ export default function Play() {
     // ─── Refs ─────────────────────────────────────────────────────────────────
     const cancelSoundRef = useRef(true);
     const cancelVibrationRef = useRef(true);
+    // durationRef = the level's duration (target). durationEffRef = what the boxes
+    // actually travel with right now; the bomb pulls it down and the animation loop
+    // walks it back up to durationRef.
     const durationRef = useRef(INITIAL_DURATION);
+    const durationEffRef = useRef(INITIAL_DURATION);
+    const lastFrameTsRef = useRef(0);
     const musicJumpingRef = useRef<Sound | null>(null);
     const musicPopRef = useRef<Sound | null>(null);
     const musicBombRef = useRef<Sound | null>(null);
@@ -271,7 +281,7 @@ export default function Play() {
         maxComboRef.current = 0;
         sessionStartRef.current = Date.now();
         sessionTokenRef.current = null;
-        setLevelLength(30);
+        setLevelLength(2);
 
         try {
             // The token returned here is what lets submitGameSession() report the
@@ -498,6 +508,7 @@ export default function Play() {
     function handleRetry() {
         submitGameSession();
         durationRef.current = INITIAL_DURATION;
+        durationEffRef.current = INITIAL_DURATION;
         countRef.current = 0;
         bombCountRef.current = INITIAL_BOMBS;
         levelRef.current = 1;
@@ -551,6 +562,11 @@ export default function Play() {
 
         tapsRef.current += 1;
         streakRef.current = 0;
+
+        // Blast aftermath: the boxes that spawn next travel with a shortened
+        // duration (slower fall) and the animation loop lifts it back to the
+        // level's duration over the next few seconds.
+        durationEffRef.current = durationRef.current * BOMB_DURATION_FACTOR;
 
         if (!cancelSoundRef.current && musicBombRef.current) {
             musicBombRef.current.setCurrentTime(0);
@@ -781,6 +797,12 @@ export default function Play() {
 
     function levelUp() {
         durationRef.current += DURATION_STEP;
+        // Keep whatever bomb deficit is still recovering: shift the effective
+        // duration by the same step instead of snapping it to the new target.
+        durationEffRef.current = Math.min(
+            durationRef.current,
+            durationEffRef.current + DURATION_STEP,
+        );
         levelRef.current += 1;
         setLevel(levelRef.current);
         triggerLevelUp(levelRef.current);
@@ -946,8 +968,25 @@ export default function Play() {
         if (!isPlaying) return;
 
         let animationFrameId: number;
+        lastFrameTsRef.current = 0;
 
-        const animate = () => {
+        const animate = (ts: number) => {
+            // Walk the effective duration back up to the level's duration after a
+            // bomb, covering the whole gap in BOMB_DURATION_RECOVER_MS. dt is
+            // clamped so one stalled frame can't skip the recovery.
+            const prevTs = lastFrameTsRef.current;
+            lastFrameTsRef.current = ts;
+            const dt = prevTs ? Math.min(ts - prevTs, 100) : 16;
+            if (durationEffRef.current < durationRef.current) {
+                const step =
+                    (durationRef.current * (1 - BOMB_DURATION_FACTOR) * dt) /
+                    BOMB_DURATION_RECOVER_MS;
+                durationEffRef.current = Math.min(
+                    durationRef.current,
+                    durationEffRef.current + step,
+                );
+            }
+
             if (isBossFightRef.current) {
                 animationFrameId = requestAnimationFrame(animate);
                 return;
@@ -993,8 +1032,8 @@ export default function Play() {
                         y: b.y + (b.ty - b.y) * speed,
                         tx: Math.abs(b.tx - b.x) < 1 ? Math.random() * (width - b.size) : b.tx,
                         ty: fromBottom
-                            ? b.y - (durationRef.current + 10)
-                            : b.y + durationRef.current + 10,
+                            ? b.y - (durationEffRef.current + 10)
+                            : b.y + durationEffRef.current + 10,
                         rotation: b.isRotation ? (b.rotation + 2) % 360 : b.rotation,
                     };
                 })
@@ -1036,7 +1075,7 @@ export default function Play() {
                 // how long a box takes to cross the screen versus the spawn gap.
                 setBoxesData(prev => [
                     ...prev,
-                    spawnBox(cardRef.current, durationRef.current, !!cardRef.current.fallFromBottom),
+                    spawnBox(cardRef.current, durationEffRef.current, !!cardRef.current.fallFromBottom),
                 ]);
             }
             timeoutId = setTimeout(spawnOne, nextDelay());

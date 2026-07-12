@@ -14,6 +14,7 @@ import {ms, vs, isTablet, SW} from '../../../utils/responsive.ts';
 // icons
 import Coin from '../../../assets/icons/Coin.tsx';
 import FullHeart from '../../../assets/icons/FullHeart.tsx';
+import RetryIcon from '../../../assets/icons/RetryIcon.tsx';
 
 // colors
 import {
@@ -49,6 +50,7 @@ export default function LoseModal({visible, score, onRetry, onBack, onWatchAd, c
     const heartAnim = useRef(new Animated.Value(1)).current;
     const adPulseAnim = useRef(new Animated.Value(1)).current;
     const starsAnim = useRef(new Animated.Value(0)).current;
+    const retrySpinAnim = useRef(new Animated.Value(0)).current;
 
     useEffect(() => {
         if (!visible) return;
@@ -125,11 +127,31 @@ export default function LoseModal({visible, score, onRetry, onBack, onWatchAd, c
                 }),
             ])
         ).start();
+
+        // Retry icon: one full turn, then a beat of rest — hints at "go again"
+        // without spinning nonstop under the label.
+        retrySpinAnim.setValue(0);
+        Animated.loop(
+            Animated.sequence([
+                Animated.delay(1200),
+                Animated.timing(retrySpinAnim, {
+                    toValue: 1,
+                    duration: 700,
+                    easing: Easing.inOut(Easing.ease),
+                    useNativeDriver: true,
+                }),
+            ])
+        ).start();
     }, [visible]);
 
     const titleColor = glowAnim.interpolate({
         inputRange: [0, 1],
         outputRange: [ORCHID, PURPLE_LIGHT],
+    });
+
+    const retrySpin = retrySpinAnim.interpolate({
+        inputRange: [0, 1],
+        outputRange: ['0deg', '360deg'],
     });
 
     if (!visible) return null;
@@ -228,7 +250,10 @@ export default function LoseModal({visible, score, onRetry, onBack, onWatchAd, c
                             end={{x: 1, y: 1}}
                             style={styles.retryBtn}
                         >
-                            <Text allowFontScaling={false} style={styles.retryBtnText}>🔄 {t('retry')}</Text>
+                            <Animated.View style={{transform: [{rotate: retrySpin}]}}>
+                                <RetryIcon size={ms(20)} color={WHITE}/>
+                            </Animated.View>
+                            <Text allowFontScaling={false} style={styles.retryBtnText}>{t('retry')}</Text>
                         </LinearGradient>
                     </TouchableOpacity>
                 </View>
@@ -400,8 +425,11 @@ const styles = StyleSheet.create({
         overflow: 'hidden',
     },
     retryBtn: {
+        flexDirection: 'row',
         paddingVertical: vs(14),
         alignItems: 'center',
+        justifyContent: 'center',
+        gap: ms(8),
         borderRadius: ms(16),
     },
     retryBtnText: {

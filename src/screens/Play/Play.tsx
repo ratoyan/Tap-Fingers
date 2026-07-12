@@ -282,7 +282,7 @@ export default function Play() {
         maxComboRef.current = 0;
         sessionStartRef.current = Date.now();
         sessionTokenRef.current = null;
-        setLevelLength(30);
+        setLevelLength(2);
 
         try {
             // The token returned here is what lets submitGameSession() report the
@@ -504,6 +504,12 @@ export default function Play() {
         setIsLoseModal(false);
         setIsPlaying(true);
         setBoxesData([]);
+
+        // Revive on a slowed-down field (same dip as a bomb blast / boss defeat):
+        // the duration drops and the animation loop walks it back up to the level's
+        // value, so the player isn't dropped straight back into full speed.
+        durationEffRef.current = durationRef.current * DURATION_DIP_FACTOR;
+        lastFrameTsRef.current = 0;
     }
 
     function handleRetry() {

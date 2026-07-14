@@ -17,6 +17,7 @@ import Ghost from "../../../assets/icons/Ghost";
 import FlameIcon from "../../../assets/icons/FlameIcon";
 import BoltIcon from "../../../assets/icons/BoltIcon";
 import {FallingBomb, BombBlast} from "../../../assets/icons/FallingBomb";
+import {MoneyBag} from "../../../assets/icons/MoneyBag";
 
 interface PlayBoxProps {
     box: any;
@@ -69,18 +70,6 @@ function PlayBox({box, handlePress}: PlayBoxProps) {
         const random = Math.floor(Math.random() * 50) + 101;
         return [random, random];
     }, []);
-    const goldenGlow: ViewStyle = box.isGolden ? {
-        borderWidth: 2,
-        borderColor: '#FFD700',
-        borderRadius: 25,
-        shadowColor: '#FFD700',
-        shadowOffset: {width: 0, height: 0},
-        shadowOpacity: 1,
-        shadowRadius: 22,
-        elevation: 44,
-        backgroundColor: 'rgba(255, 215, 0, 0.08)',
-    } : {};
-
     const baseTransform: ViewStyle["transform"] = [
         {translateX: box.x + box.size / 2},
         {translateY: box.y + box.size / 2},
@@ -92,7 +81,6 @@ function PlayBox({box, handlePress}: PlayBoxProps) {
     const commonStyle: ViewStyle = {
         position: "absolute",
         transform: baseTransform,
-        ...goldenGlow,
     };
 
     // 💣 Hazard bomb — wins over every card art (admin SVG included) so the
@@ -123,6 +111,38 @@ function PlayBox({box, handlePress}: PlayBoxProps) {
         );
     }
 
+    // 💰 Bonus money bag (what used to be the "golden" box). It replaces the
+    // card art entirely — the old glow-around-the-card treatment is gone — but
+    // the tap behaviour is unchanged: same handler, same bonus points.
+    if (box.isGolden) {
+        const bagSize = box.size || 100;
+        const bagStyle: ViewStyle = {
+            position: "absolute",
+            transform: [
+                {translateX: box.x + bagSize / 2},
+                {translateY: box.y + bagSize / 2},
+                ...((box?.isRotation && box?.rotation) ? [{rotate: `${box.rotation}deg`}] : []),
+                {translateX: -bagSize / 2},
+                {translateY: -bagSize / 2},
+            ],
+        };
+
+        // Tapped: the bag is simply gone — no leftover track/hole marker behind
+        // it, unlike the cards.
+        if (box.isBoom) return null;
+
+        return (
+            <Pressable
+                onPress={() => handlePress(box)}
+                style={[bagStyle, {zIndex: 1}]}
+                accessibilityRole="button"
+                accessibilityLabel="Tap money bag"
+            >
+                <MoneyBag size={bagSize}/>
+            </Pressable>
+        );
+    }
+
     // 🖌️ Admin-authored SVG (backend icon_svg) — wins over the on-device art so
     // the falling card matches what the Shop shows for the equipped skin. The
     // render size honours the admin-set width/height (Play only); otherwise it
@@ -141,7 +161,7 @@ function PlayBox({box, handlePress}: PlayBoxProps) {
             {translateX: -svgW / 2},
             {translateY: -svgH / 2},
         ];
-        const svgStyle: ViewStyle = {position: "absolute", transform: svgTransform, ...goldenGlow};
+        const svgStyle: ViewStyle = {position: "absolute", transform: svgTransform};
         return box.isBoom ? (
             <View style={svgStyle}>
                 <TrackIcon width={svgW} height={svgH}

@@ -78,8 +78,10 @@ const GOLDEN_SPAWN_CHANCE = 0.13;
 // fall past the edge is free. Every level — the first one included — drops
 // exactly BOMBS_PER_LEVEL of them, each after a random gap (never on a
 // predictable beat), from their own timer independent of the card spawner.
-// They drop straight down their spawn column, no sideways drift.
-const BOMBS_PER_LEVEL = 10;
+// They fall a bit quicker than the cards (BOMB_FALL_BOOST× the per-frame reach),
+// so they cross the screen faster and give the player less time to hesitate.
+const BOMBS_PER_LEVEL = 6;
+const BOMB_FALL_BOOST = 1.5;
 const BOMB_GAP_MIN_MS = 1200;
 const BOMB_GAP_MAX_MS = 4000;
 // Clearing the field (bomb blast, boss defeated) drops the fall duration to this
@@ -1101,15 +1103,17 @@ export default function Play() {
                     if (b.isBoom) return b;
 
                     const speed = 0.05 * slowSpeedRef.current;
+                    // Bombs reach further per frame than the cards → they fall
+                    // noticeably (but not wildly) faster.
+                    const reach =
+                        (durationEffRef.current + 10) * (b.isBomb ? BOMB_FALL_BOOST : 1);
 
                     return {
                         ...b,
                         x: b.x + (b.tx - b.x) * speed,
                         y: b.y + (b.ty - b.y) * speed,
                         tx: Math.abs(b.tx - b.x) < 1 ? Math.random() * (width - b.size) : b.tx,
-                        ty: fromBottom
-                            ? b.y - (durationEffRef.current + 10)
-                            : b.y + durationEffRef.current + 10,
+                        ty: fromBottom ? b.y - reach : b.y + reach,
                         // Bombs never spin — they drop upright and straight.
                         rotation: (b.isRotation && !b.isBomb) ? (b.rotation + 2) % 360 : b.rotation,
                     };

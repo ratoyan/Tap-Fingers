@@ -80,7 +80,7 @@ const GOLDEN_SPAWN_CHANCE = 0.13;
 // predictable beat), from their own timer independent of the card spawner.
 // They fall a bit quicker than the cards (BOMB_FALL_BOOST× the per-frame reach),
 // so they cross the screen faster and give the player less time to hesitate.
-const BOMBS_PER_LEVEL = 4;
+const BOMBS_PER_LEVEL = 5;
 const BOMB_FALL_BOOST = 1.5;
 // Life pickup: every HEART_DROP_EVERY_LEVELS levels the game checks whether the
 // player has lost a heart; if so, one heart drops in (a bit quicker than the

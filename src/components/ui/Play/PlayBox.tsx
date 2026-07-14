@@ -18,6 +18,7 @@ import FlameIcon from "../../../assets/icons/FlameIcon";
 import BoltIcon from "../../../assets/icons/BoltIcon";
 import {FallingBomb, BombBlast} from "../../../assets/icons/FallingBomb";
 import {MoneyBag} from "../../../assets/icons/MoneyBag";
+import {HeartPlus} from "../../../assets/icons/HeartPlus";
 
 interface PlayBoxProps {
     box: any;
@@ -107,6 +108,29 @@ function PlayBox({box, handlePress}: PlayBoxProps) {
                 accessibilityLabel="Bomb — do not tap"
             >
                 <FallingBomb size={bombSize}/>
+            </Pressable>
+        );
+    }
+
+    // ❤️ Life pickup — falls only when the player has a heart to win back.
+    // Like the bag, it leaves no track behind when tapped.
+    if (box.isHeart) {
+        const heartSize = box.size || 100;
+        const heartStyle: ViewStyle = {
+            position: "absolute",
+            transform: [{translateX: box.x}, {translateY: box.y}],
+        };
+
+        if (box.isBoom) return null;
+
+        return (
+            <Pressable
+                onPress={() => handlePress(box)}
+                style={[heartStyle, {zIndex: 1}]}
+                accessibilityRole="button"
+                accessibilityLabel="Tap to regain a life"
+            >
+                <HeartPlus size={heartSize}/>
             </Pressable>
         );
     }

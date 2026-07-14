@@ -82,6 +82,11 @@ const GOLDEN_SPAWN_CHANCE = 0.13;
 // so they cross the screen faster and give the player less time to hesitate.
 const BOMBS_PER_LEVEL = 6;
 const BOMB_FALL_BOOST = 1.5;
+// Life pickup: every HEART_DROP_EVERY_LEVELS levels the game checks whether the
+// player has lost a heart; if so, one heart drops in (a bit quicker than the
+// cards). Tapping it gives the lost life back. Nothing drops on a full heart row.
+const HEART_DROP_EVERY_LEVELS = 4;
+const HEART_FALL_BOOST = 1.4;
 const BOMB_GAP_MIN_MS = 1200;
 const BOMB_GAP_MAX_MS = 4000;
 // Clearing the field (bomb blast, boss defeated) drops the fall duration to this
@@ -102,8 +107,14 @@ function getDefaultBackground(level: number) {
     return require('../../assets/images/background1.jpg');
 }
 
-function spawnBox(card: any, duration: number, fromBottom = false, isBomb = false) {
-    const isGolden = !isBomb && Math.random() < GOLDEN_SPAWN_CHANCE;
+function spawnBox(
+    card: any,
+    duration: number,
+    fromBottom = false,
+    isBomb = false,
+    isHeart = false,
+) {
+    const isGolden = !isBomb && !isHeart && Math.random() < GOLDEN_SPAWN_CHANCE;
     // Spawn just off the edge the box travels from (below for fromBottom, above
     // otherwise) so it slides into view right away. The spacing between boxes
     // comes from the spawn cadence, not from a random head start off-screen —
@@ -129,6 +140,7 @@ function spawnBox(card: any, duration: number, fromBottom = false, isBomb = fals
         isBoom: false,
         isGolden,
         isBomb,
+        isHeart,
     };
 }
 
@@ -607,9 +619,9 @@ export default function Play() {
         Animated.timing(bombFlashAnim, {toValue: 0, duration: 700, useNativeDriver: true}).start();
 
         setBoxesData(prev => {
-            // Hazard bombs are wiped by the blast too, but they score nothing —
-            // only the real cards on screen pay out.
-            const pts = prev.filter(b => !b.isBoom && !b.isBomb).length;
+            // Hazard bombs and the life pickup are wiped by the blast too, but
+            // they score nothing — only the real cards on screen pay out.
+            const pts = prev.filter(b => !b.isBoom && !b.isBomb && !b.isHeart).length;
             countRef.current += pts;
             setCount(c => c + pts);
             setLevelCount(c => c + pts);
@@ -778,6 +790,21 @@ export default function Play() {
     function handleTap(box: any) {
         if (box.isBoom) return;
 
+        // ❤️ Life pickup: gives back one lost heart. No points, no combo — the
+        // reward is the heart itself.
+        if (box.isHeart) {
+            tapsRef.current += 1;
+            boomBox(box.id);
+            setEmptyHeartCount(prev => Math.max(0, prev - 1));
+
+            if (!cancelSoundRef.current && musicPopRef.current) {
+                musicPopRef.current.setCurrentTime(0);
+                musicPopRef.current.play();
+            }
+            if (!cancelVibrationRef.current) Vibration.vibrate(60);
+            return;
+        }
+
         // 💣 Tapped a hazard bomb: it blows up in place and costs a heart (a
         // shield eats the hit, same as a missed card). No points, combo and
         // streak reset — the punishment for not looking before tapping. Letting
@@ -873,6 +900,26 @@ export default function Play() {
         bombsLeftRef.current = BOMBS_PER_LEVEL;
         setLevel(levelRef.current);
         triggerLevelUp(levelRef.current);
+
+        // Every 4th level: if the player is down a heart, drop a life pickup.
+        // A short delay keeps it from landing on top of the level-up overlay.
+        if (levelRef.current % HEART_DROP_EVERY_LEVELS === 0 && emptyHeartCountRef.current > 0) {
+            setTimeout(() => {
+                // Re-check on arrival — the hearts may already be full again
+                // (a boss defeat also restores one), and a boss fight blocks it.
+                if (emptyHeartCountRef.current <= 0 || isBossFightRef.current) return;
+                setBoxesData(prev => [
+                    ...prev,
+                    spawnBox(
+                        cardRef.current,
+                        durationEffRef.current,
+                        !!cardRef.current.fallFromBottom,
+                        false,
+                        true,
+                    ),
+                ]);
+            }, 1200);
+        }
 
         // Free helpers are withheld until HELPER_GRANT_MIN_LEVEL — the boss below
         // still spawns on its own 10-level cadence regardless.
@@ -1084,8 +1131,9 @@ export default function Play() {
                     if (!missed) return true;
 
                     // A bomb that leaves the screen untouched is the correct
-                    // play — drop it silently, no heart, no shake.
-                    if (b.isBomb) return false;
+                    // play — drop it silently, no heart, no shake. A missed life
+                    // pickup is just a missed chance: no penalty either.
+                    if (b.isBomb || b.isHeart) return false;
 
                     if (shieldActiveRef.current) {
                         shieldActiveRef.current = false;
@@ -1103,10 +1151,10 @@ export default function Play() {
                     if (b.isBoom) return b;
 
                     const speed = 0.05 * slowSpeedRef.current;
-                    // Bombs reach further per frame than the cards → they fall
-                    // noticeably (but not wildly) faster.
-                    const reach =
-                        (durationEffRef.current + 10) * (b.isBomb ? BOMB_FALL_BOOST : 1);
+                    // Bombs (and the life pickup) reach further per frame than the
+                    // cards → they fall noticeably, but not wildly, faster.
+                    const boost = b.isBomb ? BOMB_FALL_BOOST : b.isHeart ? HEART_FALL_BOOST : 1;
+                    const reach = (durationEffRef.current + 10) * boost;
 
                     return {
                         ...b,

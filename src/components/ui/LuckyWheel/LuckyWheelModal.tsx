@@ -69,19 +69,33 @@ const RESULT_GLOW: Record<string, string> = {
 };
 
 const CONFETTI_COLORS = ['#FFD700', '#FF6B6B', '#4ECDC4', '#45B7D1', '#CE93D8', '#FF8C42', '#7fff7f', '#fff'];
-const CONFETTI = Array.from({length: 16}, (_, i) => ({
-    id:    i,
-    angle: (i / 16) * 360,
-    color: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
-    size:  4 + (i % 3) * 2,
-    dist:  110 + (i % 4) * 30,
+// A denser burst than a plain ring of dots: every piece leaves the hub at its own
+// angle and distance, half of them are ribbons rather than dots, they tumble as
+// they fly and are pulled down by `fall` so the burst reads as a real pop.
+const CONFETTI = Array.from({length: 30}, (_, i) => ({
+    id:     i,
+    angle:  (i / 30) * 360 + (i % 3) * 7,
+    color:  CONFETTI_COLORS[i % CONFETTI_COLORS.length],
+    size:   4 + (i % 4) * 2,
+    long:   i % 2 === 0,                 // ribbon vs dot
+    dist:   95 + (i % 5) * 32,
+    fall:   40 + (i % 4) * 35,           // gravity pull by the end of the flight
+    spin:   (i % 2 ? 1 : -1) * (360 + (i % 3) * 240),
+    delay:  (i % 6) * 35,
 }));
+
+// Expanding shock rings that wash out of the hub the instant the prize lands.
+const RINGS = [0, 1, 2];
 
 const SPARKLES = Array.from({length: 10}, (_, i) => ({
     id: i, x: 10 + Math.random() * 340, y: 10 + Math.random() * 580,
     size: Math.random() * 3 + 1.5, dur: 1200 + Math.random() * 2000, delay: Math.random() * 2000,
 }));
 
+// Normalises any angle into [0, 360).
+function mod360(deg: number) {
+    return ((deg % 360) + 360) % 360;
+}
 function polarToCart(cx: number, cy: number, r: number, deg: number) {
     const rad = ((deg - 90) * Math.PI) / 180;
     return {x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad)};
@@ -134,6 +148,14 @@ export default function LuckyWheelModal({visible, onClose, onSpinComplete}: Prop
         opacity: new Animated.Value(0),
         scale:   new Animated.Value(0),
     }))).current;
+    // Win-moment animations.
+    const winFlash        = useRef(new Animated.Value(0)).current;   // gold wash over the card
+    const wheelPop        = useRef(new Animated.Value(1)).current;   // wheel recoil on the hit
+    const ringAnims       = useRef(RINGS.map(() => new Animated.Value(0))).current;
+    const winnerPulse     = useRef(new Animated.Value(0)).current;   // winning slice highlight
+    const resultBob       = useRef(new Animated.Value(0)).current;   // prize card breathing
+    const winnerLoopRef   = useRef<Animated.CompositeAnimation | null>(null);
+    const resultLoopRef   = useRef<Animated.CompositeAnimation | null>(null);
 
     const pulseLoopRef    = useRef<Animated.CompositeAnimation | null>(null);
     const pointerLoopRef  = useRef<Animated.CompositeAnimation | null>(null);
@@ -142,6 +164,9 @@ export default function LuckyWheelModal({visible, onClose, onSpinComplete}: Prop
 
     const [spinning, setSpinning] = useState(false);
     const [result,   setResult]   = useState<WheelSlice | null>(null);
+    // Array position of the winning slice — drives the highlight drawn on top of
+    // the wheel, which rotates with it and so stays under the pointer.
+    const [winnerPos, setWinnerPos] = useState<number | null>(null);
     const [canSpin,  setCanSpin]  = useState(true);
     const [timeLeft, setTimeLeft] = useState('');
     const [segments, setSegments] = useState<LuckyWheelSegment[] | null>(null);
@@ -155,8 +180,12 @@ export default function LuckyWheelModal({visible, onClose, onSpinComplete}: Prop
         if (visible) {
             checkCanSpin();
             setResult(null);
+            setWinnerPos(null);
             resultScale.setValue(0);
             resultOpacity.setValue(0);
+            winFlash.setValue(0);
+            winnerLoopRef.current?.stop();
+            resultLoopRef.current?.stop();
 
             // Pull the latest wheel layout each time the modal opens, so admin
             // edits show up without an app restart.
@@ -198,6 +227,8 @@ export default function LuckyWheelModal({visible, onClose, onSpinComplete}: Prop
             sparkleLoopRefs.current.forEach(l => l.stop());
             pointerLoopRef.current?.stop();
             spinIconLoopRef.current?.stop();
+            winnerLoopRef.current?.stop();
+            resultLoopRef.current?.stop();
         }
     }, [visible]);
 
@@ -229,16 +260,70 @@ export default function LuckyWheelModal({visible, onClose, onSpinComplete}: Prop
         }
     }, [spinning]);
 
-    function burstConfetti() {
+    // The whole win moment, fired the instant the wheel stops: a gold wash over
+    // the card, the wheel recoiling off the pointer, shock rings washing out of
+    // the hub, the winning slice lighting up under the pointer, and a tumbling
+    // confetti burst — then the prize card springs in and keeps breathing.
+    function celebrateWin() {
+        // 1. Gold flash across the card.
+        winFlash.setValue(0);
+        Animated.sequence([
+            Animated.timing(winFlash, {toValue: 1, duration: 90,  useNativeDriver: true}),
+            Animated.timing(winFlash, {toValue: 0, duration: 520, easing: Easing.out(Easing.quad), useNativeDriver: true}),
+        ]).start();
+
+        // 2. The wheel takes the hit and springs back.
+        wheelPop.setValue(1);
+        Animated.sequence([
+            Animated.timing(wheelPop, {toValue: 1.06, duration: 130, easing: Easing.out(Easing.quad), useNativeDriver: true}),
+            Animated.spring(wheelPop, {toValue: 1, friction: 3.5, tension: 90, useNativeDriver: true}),
+        ]).start();
+
+        // 3. Shock rings, staggered.
+        ringAnims.forEach((r, i) => {
+            r.setValue(0);
+            Animated.timing(r, {
+                toValue: 1, duration: 900, delay: i * 170,
+                easing: Easing.out(Easing.cubic), useNativeDriver: true,
+            }).start();
+        });
+
+        // 4. The winning slice keeps glowing under the pointer.
+        winnerLoopRef.current?.stop();
+        winnerPulse.setValue(0);
+        winnerLoopRef.current = Animated.loop(Animated.sequence([
+            Animated.timing(winnerPulse, {toValue: 1, duration: 620, easing: Easing.inOut(Easing.quad), useNativeDriver: true}),
+            Animated.timing(winnerPulse, {toValue: 0.35, duration: 620, easing: Easing.inOut(Easing.quad), useNativeDriver: true}),
+        ]));
+        winnerLoopRef.current.start();
+
+        // 5. Confetti: fly out, tumble, fall, fade.
         confettiAnims.forEach(a => { a.dist.setValue(0); a.opacity.setValue(0); a.scale.setValue(0); });
-        Animated.parallel(confettiAnims.map(a => Animated.parallel([
-            Animated.timing(a.dist,    {toValue: 1, duration: 700, easing: Easing.out(Easing.cubic), useNativeDriver: true}),
+        Animated.parallel(confettiAnims.map((a, i) => Animated.parallel([
+            Animated.timing(a.dist, {
+                toValue: 1, duration: 1100, delay: CONFETTI[i].delay,
+                easing: Easing.out(Easing.cubic), useNativeDriver: true,
+            }),
             Animated.sequence([
-                Animated.timing(a.opacity, {toValue: 1, duration: 150, useNativeDriver: true}),
-                Animated.timing(a.opacity, {toValue: 0, duration: 550, delay: 150, useNativeDriver: true}),
+                Animated.timing(a.opacity, {toValue: 1, duration: 120, delay: CONFETTI[i].delay, useNativeDriver: true}),
+                Animated.timing(a.opacity, {toValue: 0, duration: 620, delay: 320, useNativeDriver: true}),
             ]),
-            Animated.spring(a.scale, {toValue: 1, friction: 4, tension: 80, useNativeDriver: true}),
+            Animated.spring(a.scale, {toValue: 1, friction: 4, tension: 80, delay: CONFETTI[i].delay, useNativeDriver: true}),
         ]))).start();
+
+        // 6. The prize card springs in, then breathes.
+        resultLoopRef.current?.stop();
+        resultBob.setValue(0);
+        Animated.parallel([
+            Animated.spring(resultScale,   {toValue: 1, friction: 3.5, tension: 90, useNativeDriver: true}),
+            Animated.timing(resultOpacity, {toValue: 1, duration: 250, useNativeDriver: true}),
+        ]).start(() => {
+            resultLoopRef.current = Animated.loop(Animated.sequence([
+                Animated.timing(resultBob, {toValue: 1, duration: 900, easing: Easing.inOut(Easing.quad), useNativeDriver: true}),
+                Animated.timing(resultBob, {toValue: 0, duration: 900, easing: Easing.inOut(Easing.quad), useNativeDriver: true}),
+            ]));
+            resultLoopRef.current.start();
+        });
     }
 
     async function checkCanSpin() {
@@ -260,6 +345,9 @@ export default function LuckyWheelModal({visible, onClose, onSpinComplete}: Prop
         if (spinning || !canSpin || slices.length === 0) return;
         setSpinning(true);
         setResult(null);
+        setWinnerPos(null);
+        winnerLoopRef.current?.stop();
+        resultLoopRef.current?.stop();
 
         // The server picks the winning slice, enforces the daily limit and
         // applies the reward — the wheel just animates to whatever it returns.
@@ -274,10 +362,30 @@ export default function LuckyWheelModal({visible, onClose, onSpinComplete}: Prop
             return;
         }
 
-        const winnerIdx   = serverResult.index;
-        const jitter      = (Math.random() - 0.5) * (segmentAngle * 0.4);
-        const toTop       = 360 - winnerIdx * segmentAngle + jitter;
-        const total       = spinValue.current + NUM_SPINS * 360 + toTop;
+        // Where the winning slice has to end up. Slice i covers
+        // [i·segmentAngle, (i+1)·segmentAngle) clockwise from 12 o'clock, and the
+        // pointer sits at 12 o'clock — so the wheel must turn until the slice's
+        // MIDDLE (not its leading edge) is under the pointer. The jitter only
+        // wanders inside the slice: capped at 35% of the half-slice, it can never
+        // push the landing point across a boundary into the neighbouring prize.
+        // The slices are drawn in array order, so the geometry needs the winner's
+        // POSITION in that array. The server sends the segment's own `index`
+        // field, which only coincides with the position when the segments happen
+        // to arrive ordered 0..n-1 — match on the field and fall back to the
+        // raw index if it isn't found.
+        const found      = slices.findIndex(s => s.index === serverResult.index);
+        const winnerIdx  = found >= 0 ? found : serverResult.index;
+        const sliceMid   = winnerIdx * segmentAngle + segmentAngle / 2;
+        const jitter     = (Math.random() - 0.5) * segmentAngle * 0.35;
+        const targetMod  = mod360(360 - sliceMid + jitter);
+
+        // The animated value keeps accumulating across spins, so the wheel is
+        // currently resting at spinValue.current mod 360 — not at 0. Turn by the
+        // delta from there, otherwise every spin after the first lands off by the
+        // previous spin's leftover angle (the "stops on the wrong prize" bug).
+        const currentMod = mod360(spinValue.current);
+        const delta      = mod360(targetMod - currentMod);
+        const total      = spinValue.current + NUM_SPINS * 360 + delta;
         spinValue.current = total;
 
         Animated.timing(spinAnim, {
@@ -286,12 +394,9 @@ export default function LuckyWheelModal({visible, onClose, onSpinComplete}: Prop
         }).start(async () => {
             setSpinning(false);
             setResult(slices[winnerIdx] ?? null);
+            setWinnerPos(winnerIdx);
             setCanSpin(false);
-            burstConfetti();
-            Animated.parallel([
-                Animated.spring(resultScale,   {toValue: 1, friction: 3.5, tension: 90, useNativeDriver: true}),
-                Animated.timing(resultOpacity, {toValue: 1, duration: 250, useNativeDriver: true}),
-            ]).start();
+            celebrateWin();
             // Server already applied the prize — just mirror it into the stores.
             patchStats({
                 coins:       serverResult.stats.coins,
@@ -349,6 +454,19 @@ export default function LuckyWheelModal({visible, onClose, onSpinComplete}: Prop
                             />
                         </Animated.View>
 
+                        {/* Win flash — a gold wash over the whole card on the hit. */}
+                        <Animated.View
+                            pointerEvents="none"
+                            style={{
+                                position: 'absolute',
+                                left: 0, right: 0, top: 0, bottom: 0,
+                                backgroundColor: glowColor,
+                                borderRadius: 32,
+                                opacity: winFlash.interpolate({inputRange: [0, 1], outputRange: [0, 0.5]}),
+                                zIndex: 20,
+                            }}
+                        />
+
                         {/* Header */}
                         <Text allowFontScaling={false} style={styles.title}>🎡  {t('luckyWheel')}</Text>
                         {isActive && <Text allowFontScaling={false} style={styles.subtitle}>{t('dailyFreeSpin')}</Text>}
@@ -374,7 +492,7 @@ export default function LuckyWheelModal({visible, onClose, onSpinComplete}: Prop
                             <View pointerEvents="none" style={styles.wheelHalo}/>
                             <Animated.View style={{
                                 position: 'absolute', width: WHEEL_SIZE, height: WHEEL_SIZE,
-                                borderRadius: CENTER, transform: [{rotate}],
+                                borderRadius: CENTER, transform: [{rotate}, {scale: wheelPop}],
                             }}>
                                 <Svg width={WHEEL_SIZE} height={WHEEL_SIZE}>
                                     {slices.length > 0 ? (
@@ -409,7 +527,44 @@ export default function LuckyWheelModal({visible, onClose, onSpinComplete}: Prop
                                     <Circle cx={CENTER} cy={CENTER} r={42} fill="#1a0035"/>
                                     <Circle cx={CENTER} cy={CENTER} r={42} fill="none" stroke="#FFD700" strokeWidth={2.5} strokeOpacity={0.6}/>
                                 </Svg>
+
+                                {/* Winning slice lit up. It lives inside the rotating
+                                    layer, so it stays locked to its slice under the
+                                    pointer while it pulses. */}
+                                {winnerPos !== null && (
+                                    <Animated.View
+                                        pointerEvents="none"
+                                        style={{position: 'absolute', opacity: winnerPulse}}
+                                    >
+                                        <Svg width={WHEEL_SIZE} height={WHEEL_SIZE}>
+                                            <Path
+                                                d={slicePath(winnerPos, segmentAngle)}
+                                                fill="rgba(255,255,255,0.30)"
+                                                stroke="#FFF6C2"
+                                                strokeWidth={3}
+                                            />
+                                        </Svg>
+                                    </Animated.View>
+                                )}
                             </Animated.View>
+
+                            {/* Shock rings washing out of the hub on the win. */}
+                            {result && ringAnims.map((r, i) => (
+                                <Animated.View
+                                    key={`ring-${i}`}
+                                    pointerEvents="none"
+                                    style={{
+                                        position: 'absolute',
+                                        left: 0, top: 0,
+                                        width: WHEEL_SIZE, height: WHEEL_SIZE,
+                                        borderRadius: CENTER,
+                                        borderWidth: 3,
+                                        borderColor: glowColor,
+                                        opacity: r.interpolate({inputRange: [0, 1], outputRange: [0.7, 0]}),
+                                        transform: [{scale: r.interpolate({inputRange: [0, 1], outputRange: [0.28, 1.45]})}],
+                                    }}
+                                />
+                            ))}
 
                             {/* Spin button */}
                             <View style={[styles.spinButtonFixed, {left: CENTER - 38, top: CENTER - 38}]}>
@@ -441,21 +596,29 @@ export default function LuckyWheelModal({visible, onClose, onSpinComplete}: Prop
                                 </Animated.View>
                             </View>
 
-                            {/* Confetti burst */}
+                            {/* Confetti burst — pieces fly out, tumble and drop. */}
                             {confettiAnims.map((a, i) => {
-                                const rad = (CONFETTI[i].angle * Math.PI) / 180;
-                                const tx = a.dist.interpolate({inputRange: [0, 1], outputRange: [0, Math.cos(rad) * CONFETTI[i].dist]});
-                                const ty = a.dist.interpolate({inputRange: [0, 1], outputRange: [0, Math.sin(rad) * CONFETTI[i].dist]});
+                                const c   = CONFETTI[i];
+                                const rad = (c.angle * Math.PI) / 180;
+                                const tx  = a.dist.interpolate({inputRange: [0, 1], outputRange: [0, Math.cos(rad) * c.dist]});
+                                // Gravity: the vertical travel ends `fall` px lower than
+                                // a straight radial flight would.
+                                const ty  = a.dist.interpolate({
+                                    inputRange:  [0, 0.6, 1],
+                                    outputRange: [0, Math.sin(rad) * c.dist * 0.75, Math.sin(rad) * c.dist + c.fall],
+                                });
+                                const rot = a.dist.interpolate({inputRange: [0, 1], outputRange: ['0deg', `${c.spin}deg`]});
                                 return (
                                     <Animated.View key={`cf-${i}`} pointerEvents="none" style={{
                                         position: 'absolute',
-                                        left: CENTER - CONFETTI[i].size / 2,
-                                        top:  CENTER - CONFETTI[i].size / 2,
-                                        width: CONFETTI[i].size, height: CONFETTI[i].size,
-                                        borderRadius: CONFETTI[i].size / 2,
-                                        backgroundColor: CONFETTI[i].color,
+                                        left: CENTER - c.size / 2,
+                                        top:  CENTER - c.size / 2,
+                                        width:  c.size,
+                                        height: c.long ? c.size * 2.6 : c.size,
+                                        borderRadius: c.long ? 2 : c.size / 2,
+                                        backgroundColor: c.color,
                                         opacity: a.opacity,
-                                        transform: [{translateX: tx}, {translateY: ty}, {scale: a.scale}],
+                                        transform: [{translateX: tx}, {translateY: ty}, {rotate: rot}, {scale: a.scale}],
                                     }}/>
                                 );
                             })}
@@ -465,7 +628,13 @@ export default function LuckyWheelModal({visible, onClose, onSpinComplete}: Prop
                         {result && (
                             <Animated.View style={[styles.resultWrapper, {
                                 opacity: resultOpacity,
-                                transform: [{scale: resultScale}],
+                                transform: [
+                                    {scale: Animated.multiply(
+                                        resultScale,
+                                        resultBob.interpolate({inputRange: [0, 1], outputRange: [1, 1.04]}),
+                                    )},
+                                    {translateY: resultBob.interpolate({inputRange: [0, 1], outputRange: [0, -4]})},
+                                ],
                                 shadowColor: glowColor,
                             }]}>
                                 <LinearGradient

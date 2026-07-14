@@ -43,6 +43,9 @@ import {useKeyboardAwareScroll} from '../../hooks/useKeyboardAwareScroll.ts';
 import styles from './Profile.style.ts';
 import {GRADIENT_LIGHT, PURPLE, PURPLE_DARK, VIOLET} from '../../constants/colors.ts';
 
+// Extra bottom padding added on top of the keyboard height while it is open.
+const KEYBOARD_EXTRA_PADDING = 220;
+
 function Profile() {
     const {t} = useTranslation();
     const navigation = useNavigation<any>();
@@ -108,7 +111,12 @@ function Profile() {
 
     // Keep the focused input above the keyboard (edge-to-edge disables the
     // native resize on Android SDK 36 / RN 0.84, so we handle it in JS).
-    const {scrollRef, onScroll, onInputFocus, keyboardSpacerStyle} = useKeyboardAwareScroll();
+    const {scrollRef, keyboardHeight, onScroll, onInputFocus} = useKeyboardAwareScroll();
+    // Bottom room while the keyboard is up: the keyboard's own height (it overlaps
+    // the view under edge-to-edge) plus a breathing gap, so the lowest card and its
+    // button can still be scrolled clear of the keys instead of sitting flush on them.
+    const keyboardSpacerStyle =
+        keyboardHeight > 0 ? {paddingBottom: keyboardHeight + KEYBOARD_EXTRA_PADDING} : null;
 
     // Field icon sizing/colour — mirrors the Welcome register form.
     const fieldIconSize = isTablet ? 24 : 21;

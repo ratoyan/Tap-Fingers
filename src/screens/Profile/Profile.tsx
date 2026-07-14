@@ -66,7 +66,7 @@ function Profile() {
 
     // Guest account block — either create a new account (keeps guest progress)
     // or sign in to a different existing account (replaces the guest session).
-    const [authMode,    setAuthMode]    = useState<'register' | 'login'>('register');
+    const [authMode,    setAuthMode]    = useState<'register' | 'login'>('login');
     const [regName,     setRegName]     = useState('');
     const [regEmail,    setRegEmail]    = useState('');
     const [regPassword, setRegPassword] = useState('');

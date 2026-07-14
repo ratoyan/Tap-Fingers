@@ -16,6 +16,7 @@ import BombCard from "../../../assets/icons/BombCard";
 import Ghost from "../../../assets/icons/Ghost";
 import FlameIcon from "../../../assets/icons/FlameIcon";
 import BoltIcon from "../../../assets/icons/BoltIcon";
+import {FallingBomb, BombBlast} from "../../../assets/icons/FallingBomb";
 
 interface PlayBoxProps {
     box: any;
@@ -93,6 +94,34 @@ function PlayBox({box, handlePress}: PlayBoxProps) {
         transform: baseTransform,
         ...goldenGlow,
     };
+
+    // 💣 Hazard bomb — wins over every card art (admin SVG included) so the
+    // trap always reads as a bomb, whatever skin the player has equipped. It is
+    // never golden; its own red halo does the highlighting.
+    if (box.isBomb) {
+        const bombSize = box.size || 100;
+        // No spin, no tilt: the bomb drops upright, so the lit fuse stays on top.
+        const bombTransform: ViewStyle["transform"] = [
+            {translateX: box.x},
+            {translateY: box.y},
+        ];
+        const bombStyle: ViewStyle = {position: "absolute", transform: bombTransform};
+
+        return box.isBoom ? (
+            <View style={bombStyle}>
+                <BombBlast size={bombSize}/>
+            </View>
+        ) : (
+            <Pressable
+                onPress={() => handlePress(box)}
+                style={[bombStyle, {zIndex: 1}]}
+                accessibilityRole="button"
+                accessibilityLabel="Bomb — do not tap"
+            >
+                <FallingBomb size={bombSize}/>
+            </Pressable>
+        );
+    }
 
     // 🖌️ Admin-authored SVG (backend icon_svg) — wins over the on-device art so
     // the falling card matches what the Shop shows for the equipped skin. The

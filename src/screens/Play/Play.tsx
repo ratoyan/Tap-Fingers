@@ -74,6 +74,14 @@ const INITIAL_BOMBS = 0;
 const COMBO_WINDOW_MS = 550;
 const COMBO_RESET_MS = 850;
 const GOLDEN_SPAWN_CHANCE = 0.13;
+// Hazard bombs fall in with the cards: tapping one costs a heart, letting it
+// fall past the edge is free. Every level — the first one included — drops
+// exactly BOMBS_PER_LEVEL of them, each after a random gap (never on a
+// predictable beat), from their own timer independent of the card spawner.
+// They drop straight down their spawn column, no sideways drift.
+const BOMBS_PER_LEVEL = 10;
+const BOMB_GAP_MIN_MS = 1200;
+const BOMB_GAP_MAX_MS = 4000;
 // Clearing the field (bomb blast, boss defeated) drops the fall duration to this
 // fraction of the level's value, then it climbs back linearly over
 // DURATION_DIP_RECOVER_MS — the arena restarts gentle and eases back to the
@@ -92,8 +100,8 @@ function getDefaultBackground(level: number) {
     return require('../../assets/images/background1.jpg');
 }
 
-function spawnBox(card: any, duration: number, fromBottom = false) {
-    const isGolden = Math.random() < GOLDEN_SPAWN_CHANCE;
+function spawnBox(card: any, duration: number, fromBottom = false, isBomb = false) {
+    const isGolden = !isBomb && Math.random() < GOLDEN_SPAWN_CHANCE;
     // Spawn just off the edge the box travels from (below for fromBottom, above
     // otherwise) so it slides into view right away. The spacing between boxes
     // comes from the spawn cadence, not from a random head start off-screen —
@@ -118,6 +126,7 @@ function spawnBox(card: any, duration: number, fromBottom = false) {
         rotation: 0,
         isBoom: false,
         isGolden,
+        isBomb,
     };
 }
 
@@ -161,6 +170,9 @@ export default function Play() {
     const musicBombRef = useRef<Sound | null>(null);
     const countRef = useRef(0);
     const bombCountRef = useRef(INITIAL_BOMBS);
+    // Hazard bombs still owed for the current level; refilled to BOMBS_PER_LEVEL
+    // on every level-up so each level drops exactly ten of them.
+    const bombsLeftRef = useRef(BOMBS_PER_LEVEL);
     const levelRef = useRef(1);
     const watchAdUsedRef = useRef(0);
     const lastTapTimeRef = useRef(0);
@@ -198,6 +210,8 @@ export default function Play() {
 
     // ─── Animated values ──────────────────────────────────────────────────────
     const bombFlashAnim = useRef(new Animated.Value(0)).current;
+    // Red screen flash when the player taps a hazard bomb.
+    const hurtFlashAnim = useRef(new Animated.Value(0)).current;
     const shieldFlashAnim = useRef(new Animated.Value(0)).current;
     const slowFlashAnim = useRef(new Animated.Value(0)).current;
     const comboScaleAnim = useRef(new Animated.Value(0)).current;
@@ -522,6 +536,7 @@ export default function Play() {
         durationEffRef.current = INITIAL_DURATION;
         countRef.current = 0;
         bombCountRef.current = INITIAL_BOMBS;
+        bombsLeftRef.current = BOMBS_PER_LEVEL;
         levelRef.current = 1;
         comboCountRef.current = 0;
         streakRef.current = 0;
@@ -590,8 +605,9 @@ export default function Play() {
         Animated.timing(bombFlashAnim, {toValue: 0, duration: 700, useNativeDriver: true}).start();
 
         setBoxesData(prev => {
-            const activeCount = prev.filter(b => !b.isBoom).length;
-            const pts = activeCount;
+            // Hazard bombs are wiped by the blast too, but they score nothing —
+            // only the real cards on screen pay out.
+            const pts = prev.filter(b => !b.isBoom && !b.isBomb).length;
             countRef.current += pts;
             setCount(c => c + pts);
             setLevelCount(c => c + pts);
@@ -760,6 +776,39 @@ export default function Play() {
     function handleTap(box: any) {
         if (box.isBoom) return;
 
+        // 💣 Tapped a hazard bomb: it blows up in place and costs a heart (a
+        // shield eats the hit, same as a missed card). No points, combo and
+        // streak reset — the punishment for not looking before tapping. Letting
+        // the bomb fall off-screen is free; only touching it hurts.
+        if (box.isBomb) {
+            tapsRef.current += 1;
+            boomBox(box.id);
+
+            if (comboTimerRef.current) clearTimeout(comboTimerRef.current);
+            comboCountRef.current = 0;
+            streakRef.current = 0;
+            setCombo(0);
+
+            if (shieldActiveRef.current) {
+                shieldActiveRef.current = false;
+                setShieldActive(false);
+            } else {
+                setEmptyHeartCount(prev => prev + 1);
+            }
+
+            if (!cancelSoundRef.current && musicBombRef.current) {
+                musicBombRef.current.setSpeed(1);
+                musicBombRef.current.setCurrentTime(0);
+                musicBombRef.current.play();
+            }
+            if (!cancelVibrationRef.current) Vibration.vibrate([0, 120, 60, 200]);
+
+            hurtFlashAnim.setValue(1);
+            Animated.timing(hurtFlashAnim, {toValue: 0, duration: 550, useNativeDriver: true}).start();
+            triggerMissShake();
+            return;
+        }
+
         if (!cancelSoundRef.current) {
             if (musicJumpingRef.current) {
                 const pitch = 0.8 + Math.random() * 0.7;
@@ -818,6 +867,8 @@ export default function Play() {
             durationEffRef.current + DURATION_STEP,
         );
         levelRef.current += 1;
+        // Fresh level → a fresh batch of ten hazard bombs.
+        bombsLeftRef.current = BOMBS_PER_LEVEL;
         setLevel(levelRef.current);
         triggerLevelUp(levelRef.current);
 
@@ -1030,6 +1081,10 @@ export default function Play() {
                     const missed = fromBottom ? newY < 0 : newY + b.size > height;
                     if (!missed) return true;
 
+                    // A bomb that leaves the screen untouched is the correct
+                    // play — drop it silently, no heart, no shake.
+                    if (b.isBomb) return false;
+
                     if (shieldActiveRef.current) {
                         shieldActiveRef.current = false;
                         setShieldActive(false);
@@ -1055,7 +1110,8 @@ export default function Play() {
                         ty: fromBottom
                             ? b.y - (durationEffRef.current + 10)
                             : b.y + durationEffRef.current + 10,
-                        rotation: b.isRotation ? (b.rotation + 2) % 360 : b.rotation,
+                        // Bombs never spin — they drop upright and straight.
+                        rotation: (b.isRotation && !b.isBomb) ? (b.rotation + 2) % 360 : b.rotation,
                     };
                 })
             );
@@ -1104,6 +1160,39 @@ export default function Play() {
 
         // First box drops right away — the field starts empty.
         timeoutId = setTimeout(spawnOne, 0);
+
+        return () => clearTimeout(timeoutId);
+    }, [isPlaying]);
+
+    // Bomb spawner — its own timer, so bombs land between the cards on their own
+    // irregular rhythm instead of replacing a card on the spawn beat. Each level
+    // has a budget of BOMBS_PER_LEVEL (reset in levelUp / handleRetry); the gap
+    // before each one is re-randomised, so no two bombs arrive on the same beat.
+    useEffect(() => {
+        if (!isPlaying) return;
+
+        let timeoutId: ReturnType<typeof setTimeout>;
+
+        const nextGap = () =>
+            (BOMB_GAP_MIN_MS + Math.random() * (BOMB_GAP_MAX_MS - BOMB_GAP_MIN_MS)) /
+            slowSpeedRef.current;
+
+        const spawnBomb = () => {
+            const eligible = !isBossFightRef.current && bombsLeftRef.current > 0;
+
+            if (eligible) {
+                bombsLeftRef.current -= 1;
+                setBoxesData(prev => [
+                    ...prev,
+                    spawnBox(cardRef.current, durationEffRef.current, !!cardRef.current.fallFromBottom, true),
+                ]);
+            }
+            // Keep ticking even when not eligible (boss fight, budget spent):
+            // the next level refills the budget and the timer picks it up.
+            timeoutId = setTimeout(spawnBomb, nextGap());
+        };
+
+        timeoutId = setTimeout(spawnBomb, nextGap());
 
         return () => clearTimeout(timeoutId);
     }, [isPlaying]);
@@ -1329,6 +1418,8 @@ export default function Play() {
                            style={[styles.flashOverlay, {opacity: shieldFlashAnim, backgroundColor: '#00e5ff'}]}/>
             <Animated.View pointerEvents="none"
                            style={[styles.flashOverlay, {opacity: slowFlashAnim, backgroundColor: LILAC}]}/>
+            <Animated.View pointerEvents="none"
+                           style={[styles.flashOverlay, {opacity: hurtFlashAnim, backgroundColor: '#FF1744'}]}/>
 
             <LoseModal
                 visible={isLoseModal}

@@ -51,6 +51,7 @@ import BuyHelperModal, {HelperType, HELPER_CONFIGS} from '../../components/ui/Pl
 import Level from '../../components/ui/Play/Level.tsx';
 import Progress from '../../components/ui/Play/Progress.tsx';
 import GameMenuModal from '../../components/ui/Play/GameMenuModal.tsx';
+import CountdownOverlay from '../../components/ui/Play/CountdownOverlay.tsx';
 
 // store
 import {useGlobalStore} from '../../store/globalStore.ts';
@@ -244,6 +245,7 @@ export default function Play() {
     const [isLoseModal, setIsLoseModal] = useState(false);
     const [isExitModal, setIsExitModal] = useState(false);
     const [isMenuModal, setIsMenuModal] = useState(false);
+    const [isCountdown, setIsCountdown] = useState(false);
     const [buyModal, setBuyModal] = useState<HelperType | null>(null);
     // Starts empty — the spawn effect drips the first box in immediately.
     const [boxesData, setBoxesData] = useState<any[]>([]);
@@ -504,8 +506,16 @@ export default function Play() {
         setIsMenuModal(true);
     }
 
+    // Resuming from the pause menu doesn't drop the player straight back into a
+    // live arena — the menu closes, the field stays frozen, and the 3·2·1·GO!
+    // overlay counts them back in. `isPlaying` stays false for the whole count.
     function handleMenuClose() {
         setIsMenuModal(false);
+        setIsCountdown(true);
+    }
+
+    function handleCountdownFinish() {
+        setIsCountdown(false);
         setIsPlaying(true);
     }
 
@@ -965,6 +975,9 @@ export default function Play() {
     // ─── App state (background → auto-pause & open menu) ─────────────────────
     const onAppBackground = useCallback(() => {
         if (isLoseModal || isExitModal || buyModal !== null) return;
+        // Drop any countdown in flight: it sits above the menu and would resume
+        // the game behind it. Closing the menu starts a fresh 3·2·1 anyway.
+        setIsCountdown(false);
         setIsPlaying(false);
         setIsMenuModal(true);
     }, [isLoseModal, isExitModal, buyModal]);
@@ -1485,6 +1498,7 @@ export default function Play() {
             />
             <ExitModal visible={isExitModal} onConfirm={handleExitConfirm} onCancel={handleExitCancel}/>
             <GameMenuModal visible={isMenuModal} onClose={handleMenuClose} onExit={handleMenuExit}/>
+            {isCountdown && <CountdownOverlay onFinish={handleCountdownFinish}/>}
             <BuyHelperModal
                 visible={buyModal !== null}
                 helperType={buyModal}

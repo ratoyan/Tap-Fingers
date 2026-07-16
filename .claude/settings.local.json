@@ -47,7 +47,8 @@
       "Bash(adb shell *)",
       "Bash(adb pull *)",
       "Bash(adb logcat *)",
-      "Bash(adb exec-out *)"
+      "Bash(adb exec-out *)",
+      "Bash(rm -f seq_*.png)"
     ]
   }
 }

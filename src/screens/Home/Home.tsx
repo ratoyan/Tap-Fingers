@@ -213,7 +213,7 @@ const Home: React.FC<Props> = () => {
 
             <LuckyWheelButton
                 canSpin={canSpin}
-                top={insets.top + 8}
+                top={insets.top + TOP_OFFSET}
                 onPress={() => setShowWheel(true)}
             />
 

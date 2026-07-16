@@ -28,15 +28,11 @@ import {useAuthStore} from '../../store/authStore.ts';
 import BackHeader from '../../components/ui/BackHeader/BackHeader.tsx';
 import PhotoPickerSheet from '../../components/ui/PhotoPickerSheet/PhotoPickerSheet.tsx';
 import CameraModal from '../../components/ui/CameraModal/CameraModal.tsx';
+import GuestAuthModal, {GuestAuthMode} from '../../components/ui/GuestAuthModal/GuestAuthModal.tsx';
 import Ghost from '../../assets/icons/Ghost.tsx';
-import PersonIcon from '../../assets/icons/PersonIcon.tsx';
-import MailIcon from '../../assets/icons/MailIcon.tsx';
-import LockIcon from '../../assets/icons/LockIcon.tsx';
-import EyeIcon from '../../assets/icons/EyeIcon.tsx';
 
 // data
 import {avatarForId} from '../../data/avatars.ts';
-import {isTablet} from '../../utils/responsive.ts';
 import {useKeyboardAwareScroll} from '../../hooks/useKeyboardAwareScroll.ts';
 
 // styles
@@ -67,15 +63,11 @@ function Profile() {
     const [nameInput,     setNameInput]     = useState('');
     const [savingName,    setSavingName]    = useState(false);
 
-    // Guest account block — either create a new account (keeps guest progress)
-    // or sign in to a different existing account (replaces the guest session).
-    const [authMode,    setAuthMode]    = useState<'register' | 'login'>('login');
-    const [regName,     setRegName]     = useState('');
-    const [regEmail,    setRegEmail]    = useState('');
-    const [regPassword, setRegPassword] = useState('');
-    const [showRegPassword, setShowRegPassword] = useState(false);
-    const [linking,     setLinking]     = useState(false);
-    const [focusedField, setFocusedField] = useState<'name' | 'email' | 'password' | null>(null);
+    // Guest account block — the sign-up / sign-in form lives in a bottom sheet
+    // so this screen stays a short summary. `authMode` picks which form it opens
+    // on; the sheet itself owns the fields and can switch modes from inside.
+    const [authModal, setAuthModal] = useState(false);
+    const [authMode,  setAuthMode]  = useState<GuestAuthMode>('register');
 
     // Change email (email accounts only)
     const [emailPwd,    setEmailPwd]    = useState('');
@@ -118,11 +110,6 @@ function Profile() {
     const keyboardSpacerStyle =
         keyboardHeight > 0 ? {paddingBottom: keyboardHeight + KEYBOARD_EXTRA_PADDING} : null;
 
-    // Field icon sizing/colour — mirrors the Welcome register form.
-    const fieldIconSize = isTablet ? 24 : 21;
-    const iconColor = (field: 'name' | 'email' | 'password') =>
-        focusedField === field ? VIOLET : 'rgba(255,255,255,0.55)';
-
     // Keep the editable name field in sync with the server username.
     useEffect(() => {
         setNameInput(player?.username || '');
@@ -130,78 +117,27 @@ function Profile() {
 
     // ── Auth: upgrade a guest account ───────────────────────
 
-    // Mirrors the backend validators (tapfingers-server auth.validator):
-    // username 3-32 alphanumeric/underscore, valid email, password 6-72.
-    function validateRegistration(): string | null {
-        if (!/^[a-zA-Z0-9_]{3,32}$/.test(regName.trim())) {
-            return t('nameRuleError');
-        }
-        if (!/^\S+@\S+\.\S+$/.test(regEmail.trim())) {
-            return t('validEmailError');
-        }
-        if (regPassword.length < 6) {
-            return t('passwordMinError');
-        }
-        return null;
+    function openAuthModal(mode: GuestAuthMode) {
+        setAuthMode(mode);
+        setAuthModal(true);
     }
 
-    async function handleEmailSignUp() {
-        if (linking) return;
-        const validationError = validateRegistration();
-        if (validationError) {
-            notice.error(t('checkDetails'), validationError);
-            return;
-        }
-        setLinking(true);
-        try {
-            // Upgrades the current guest account to an email/password account,
-            // keeping all of the guest's progress server-side.
-            await authService.linkEmail(regName.trim(), regEmail.trim(), regPassword);
-            Keyboard.dismiss();
-            await setSession();
-            // Still a guest until the email is confirmed — prompt for the code.
-            notice.success(t('confirmEmail'), t('confirmEmailHint', {email: regEmail.trim()}));
-        } catch (error: any) {
-            notice.error(t('signUpFailed'), error?.message ?? t('tryAgain'));
-        } finally {
-            setLinking(false);
-        }
+    // The guest was upgraded in place, keeping its progress. It stays a guest
+    // server-side until the email is confirmed, so the verify card takes over
+    // the guest view once the session refreshes.
+    async function handleRegistered(email: string) {
+        setAuthModal(false);
+        await setSession();
+        notice.success(t('confirmEmail'), t('confirmEmailHint', {email}));
     }
 
-    // Signs the guest into a DIFFERENT, already-existing account. Unlike the
-    // sign-up above (which upgrades this guest in place), this swaps to another
-    // account's session, so the guest's local progress is left behind on the
-    // server under its own guest_id.
-    async function handleEmailLogin() {
-        if (linking) return;
-        const email = regEmail.trim();
-        if (!/^\S+@\S+\.\S+$/.test(email)) {
-            notice.error(t('checkDetails'), t('validEmailError'));
-            return;
-        }
-        if (regPassword.length < 6) {
-            notice.error(t('checkDetails'), t('passwordMinError'));
-            return;
-        }
-        setLinking(true);
-        try {
-            await authService.emailLogin(email, regPassword);
-            Keyboard.dismiss();
-            await setSession();
-            notice.success(t('welcomeBack'), t('signedInMsg'));
-            // Reset to Home so the whole app reflects the new account cleanly.
-            navigation.reset({index: 0, routes: [{name: 'Home'}]});
-        } catch (error: any) {
-            notice.error(t('signInFailed'), error?.message ?? t('tryAgain'));
-        } finally {
-            setLinking(false);
-        }
-    }
-
-    function toggleAuthMode() {
-        if (linking) return;
-        setFocusedField(null);
-        setAuthMode(prev => (prev === 'register' ? 'login' : 'register'));
+    // The guest signed into a different, already-existing account — reset to
+    // Home so the whole app reflects the new account cleanly.
+    async function handleLoggedIn() {
+        setAuthModal(false);
+        await setSession();
+        notice.success(t('welcomeBack'), t('signedInMsg'));
+        navigation.reset({index: 0, routes: [{name: 'Home'}]});
     }
 
     // ── Username (server-owned) ─────────────────────────────
@@ -463,122 +399,51 @@ function Profile() {
                             </Text>
 
                             {/* A guest with a pending email confirms it here (and only
-                                then becomes a real account); otherwise the sign-up/in form. */}
+                                then becomes a real account); otherwise the two
+                                buttons that open the sign-up / sign-in sheet. */}
                             {guestPendingEmail ? renderVerifyCard() : (
-                            <View style={styles.guestForm}>
-                                <Text allowFontScaling={false} style={styles.formTitle}>
-                                    {authMode === 'register'
-                                        ? `✨ ${t('createYourAccount')}`
-                                        : `👋 ${t('signInToAccount')}`}
-                                </Text>
-
-                                {authMode === 'register' && (
-                                    <View style={[styles.fieldRow, focusedField === 'name' && styles.fieldRowFocused]}>
-                                        <PersonIcon size={fieldIconSize} color={iconColor('name')} style={styles.fieldIcon} />
-                                        <TextInput
-                                            style={styles.fieldInput}
-                                            placeholder={t('name')}
-                                            placeholderTextColor="rgba(255,255,255,0.45)"
-                                            value={regName}
-                                            onChangeText={setRegName}
-                                            onFocus={() => { setFocusedField('name'); onInputFocus(); }}
-                                            onBlur={() => setFocusedField(null)}
-                                            autoCapitalize="none"
-                                            autoCorrect={false}
-                                            editable={!linking}
-                                            allowFontScaling={false}
-                                            returnKeyType="next"
-                                        />
-                                    </View>
-                                )}
-
-                                <View style={[styles.fieldRow, focusedField === 'email' && styles.fieldRowFocused]}>
-                                    <MailIcon size={fieldIconSize} color={iconColor('email')} style={styles.fieldIcon} />
-                                    <TextInput
-                                        style={styles.fieldInput}
-                                        placeholder={t('email')}
-                                        placeholderTextColor="rgba(255,255,255,0.45)"
-                                        value={regEmail}
-                                        onChangeText={setRegEmail}
-                                        onFocus={() => { setFocusedField('email'); onInputFocus(); }}
-                                        onBlur={() => setFocusedField(null)}
-                                        keyboardType="email-address"
-                                        autoCapitalize="none"
-                                        autoCorrect={false}
-                                        editable={!linking}
-                                        allowFontScaling={false}
-                                        returnKeyType="next"
-                                    />
-                                </View>
-
-                                <View style={[styles.fieldRow, focusedField === 'password' && styles.fieldRowFocused]}>
-                                    <LockIcon size={fieldIconSize} color={iconColor('password')} style={styles.fieldIcon} />
-                                    <TextInput
-                                        style={styles.fieldInput}
-                                        placeholder={t('password')}
-                                        placeholderTextColor="rgba(255,255,255,0.45)"
-                                        value={regPassword}
-                                        onChangeText={setRegPassword}
-                                        onFocus={() => { setFocusedField('password'); onInputFocus(); }}
-                                        onBlur={() => setFocusedField(null)}
-                                        secureTextEntry={!showRegPassword}
-                                        autoCapitalize="none"
-                                        autoCorrect={false}
-                                        editable={!linking}
-                                        allowFontScaling={false}
-                                        returnKeyType="done"
-                                        onSubmitEditing={authMode === 'register' ? handleEmailSignUp : handleEmailLogin}
-                                    />
+                                <View style={styles.authButtons}>
                                     <TouchableOpacity
-                                        onPress={() => setShowRegPassword(v => !v)}
-                                        hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}
+                                        style={styles.primaryAuthButton}
+                                        onPress={() => openAuthModal('register')}
+                                        activeOpacity={0.85}
                                         accessibilityRole="button"
-                                        accessibilityLabel={showRegPassword ? 'Hide password' : 'Show password'}
+                                        accessibilityLabel={t('createAccount')}
                                     >
-                                        <EyeIcon size={fieldIconSize} off={!showRegPassword} color={iconColor('password')} />
+                                        <LinearGradient
+                                            colors={[PURPLE_DARK, GRADIENT_LIGHT]}
+                                            start={{x: 0, y: 0}}
+                                            end={{x: 1, y: 1}}
+                                            style={styles.primaryAuthGradient}
+                                        >
+                                            <Text allowFontScaling={false} style={styles.primaryAuthText}>
+                                                ✨  {t('createAccount')}
+                                            </Text>
+                                        </LinearGradient>
                                     </TouchableOpacity>
-                                </View>
 
-                                <TouchableOpacity
-                                    style={styles.linkButton}
-                                    onPress={authMode === 'register' ? handleEmailSignUp : handleEmailLogin}
-                                    disabled={linking}
-                                    activeOpacity={0.85}
-                                >
-                                    <LinearGradient
-                                        colors={[PURPLE_DARK, GRADIENT_LIGHT]}
-                                        start={{x: 0, y: 0}}
-                                        end={{x: 1, y: 1}}
-                                        style={styles.linkButtonGradient}
+                                    <View style={styles.dividerRow}>
+                                        <View style={styles.dividerLine} />
+                                        <Text allowFontScaling={false} style={styles.dividerText}>{t('or')}</Text>
+                                        <View style={styles.dividerLine} />
+                                    </View>
+
+                                    <TouchableOpacity
+                                        style={styles.secondaryAuthButton}
+                                        onPress={() => openAuthModal('login')}
+                                        activeOpacity={0.85}
+                                        accessibilityRole="button"
+                                        accessibilityLabel={t('signIn')}
                                     >
-                                        {linking
-                                            ? <ActivityIndicator color="#fff" />
-                                            : <Text allowFontScaling={false} style={styles.linkButtonText}>
-                                                {authMode === 'register' ? t('createAccount') : t('signIn')}
-                                            </Text>}
-                                    </LinearGradient>
-                                </TouchableOpacity>
-
-                                {/* Switch between "create account" and "sign in to another account" */}
-                                <TouchableOpacity
-                                    onPress={toggleAuthMode}
-                                    disabled={linking}
-                                    hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}
-                                >
-                                    <Text allowFontScaling={false} style={styles.guestToggleText}>
-                                        {authMode === 'register' ? t('haveAccount') : t('noAccount')}
-                                        <Text style={styles.guestToggleAccent}>
-                                            {authMode === 'register' ? t('signInAction') : t('signUp')}
+                                        <Text allowFontScaling={false} style={styles.secondaryAuthText}>
+                                            👋  {t('signIn')}
                                         </Text>
-                                    </Text>
-                                </TouchableOpacity>
+                                    </TouchableOpacity>
 
-                                {authMode === 'register' && (
                                     <Text allowFontScaling={false} style={styles.formFootnote}>
                                         🔒 {t('progressSafeNote')}
                                     </Text>
-                                )}
-                            </View>
+                                </View>
                             )}
 
                             {/* Delete guest account — wipes this guest session and its progress */}
@@ -797,6 +662,16 @@ function Profile() {
 
                 </ScrollView>
             </KeyboardAvoidingView>
+
+            {isGuest && (
+                <GuestAuthModal
+                    visible={authModal}
+                    mode={authMode}
+                    onClose={() => setAuthModal(false)}
+                    onRegistered={handleRegistered}
+                    onLoggedIn={handleLoggedIn}
+                />
+            )}
 
             {!isGuest && (
                 <PhotoPickerSheet

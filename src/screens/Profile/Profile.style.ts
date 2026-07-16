@@ -1,5 +1,5 @@
 import {StyleSheet} from 'react-native';
-import {DARK_PURPLE, GRADIENT_LIGHT, ORCHID, PURPLE_DARK, VIOLET, WHITE} from '../../constants/colors.ts';
+import {DARK_PURPLE, GRADIENT_LIGHT, ORCHID, PURPLE_DARK, WHITE} from '../../constants/colors.ts';
 import {HORIZONAL_OFFSET} from '../../constants/uiConstants.ts';
 import {ms, scale, vs, SW} from '../../utils/responsive.ts';
 
@@ -129,7 +129,7 @@ export default StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         width: '100%',
-        marginBottom: vs(4),
+        marginVertical: vs(14),
         gap: ms(10),
     },
     dividerLine: {
@@ -143,10 +143,50 @@ export default StyleSheet.create({
         fontWeight: '600',
         letterSpacing: 0.5,
     },
+    /* ── Guest auth buttons (open the sign-up / sign-in sheet) ── */
     authButtons: {
         width: '100%',
         alignItems: 'center',
         marginTop: vs(4),
+    },
+    primaryAuthButton: {
+        width: '100%',
+        borderRadius: ms(16),
+        shadowColor: GRADIENT_LIGHT,
+        shadowOffset: {width: 0, height: 6},
+        shadowOpacity: 0.5,
+        shadowRadius: 12,
+        elevation: 8,
+    },
+    primaryAuthGradient: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: vs(16),
+        minHeight: vs(54),
+        borderRadius: ms(16),
+    },
+    primaryAuthText: {
+        color: WHITE,
+        fontSize: ms(17),
+        fontWeight: '800',
+        letterSpacing: 0.5,
+    },
+    secondaryAuthButton: {
+        width: '100%',
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: vs(15),
+        minHeight: vs(52),
+        borderRadius: ms(16),
+        borderWidth: 1.5,
+        borderColor: 'rgba(255,255,255,0.28)',
+        backgroundColor: 'rgba(255,255,255,0.08)',
+    },
+    secondaryAuthText: {
+        color: WHITE,
+        fontSize: ms(16),
+        fontWeight: '800',
+        letterSpacing: 0.5,
     },
 
     /* ── Input card ─────────────────────────────────── */
@@ -176,92 +216,12 @@ export default StyleSheet.create({
         textAlign: 'center',
     },
 
-    /* ── Guest sign-up form ─────────────────────────── */
-    guestForm: {
-        width: '100%',
-        marginTop: vs(18),
-        backgroundColor: 'rgba(255,255,255,0.07)',
-        borderRadius: ms(24),
-        paddingVertical: ms(22),
-        paddingHorizontal: ms(18),
-        borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.14)',
-        shadowColor: DARK_PURPLE,
-        shadowOffset: {width: 0, height: 8},
-        shadowOpacity: 0.35,
-        shadowRadius: 16,
-        elevation: 8,
-    },
-    formTitle: {
-        color: WHITE,
-        fontSize: ms(18),
-        fontWeight: '800',
-        textAlign: 'center',
-        letterSpacing: 0.4,
-        marginBottom: vs(18),
-    },
-    fieldRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: 'rgba(255,255,255,0.12)',
-        borderRadius: ms(14),
-        borderWidth: 1.5,
-        borderColor: 'rgba(255,255,255,0.12)',
-        paddingHorizontal: ms(14),
-        marginBottom: vs(12),
-    },
-    fieldRowFocused: {
-        borderColor: VIOLET,
-        backgroundColor: 'rgba(255,255,255,0.18)',
-    },
-    fieldIcon: {
-        marginRight: ms(10),
-    },
-    fieldInput: {
-        flex: 1,
-        color: WHITE,
-        fontSize: ms(16),
-        paddingVertical: vs(13),
-    },
-    linkButton: {
-        width: '100%',
-        borderRadius: ms(16),
-        marginTop: vs(6),
-        shadowColor: GRADIENT_LIGHT,
-        shadowOffset: {width: 0, height: 6},
-        shadowOpacity: 0.5,
-        shadowRadius: 12,
-        elevation: 8,
-    },
-    linkButtonGradient: {
-        alignItems: 'center',
-        justifyContent: 'center',
-        paddingVertical: vs(16),
-        minHeight: vs(54),
-        borderRadius: ms(16),
-    },
-    linkButtonText: {
-        color: WHITE,
-        fontSize: ms(17),
-        fontWeight: '800',
-        letterSpacing: 0.5,
-    },
     formFootnote: {
         color: 'rgba(255,255,255,0.5)',
         fontSize: ms(12),
         textAlign: 'center',
         marginTop: vs(14),
         letterSpacing: 0.3,
-    },
-    guestToggleText: {
-        color: 'rgba(255,255,255,0.7)',
-        fontSize: ms(14),
-        textAlign: 'center',
-        marginTop: vs(16),
-    },
-    guestToggleAccent: {
-        color: GRADIENT_LIGHT,
-        fontWeight: '800',
     },
 
     /* ── Confirm email card ─────────────────────────── */

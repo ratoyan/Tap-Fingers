@@ -42,7 +42,12 @@
       "Bash(adb devices *)",
       "PowerShell(npm config *)",
       "PowerShell(npm run *)",
-      "PowerShell(npm install *)"
+      "PowerShell(npm install *)",
+      "Bash(git stash *)",
+      "Bash(adb shell *)",
+      "Bash(adb pull *)",
+      "Bash(adb logcat *)",
+      "Bash(adb exec-out *)"
     ]
   }
 }

@@ -48,7 +48,11 @@
       "Bash(adb pull *)",
       "Bash(adb logcat *)",
       "Bash(adb exec-out *)",
-      "Bash(rm -f seq_*.png)"
+      "Bash(rm -f seq_*.png)",
+      "Bash(adb install *)",
+      "Bash(git checkout *)",
+      "Bash(./gradlew assembleRelease -q)",
+      "Bash(echo \"BUILD_EXIT=$?\")"
     ]
   }
 }

@@ -71,6 +71,40 @@ function PlayBox({box, handlePress}: PlayBoxProps) {
         const random = Math.floor(Math.random() * 50) + 101;
         return [random, random];
     }, []);
+
+    // The artwork is the expensive part of a falling box — an admin SVG is dozens
+    // of nodes, and Card1/MoneyBag/… are SVGs too. None of it changes while a box
+    // falls; only its position does. But the game loop hands every box a fresh
+    // object each frame, so React.memo on this component can't help and the whole
+    // art tree would re-render 60×/sec, per box.
+    //
+    // Memoising the *elements* fixes that on its own: React bails out of a
+    // subtree when the element is referentially identical, so the per-frame
+    // re-render only rebuilds the wrapper's style and leaves the art untouched.
+    // That's what makes a screen full of SVG cards affordable.
+    //
+    // Sizes are hoisted here (not read inside the branches) so these hooks always
+    // run in the same order, whichever art branch is taken below. Elements for
+    // branches that aren't taken are merely created, never mounted — harmless.
+    const artSize = box.size || 100;
+    const svgW = box.width || box.size || 100;
+    const svgH = box.height || box.size || 100;
+    // Admin-set width/height fill the box exactly (stretch); without them,
+    // keep the artwork's own aspect ratio.
+    const hasAdminDims = !!(box.width || box.height);
+
+    const svgArt = useMemo(
+        () => (
+            <SvgXml xml={tintedSvg} width={svgW} height={svgH}
+                color={box.randomColors ? randomColor : undefined}
+                preserveAspectRatio={hasAdminDims ? "none" : "xMidYMid meet"}/>
+        ),
+        [tintedSvg, svgW, svgH, box.randomColors, randomColor, hasAdminDims],
+    );
+    const cardArt = useMemo(() => <Card1 width={100} height={100}/>, []);
+    const bombArt = useMemo(() => <FallingBomb size={artSize}/>, [artSize]);
+    const bagArt = useMemo(() => <MoneyBag size={artSize}/>, [artSize]);
+    const heartArt = useMemo(() => <HeartPlus size={artSize}/>, [artSize]);
     const baseTransform: ViewStyle["transform"] = [
         {translateX: box.x + box.size / 2},
         {translateY: box.y + box.size / 2},
@@ -88,7 +122,7 @@ function PlayBox({box, handlePress}: PlayBoxProps) {
     // trap always reads as a bomb, whatever skin the player has equipped. It is
     // never golden; its own red halo does the highlighting.
     if (box.isBomb) {
-        const bombSize = box.size || 100;
+        const bombSize = artSize;
         // No spin, no tilt: the bomb drops upright, so the lit fuse stays on top.
         const bombTransform: ViewStyle["transform"] = [
             {translateX: box.x},
@@ -102,12 +136,12 @@ function PlayBox({box, handlePress}: PlayBoxProps) {
             </View>
         ) : (
             <Pressable
-                onPress={() => handlePress(box)}
+                onPressIn={() => handlePress(box)}
                 style={[bombStyle, {zIndex: 1}]}
                 accessibilityRole="button"
                 accessibilityLabel="Bomb — do not tap"
             >
-                <FallingBomb size={bombSize}/>
+                {bombArt}
             </Pressable>
         );
     }
@@ -115,7 +149,6 @@ function PlayBox({box, handlePress}: PlayBoxProps) {
     // ❤️ Life pickup — falls only when the player has a heart to win back.
     // Like the bag, it leaves no track behind when tapped.
     if (box.isHeart) {
-        const heartSize = box.size || 100;
         const heartStyle: ViewStyle = {
             position: "absolute",
             transform: [{translateX: box.x}, {translateY: box.y}],
@@ -125,12 +158,12 @@ function PlayBox({box, handlePress}: PlayBoxProps) {
 
         return (
             <Pressable
-                onPress={() => handlePress(box)}
+                onPressIn={() => handlePress(box)}
                 style={[heartStyle, {zIndex: 1}]}
                 accessibilityRole="button"
                 accessibilityLabel="Tap to regain a life"
             >
-                <HeartPlus size={heartSize}/>
+                {heartArt}
             </Pressable>
         );
     }
@@ -139,7 +172,7 @@ function PlayBox({box, handlePress}: PlayBoxProps) {
     // card art entirely — the old glow-around-the-card treatment is gone — but
     // the tap behaviour is unchanged: same handler, same bonus points.
     if (box.isGolden) {
-        const bagSize = box.size || 100;
+        const bagSize = artSize;
         const bagStyle: ViewStyle = {
             position: "absolute",
             transform: [
@@ -157,12 +190,12 @@ function PlayBox({box, handlePress}: PlayBoxProps) {
 
         return (
             <Pressable
-                onPress={() => handlePress(box)}
+                onPressIn={() => handlePress(box)}
                 style={[bagStyle, {zIndex: 1}]}
                 accessibilityRole="button"
                 accessibilityLabel="Tap money bag"
             >
-                <MoneyBag size={bagSize}/>
+                {bagArt}
             </Pressable>
         );
     }
@@ -173,11 +206,6 @@ function PlayBox({box, handlePress}: PlayBoxProps) {
     // falls back to the on-device size. The transform is recentred on those
     // dimensions so a non-square card still pivots/positions correctly.
     if (typeof box.iconSvg === "string" && box.iconSvg.trim()) {
-        // Admin-set width/height fill the box exactly (stretch); without them,
-        // keep the artwork's own aspect ratio.
-        const hasAdminDims = !!(box.width || box.height);
-        const svgW = box.width || box.size || 100;
-        const svgH = box.height || box.size || 100;
         const svgTransform: ViewStyle["transform"] = [
             {translateX: box.x + svgW / 2},
             {translateY: box.y + svgH / 2},
@@ -193,14 +221,12 @@ function PlayBox({box, handlePress}: PlayBoxProps) {
             </View>
         ) : (
             <Pressable
-                onPress={() => handlePress(box)}
+                onPressIn={() => handlePress(box)}
                 style={[svgStyle, {zIndex: 1}]}
                 accessibilityRole="button"
                 accessibilityLabel="Tap card"
             >
-                <SvgXml xml={tintedSvg} width={svgW} height={svgH}
-                    color={box.randomColors ? randomColor : undefined}
-                    preserveAspectRatio={hasAdminDims ? "none" : "xMidYMid meet"}/>
+                {svgArt}
             </Pressable>
         );
     }
@@ -217,7 +243,7 @@ function PlayBox({box, handlePress}: PlayBoxProps) {
             :
             (
                 <Pressable
-                    onPress={() => handlePress(box)}
+                    onPressIn={() => handlePress(box)}
                     accessibilityRole="button"
                     accessibilityLabel="Tap card"
                     style={[
@@ -244,12 +270,12 @@ function PlayBox({box, handlePress}: PlayBoxProps) {
         :
         (
             <Pressable
-                onPress={() => handlePress(box)}
+                onPressIn={() => handlePress(box)}
                 style={[commonStyle, {zIndex: 1}]}
                 accessibilityRole="button"
                 accessibilityLabel="Tap card"
             >
-                <Card1 width={100} height={100}/>
+                {cardArt}
             </Pressable>
         )
 }

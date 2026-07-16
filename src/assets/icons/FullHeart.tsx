@@ -1,16 +1,155 @@
 import React from "react";
-import Svg, { Path } from "react-native-svg";
+import Svg, {
+    Path,
+    Defs,
+    LinearGradient,
+    RadialGradient,
+    Stop,
+    Circle,
+} from "react-native-svg";
 
-const FullHeart = ({ size = 24, color = "red" }) => (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-        <Path
-            d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42
-         4.42 3 7.5 3c1.74 0 3.41 0.81 4.5 2.09C13.09 3.81
-         14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4
-         6.86-8.55 11.54L12 21.35z"
-            fill={color}
+const FullHeart = ({
+                       size = 26,
+                       color = "#FF1744"
+                   }) => (
+
+    <Svg
+        width={size}
+        height={size}
+        viewBox="0 0 100 100"
+        fill="none"
+    >
+
+        <Defs>
+
+            {/* Red heart gradient */}
+            <LinearGradient
+                id="heartGradient"
+                x1="20"
+                y1="10"
+                x2="80"
+                y2="90"
+            >
+
+                <Stop
+                    offset="0%"
+                    stopColor="#FF5252"
+                />
+
+                <Stop
+                    offset="45%"
+                    stopColor={color}
+                />
+
+                <Stop
+                    offset="100%"
+                    stopColor="#B00020"
+                />
+
+            </LinearGradient>
+
+
+            {/* Soft red glow */}
+            <RadialGradient
+                id="heartGlow"
+                cx="50%"
+                cy="50%"
+                r="50%"
+            >
+
+                <Stop
+                    offset="0%"
+                    stopColor="#FF1744"
+                    stopOpacity="0.35"
+                />
+
+                <Stop
+                    offset="100%"
+                    stopColor="#FF1744"
+                    stopOpacity="0"
+                />
+
+            </RadialGradient>
+
+
+            {/* Shine */}
+            <LinearGradient
+                id="shine"
+                x1="0"
+                y1="0"
+                x2="1"
+                y2="1"
+            >
+
+                <Stop
+                    offset="0%"
+                    stopColor="#FFFFFF"
+                    stopOpacity="0.85"
+                />
+
+                <Stop
+                    offset="100%"
+                    stopColor="#FFFFFF"
+                    stopOpacity="0"
+                />
+
+            </LinearGradient>
+
+
+        </Defs>
+
+
+        {/* Glow */}
+        <Circle
+            cx="50"
+            cy="52"
+            r="46"
+            fill="url(#heartGlow)"
         />
+
+
+        {/* Main Heart */}
+        <Path
+            d="
+            M50 88
+            C45 81 12 61 12 35
+            C12 21 22 12 36 12
+            C43 12 49 17 50 25
+            C51 17 57 12 64 12
+            C78 12 88 21 88 35
+            C88 61 55 81 50 88
+            Z
+            "
+            fill="url(#heartGradient)"
+        />
+
+
+        {/* Left reflection */}
+        <Path
+            d="
+            M28 30
+            C33 21 43 20 47 28
+            C39 29 34 35 32 43
+            C27 40 26 34 28 30
+            Z
+            "
+            fill="url(#shine)"
+        />
+
+
+        {/* Small light */}
+        <Circle
+            cx="68"
+            cy="28"
+            r="5"
+            fill="#FFFFFF"
+            opacity="0.35"
+        />
+
+
     </Svg>
+
 );
+
 
 export default FullHeart;

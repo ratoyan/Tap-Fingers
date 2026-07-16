@@ -64,20 +64,129 @@ export function FallingBomb({size = 100}: {size?: number}) {
 // The blast left behind after a bomb is tapped.
 export function BombBlast({size = 100}: {size?: number}) {
     return (
-        <Svg width={size} height={size} viewBox="0 0 100 100" fill="none">
+        <Svg width={size} height={size} viewBox="0 0 120 120" fill="none">
             <Defs>
-                <RadialGradient id="bbCore" cx="50%" cy="50%" r="50%">
+
+                <RadialGradient id="blastGlow">
                     <Stop offset="0%" stopColor="#FFFFFF"/>
-                    <Stop offset="35%" stopColor="#FFD54F"/>
-                    <Stop offset="70%" stopColor="#FF5722"/>
-                    <Stop offset="100%" stopColor="#B71C1C" stopOpacity={0.15}/>
+                    <Stop offset="25%" stopColor="#FFF8DC"/>
+                    <Stop offset="55%" stopColor="#FFC107"/>
+                    <Stop offset="80%" stopColor="#FF5722"/>
+                    <Stop offset="100%" stopColor="#B71C1C" stopOpacity="0"/>
                 </RadialGradient>
+
+
+                <RadialGradient id="hotFire">
+                    <Stop offset="0%" stopColor="#FFFFFF"/>
+                    <Stop offset="15%" stopColor="#FFFFCC"/>
+                    <Stop offset="40%" stopColor="#FFD740"/>
+                    <Stop offset="65%" stopColor="#FF9800"/>
+                    <Stop offset="90%" stopColor="#F4511E"/>
+                    <Stop offset="100%" stopColor="#8E0000"/>
+                </RadialGradient>
+
+
+                <LinearGradient id="flameEdge" x1="0" y1="0" x2="1" y2="1">
+                    <Stop offset="0%" stopColor="#FFF176"/>
+                    <Stop offset="40%" stopColor="#FFB300"/>
+                    <Stop offset="100%" stopColor="#E53935"/>
+                </LinearGradient>
+
             </Defs>
-            <Path
-                d="M50 6 L60 30 L84 18 L72 42 L96 50 L72 58 L84 82 L60 70 L50 94 L40 70 L16 82 L28 58 L4 50 L28 42 L16 18 L40 30 Z"
-                fill="url(#bbCore)"
+
+
+            {/* Big explosion glow */}
+            <Circle
+                cx="60"
+                cy="60"
+                r="58"
+                fill="url(#blastGlow)"
+                opacity="0.65"
             />
-            <Circle cx={50} cy={50} r={17} fill="#FFF3E0" fillOpacity={0.9}/>
+
+
+            {/* Outer fire spikes */}
+            <Path
+                fill="url(#hotFire)"
+                d="
+    M60 3
+    L66 25
+    L82 8
+    L78 32
+    L105 20
+    L90 45
+    L118 48
+    L94 60
+    L116 75
+    L88 72
+    L102 102
+    L76 84
+    L68 117
+    L55 90
+    L38 115
+    L40 85
+    L12 103
+    L28 72
+    L3 78
+    L24 57
+    L4 40
+    L34 42
+    L18 15
+    L45 30
+    Z
+    "
+            />
+
+
+            {/* Inner flame */}
+            <Path
+                fill="url(#flameEdge)"
+                d="
+    M60 20
+    C70 35 85 35 88 48
+    C76 52 84 66 90 70
+    C75 70 72 84 65 95
+    C55 82 44 88 34 95
+    C40 78 25 70 18 64
+    C35 60 32 45 27 38
+    C44 42 54 30 60 20
+    Z
+    "
+            />
+
+
+            {/* White hot center */}
+            <Circle
+                cx="60"
+                cy="60"
+                r="20"
+                fill="#FFFDE7"
+            />
+
+            <Circle
+                cx="60"
+                cy="60"
+                r="11"
+                fill="#FFFFFF"
+            />
+
+
+            {/* Sparks */}
+            <Path
+                fill="#FFD54F"
+                d="M15 30 L18 22 L22 30 L18 36 Z"
+            />
+
+            <Path
+                fill="#FF9800"
+                d="M98 38 L102 28 L107 38 L102 44 Z"
+            />
+
+            <Path
+                fill="#FFF176"
+                d="M105 85 L109 76 L113 85 L109 91 Z"
+            />
+
         </Svg>
     );
 }

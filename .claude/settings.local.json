@@ -52,7 +52,8 @@
       "Bash(adb install *)",
       "Bash(git checkout *)",
       "Bash(./gradlew assembleRelease -q)",
-      "Bash(echo \"BUILD_EXIT=$?\")"
+      "Bash(echo \"BUILD_EXIT=$?\")",
+      "PowerShell(npx tsc --noEmit -p tsconfig.json)"
     ]
   }
 }

@@ -1,11 +1,14 @@
 ﻿import React, {useRef} from "react";
-import {Animated, Text, TouchableOpacity} from "react-native";
+import {Animated, Text, TouchableOpacity, View} from "react-native";
 import {MenuType} from "../../../types/menu.type.ts";
 import {useTranslation} from "react-i18next";
 import {useNavigation} from "@react-navigation/core";
 
+// icons
+import {MENU_ICONS} from "../../../assets/icons/MenuIcons.tsx";
+
 // styles
-import styles from './MenuButton.style.ts';
+import styles, {MENU_ICON_SIZE} from './MenuButton.style.ts';
 import {ORCHID, PURPLE} from "../../../constants/colors.ts";
 import LinearGradient from "react-native-linear-gradient";
 
@@ -14,6 +17,7 @@ interface MenuProps {
 }
 
 function MenuButton({menu}: MenuProps){
+    const Icon = MENU_ICONS[menu.icon];
     const {t} = useTranslation();
     const navigation = useNavigation();
     const scale = useRef(new Animated.Value(1)).current;
@@ -53,7 +57,11 @@ function MenuButton({menu}: MenuProps){
                     end={{x: 1, y: 0}}
                     style={styles.gradientButton}
                 >
-                    <Text allowFontScaling={false} style={styles.icon}>{menu.icon}</Text>
+                    {Icon ? (
+                        <View style={styles.icon}>
+                            <Icon size={MENU_ICON_SIZE}/>
+                        </View>
+                    ) : null}
                     <Text allowFontScaling={false} style={styles.title}>{t(menu.title)}</Text>
                 </LinearGradient>
             </TouchableOpacity>

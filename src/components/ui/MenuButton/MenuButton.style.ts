@@ -2,6 +2,10 @@ import {StyleSheet} from 'react-native';
 import {BLACK, WHITE} from '../../../constants/colors.ts';
 import {ms, scale, vs, isTablet, SW, SH} from '../../../utils/responsive.ts';
 
+// Render size of the button's SVG art. Kept here (not inline in the component)
+// so it scales off the same responsive helpers as the label beside it.
+export const MENU_ICON_SIZE = ms(isTablet ? 32 : 30);
+
 export default StyleSheet.create({
     buttonContainer: {
         marginVertical: vs(isTablet ? 10 : 14),
@@ -23,9 +27,7 @@ export default StyleSheet.create({
         borderRadius: ms(20),
     },
     icon: {
-        fontSize: ms(isTablet ? 28 : 26),
         marginRight: scale(12),
-        color: WHITE,
     },
     title: {
         fontSize: ms(isTablet ? 20 : 18),

@@ -74,7 +74,7 @@ const DURATION_STEP = 20;
 const INITIAL_BOMBS = 0;
 const COMBO_WINDOW_MS = 550;
 const COMBO_RESET_MS = 850;
-const GOLDEN_SPAWN_CHANCE = 0.13;
+const GOLDEN_SPAWN_CHANCE = 0.09;
 // Hazard bombs fall in with the cards: tapping one costs a heart, letting it
 // fall past the edge is free. Every level — the first one included — drops
 // exactly BOMBS_PER_LEVEL of them, each after a random gap (never on a

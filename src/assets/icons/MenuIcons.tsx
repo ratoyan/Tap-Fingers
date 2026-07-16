@@ -61,16 +61,18 @@ function SettingsMenuIcon({size = 30}: MenuIconProps) {
                 </RadialGradient>
             </Defs>
             <Circle cx="32" cy="32" r="27" fill="#FFFFFF" opacity={0.15}/>
-            {/* Eight teeth, drawn as one rounded cross rotated 45° twice */}
+            {/* Eight teeth: four bars through the centre, each rotated 45°. Kept
+                barely rounded (rx 1.5) and stubby — at rx 4 and full length they
+                read as flower petals, not gear teeth. */}
             <G>
                 {[0, 45, 90, 135].map(angle => (
                     <Rect
                         key={angle}
-                        x="27"
-                        y="6"
-                        width="10"
-                        height="52"
-                        rx="4"
+                        x="26.5"
+                        y="9"
+                        width="11"
+                        height="46"
+                        rx="1.5"
                         fill="url(#miGearBody)"
                         stroke={GOLD_EDGE}
                         strokeWidth={1.5}
@@ -94,36 +96,42 @@ function ShopMenuIcon({size = 30}: MenuIconProps) {
                     <Stop offset="0.5" stopColor={GOLD}/>
                     <Stop offset="1" stopColor={GOLD_DEEP}/>
                 </LinearGradient>
-                <LinearGradient id="miBagGloss" x1="16" y1="22" x2="30" y2="56" gradientUnits="userSpaceOnUse">
+                <LinearGradient id="miBagGloss" x1="16" y1="19" x2="30" y2="40" gradientUnits="userSpaceOnUse">
                     <Stop offset="0" stopColor="#FFFFFF" stopOpacity={0.55}/>
                     <Stop offset="1" stopColor="#FFFFFF" stopOpacity={0}/>
                 </LinearGradient>
             </Defs>
             <Circle cx="32" cy="32" r="27" fill="#FFFFFF" opacity={0.15}/>
-            {/* Handle sits behind the bag so it reads as coming over the rim */}
+            {/* A cart, not a bag. Two passes at a handled bag both read as a
+                padlock: an arc of any weight sitting on a rounded body IS a
+                shackle at 30px, and thinning the arc only made it a thinner
+                shackle. A cart's silhouette has no such collision. */}
             <Path
-                d="M22 24v-4a10 10 0 0120 0v4"
-                stroke="#FFF8E1"
-                strokeWidth={3.5}
+                d="M5 11h6.5a2.5 2.5 0 012.44 1.94L21 41.6a3 3 0 002.92 2.35H50"
+                stroke={GOLD_LIGHT}
+                strokeWidth={3.2}
                 strokeLinecap="round"
+                strokeLinejoin="round"
                 fill="none"
             />
             <Path
-                d="M14 22h36l3 30a4 4 0 01-4 4.5H15a4 4 0 01-4-4.5l3-30z"
+                d="M16.5 19h39l-4 17.6a2.5 2.5 0 01-2.44 1.94H21.2L16.5 19z"
                 fill="url(#miBagBody)"
                 stroke={GOLD_EDGE}
                 strokeWidth={2}
                 strokeLinejoin="round"
             />
-            <Path d="M14 22h36l1 10H13l1-10z" fill="url(#miBagGloss)"/>
-            {/* Price tag mark */}
+            <Path d="M16.5 19h39l-1.4 6H17.9l-1.4-6z" fill="url(#miBagGloss)"/>
+            {/* Basket grid — enough to read as a mesh, not so much it turns to
+                mush at icon size. */}
             <Path
-                d="M32 33v14M27.5 36.5a4.5 4.5 0 014.5-3.5c2.5 0 4.5 1.6 4.5 3.5s-2 3.3-4.5 3.7-4.5 1.8-4.5 3.7 2 3.6 4.5 3.6a4.5 4.5 0 004.5-3.5"
+                d="M28.5 19.5l2.2 18.5M41 19.5l-1.2 18.5M18.6 28.5h34.4"
                 stroke="#5B2C8D"
-                strokeWidth={2.5}
-                strokeLinecap="round"
-                fill="none"
+                strokeWidth={1.6}
+                opacity={0.75}
             />
+            <Circle cx="27" cy="52" r="4.6" fill={GOLD_LIGHT} stroke={GOLD_EDGE} strokeWidth={1.6}/>
+            <Circle cx="46" cy="52" r="4.6" fill={GOLD_LIGHT} stroke={GOLD_EDGE} strokeWidth={1.6}/>
         </Svg>
     )
 }

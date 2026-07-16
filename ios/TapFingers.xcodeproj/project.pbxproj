@@ -14,6 +14,15 @@
 		AA0001BB0001AA0001BB0001 /* gamemusic.wav in Resources */ = {isa = PBXBuildFile; fileRef = AA0001AA0001AA0001AA0001 /* gamemusic.wav */; };
 		AA0002BB0002AA0002BB0002 /* jumping.wav in Resources */ = {isa = PBXBuildFile; fileRef = AA0002AA0002AA0002AA0002 /* jumping.wav */; };
 		AA0003BB0003AA0003BB0003 /* games1.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = AA0003AA0003AA0003AA0003 /* games1.mp3 */; };
+		AA0010BB0010AA0010BB0010 /* tap.wav in Resources */ = {isa = PBXBuildFile; fileRef = AA0010AA0010AA0010AA0010 /* tap.wav */; };
+		AA0011BB0011AA0011BB0011 /* coin.wav in Resources */ = {isa = PBXBuildFile; fileRef = AA0011AA0011AA0011AA0011 /* coin.wav */; };
+		AA0012BB0012AA0012BB0012 /* heart.wav in Resources */ = {isa = PBXBuildFile; fileRef = AA0012AA0012AA0012AA0012 /* heart.wav */; };
+		AA0013BB0013AA0013BB0013 /* bomb.wav in Resources */ = {isa = PBXBuildFile; fileRef = AA0013AA0013AA0013AA0013 /* bomb.wav */; };
+		AA0014BB0014AA0014BB0014 /* shield.wav in Resources */ = {isa = PBXBuildFile; fileRef = AA0014AA0014AA0014AA0014 /* shield.wav */; };
+		AA0015BB0015AA0015BB0015 /* slow.wav in Resources */ = {isa = PBXBuildFile; fileRef = AA0015AA0015AA0015AA0015 /* slow.wav */; };
+		AA0016BB0016AA0016BB0016 /* hit.wav in Resources */ = {isa = PBXBuildFile; fileRef = AA0016AA0016AA0016AA0016 /* hit.wav */; };
+		AA0017BB0017AA0017BB0017 /* countdown.wav in Resources */ = {isa = PBXBuildFile; fileRef = AA0017AA0017AA0017AA0017 /* countdown.wav */; };
+		AA0018BB0018AA0018BB0018 /* go.wav in Resources */ = {isa = PBXBuildFile; fileRef = AA0018AA0018AA0018AA0018 /* go.wav */; };
 		AA0004BB0004AA0004BB0004 /* games2.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = AA0004AA0004AA0004AA0004 /* games2.mp3 */; };
 		AA0005BB0005AA0005BB0005 /* gamemusic2.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = AA0005AA0005AA0005AA0005 /* gamemusic2.mp3 */; };
 		AA0006BB0006AA0006BB0006 /* gamemusic3.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = AA0006AA0006AA0006AA0006 /* gamemusic3.mp3 */; };
@@ -33,6 +42,15 @@
 		AA0001AA0001AA0001AA0001 /* gamemusic.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = gamemusic.wav; path = TapFingers/gamemusic.wav; sourceTree = "<group>"; };
 		AA0002AA0002AA0002AA0002 /* jumping.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = jumping.wav; path = TapFingers/jumping.wav; sourceTree = "<group>"; };
 		AA0003AA0003AA0003AA0003 /* games1.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; name = games1.mp3; path = TapFingers/games1.mp3; sourceTree = "<group>"; };
+		AA0010AA0010AA0010AA0010 /* tap.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = tap.wav; path = TapFingers/tap.wav; sourceTree = "<group>"; };
+		AA0011AA0011AA0011AA0011 /* coin.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = coin.wav; path = TapFingers/coin.wav; sourceTree = "<group>"; };
+		AA0012AA0012AA0012AA0012 /* heart.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = heart.wav; path = TapFingers/heart.wav; sourceTree = "<group>"; };
+		AA0013AA0013AA0013AA0013 /* bomb.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = bomb.wav; path = TapFingers/bomb.wav; sourceTree = "<group>"; };
+		AA0014AA0014AA0014AA0014 /* shield.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = shield.wav; path = TapFingers/shield.wav; sourceTree = "<group>"; };
+		AA0015AA0015AA0015AA0015 /* slow.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = slow.wav; path = TapFingers/slow.wav; sourceTree = "<group>"; };
+		AA0016AA0016AA0016AA0016 /* hit.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = hit.wav; path = TapFingers/hit.wav; sourceTree = "<group>"; };
+		AA0017AA0017AA0017AA0017 /* countdown.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = countdown.wav; path = TapFingers/countdown.wav; sourceTree = "<group>"; };
+		AA0018AA0018AA0018AA0018 /* go.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = go.wav; path = TapFingers/go.wav; sourceTree = "<group>"; };
 		AA0004AA0004AA0004AA0004 /* games2.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; name = games2.mp3; path = TapFingers/games2.mp3; sourceTree = "<group>"; };
 		AA0005AA0005AA0005AA0005 /* gamemusic2.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; name = gamemusic2.mp3; path = TapFingers/gamemusic2.mp3; sourceTree = "<group>"; };
 		AA0006AA0006AA0006AA0006 /* gamemusic3.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; name = gamemusic3.mp3; path = TapFingers/gamemusic3.mp3; sourceTree = "<group>"; };
@@ -61,6 +79,15 @@
 				AA0001AA0001AA0001AA0001 /* gamemusic.wav */,
 				AA0002AA0002AA0002AA0002 /* jumping.wav */,
 				AA0003AA0003AA0003AA0003 /* games1.mp3 */,
+				AA0010AA0010AA0010AA0010 /* tap.wav */,
+				AA0011AA0011AA0011AA0011 /* coin.wav */,
+				AA0012AA0012AA0012AA0012 /* heart.wav */,
+				AA0013AA0013AA0013AA0013 /* bomb.wav */,
+				AA0014AA0014AA0014AA0014 /* shield.wav */,
+				AA0015AA0015AA0015AA0015 /* slow.wav */,
+				AA0016AA0016AA0016AA0016 /* hit.wav */,
+				AA0017AA0017AA0017AA0017 /* countdown.wav */,
+				AA0018AA0018AA0018AA0018 /* go.wav */,
 				AA0004AA0004AA0004AA0004 /* games2.mp3 */,
 				AA0005AA0005AA0005AA0005 /* gamemusic2.mp3 */,
 				AA0006AA0006AA0006AA0006 /* gamemusic3.mp3 */,
@@ -180,6 +207,15 @@
 				AA0001BB0001AA0001BB0001 /* gamemusic.wav in Resources */,
 				AA0002BB0002AA0002BB0002 /* jumping.wav in Resources */,
 				AA0003BB0003AA0003BB0003 /* games1.mp3 in Resources */,
+				AA0010BB0010AA0010BB0010 /* tap.wav in Resources */,
+				AA0011BB0011AA0011BB0011 /* coin.wav in Resources */,
+				AA0012BB0012AA0012BB0012 /* heart.wav in Resources */,
+				AA0013BB0013AA0013BB0013 /* bomb.wav in Resources */,
+				AA0014BB0014AA0014BB0014 /* shield.wav in Resources */,
+				AA0015BB0015AA0015BB0015 /* slow.wav in Resources */,
+				AA0016BB0016AA0016BB0016 /* hit.wav in Resources */,
+				AA0017BB0017AA0017BB0017 /* countdown.wav in Resources */,
+				AA0018BB0018AA0018BB0018 /* go.wav in Resources */,
 				AA0004BB0004AA0004BB0004 /* games2.mp3 in Resources */,
 				AA0005BB0005AA0005BB0005 /* gamemusic2.mp3 in Resources */,
 				AA0006BB0006AA0006BB0006 /* gamemusic3.mp3 in Resources */,

@@ -7,6 +7,7 @@ import VersionCheck from 'react-native-version-check';
 import StackNavigator from "./src/navigation/StackNavigator.tsx";
 import useMusicAppState from "./src/hooks/useMusicAppState.tsx";
 import {playMusic, stopMusic} from "./src/utils/helpers.ts";
+import {loadSfx, refreshSfxMuted} from "./src/utils/sfx.ts";
 import UpdateModal from "./src/components/ui/UpdateModal/UpdateModal.tsx";
 import NoticeModal from "./src/components/ui/NoticeModal/NoticeModal.tsx";
 import Splash from "./src/screens/Splash/Splash.tsx";
@@ -32,6 +33,14 @@ function App() {
     useEffect(() => {
         bootstrap();
     }, [bootstrap]);
+
+    // The SFX pool is loaded for the app's lifetime rather than per screen: the
+    // files are small (~370KB all told) and Settings, the pause menu and Play
+    // all reach for the same voices. Loading it here also means the very first
+    // tap of a round is already decoded instead of missing its sound.
+    useEffect(() => {
+        refreshSfxMuted().finally(loadSfx);
+    }, []);
 
     // Pull the admin-controlled global config (ads on/off, level length) at
     // startup AND every time the app returns to the foreground, so an admin

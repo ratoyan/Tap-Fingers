@@ -5,6 +5,7 @@ import {storage} from '../../../db/kvStore.ts';
 import {useTranslation} from 'react-i18next';
 import {STORAGE_KEYS} from '../../../utils/storageKeys.ts';
 import {loadMusic, playMusic, stopMusic} from '../../../utils/helpers.ts';
+import {playSfx, setSfxMuted} from '../../../utils/sfx.ts';
 import {ms, vs} from '../../../utils/responsive.ts';
 import {DARK_PURPLE, PURPLE} from '../../../constants/colors.ts';
 
@@ -46,9 +47,10 @@ export default function SettingsModal({visible, onClose}: SettingsModalProps) {
         const musicData = await storage.getItem(STORAGE_KEYS.MUSIC);
         const soundData = await storage.getItem(STORAGE_KEYS.SOUND);
         const vibrationData = await storage.getItem(STORAGE_KEYS.VIBRATION);
+        // All three keys are inverted sentinels: a stored 'STOP' means off.
         setMusic(!musicData);
         setSound(!soundData);
-        setVibration(!!vibrationData);
+        setVibration(!vibrationData);
     }
 
     const toggleMusic = async (val: boolean) => {
@@ -65,8 +67,13 @@ export default function SettingsModal({visible, onClose}: SettingsModalProps) {
 
     const toggleSound = async (val: boolean) => {
         setSound(val);
+        // Push the flag straight into the SFX module as well as storage: Play
+        // only re-reads it on focus, so without this a toggle from the pause
+        // menu wouldn't take effect until the player left and came back.
+        setSfxMuted(!val);
         if (val) {
             await storage.removeItem(STORAGE_KEYS.SOUND);
+            playSfx('tap'); // preview, so the toggle proves itself
         } else {
             await storage.setItem(STORAGE_KEYS.SOUND, 'STOP');
         }
@@ -74,10 +81,13 @@ export default function SettingsModal({visible, onClose}: SettingsModalProps) {
 
     const toggleVibration = async (val: boolean) => {
         setVibration(val);
+        // Was written the other way round from music/sound, which made "on"
+        // store 'STOP' — and Play reads a stored value as "disabled", so the
+        // switch did the exact opposite of what it said.
         if (val) {
-            await storage.setItem(STORAGE_KEYS.VIBRATION, 'STOP');
-        } else {
             await storage.removeItem(STORAGE_KEYS.VIBRATION);
+        } else {
+            await storage.setItem(STORAGE_KEYS.VIBRATION, 'STOP');
         }
     };
 

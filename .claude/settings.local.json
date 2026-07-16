@@ -53,7 +53,14 @@
       "Bash(git checkout *)",
       "Bash(./gradlew assembleRelease -q)",
       "Bash(echo \"BUILD_EXIT=$?\")",
-      "PowerShell(npx tsc --noEmit -p tsconfig.json)"
+      "PowerShell(npx tsc --noEmit -p tsconfig.json)",
+      "PowerShell(node scripts/gen-sfx.mjs)",
+      "Bash(:)",
+      "PowerShell($adb = \"$env:LOCALAPPDATA\\\\Android\\\\Sdk\\\\platform-tools\\\\adb.exe\"; if \\(Test-Path $adb\\) { & $adb devices } else { Write-Output \"adb not at $adb\"; try { adb devices } catch { \"adb not on PATH\" } })",
+      "PowerShell(adb logcat *)",
+      "PowerShell(npx react-native run-android --no-packager 2>&1 | Select-Object -Last 40)",
+      "PowerShell(adb shell *)",
+      "PowerShell(New-Item *)"
     ]
   }
 }

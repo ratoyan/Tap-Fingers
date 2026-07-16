@@ -1,6 +1,7 @@
 import React, {useEffect, useRef, useState} from 'react';
 import {Animated, StyleSheet, View} from 'react-native';
 import {ms} from '../../../utils/responsive.ts';
+import {playSfx} from '../../../utils/sfx.ts';
 import {GOLD, GRADIENT_LIGHT, WHITE} from '../../../constants/colors.ts';
 
 // Last entry is the go-signal — it animates outward instead of shrinking away.
@@ -36,6 +37,14 @@ export default function CountdownOverlay({onFinish}: CountdownOverlayProps) {
 
     useEffect(() => {
         const isGo = index === STEPS.length - 1;
+
+        // Fires with the slam-in, not on a timer of its own, so the beep always
+        // lands on the frame the number hits — the two can't drift apart.
+        // 3·2·1 tick on the same note a step higher each time (tension), then
+        // GO! resolves it into a chord an octave up. playSfx is muted-gated, so
+        // this needs no settings check of its own.
+        if (isGo) playSfx('go');
+        else playSfx('countdown', {rate: 1 + index * 0.06});
 
         // Numbers slam in from oversized; "GO!" pops up from small and flies out.
         scale.setValue(isGo ? 0.4 : 2.4);

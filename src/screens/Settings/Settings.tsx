@@ -3,12 +3,14 @@ import {
     View,
     Text,
     TouchableOpacity,
+    Vibration,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import {LanguageType} from "../../types/language.type.ts";
 import {changeAppLanguage} from "../../localization/i18n.ts";
 import {useNavigation} from "@react-navigation/core";
 import {loadMusic, playMusic, stopMusic} from "../../utils/helpers.ts";
+import {playSfx, setSfxMuted} from "../../utils/sfx.ts";
 import {useTranslation} from "react-i18next";
 import {languages} from "../../data/language.ts";
 import {STORAGE_KEYS} from "../../utils/storageKeys.ts";
@@ -72,8 +74,12 @@ function Settings() {
 
     const toggleSound = async (val: boolean) => {
         setSound(val);
+        // Mirror into the SFX module so the gate flips now, not on Play's next
+        // focus — and so the preview below is actually audible.
+        setSfxMuted(!val);
         if (val) {
             await storage.removeItem(STORAGE_KEYS.SOUND);
+            playSfx('tap'); // preview, so the toggle proves itself
         } else {
             await storage.setItem(STORAGE_KEYS.SOUND, 'STOP');
         }
@@ -81,11 +87,14 @@ function Settings() {
 
     const toggleVibration = async (val: boolean) => {
         setVibration(val);
+        // Stored 'STOP' means OFF, the same as music/sound. This was written
+        // inverted, so turning vibration on is what switched it off in Play.
         if (val) {
-            await storage.setItem(STORAGE_KEYS.VIBRATION, 'STOP');
-        } else {
             await storage.removeItem(STORAGE_KEYS.VIBRATION);
+        } else {
+            await storage.setItem(STORAGE_KEYS.VIBRATION, 'STOP');
         }
+        if (val) Vibration.vibrate(60); // preview
     };
 
     const getStorageData = async () => {

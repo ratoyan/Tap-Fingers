@@ -1,10 +1,10 @@
 ﻿import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
-import Sound from 'react-native-sound';
 import LinearGradient from 'react-native-linear-gradient';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {useFocusEffect, useNavigation} from '@react-navigation/core';
 import {useTranslation} from 'react-i18next';
 import {loadMusic, pauceMusic, playMusic, releaseMusic, stopMusic} from '../../utils/helpers.ts';
+import {playSfx, playSfxVaried, refreshSfxMuted} from '../../utils/sfx.ts';
 import {
     Animated,
     Dimensions,
@@ -172,7 +172,6 @@ export default function Play() {
     const patchStats = useAuthStore(s => s.patchStats);
 
     // ─── Refs ─────────────────────────────────────────────────────────────────
-    const cancelSoundRef = useRef(true);
     const cancelVibrationRef = useRef(true);
     // durationRef = the level's duration (target). durationEffRef = what the boxes
     // actually travel with right now; a bomb or a boss defeat pulls it down and the
@@ -180,9 +179,6 @@ export default function Play() {
     const durationRef = useRef(INITIAL_DURATION);
     const durationEffRef = useRef(INITIAL_DURATION);
     const lastFrameTsRef = useRef(0);
-    const musicJumpingRef = useRef<Sound | null>(null);
-    const musicPopRef = useRef<Sound | null>(null);
-    const musicBombRef = useRef<Sound | null>(null);
     const countRef = useRef(0);
     const bombCountRef = useRef(INITIAL_BOMBS);
     // Hazard bombs still owed for the current level; refilled to BOMBS_PER_LEVEL
@@ -384,10 +380,12 @@ export default function Play() {
 
     // ─── Storage helpers ──────────────────────────────────────────────────────
     async function loadSettings() {
-        const s = await storage.getItem(STORAGE_KEYS.SOUND);
+        // SOUND/VIBRATION are inverted sentinels: a stored value means "off".
         const v = await storage.getItem(STORAGE_KEYS.VIBRATION);
-        cancelSoundRef.current = !!s;
         cancelVibrationRef.current = !!v;
+        // The SFX gate lives in utils/sfx.ts, which every playSfx() checks —
+        // this screen no longer keeps its own copy of the flag.
+        await refreshSfxMuted();
     }
 
     function handleWatchAdHelper(type: HelperType) {
@@ -618,10 +616,9 @@ export default function Play() {
         // level's duration over the next few seconds.
         durationEffRef.current = durationRef.current * DURATION_DIP_FACTOR;
 
-        if (!cancelSoundRef.current && musicBombRef.current) {
-            musicBombRef.current.setCurrentTime(0);
-            musicBombRef.current.play();
-        }
+        // The helper clears the whole board, so it gets the blast a touch lower
+        // and longer than a single hazard bomb going off.
+        playSfx('bomb', {rate: 0.85});
 
         if (!cancelVibrationRef.current) Vibration.vibrate([0, 80, 60, 80]);
 
@@ -650,11 +647,7 @@ export default function Play() {
         shieldActiveRef.current = true;
         setShieldActive(true);
 
-        if (!cancelSoundRef.current && musicJumpingRef.current) {
-            musicJumpingRef.current.setSpeed(1.6);
-            musicJumpingRef.current.setCurrentTime(0);
-            musicJumpingRef.current.play();
-        }
+        playSfx('shield');
 
         shieldFlashAnim.setValue(1);
         Animated.timing(shieldFlashAnim, {toValue: 0, duration: 600, useNativeDriver: true}).start();
@@ -674,11 +667,7 @@ export default function Play() {
         slowSpeedRef.current = 0.25;
         setSlowActive(true);
 
-        if (!cancelSoundRef.current && musicBombRef.current) {
-            musicBombRef.current.setSpeed(0.5);
-            musicBombRef.current.setCurrentTime(0);
-            musicBombRef.current.play();
-        }
+        playSfx('slow');
 
         slowFlashAnim.setValue(1);
         Animated.timing(slowFlashAnim, {toValue: 0, duration: 800, useNativeDriver: true}).start();
@@ -762,11 +751,9 @@ export default function Play() {
         setCount(c => c + 1);
         tapsRef.current += 1;
 
-        if (!cancelSoundRef.current && musicJumpingRef.current) {
-            musicJumpingRef.current.setSpeed(0.3 + Math.random() * 0.15);
-            musicJumpingRef.current.setCurrentTime(0);
-            musicJumpingRef.current.play();
-        }
+        // A blunt thud rather than the card blip — chipping the boss down should
+        // feel like landing punches on something solid.
+        playSfxVaried('hit', 0.1);
         if (!cancelVibrationRef.current) Vibration.vibrate(25);
 
         if (newHP <= 0) endBossFight();
@@ -807,10 +794,7 @@ export default function Play() {
             boomBox(box.id);
             setEmptyHeartCount(prev => Math.max(0, prev - 1));
 
-            if (!cancelSoundRef.current && musicPopRef.current) {
-                musicPopRef.current.setCurrentTime(0);
-                musicPopRef.current.play();
-            }
+            playSfx('heart');
             if (!cancelVibrationRef.current) Vibration.vibrate(60);
             return;
         }
@@ -835,11 +819,7 @@ export default function Play() {
                 setEmptyHeartCount(prev => prev + 1);
             }
 
-            if (!cancelSoundRef.current && musicBombRef.current) {
-                musicBombRef.current.setSpeed(1);
-                musicBombRef.current.setCurrentTime(0);
-                musicBombRef.current.play();
-            }
+            playSfx('bomb');
             if (!cancelVibrationRef.current) Vibration.vibrate([0, 120, 60, 200]);
 
             hurtFlashAnim.setValue(1);
@@ -848,18 +828,12 @@ export default function Play() {
             return;
         }
 
-        if (!cancelSoundRef.current) {
-            if (musicJumpingRef.current) {
-                const pitch = 0.8 + Math.random() * 0.7;
-                musicJumpingRef.current.setSpeed(pitch);
-                musicJumpingRef.current.setCurrentTime(0);
-                musicJumpingRef.current.play();
-            }
-            if (musicPopRef.current) {
-                musicPopRef.current.setCurrentTime(0);
-                musicPopRef.current.play();
-            }
-        }
+        // 💰 The money bag is worth 3 points, so it earns the coin jingle; plain
+        // cards get the blip. The detune is small on purpose — the old ±0.35
+        // range swung the pitch so wide that consecutive taps sounded like two
+        // different sounds.
+        if (box.isGolden) playSfx('coin');
+        else playSfxVaried('tap', 0.14);
 
         // Streak + honest tap count for the backend session
         streakRef.current += 1;
@@ -1023,33 +997,20 @@ export default function Play() {
                 clearTimeout(loadTimeout);
                 clearTimeout(playTimeout);
                 pauceMusic();
-                musicJumpingRef.current?.release();
-                musicPopRef.current?.release();
+                // The SFX pool is NOT released here: blur doesn't unmount the
+                // screen, and the effect that loads it runs once ([] deps). The
+                // old code released the players on every blur, so re-focusing
+                // left the screen holding released instances that never played
+                // again. Release belongs to the unmount effect.
             };
         }, [])
     );
 
+    // SFX are loaded once in App for the whole app lifetime — this screen just
+    // plays them. (It used to construct its own Sound objects here and release
+    // them on blur, which left re-focused sessions silent.)
     useEffect(() => {
-        const jumping = new Sound('jumping.wav', Sound.MAIN_BUNDLE, e => {
-            if (e) console.log('jump sound error:', e);
-        });
-        musicJumpingRef.current = jumping;
-
-        const pop = new Sound('pop.wav', Sound.MAIN_BUNDLE, e => {
-            if (e) console.log('pop sound error:', e);
-        });
-        musicPopRef.current = pop;
-
-        const bomb = new Sound('jumping.wav', Sound.MAIN_BUNDLE, e => {
-            if (e) console.log('bomb sound error:', e);
-            else bomb.setSpeed(0.25);
-        });
-        musicBombRef.current = bomb;
-
         return () => {
-            jumping.release();
-            pop.release();
-            bomb.release();
             if (slowIntervalRef.current) clearInterval(slowIntervalRef.current);
         };
     }, []);

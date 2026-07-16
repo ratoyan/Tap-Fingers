@@ -60,6 +60,7 @@ import {useConfigStore} from '../../store/configStore.ts';
 // styles
 import styles from './Play.style.ts';
 import {GRADIENT_LIGHT, LILAC, ORANGE, ORANGE_RED} from '../../constants/colors.ts';
+import {TOP_OFFSET} from "../../constants/uiConstants.ts";
 
 const {width, height} = Dimensions.get('window');
 
@@ -1247,7 +1248,7 @@ export default function Play() {
             </View>
 
 
-            <View style={[styles.headerLeftView, {top: insets.top, zIndex: 2}]}>
+            <View style={[styles.headerLeftView, {top: insets.top + TOP_OFFSET, zIndex: 2}]}>
                 <View style={styles.headerTopRow}>
                     <TouchableOpacity
                         onPress={menuHandler}
@@ -1265,7 +1266,7 @@ export default function Play() {
             </View>
 
             <View style={styles.zIndexStyle}>
-                <CoinCount count={count} viewStyles={[styles.countView, {top: insets.top}]}/>
+                <CoinCount count={count} viewStyles={[styles.countView, {top: insets.top + TOP_OFFSET}]}/>
             </View>
 
 

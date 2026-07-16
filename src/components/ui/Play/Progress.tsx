@@ -16,7 +16,7 @@ function Progress({ length = 40, coin = 0 }: ProgressProps) {
     const insets = useSafeAreaInsets();
 
     return (
-        <View style={[styles.progressBarBackground, {top: insets.top + TOP_OFFSET}]}>
+        <View style={[styles.progressBarBackground, {top: insets.top + TOP_OFFSET + 10}]}>
             <View style={[styles.progressBarFill, { flex: progress }]} />
             <View style={[styles.progressBarEmpty, { flex: 1 - progress }]} />
         </View>

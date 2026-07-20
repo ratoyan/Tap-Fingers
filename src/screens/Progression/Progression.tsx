@@ -17,6 +17,7 @@ import {useAuthStore} from "../../store/authStore.ts";
 import BackHeader from "../../components/ui/BackHeader/BackHeader.tsx";
 import ProgressItem from "../../components/ui/ProgressItem/ProgressItem.tsx";
 import EmptyProgression from "../../components/ui/EmptyProgression/EmptyProgression.tsx";
+import {ProgressionSkeleton} from "../../components/ui/Shimmer/Skeletons.tsx";
 
 // styles
 import styles from './Progression.style.ts';
@@ -137,9 +138,7 @@ function Progression() {
             <BackHeader title={`🏆 ${t('progression')}`}/>
 
             {loading ? (
-                <View style={{flex: 1, alignItems: 'center', justifyContent: 'center'}}>
-                    <ActivityIndicator size="large" color={WHITE}/>
-                </View>
+                <ProgressionSkeleton/>
             ) : (
                 <FlatList
                     data={entries}

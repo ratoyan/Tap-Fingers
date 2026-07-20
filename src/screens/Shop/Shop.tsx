@@ -1,5 +1,5 @@
 ﻿import React, {useCallback, useRef, useState} from "react";
-import {ActivityIndicator, Animated, ScrollView, Text, TouchableOpacity, View} from "react-native";
+import {Animated, ScrollView, Text, TouchableOpacity, View} from "react-native";
 import {useTranslation} from "react-i18next";
 import {useFocusEffect} from "@react-navigation/core";
 import {useGlobalStore} from "../../store/globalStore.ts";
@@ -19,6 +19,7 @@ import ScreenStatusBar from "../../components/ui/ScreenStatusBar/ScreenStatusBar
 // components
 import BackHeader from "../../components/ui/BackHeader/BackHeader.tsx";
 import ShopItem from "../../components/ui/ShopItem/ShopItem.tsx";
+import {ShopSkeleton} from "../../components/ui/Shimmer/Skeletons.tsx";
 import WatchAdModal from "../../components/ui/WatchAdModal/WatchAdModal.tsx";
 
 // icons
@@ -333,9 +334,7 @@ function Shop() {
 
             {/* Content */}
             {loading ? (
-                <View style={{flex: 1, alignItems: 'center', justifyContent: 'center'}}>
-                    <ActivityIndicator size="large" color={WHITE}/>
-                </View>
+                <ShopSkeleton/>
             ) : (
                 // Both grids stay mounted once visited and the inactive one is
                 // hidden, instead of one keyed ScrollView that tore the whole

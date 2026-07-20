@@ -14,6 +14,7 @@ import {haptic} from "../../utils/haptics.ts";
 // components
 import BackHeader from "../../components/ui/BackHeader/BackHeader.tsx";
 import ChallengeCard from "../../components/ui/ChallengeCard/ChallengeCard.tsx";
+import {ChallengesSkeleton} from "../../components/ui/Shimmer/Skeletons.tsx";
 import ScreenStatusBar from "../../components/ui/ScreenStatusBar/ScreenStatusBar.tsx";
 
 // styles
@@ -162,9 +163,7 @@ function Challenges() {
             <BackHeader title={`🎯 ${t('challenges')}`}/>
 
             {loading ? (
-                <View style={{flex: 1, alignItems: 'center', justifyContent: 'center'}}>
-                    <ActivityIndicator size="large" color={WHITE}/>
-                </View>
+                <ChallengesSkeleton/>
             ) : (
                 <FlatList
                     data={items}

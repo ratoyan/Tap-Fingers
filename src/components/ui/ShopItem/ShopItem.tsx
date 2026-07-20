@@ -23,6 +23,10 @@ import LinearGradient from "react-native-linear-gradient";
 import LockIcon from "../../../assets/icons/LockIcon.tsx";
 import {ms} from "../../../utils/responsive.ts";
 
+// How many items still get a staggered entrance. The grid is two columns, so
+// this is roughly the first three rows — everything a phone shows at once.
+const STAGGER_CAP = 5;
+
 interface ShopItemProps {
     item: any;
     index?: number;
@@ -79,19 +83,28 @@ function ShopItem({item, index = 0, handlePress, selected = false, purchased = f
         return () => { spin.stop(); pulse.stop(); };
     }, [item.randomColors, paused]);
 
-    // Staggered entrance
+    // Staggered entrance, capped at the first screenful.
+    //
+    // The stagger is a cascade you watch as the grid appears, so it only has to
+    // apply to the items you can actually see. Uncapped it was index × 70ms, and
+    // the backgrounds tab has 20 items — the last one waited 1330ms after the
+    // tab was tapped, which reads as the grid loading slowly rather than
+    // animating in. Everything past the visible rows now lands together at the
+    // cap, already on screen by the time you scroll to it.
+    const entranceDelay = Math.min(index, STAGGER_CAP) * 70;
+
     useEffect(() => {
         Animated.parallel([
             Animated.timing(entranceOpacity, {
                 toValue: 1,
                 duration: 350,
-                delay: index * 70,
+                delay: entranceDelay,
                 useNativeDriver: true,
             }),
             Animated.timing(entranceY, {
                 toValue: 0,
                 duration: 350,
-                delay: index * 70,
+                delay: entranceDelay,
                 useNativeDriver: true,
             }),
         ]).start();

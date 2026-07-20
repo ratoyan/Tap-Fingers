@@ -40,35 +40,16 @@ function GameMenuModal({visible, onClose, onExit}: GameMenuModalProps) {
 
     useEffect(() => {
         if (visible) {
-            setMounted(true);
+            // Only reset to the "from" state and mount here. The entrance is
+            // deliberately NOT started in this pass: `mounted` is still false
+            // right now, so the component is returning null and none of the
+            // card's views exist yet. Starting the animation against a subtree
+            // that hasn't mounted meant its first frames played against nothing
+            // and the card snapped in partway through — the jank on open.
             backdrop.setValue(0);
             card.setValue(0);
             rows.forEach(r => r.setValue(0));
-
-            Animated.parallel([
-                // The dim comes in on its own timing: a spring on the backdrop
-                // would overshoot into pure black and back, which reads as a flash.
-                Animated.timing(backdrop, {
-                    toValue: 1,
-                    duration: 220,
-                    easing: Easing.out(Easing.quad),
-                    useNativeDriver: true,
-                }),
-                Animated.spring(card, {
-                    toValue: 1,
-                    friction: 7,
-                    tension: 70,
-                    useNativeDriver: true,
-                }),
-                Animated.stagger(ROW_STAGGER, rows.map(r =>
-                    Animated.spring(r, {
-                        toValue: 1,
-                        friction: 7,
-                        tension: 80,
-                        useNativeDriver: true,
-                    }),
-                )),
-            ]).start();
+            setMounted(true);
         } else if (mounted) {
             // Leaving is faster than arriving and doesn't bounce — a spring on the
             // way out makes a dismissal feel hesitant.
@@ -90,6 +71,40 @@ function GameMenuModal({visible, onClose, onExit}: GameMenuModalProps) {
             });
         }
     }, [visible]);
+
+    // The entrance, in its own effect so it runs on the commit *after* the one
+    // that mounted the card — by now the views are real and the animation has
+    // something to drive from frame one.
+    useEffect(() => {
+        if (!mounted || !visible) return;
+
+        const entrance = Animated.parallel([
+            // The dim comes in on its own timing: a spring on the backdrop
+            // would overshoot into pure black and back, which reads as a flash.
+            Animated.timing(backdrop, {
+                toValue: 1,
+                duration: 220,
+                easing: Easing.out(Easing.quad),
+                useNativeDriver: true,
+            }),
+            Animated.spring(card, {
+                toValue: 1,
+                friction: 7,
+                tension: 70,
+                useNativeDriver: true,
+            }),
+            Animated.stagger(ROW_STAGGER, rows.map(r =>
+                Animated.spring(r, {
+                    toValue: 1,
+                    friction: 7,
+                    tension: 80,
+                    useNativeDriver: true,
+                }),
+            )),
+        ]);
+        entrance.start();
+        return () => entrance.stop();
+    }, [mounted, visible]);
 
     // Slow breathing halo behind the card. It's the only thing moving while the
     // menu sits open, which keeps a paused screen from looking frozen.

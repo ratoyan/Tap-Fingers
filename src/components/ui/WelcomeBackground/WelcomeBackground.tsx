@@ -40,8 +40,14 @@ export default function WelcomeBackground() {
     const floatAnims = useRef(FLOATERS.map(() => ({t: new Animated.Value(0), o: new Animated.Value(0.5)}))).current;
 
     useEffect(() => {
+        // Collected and stopped on unmount. This background carries dozens of
+        // loops (orbs + sparks + floaters) and lives on Welcome, which is
+        // dropped from the stack after sign-in — leaving every one of them
+        // running for the rest of the session.
+        const loops: Animated.CompositeAnimation[] = [];
+
         orbAnims.forEach((a, i) => {
-            Animated.loop(Animated.sequence([
+            loops.push(Animated.loop(Animated.sequence([
                 Animated.parallel([
                     Animated.timing(a.o, {toValue: 0.85, duration: ORBS[i].dur, delay: ORBS[i].delay, useNativeDriver: true}),
                     Animated.timing(a.t, {toValue: 1,    duration: ORBS[i].dur, useNativeDriver: true}),
@@ -50,18 +56,18 @@ export default function WelcomeBackground() {
                     Animated.timing(a.o, {toValue: 0.3, duration: ORBS[i].dur, useNativeDriver: true}),
                     Animated.timing(a.t, {toValue: 0,   duration: ORBS[i].dur, useNativeDriver: true}),
                 ]),
-            ])).start();
+            ])));
         });
 
         sparkAnims.forEach((a, i) => {
-            Animated.loop(Animated.sequence([
+            loops.push(Animated.loop(Animated.sequence([
                 Animated.timing(a, {toValue: 1,    duration: SPARKS[i].dur, delay: SPARKS[i].delay, useNativeDriver: true}),
                 Animated.timing(a, {toValue: 0.1,  duration: SPARKS[i].dur, useNativeDriver: true}),
-            ])).start();
+            ])));
         });
 
         floatAnims.forEach((a, i) => {
-            Animated.loop(Animated.sequence([
+            loops.push(Animated.loop(Animated.sequence([
                 Animated.parallel([
                     Animated.timing(a.t, {toValue: 1, duration: FLOATERS[i].dur, delay: FLOATERS[i].delay, useNativeDriver: true}),
                     Animated.timing(a.o, {toValue: 1, duration: FLOATERS[i].dur, useNativeDriver: true}),
@@ -70,8 +76,11 @@ export default function WelcomeBackground() {
                     Animated.timing(a.t, {toValue: 0,   duration: FLOATERS[i].dur, useNativeDriver: true}),
                     Animated.timing(a.o, {toValue: 0.4, duration: FLOATERS[i].dur, useNativeDriver: true}),
                 ]),
-            ])).start();
+            ])));
         });
+
+        loops.forEach(l => l.start());
+        return () => loops.forEach(l => l.stop());
     }, []);
 
     return (

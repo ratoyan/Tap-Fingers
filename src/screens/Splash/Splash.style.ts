@@ -67,7 +67,9 @@ export default StyleSheet.create({
         backgroundColor: 'rgba(255,255,255,0.08)',
         overflow:        'hidden',
     },
+    // Full width; the track clips it and a translateX slides it into view.
     progressFill: {
+        width:        '100%',
         height:       2,
         borderRadius: 1,
         overflow:     'hidden',

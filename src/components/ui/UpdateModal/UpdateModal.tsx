@@ -26,6 +26,7 @@ export default function UpdateModal({visible, storeUrl}: UpdateModalProps) {
     const pulseAnim   = useRef(new Animated.Value(1)).current;
     const shineAnim   = useRef(new Animated.Value(-1)).current;
     const pulseRef    = useRef<Animated.CompositeAnimation | null>(null);
+    const shineRef    = useRef<Animated.CompositeAnimation | null>(null);
 
     useEffect(() => {
         if (visible) {
@@ -35,9 +36,12 @@ export default function UpdateModal({visible, storeUrl}: UpdateModalProps) {
             ]).start();
 
             shineAnim.setValue(-1);
-            Animated.loop(
+            // Held in a ref like the pulse below it. It was the one loop here
+            // that wasn't, so the else-branch stopped everything except this.
+            shineRef.current = Animated.loop(
                 Animated.timing(shineAnim, {toValue: 2, duration: 2600, delay: 600, easing: Easing.inOut(Easing.ease), useNativeDriver: true})
-            ).start();
+            );
+            shineRef.current.start();
 
             pulseRef.current = Animated.loop(Animated.sequence([
                 Animated.timing(pulseAnim, {toValue: 1.06, duration: 700, useNativeDriver: true}),
@@ -48,6 +52,7 @@ export default function UpdateModal({visible, storeUrl}: UpdateModalProps) {
             scaleAnim.setValue(0.75);
             opacityAnim.setValue(0);
             pulseRef.current?.stop();
+            shineRef.current?.stop();
             pulseAnim.setValue(1);
         }
     }, [visible]);

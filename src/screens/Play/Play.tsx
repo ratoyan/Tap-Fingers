@@ -1097,6 +1097,10 @@ export default function Play() {
     useEffect(() => {
         return () => {
             if (slowIntervalRef.current) clearInterval(slowIntervalRef.current);
+            // The combo timer is cleared on the next tap, so a player who taps
+            // and immediately leaves the screen left it armed to setCombo(0) on
+            // an unmounted tree.
+            if (comboTimerRef.current) clearTimeout(comboTimerRef.current);
         };
     }, []);
 

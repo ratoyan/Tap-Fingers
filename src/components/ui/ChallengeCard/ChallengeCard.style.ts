@@ -65,9 +65,13 @@ export default StyleSheet.create({
         overflow: 'hidden',
         marginBottom: vs(6),
     },
+    // Full width, revealed by scaleX from the left. No radius of its own — the
+    // track clips to its own rounded corners, and a radius here would stretch
+    // into an ellipse as the bar scales.
     progressFill: {
+        width: '100%',
         height: '100%',
-        borderRadius: ms(10),
+        transformOrigin: 'left',
     },
     progressLabel: {
         flexDirection: 'row',

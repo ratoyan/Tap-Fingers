@@ -92,12 +92,14 @@ function BuyHelperModal({visible, helperType, coins, watchAdUsed, onBuy, onWatch
             Animated.timing(fadeAnim,  {toValue: 1, duration: 200, useNativeDriver: true}),
         ]).start();
 
-        Animated.loop(
+        const pulse = Animated.loop(
             Animated.sequence([
                 Animated.timing(adPulseAnim, {toValue: 1.04, duration: 700, useNativeDriver: true}),
                 Animated.timing(adPulseAnim, {toValue: 1,    duration: 700, useNativeDriver: true}),
             ])
-        ).start();
+        );
+        pulse.start();
+        return () => pulse.stop();
     }, [visible]);
 
     if (!visible || !helperType) return null;

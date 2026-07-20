@@ -168,6 +168,7 @@ export default function LuckyWheelModal({visible, onClose, onSpinComplete, segme
 
     const pulseLoopRef    = useRef<Animated.CompositeAnimation | null>(null);
     const pointerLoopRef  = useRef<Animated.CompositeAnimation | null>(null);
+    const shineLoopRef    = useRef<Animated.CompositeAnimation | null>(null);
     const sparkleLoopRefs = useRef<Animated.CompositeAnimation[]>([]);
     const spinIconLoopRef = useRef<Animated.CompositeAnimation | null>(null);
 
@@ -198,11 +199,15 @@ export default function LuckyWheelModal({visible, onClose, onSpinComplete, segme
                 Animated.timing(modalOpacity, {toValue: 1, duration: 220, useNativeDriver: true}),
             ]).start();
 
-            // Shine sweep
+            // Shine sweep. Held in a ref like every other loop in this file —
+            // it was the one that wasn't, so the else-branch below stopped all
+            // the others and left this one running on every modal open.
+            shineLoopRef.current?.stop();
             shineAnim.setValue(-1);
-            Animated.loop(
+            shineLoopRef.current = Animated.loop(
                 Animated.timing(shineAnim, {toValue: 2, duration: 2800, delay: 800, easing: Easing.inOut(Easing.ease), useNativeDriver: true})
-            ).start();
+            );
+            shineLoopRef.current.start();
 
             sparkleLoopRefs.current.forEach(l => l.stop());
             sparkleLoopRefs.current = sparkleAnims.map((anim, i) => {
@@ -225,6 +230,7 @@ export default function LuckyWheelModal({visible, onClose, onSpinComplete, segme
             modalOpacity.setValue(0);
             sparkleLoopRefs.current.forEach(l => l.stop());
             pointerLoopRef.current?.stop();
+            shineLoopRef.current?.stop();
             spinIconLoopRef.current?.stop();
             winnerLoopRef.current?.stop();
             resultLoopRef.current?.stop();

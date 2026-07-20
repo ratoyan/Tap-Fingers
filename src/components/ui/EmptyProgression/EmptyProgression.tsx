@@ -40,7 +40,9 @@ function EmptyProgression({onPressCta}: EmptyProgressionProps) {
             }),
         ]).start();
 
-        Animated.loop(
+        // Both loops collected and stopped on unmount — this component swaps out
+        // as soon as the player has any progression to show.
+        const loops = [Animated.loop(
             Animated.sequence([
                 Animated.timing(haloAnim, {
                     toValue: 1,
@@ -55,9 +57,7 @@ function EmptyProgression({onPressCta}: EmptyProgressionProps) {
                     useNativeDriver: true,
                 }),
             ]),
-        ).start();
-
-        Animated.loop(
+        ), Animated.loop(
             Animated.sequence([
                 Animated.timing(sparkleAnim, {
                     toValue: 1,
@@ -72,7 +72,9 @@ function EmptyProgression({onPressCta}: EmptyProgressionProps) {
                     useNativeDriver: true,
                 }),
             ]),
-        ).start();
+        )];
+        loops.forEach(l => l.start());
+        return () => loops.forEach(l => l.stop());
     }, [fadeAnim, riseAnim, haloAnim, sparkleAnim]);
 
     const haloScale = haloAnim.interpolate({inputRange: [0, 1], outputRange: [0.92, 1.06]});

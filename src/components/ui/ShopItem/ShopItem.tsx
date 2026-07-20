@@ -105,13 +105,12 @@ function ShopItem({item, index = 0, handlePress, selected = false, purchased = f
         }
         // Held in a local and stopped on cleanup. It used to be started and
         // dropped on the floor: an Animated.loop with no reference keeps running
-        // after the effect re-runs, so every re-select left another copy of a
-        // JS-driven (useNativeDriver can't animate borderColor) loop burning the
-        // thread for the rest of the session.
+        // after the effect re-runs, so every re-select left another copy burning
+        // the thread for the rest of the session.
         const loop = Animated.loop(
             Animated.sequence([
-                Animated.timing(glowAnim, {toValue: 1, duration: 900, useNativeDriver: false}),
-                Animated.timing(glowAnim, {toValue: 0.3, duration: 900, useNativeDriver: false}),
+                Animated.timing(glowAnim, {toValue: 1, duration: 900, useNativeDriver: true}),
+                Animated.timing(glowAnim, {toValue: 0.3, duration: 900, useNativeDriver: true}),
             ])
         );
         loop.start();
@@ -167,9 +166,14 @@ function ShopItem({item, index = 0, handlePress, selected = false, purchased = f
         Animated.spring(scaleAnim, {toValue: 1, friction: 5, useNativeDriver: true}).start();
     }
 
-    const glowColor = glowAnim.interpolate({
+    // The glow only ever varied the alpha of one fixed purple, so it doesn't
+    // need to animate borderColor (which the native driver can't do) — the same
+    // look comes from a constant-colour border faded with opacity, which it can.
+    // selectedBorder is already a dedicated overlay whose only job is that
+    // border, so there's nothing else on it for the fade to affect.
+    const glowOpacity = glowAnim.interpolate({
         inputRange: [0, 1],
-        outputRange: ['rgba(142,45,226,0.4)', 'rgba(142,45,226,1)'],
+        outputRange: [0.4, 1],
     });
 
     const badgeRotate = badgeSpin.interpolate({inputRange: [0, 1], outputRange: ['0deg', '360deg']});
@@ -318,7 +322,7 @@ function ShopItem({item, index = 0, handlePress, selected = false, purchased = f
         >
             {/* Glow border for selected */}
             {selected && (
-                <Animated.View style={[styles.selectedBorder, {borderColor: glowColor}]}/>
+                <Animated.View style={[styles.selectedBorder, {opacity: glowOpacity}]}/>
             )}
 
             <TouchableOpacity

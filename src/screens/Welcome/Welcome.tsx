@@ -199,15 +199,20 @@ function Welcome() {
             useNativeDriver: true,
         }).start();
 
+        // The three looping animations below are collected and stopped on
+        // unmount. Welcome is left behind for good once the player signs in, so
+        // an unstopped loop here runs for the rest of the app's life.
+        const loops: Animated.CompositeAnimation[] = [];
+
         // Logo float loop
-        Animated.loop(
+        loops.push(Animated.loop(
             Animated.sequence([
                 Animated.timing(floatAnim, {toValue: -15, duration: 1000, useNativeDriver: true}),
                 Animated.timing(floatAnim, {toValue: 0,   duration: 1000, useNativeDriver: true}),
                 Animated.timing(floatAnim, {toValue: 15,  duration: 1000, useNativeDriver: true}),
                 Animated.timing(floatAnim, {toValue: 0,   duration: 1000, useNativeDriver: true}),
             ])
-        ).start();
+        ));
 
         // Ghost fade in then float (opposite phase)
         Animated.timing(ghostOpacity, {
@@ -217,22 +222,25 @@ function Welcome() {
             useNativeDriver: true,
         }).start();
 
-        Animated.loop(
+        loops.push(Animated.loop(
             Animated.sequence([
                 Animated.timing(ghostFloat, {toValue: 12,  duration: 1100, useNativeDriver: true}),
                 Animated.timing(ghostFloat, {toValue: 0,   duration: 1100, useNativeDriver: true}),
                 Animated.timing(ghostFloat, {toValue: -12, duration: 1100, useNativeDriver: true}),
                 Animated.timing(ghostFloat, {toValue: 0,   duration: 1100, useNativeDriver: true}),
             ])
-        ).start();
+        ));
 
         // Gentle "tap me" pulse on the primary call-to-action.
-        Animated.loop(
+        loops.push(Animated.loop(
             Animated.sequence([
                 Animated.timing(ctaPulse, {toValue: 1.035, duration: 1200, useNativeDriver: true}),
                 Animated.timing(ctaPulse, {toValue: 1,     duration: 1200, useNativeDriver: true}),
             ])
-        ).start();
+        ));
+
+        loops.forEach(l => l.start());
+        return () => loops.forEach(l => l.stop());
     }, []);
 
     const buttonsOpacity = slideButtons.interpolate({

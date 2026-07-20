@@ -44,8 +44,8 @@ export default function LuckyWheelButton({canSpin, top, onPress}: LuckyWheelButt
             return;
         }
         const glow = Animated.loop(Animated.sequence([
-            Animated.timing(glowAnim, {toValue: 1, duration: 900, useNativeDriver: false}),
-            Animated.timing(glowAnim, {toValue: 0, duration: 900, useNativeDriver: false}),
+            Animated.timing(glowAnim, {toValue: 1, duration: 900, useNativeDriver: true}),
+            Animated.timing(glowAnim, {toValue: 0, duration: 900, useNativeDriver: true}),
         ]));
         const pulse = Animated.loop(Animated.sequence([
             Animated.timing(pulseAnim, {toValue: 1.06, duration: 850, useNativeDriver: true}),
@@ -65,9 +65,14 @@ export default function LuckyWheelButton({canSpin, top, onPress}: LuckyWheelButt
         };
     }, [canSpin]);
 
-    const borderColor = glowAnim.interpolate({
+    // The glow varied only the alpha of one fixed gold, so instead of animating
+    // borderColor (JS-thread only) the ring keeps a dim constant border and a
+    // full-brightness copy is faded in over it with opacity — native-drivable.
+    // It matters here more than elsewhere: this loop runs continuously on Home
+    // for as long as a free spin is available.
+    const glowOpacity = glowAnim.interpolate({
         inputRange: [0, 1],
-        outputRange: ['rgba(255,215,0,0.45)', 'rgba(255,215,0,1)'],
+        outputRange: [0, 1],
     });
     const rotate = spinAnim.interpolate({inputRange: [0, 1], outputRange: ['0deg', '360deg']});
     const haloScale = haloAnim.interpolate({inputRange: [0, 1], outputRange: [0.9, 1.25]});
@@ -97,7 +102,8 @@ export default function LuckyWheelButton({canSpin, top, onPress}: LuckyWheelButt
                     }
                     onPress={onPress}
                 >
-                    <Animated.View style={[styles.outerRing, {borderColor}]}>
+                    <View>
+                    <Animated.View style={styles.outerRing}>
                         <LinearGradient
                             colors={['#3a0072', '#1e0040', '#0a0018']}
                             start={{x: 0, y: 0}}
@@ -120,6 +126,16 @@ export default function LuckyWheelButton({canSpin, top, onPress}: LuckyWheelButt
                             <Text allowFontScaling={false} style={styles.label}>SPIN</Text>
                         </LinearGradient>
                     </Animated.View>
+
+                    {/* Sibling, not a child: outerRing is overflow:hidden, so an
+                        overlay inside it would be clipped away. The plain View
+                        wrapper sizes itself to the ring, which lets this match
+                        it exactly with absoluteFill and no measuring. */}
+                    <Animated.View
+                        style={[styles.glowRing, {opacity: glowOpacity}]}
+                        pointerEvents="none"
+                    />
+                    </View>
 
                     {canSpin && (
                         <View style={styles.freeBadge}>
@@ -155,8 +171,17 @@ const styles = StyleSheet.create({
     outerRing: {
         borderRadius: ms(22),
         borderWidth: 2,
+        // The dim end of the pulse, held constant. glowRing fades the bright
+        // copy in over it.
+        borderColor: 'rgba(255,215,0,0.45)',
         overflow: 'hidden',
         backgroundColor: '#0a0018',
+    },
+    glowRing: {
+        ...StyleSheet.absoluteFillObject,
+        borderRadius: ms(22),
+        borderWidth: 2,
+        borderColor: 'rgba(255,215,0,1)',
     },
     gradient: {
         width: ms(72),

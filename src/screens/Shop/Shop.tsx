@@ -186,8 +186,13 @@ function Shop() {
     // "You can't do that" — the two rejections a shop has (locked teaser, not
     // enough coins) and the failure path all land here, so they feel identical.
     function denyFeedback() {
-        playSfx('denied');
-        haptic('denied');
+        // Deferred like switchTab's: a rejection fires straight off a press, on
+        // a screen holding a grid of animated cards, so the native calls stay
+        // off the frame the player is watching.
+        setTimeout(() => {
+            playSfx('denied');
+            haptic('denied');
+        }, 0);
     }
 
     async function handleItemPress(entry: ShopEntry) {
@@ -202,8 +207,7 @@ function Shop() {
                 // Already owned (or free) — just equip it. The sound fires before
                 // the await: equipping writes to Realm and syncs to the server,
                 // and feedback that waits on either would lag behind the finger.
-                playSfx('equip');
-                haptic('equip');
+                setTimeout(() => { playSfx('equip'); haptic('equip'); }, 0);
                 await equip(entry);
             } else {
                 // Buy, then equip — matches the previous one-tap behaviour. This

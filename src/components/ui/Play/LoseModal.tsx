@@ -75,8 +75,16 @@ function LoseModal({visible, score, onRetry, onBack, onWatchAd, canWatchAd = tru
             useNativeDriver: true,
         }).start();
 
+        // Every loop below is collected and stopped when the modal hides. They
+        // used to be started and dropped, and this effect keys on `visible` —
+        // so each game-over left another permanent set running, and a long
+        // session accumulated one per death. The glow is the expensive one: it
+        // animates a text colour, which the native driver can't do, so a leaked
+        // copy costs JS-thread time on every frame forever.
+        const loops: Animated.CompositeAnimation[] = [];
+
         // Title glow loop
-        Animated.loop(
+        loops.push(Animated.loop(
             Animated.sequence([
                 Animated.timing(glowAnim, {
                     toValue: 1,
@@ -91,10 +99,10 @@ function LoseModal({visible, score, onRetry, onBack, onWatchAd, canWatchAd = tru
                     useNativeDriver: false,
                 }),
             ])
-        ).start();
+        ));
 
         // Heart beat
-        Animated.loop(
+        loops.push(Animated.loop(
             Animated.sequence([
                 Animated.timing(heartAnim, {
                     toValue: 1.25,
@@ -109,10 +117,10 @@ function LoseModal({visible, score, onRetry, onBack, onWatchAd, canWatchAd = tru
                     useNativeDriver: true,
                 }),
             ])
-        ).start();
+        ));
 
         // Ad button pulse
-        Animated.loop(
+        loops.push(Animated.loop(
             Animated.sequence([
                 Animated.timing(adPulseAnim, {
                     toValue: 1.05,
@@ -127,12 +135,12 @@ function LoseModal({visible, score, onRetry, onBack, onWatchAd, canWatchAd = tru
                     useNativeDriver: true,
                 }),
             ])
-        ).start();
+        ));
 
         // Retry icon: one full turn, then a beat of rest — hints at "go again"
         // without spinning nonstop under the label.
         retrySpinAnim.setValue(0);
-        Animated.loop(
+        loops.push(Animated.loop(
             Animated.sequence([
                 Animated.delay(1200),
                 Animated.timing(retrySpinAnim, {
@@ -142,7 +150,10 @@ function LoseModal({visible, score, onRetry, onBack, onWatchAd, canWatchAd = tru
                     useNativeDriver: true,
                 }),
             ])
-        ).start();
+        ));
+
+        loops.forEach(l => l.start());
+        return () => loops.forEach(l => l.stop());
     }, [visible]);
 
     const titleColor = glowAnim.interpolate({

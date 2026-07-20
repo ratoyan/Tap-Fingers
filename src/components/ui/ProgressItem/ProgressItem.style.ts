@@ -96,10 +96,14 @@ export default StyleSheet.create({
         overflow: 'hidden',
         backgroundColor: 'rgba(255,255,255,0.12)',
     },
+    // Full width, revealed by scaleX from the left. No radius of its own — the
+    // track clips to its own rounded corners, and a radius here would stretch
+    // into an ellipse as the bar scales.
     progressBarFill: {
+        width: '100%',
         height: ms(10),
         backgroundColor: GOLD,
-        borderRadius: ms(10),
+        transformOrigin: 'left',
     },
     progressLabel: {
         fontSize: ms(13),

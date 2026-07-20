@@ -43,15 +43,13 @@ function ProgressItem({item, trophy, index, topLevel, isMe}: ProgressItemProps) 
         Animated.timing(progressAnim, {
             toValue: progress,
             duration: 700,
-            delay: 200,
-            useNativeDriver: false,
+            // scaleX off a full-width fill instead of an animated percentage
+            // width — see the style. This is a FlatList row, so every visible
+            // leaderboard entry used to start its own 700ms JS-driven layout
+            // animation on mount, all at once, right when a page loads.
+            useNativeDriver: true,
         }).start();
     }, [progress]);
-
-    const progressWidth = progressAnim.interpolate({
-        inputRange: [0, 1],
-        outputRange: ['0%', '100%'],
-    });
 
     // Leaderboard entries carry a username; fall back to the level label
     // for any caller that still passes the legacy shape.
@@ -122,7 +120,7 @@ function ProgressItem({item, trophy, index, topLevel, isMe}: ProgressItemProps) 
                 {/* Progress bar */}
                 <View style={styles.progressWrapper}>
                     <View style={styles.progressBarBackground}>
-                        <Animated.View style={[styles.progressBarFill, {width: progressWidth}]}/>
+                        <Animated.View style={[styles.progressBarFill, {transform: [{scaleX: progressAnim}]}]}/>
                     </View>
                     <Text allowFontScaling={false} style={styles.progressLabel}>{progressPercent}%</Text>
                 </View>

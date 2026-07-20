@@ -21,7 +21,9 @@ function GameSwitch({
         Animated.timing(anim, {
             toValue: value ? 1 : 0,
             duration: 220,
-            useNativeDriver: false,
+            // Drives a plain numeric translateX, so there was never a reason for
+            // this to run on the JS thread — the flag was simply wrong.
+            useNativeDriver: true,
         }).start();
     }, [value]);
 

@@ -6,6 +6,10 @@ import {Boss} from '../../../services/types.ts';
 
 const {width, height} = Dimensions.get('window');
 export const BOSS_SIZE = 150;
+// Inner width of the HP track: the bar container is BOSS_SIZE + 30 wide and the
+// track draws a 1px border on each side. Known up front, so the fill can slide
+// on a transform instead of being measured.
+const HP_BAR_W = BOSS_SIZE + 30 - 2;
 
 // ── Boss tiers ──────────────────────────────────────────────────────────────
 // One entry per 10 levels. `name` shows on the banner/health bar, `aura` is the
@@ -121,30 +125,37 @@ function BossBox({bossHP, bossMaxHP, level, onTap, boss}: Props) {
             moveToNext();
         });
 
-        Animated.loop(
-            Animated.sequence([
-                Animated.timing(glowOpacity, {toValue: 1,   duration: 650, useNativeDriver: true}),
-                Animated.timing(glowOpacity, {toValue: 0.2, duration: 650, useNativeDriver: true}),
-            ])
-        ).start();
+        // Collected and stopped alongside moveRef. The cleanup below already
+        // existed but only stopped the movement, so every boss fight left these
+        // three loops driving a component that no longer exists.
+        const loops = [
+            Animated.loop(
+                Animated.sequence([
+                    Animated.timing(glowOpacity, {toValue: 1,   duration: 650, useNativeDriver: true}),
+                    Animated.timing(glowOpacity, {toValue: 0.2, duration: 650, useNativeDriver: true}),
+                ])
+            ),
+            Animated.loop(
+                Animated.sequence([
+                    Animated.timing(bobAnim, {toValue: 1, duration: 1100, easing: Easing.inOut(Easing.sin), useNativeDriver: true}),
+                    Animated.timing(bobAnim, {toValue: 0, duration: 1100, easing: Easing.inOut(Easing.sin), useNativeDriver: true}),
+                ])
+            ),
+            Animated.loop(
+                Animated.timing(spinAnim, {toValue: 1, duration: 9000, easing: Easing.linear, useNativeDriver: true})
+            ),
+        ];
+        loops.forEach(l => l.start());
 
-        Animated.loop(
-            Animated.sequence([
-                Animated.timing(bobAnim, {toValue: 1, duration: 1100, easing: Easing.inOut(Easing.sin), useNativeDriver: true}),
-                Animated.timing(bobAnim, {toValue: 0, duration: 1100, easing: Easing.inOut(Easing.sin), useNativeDriver: true}),
-            ])
-        ).start();
-
-        Animated.loop(
-            Animated.timing(spinAnim, {toValue: 1, duration: 9000, easing: Easing.linear, useNativeDriver: true})
-        ).start();
-
-        return () => moveRef.current?.stop();
+        return () => {
+            moveRef.current?.stop();
+            loops.forEach(l => l.stop());
+        };
     }, []);
 
     // Smoothly drain the HP bar whenever HP changes.
     useEffect(() => {
-        Animated.timing(hpAnim, {toValue: hpRatio, duration: 220, useNativeDriver: false}).start();
+        Animated.timing(hpAnim, {toValue: hpRatio, duration: 220, useNativeDriver: true}).start();
     }, [hpRatio]);
 
     // Low-HP rage: the boss shudders left/right until it dies.
@@ -240,11 +251,28 @@ function BossBox({bossHP, bossMaxHP, level, onTap, boss}: Props) {
                     borderWidth:     1,
                     borderColor:     'rgba(255,255,255,0.3)',
                 }}>
+                    {/* Revealed by sliding a full-width fill under the track's
+                        overflow:hidden, rather than animating its width. A
+                        percentage width is a layout prop, so the native driver
+                        couldn't touch it and the drain ran on the JS thread —
+                        re-firing on every tap of the boss, each time forcing a
+                        Yoga layout pass, in the middle of the game loop.
+
+                        translateX rather than scaleX because the fill holds a
+                        gradient: scaling would squash it, sliding keeps it at
+                        its authored proportions. The track width is a constant
+                        here, so no measurement is needed. */}
                     <Animated.View style={{
-                        width:        hpAnim.interpolate({inputRange: [0, 1], outputRange: ['0%', '100%']}),
+                        width:        HP_BAR_W,
                         height:       '100%',
                         borderRadius: 5,
                         overflow:     'hidden',
+                        transform:    [{
+                            translateX: hpAnim.interpolate({
+                                inputRange:  [0, 1],
+                                outputRange: [-HP_BAR_W, 0],
+                            }),
+                        }],
                     }}>
                         <LinearGradient
                             colors={[hpColorHi, hpColor]}

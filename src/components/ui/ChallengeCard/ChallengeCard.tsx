@@ -62,19 +62,24 @@ function ChallengeCard({item, index = 0, onCollect}: ChallengeCardProps) {
             toValue: item.progress / 100,
             duration: 700,
             delay: index * 80 + 200,
-            useNativeDriver: false,
+            useNativeDriver: true,
         }).start();
     }, [item.progress]);
 
     // Pulse collect button when finished
     useEffect(() => {
         if (!item.finished) return;
-        Animated.loop(
+        // Stopped on cleanup: this is a list row, so an unstopped loop is one
+        // per collectable card, and `item.finished` flips mid-session when a
+        // challenge completes.
+        const loop = Animated.loop(
             Animated.sequence([
                 Animated.timing(collectPulse, {toValue: 1.08, duration: 600, useNativeDriver: true}),
                 Animated.timing(collectPulse, {toValue: 1, duration: 600, useNativeDriver: true}),
             ])
-        ).start();
+        );
+        loop.start();
+        return () => loop.stop();
     }, [item.finished]);
 
     // Fire the claim animation and the network call together: the card should
@@ -132,10 +137,13 @@ function ChallengeCard({item, index = 0, onCollect}: ChallengeCardProps) {
         ? [PURPLE_DARK, DARK_PURPLE]
         : [GRADIENT_LIGHT, GRADIENT_DARK];
 
-    const progressWidth = progressAnim.interpolate({
-        inputRange: [0, 1],
-        outputRange: ['0%', '100%'],
-    });
+    // scaleX off a full-width fill rather than an animated percentage width.
+    // A percentage width is a layout prop the native driver can't touch, so this
+    // was the one JS-thread animation in a file that is otherwise all-native —
+    // and it runs per row in a FlatList, staggered, so the whole visible list
+    // was driving layout passes from JS at once. transformOrigin anchors the
+    // growth to the left edge without needing to measure the track.
+    const progressScale = progressAnim;
 
     return (
         <Animated.View
@@ -180,8 +188,8 @@ function ChallengeCard({item, index = 0, onCollect}: ChallengeCardProps) {
                                 style={[
                                     styles.progressFill,
                                     {
-                                        width: progressWidth,
                                         backgroundColor: item.finished ? GOLD : 'rgba(255,255,255,0.85)',
+                                        transform: [{scaleX: progressScale}],
                                     },
                                 ]}
                             />

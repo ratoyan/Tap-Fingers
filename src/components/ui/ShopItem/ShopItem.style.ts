@@ -26,6 +26,9 @@ export default StyleSheet.create({
         bottom: -3,
         borderRadius: ms(27),
         borderWidth: 3,
+        // Constant colour; the pulse is an animated opacity on this view so it
+        // can run on the native driver.
+        borderColor: 'rgba(142,45,226,1)',
         zIndex: 0,
     },
     preview: {

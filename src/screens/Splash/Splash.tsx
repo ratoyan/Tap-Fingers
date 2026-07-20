@@ -1,5 +1,5 @@
 import React, {useEffect, useRef} from 'react';
-import {Animated, Easing, StyleSheet, View} from 'react-native';
+import {Animated, Dimensions, Easing, StyleSheet, View} from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import Logo from '../../components/ui/Logo/Logo.tsx';
 import ScreenStatusBar from '../../components/ui/ScreenStatusBar/ScreenStatusBar.tsx';
@@ -7,6 +7,10 @@ import styles from './Splash.style.ts';
 
 const TITLE  = 'TapFingers'.split('');
 const GOLD   = '#FFD700';
+
+// Inner width of the progress track, which is pinned left:40 / right:40. Known
+// without measuring, so the fill can slide on a transform.
+const PROGRESS_W = Dimensions.get('window').width - 80;
 
 const PARTICLES = Array.from({length: 22}, (_, i) => ({
     angle: (i / 22) * 360,
@@ -65,30 +69,39 @@ export default function Splash({onFinish}: Props) {
     }))).current;
 
     useEffect(() => {
+        // Splash is unmounted for good once onFinish fires, so anything still
+        // running at that point runs for the rest of the app's life. Every loop
+        // and timer started here is collected and torn down on unmount —
+        // including the ones started later from inside the entrance callback.
+        const loops: Animated.CompositeAnimation[] = [];
+        const timers: ReturnType<typeof setTimeout>[] = [];
+
         // Stars twinkle
         starAnims.forEach((anim, i) => {
-            Animated.loop(Animated.sequence([
+            loops.push(Animated.loop(Animated.sequence([
                 Animated.timing(anim, {toValue: 1, duration: STARS[i].dur, delay: STARS[i].delay, useNativeDriver: true}),
                 Animated.timing(anim, {toValue: 0.1, duration: STARS[i].dur, useNativeDriver: true}),
-            ])).start();
+            ])));
         });
 
         // Orbs drift
         orbAnims.forEach((anim, i) => {
-            Animated.loop(Animated.sequence([
+            loops.push(Animated.loop(Animated.sequence([
                 Animated.timing(anim, {toValue: 1, duration: 3200 + i * 900, easing: Easing.inOut(Easing.sin), useNativeDriver: true}),
                 Animated.timing(anim, {toValue: 0, duration: 3200 + i * 900, easing: Easing.inOut(Easing.sin), useNativeDriver: true}),
-            ])).start();
+            ])));
         });
 
+        loops.forEach(l => l.start());
+
         // Shooting star
-        setTimeout(() => {
+        timers.push(setTimeout(() => {
             Animated.sequence([
                 Animated.timing(shootO, {toValue: 1,   duration: 80,  useNativeDriver: true}),
                 Animated.timing(shootX, {toValue: 520,  duration: 620, easing: Easing.out(Easing.quad), useNativeDriver: true}),
                 Animated.timing(shootO, {toValue: 0,   duration: 180, useNativeDriver: true}),
             ]).start();
-        }, 900);
+        }, 900));
 
         // Logo entrance
         Animated.parallel([
@@ -98,13 +111,13 @@ export default function Splash({onFinish}: Props) {
         ]).start(() => {
             // 3 ripple rings staggered
             const ripple = (s: Animated.Value, o: Animated.Value, delay: number) => {
-                setTimeout(() => {
+                timers.push(setTimeout(() => {
                     s.setValue(0.85); o.setValue(0.75);
                     Animated.parallel([
                         Animated.timing(s, {toValue: 2.6, duration: 900, easing: Easing.out(Easing.cubic), useNativeDriver: true}),
                         Animated.timing(o, {toValue: 0,   duration: 900, useNativeDriver: true}),
                     ]).start();
-                }, delay);
+                }, delay));
             };
             ripple(ring1S, ring1O, 0);
             ripple(ring2S, ring2O, 220);
@@ -113,17 +126,22 @@ export default function Splash({onFinish}: Props) {
             // Particles burst
             burstParticles();
 
-            // Logo float loop
-            Animated.loop(Animated.sequence([
-                Animated.timing(logoFloat, {toValue: -12, duration: 2000, easing: Easing.inOut(Easing.sin), useNativeDriver: true}),
-                Animated.timing(logoFloat, {toValue: 0,   duration: 2000, easing: Easing.inOut(Easing.sin), useNativeDriver: true}),
-            ])).start();
-
-            // Glow pulse
-            Animated.loop(Animated.sequence([
-                Animated.timing(glowAnim, {toValue: 1, duration: 900, useNativeDriver: true}),
-                Animated.timing(glowAnim, {toValue: 0, duration: 900, useNativeDriver: true}),
-            ])).start();
+            // Logo float loop. Pushed onto the same list the cleanup drains —
+            // these start late, from inside this callback, but they outlive the
+            // screen exactly like the ones above.
+            const lateLoops = [
+                Animated.loop(Animated.sequence([
+                    Animated.timing(logoFloat, {toValue: -12, duration: 2000, easing: Easing.inOut(Easing.sin), useNativeDriver: true}),
+                    Animated.timing(logoFloat, {toValue: 0,   duration: 2000, easing: Easing.inOut(Easing.sin), useNativeDriver: true}),
+                ])),
+                // Glow pulse
+                Animated.loop(Animated.sequence([
+                    Animated.timing(glowAnim, {toValue: 1, duration: 900, useNativeDriver: true}),
+                    Animated.timing(glowAnim, {toValue: 0, duration: 900, useNativeDriver: true}),
+                ])),
+            ];
+            loops.push(...lateLoops);
+            lateLoops.forEach(l => l.start());
 
             // Letters cascade
             Animated.stagger(52, charAnims.map(a => Animated.parallel([
@@ -132,36 +150,41 @@ export default function Splash({onFinish}: Props) {
             ]))).start();
 
             // Underline draw
-            setTimeout(() => {
+            timers.push(setTimeout(() => {
                 Animated.spring(lineScale, {toValue: 1, friction: 5, tension: 55, useNativeDriver: true}).start();
-            }, 560);
+            }, 560));
 
             // Subtitle
-            setTimeout(() => {
+            timers.push(setTimeout(() => {
                 Animated.parallel([
                     Animated.timing(subtitleO, {toValue: 1, duration: 550, useNativeDriver: true}),
                     Animated.spring(subtitleY, {toValue: 0, friction: 7,   tension: 60,  useNativeDriver: true}),
                 ]).start();
-            }, 760);
+            }, 760));
 
             // Progress bar
-            setTimeout(() => {
+            timers.push(setTimeout(() => {
                 Animated.timing(progressAnim, {
                     toValue: 1, duration: 2100,
                     easing:  Easing.inOut(Easing.ease),
-                    useNativeDriver: false,
+                    useNativeDriver: true,
                 }).start();
-            }, 250);
+            }, 250));
 
             // Exit fade
-            setTimeout(() => {
+            timers.push(setTimeout(() => {
                 Animated.timing(exit, {
                     toValue: 0, duration: 700,
                     easing:  Easing.inOut(Easing.ease),
                     useNativeDriver: true,
-                }).start(() => onFinish());
-            }, 2950);
+                }).start(({finished}) => { if (finished) onFinish(); });
+            }, 2950));
         });
+
+        return () => {
+            loops.forEach(l => l.stop());
+            timers.forEach(clearTimeout);
+        };
     }, []);
 
     function burstParticles() {
@@ -177,7 +200,6 @@ export default function Splash({onFinish}: Props) {
     }
 
     const titleGlow   = glowAnim.interpolate({inputRange: [0, 1], outputRange: [0.6, 1]});
-    const progressW   = progressAnim.interpolate({inputRange: [0, 1], outputRange: ['0%', '100%']});
 
     return (
         <Animated.View style={[styles.container, {opacity: exit}]}>
@@ -318,7 +340,21 @@ export default function Splash({onFinish}: Props) {
 
             {/* Progress bar */}
             <View style={styles.progressTrack}>
-                <Animated.View style={[styles.progressFill, {width: progressW}]}>
+                {/* Revealed by sliding a full-width fill under the track's
+                    overflow:hidden, not by animating its width — a percentage
+                    width is a layout prop the native driver can't touch, and
+                    this ran for 2.1s during startup, when the JS thread is at
+                    its busiest of the whole session. translateX rather than
+                    scaleX because the fill holds a five-stop gradient that
+                    scaling would smear. */}
+                <Animated.View style={[styles.progressFill, {
+                    transform: [{
+                        translateX: progressAnim.interpolate({
+                            inputRange:  [0, 1],
+                            outputRange: [-PROGRESS_W, 0],
+                        }),
+                    }],
+                }]}>
                     <LinearGradient
                         colors={['#996600', GOLD, '#ffe566', GOLD, '#996600']}
                         start={{x: 0, y: 0}} end={{x: 1, y: 0}}

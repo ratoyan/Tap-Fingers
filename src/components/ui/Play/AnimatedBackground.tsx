@@ -18,14 +18,20 @@ function StarsBackground() {
     const anims = useRef(STARS.map(() => new Animated.Value(Math.random()))).current;
 
     useEffect(() => {
-        anims.forEach((anim, i) => {
+        // Every loop in this file is collected and stopped on unmount. They used
+        // to be started and dropped: an Animated.loop with no retained handle
+        // keeps driving after the component is gone, so each Play mount left
+        // another full set of them running for the rest of the app's life.
+        const loops = anims.map((anim, i) =>
             Animated.loop(
                 Animated.sequence([
                     Animated.timing(anim, {toValue: 1,   duration: STARS[i].duration, delay: STARS[i].delay, useNativeDriver: true}),
                     Animated.timing(anim, {toValue: 0.08, duration: STARS[i].duration, useNativeDriver: true}),
                 ])
-            ).start();
-        });
+            ),
+        );
+        loops.forEach(l => l.start());
+        return () => loops.forEach(l => l.stop());
     }, []);
 
     return (
@@ -65,7 +71,7 @@ function AuroraBackground() {
     ).current;
 
     useEffect(() => {
-        anims.forEach((anim, i) => {
+        const loops = anims.map((anim, i) =>
             Animated.loop(
                 Animated.sequence([
                     Animated.parallel([
@@ -77,8 +83,10 @@ function AuroraBackground() {
                         Animated.timing(anim.translateY, {toValue: 40,   duration: 3200, useNativeDriver: true}),
                     ]),
                 ])
-            ).start();
-        });
+            ),
+        );
+        loops.forEach(l => l.start());
+        return () => loops.forEach(l => l.stop());
     }, []);
 
     return (
@@ -126,21 +134,42 @@ function InfernoBackground() {
     ).current;
 
     useEffect(() => {
+        // Hand-rolled loop (each pass re-seeds the start position, which
+        // Animated.loop can't do), so it needs its own kill switch: the
+        // `cancelled` flag stops the recursion and `running` holds the pass
+        // that's in flight. Previously neither existed — `.start(() => loop())`
+        // with nothing retained is unstoppable by construction, so 18 particles
+        // per Play mount kept re-arming themselves forever.
+        let cancelled = false;
+        const timers: ReturnType<typeof setTimeout>[] = [];
+        const running: (Animated.CompositeAnimation | null)[] = anims.map(() => null);
+
         anims.forEach((anim, i) => {
             const dur = FIRE_PARTICLES[i].duration;
             const loop = () => {
+                if (cancelled) return;
                 anim.y.setValue(height + 20);
                 anim.opacity.setValue(0.9);
-                Animated.parallel([
+                const pass = Animated.parallel([
                     Animated.timing(anim.y,       {toValue: height * 0.25, duration: dur, useNativeDriver: true}),
                     Animated.sequence([
                         Animated.timing(anim.opacity, {toValue: 1,  duration: dur * 0.25, useNativeDriver: true}),
                         Animated.timing(anim.opacity, {toValue: 0,  duration: dur * 0.75, useNativeDriver: true}),
                     ]),
-                ]).start(() => loop());
+                ]);
+                running[i] = pass;
+                // `finished` is false when the pass was stopped rather than
+                // completing, which is the other half of the kill switch.
+                pass.start(({finished}) => { if (finished && !cancelled) loop(); });
             };
-            setTimeout(() => loop(), FIRE_PARTICLES[i].delay);
+            timers.push(setTimeout(loop, FIRE_PARTICLES[i].delay));
         });
+
+        return () => {
+            cancelled = true;
+            timers.forEach(clearTimeout);
+            running.forEach(pass => pass?.stop());
+        };
     }, []);
 
     return (
@@ -184,18 +213,30 @@ function MatrixBackground() {
     const anims = useRef(MATRIX_DROPS.map(() => new Animated.Value(0))).current;
 
     useEffect(() => {
+        // Same unstoppable-recursion fix as Inferno above, at 45 drops.
+        let cancelled = false;
+        const running: (Animated.CompositeAnimation | null)[] = anims.map(() => null);
+
         anims.forEach((anim, i) => {
             const loop = () => {
+                if (cancelled) return;
                 anim.setValue(0);
-                Animated.timing(anim, {
+                const pass = Animated.timing(anim, {
                     toValue:  1,
                     duration: MATRIX_DROPS[i].duration,
                     delay:    MATRIX_DROPS[i].delay,
                     useNativeDriver: true,
-                }).start(() => loop());
+                });
+                running[i] = pass;
+                pass.start(({finished}) => { if (finished && !cancelled) loop(); });
             };
             loop();
         });
+
+        return () => {
+            cancelled = true;
+            running.forEach(pass => pass?.stop());
+        };
     }, []);
 
     return (

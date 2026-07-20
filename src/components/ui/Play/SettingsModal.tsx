@@ -6,6 +6,7 @@ import {useTranslation} from 'react-i18next';
 import {STORAGE_KEYS} from '../../../utils/storageKeys.ts';
 import {loadMusic, playMusic, stopMusic} from '../../../utils/helpers.ts';
 import {playSfx, setSfxMuted} from '../../../utils/sfx.ts';
+import {haptic, setHapticsEnabled} from '../../../utils/haptics.ts';
 import {ms, vs} from '../../../utils/responsive.ts';
 import {DARK_PURPLE, PURPLE} from '../../../constants/colors.ts';
 
@@ -81,6 +82,10 @@ export default function SettingsModal({visible, onClose}: SettingsModalProps) {
 
     const toggleVibration = async (val: boolean) => {
         setVibration(val);
+        // Flip the live gate too — this modal opens mid-round, so waiting for
+        // Play's next focus to re-read storage would be a whole game too late.
+        setHapticsEnabled(val);
+        if (val) haptic('heart'); // preview
         // Was written the other way round from music/sound, which made "on"
         // store 'STOP' — and Play reads a stored value as "disabled", so the
         // switch did the exact opposite of what it said.

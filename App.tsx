@@ -8,6 +8,7 @@ import StackNavigator from "./src/navigation/StackNavigator.tsx";
 import useMusicAppState from "./src/hooks/useMusicAppState.tsx";
 import {playMusic, stopMusic} from "./src/utils/helpers.ts";
 import {loadSfx, refreshSfxMuted} from "./src/utils/sfx.ts";
+import {refreshHapticsEnabled} from "./src/utils/haptics.ts";
 import UpdateModal from "./src/components/ui/UpdateModal/UpdateModal.tsx";
 import NoticeModal from "./src/components/ui/NoticeModal/NoticeModal.tsx";
 import Splash from "./src/screens/Splash/Splash.tsx";
@@ -40,6 +41,9 @@ function App() {
     // tap of a round is already decoded instead of missing its sound.
     useEffect(() => {
         refreshSfxMuted().finally(loadSfx);
+        // The haptics gate has nothing to preload — it just needs the persisted
+        // vibration preference read once, before the first haptic() fires.
+        refreshHapticsEnabled();
     }, []);
 
     // Pull the admin-controlled global config (ads on/off, level length) at

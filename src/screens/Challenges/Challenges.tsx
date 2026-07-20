@@ -9,6 +9,7 @@ import * as challengeService from "../../services/challengeService.ts";
 import {ChallengeWithProgress} from "../../services/types.ts";
 import {useAuthStore} from "../../store/authStore.ts";
 import {playSfx} from "../../utils/sfx.ts";
+import {haptic} from "../../utils/haptics.ts";
 
 // components
 import BackHeader from "../../components/ui/BackHeader/BackHeader.tsx";
@@ -120,6 +121,7 @@ function Challenges() {
             // After the server confirms, not on press — the fanfare is the
             // receipt for the coins, and it would be a lie if the claim failed.
             playSfx('claim');
+            haptic('claim');
             // Mark this challenge claimed in place (and pull the new coin balance)
             // rather than reloading from page 1 — keeps scroll position and the
             // already-loaded pages intact.
@@ -132,6 +134,7 @@ function Challenges() {
         } catch (error) {
             console.error('Failed to claim challenge:', error);
             playSfx('denied');
+            haptic('denied');
         } finally {
             setClaimingId(null);
         }

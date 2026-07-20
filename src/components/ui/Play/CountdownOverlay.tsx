@@ -2,6 +2,7 @@ import React, {useEffect, useRef, useState} from 'react';
 import {Animated, StyleSheet, View} from 'react-native';
 import {ms} from '../../../utils/responsive.ts';
 import {playSfx} from '../../../utils/sfx.ts';
+import {haptic} from '../../../utils/haptics.ts';
 import {GOLD, GRADIENT_LIGHT, WHITE} from '../../../constants/colors.ts';
 
 // Last entry is the go-signal — it animates outward instead of shrinking away.
@@ -45,6 +46,9 @@ export default function CountdownOverlay({onFinish}: CountdownOverlayProps) {
         // this needs no settings check of its own.
         if (isGo) playSfx('go');
         else playSfx('countdown', {rate: 1 + index * 0.06});
+        // Same for haptics: a tick under each number and a heavier pop on GO!,
+        // so the start of a round is felt as well as heard. Gated in haptics.ts.
+        haptic(isGo ? 'go' : 'countdown');
 
         // Numbers slam in from oversized; "GO!" pops up from small and flies out.
         scale.setValue(isGo ? 0.4 : 2.4);

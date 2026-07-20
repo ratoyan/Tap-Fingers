@@ -13,6 +13,7 @@ import * as userService from "../../services/userService.ts";
 import * as equippedRepo from "../../db/equippedRepo.ts";
 import {DEFAULT_BG_KEY, DEFAULT_CARD_KEY, mergeShopItem, registerShopIcons, ShopEntry} from "../../data/shopVisuals.ts";
 import {playSfx} from "../../utils/sfx.ts";
+import {haptic} from "../../utils/haptics.ts";
 
 // components
 import BackHeader from "../../components/ui/BackHeader/BackHeader.tsx";
@@ -130,7 +131,10 @@ function Shop() {
     function switchTab(tab: TabType) {
         // Re-tapping the tab you're already on animates nothing, so it shouldn't
         // sound like it did. Pitched up and quiet: navigation, not selection.
-        if (tab !== activeTab) playSfx('equip', {rate: 1.18, volume: 0.7});
+        if (tab !== activeTab) {
+            playSfx('equip', {rate: 1.18, volume: 0.7});
+            haptic('equip');
+        }
         setActiveTab(tab);
         Animated.spring(tabAnim, {
             toValue: tab === 'card' ? 0 : 1,
@@ -163,11 +167,18 @@ function Shop() {
         }
     }
 
+    // "You can't do that" — the two rejections a shop has (locked teaser, not
+    // enough coins) and the failure path all land here, so they feel identical.
+    function denyFeedback() {
+        playSfx('denied');
+        haptic('denied');
+    }
+
     async function handleItemPress(entry: ShopEntry) {
         // Teasers are locked — visible but not purchasable/equippable.
-        if (entry.comingSoon) return playSfx('denied');
+        if (entry.comingSoon) return denyFeedback();
         if (busyKey) return;
-        if (!isOwned(entry) && coins < entry.priceCoins) return playSfx('denied');
+        if (!isOwned(entry) && coins < entry.priceCoins) return denyFeedback();
 
         setBusyKey(entry.key);
         try {
@@ -176,6 +187,7 @@ function Shop() {
                 // the await: equipping writes to Realm and syncs to the server,
                 // and feedback that waits on either would lag behind the finger.
                 playSfx('equip');
+                haptic('equip');
                 await equip(entry);
             } else {
                 // Buy, then equip — matches the previous one-tap behaviour. This
@@ -185,11 +197,12 @@ function Shop() {
                 setOwnedKeys(prev => new Set(prev).add(entry.key));
                 patchStats({coins: result.remainingCoins});
                 playSfx('purchase');
+                haptic('purchase');
                 await equip(entry);
             }
         } catch (error) {
             console.error('Shop action failed:', error);
-            playSfx('denied');
+            denyFeedback();
             // Re-sync from the server so the UI reflects the real state.
             loadShop();
         } finally {

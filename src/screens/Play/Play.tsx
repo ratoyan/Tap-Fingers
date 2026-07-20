@@ -6,13 +6,13 @@ import {useFocusEffect, useNavigation} from '@react-navigation/core';
 import {useTranslation} from 'react-i18next';
 import {loadMusic, pauceMusic, playMusic, releaseMusic, stopMusic} from '../../utils/helpers.ts';
 import {playSfx, playSfxVaried, refreshSfxMuted} from '../../utils/sfx.ts';
+import {haptic, refreshHapticsEnabled} from '../../utils/haptics.ts';
 import {
     Animated,
     Dimensions,
     ImageBackground,
     Text,
     TouchableOpacity,
-    Vibration,
     View,
 } from 'react-native';
 import {colors} from '../../data/play.ts';
@@ -195,7 +195,6 @@ export default function Play() {
     const patchStats = useAuthStore(s => s.patchStats);
 
     // ─── Refs ─────────────────────────────────────────────────────────────────
-    const cancelVibrationRef = useRef(true);
     // durationRef = the level's duration (target). durationEffRef = what the boxes
     // actually travel with right now; a bomb or a boss defeat pulls it down and the
     // animation loop walks it back up to durationRef.
@@ -405,12 +404,10 @@ export default function Play() {
 
     // ─── Storage helpers ──────────────────────────────────────────────────────
     async function loadSettings() {
-        // SOUND/VIBRATION are inverted sentinels: a stored value means "off".
-        const v = await storage.getItem(STORAGE_KEYS.VIBRATION);
-        cancelVibrationRef.current = !!v;
-        // The SFX gate lives in utils/sfx.ts, which every playSfx() checks —
-        // this screen no longer keeps its own copy of the flag.
-        await refreshSfxMuted();
+        // Both gates live in their own modules — utils/sfx.ts and utils/haptics.ts —
+        // and are checked inside every playSfx()/haptic() call, so this screen no
+        // longer keeps its own copies of the flags.
+        await Promise.all([refreshSfxMuted(), refreshHapticsEnabled()]);
     }
 
     function handleWatchAdHelper(type: HelperType) {
@@ -673,7 +670,7 @@ export default function Play() {
         // and longer than a single hazard bomb going off.
         playSfx('bomb', {rate: 0.85});
 
-        if (!cancelVibrationRef.current) Vibration.vibrate([0, 80, 60, 80]);
+        haptic('bombHelper');
 
         bombFlashAnim.setValue(1);
         Animated.timing(bombFlashAnim, {toValue: 0, duration: 700, useNativeDriver: true}).start();
@@ -705,7 +702,7 @@ export default function Play() {
         shieldFlashAnim.setValue(1);
         Animated.timing(shieldFlashAnim, {toValue: 0, duration: 600, useNativeDriver: true}).start();
 
-        if (!cancelVibrationRef.current) Vibration.vibrate(120);
+        haptic('shield');
     }
 
     // ─── Slow Mo helper ───────────────────────────────────────────────────────
@@ -725,7 +722,7 @@ export default function Play() {
         slowFlashAnim.setValue(1);
         Animated.timing(slowFlashAnim, {toValue: 0, duration: 800, useNativeDriver: true}).start();
 
-        if (!cancelVibrationRef.current) Vibration.vibrate([0, 60, 40, 60]);
+        haptic('slow');
 
         const SLOW_DURATION = 8;
         slowTimerValueRef.current = SLOW_DURATION;
@@ -807,7 +804,7 @@ export default function Play() {
         // A blunt thud rather than the card blip — chipping the boss down should
         // feel like landing punches on something solid.
         playSfxVaried('hit', 0.1);
-        if (!cancelVibrationRef.current) Vibration.vibrate(25);
+        haptic('hit');
 
         if (newHP <= 0) endBossFight();
     }
@@ -848,7 +845,7 @@ export default function Play() {
             setEmptyHeartCount(prev => Math.max(0, prev - 1));
 
             playSfx('heart');
-            if (!cancelVibrationRef.current) Vibration.vibrate(60);
+            haptic('heart');
             return;
         }
 
@@ -872,9 +869,7 @@ export default function Play() {
             // lower and its punishment lands harder: a longer flash, a deeper
             // rumble and the big shake instead of the bomb's quick jolt.
             playSfx('bomb', isBarrel ? {rate: 0.7} : undefined);
-            if (!cancelVibrationRef.current) {
-                Vibration.vibrate(isBarrel ? [0, 200, 80, 260] : [0, 120, 60, 200]);
-            }
+            haptic(isBarrel ? 'barrel' : 'bombHazard');
 
             hurtFlashAnim.setValue(1);
             Animated.timing(hurtFlashAnim, {
@@ -893,6 +888,12 @@ export default function Play() {
         // different sounds.
         if (box.isGolden) playSfx('coin');
         else playSfxVaried('tap', 0.14);
+
+        // Cards had no haptic at all before — the raw Vibration API couldn't do
+        // one this light without feeling like a buzz. `tap` is the OS selection
+        // transient and is throttled in haptics.ts, so a fast round reads as a
+        // series of clicks under the finger rather than a rattle.
+        haptic(box.isGolden ? 'coin' : 'tap');
 
         // Streak + honest tap count for the backend session
         streakRef.current += 1;
@@ -1171,7 +1172,7 @@ export default function Play() {
                     // mistake: it disappears without costing a heart either.
                     if (b.isBomb || b.isBarrel || b.isHeart || b.isGolden) return false;
 
-                    if (loseHeart() && !cancelVibrationRef.current) Vibration.vibrate(500);
+                    if (loseHeart()) haptic('loseHeart');
                     missHappenedRef.current = true;
                     // Drop the box instead of teleporting it back to the far edge:
                     // the spawner feeds the next one on its own cadence, so boxes

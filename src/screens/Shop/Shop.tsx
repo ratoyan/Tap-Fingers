@@ -1,5 +1,5 @@
 ﻿import React, {useCallback, useRef, useState} from "react";
-import {Animated, ScrollView, Text, TouchableOpacity, View} from "react-native";
+import {Animated, InteractionManager, ScrollView, Text, TouchableOpacity, View} from "react-native";
 import {useTranslation} from "react-i18next";
 import {useFocusEffect} from "@react-navigation/core";
 import {useGlobalStore} from "../../store/globalStore.ts";
@@ -148,11 +148,23 @@ function Shop() {
             haptic('equip');
         }, 0);
 
-        // First visit to a tab mounts its grid; after that both stay mounted and
+        setActiveTab(tab);
+
+        // First visit to a tab builds its grid; after that both stay mounted and
         // switching is just a visibility flip. Lazy rather than mounting both up
         // front so opening the shop doesn't pay for a tab nobody looked at.
-        setMountedTabs(prev => (prev.has(tab) ? prev : new Set(prev).add(tab)));
-        setActiveTab(tab);
+        //
+        // The build is deferred to after the transition rather than done in this
+        // same commit. That is what lets the shimmer actually show: the tab flips
+        // instantly to a cheap skeleton, the indicator slides, and only then does
+        // the expensive part happen — twenty cards' worth of SVG art, previews
+        // and six animations each. Doing it inline meant the tap simply hung
+        // until the whole grid was ready.
+        if (!mountedTabs.has(tab)) {
+            InteractionManager.runAfterInteractions(() => {
+                setMountedTabs(prev => (prev.has(tab) ? prev : new Set(prev).add(tab)));
+            });
+        }
         Animated.spring(tabAnim, {
             toValue: tab === 'card' ? 0 : 1,
             friction: 7,
@@ -343,7 +355,15 @@ function Shop() {
                 // entrance delayed by index × 70ms, glow, shine, float) and
                 // renders SVG art, so remounting a full grid was the lag.
                 (TABS.map(tab => {
-                    if (!mountedTabs.has(tab)) return null;
+                    const isPending = !mountedTabs.has(tab);
+                    if (isPending) {
+                        // Not built yet. If it's the tab the player just moved
+                        // to, this is the shimmer they see while the grid is
+                        // assembled behind it (see switchTab); an unvisited tab
+                        // that isn't showing renders nothing at all.
+                        return tab === activeTab ? <ShopSkeleton key={tab}/> : null;
+                    }
+
                     const list = tab === 'card' ? cardItems : bgItems;
                     const equipped = tab === 'card' ? activeCardKey : activeBgKey;
                     const isActive = tab === activeTab;

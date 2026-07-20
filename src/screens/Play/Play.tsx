@@ -169,6 +169,24 @@ function spawnBox(
     };
 }
 
+// Sound and haptics are native calls, and they run on the JS thread — the same
+// thread the box loop below drives at 60fps by setState-ing every frame. Fired
+// inline from a tap handler they land *before* React commits that tap's render,
+// so their cost is added straight onto the frame's budget and the whole field
+// visibly hitches for a beat on every tap.
+//
+// Deferring by one macrotask lets React commit and paint first; the feedback
+// then fires roughly a frame later, which is imperceptible for a sound or a
+// buzz but takes them off the critical path entirely.
+//
+// Used for the presses that land in the loop's hot path — every card tap, every
+// boss hit. The three helper buttons fire a handful of times a round and already
+// rewrite the whole board when they do, so they stay inline; menu and settings
+// presses aren't competing with the loop at all.
+function deferFeedback(fire: () => void): void {
+    setTimeout(fire, 0);
+}
+
 export default function Play() {
     const {t} = useTranslation();
     const navigation = useNavigation();
@@ -809,8 +827,7 @@ export default function Play() {
 
         // A blunt thud rather than the card blip — chipping the boss down should
         // feel like landing punches on something solid.
-        playSfxVaried('hit', 0.1);
-        haptic('hit');
+        deferFeedback(() => { playSfxVaried('hit', 0.1); haptic('hit'); });
 
         if (newHP <= 0) endBossFight();
     }
@@ -850,8 +867,7 @@ export default function Play() {
             boomBox(box.id);
             setEmptyHeartCount(prev => Math.max(0, prev - 1));
 
-            playSfx('heart');
-            haptic('heart');
+            deferFeedback(() => { playSfx('heart'); haptic('heart'); });
             return;
         }
 
@@ -874,8 +890,10 @@ export default function Play() {
             // The barrel is the heavier of the two traps, so its blast sits
             // lower and its punishment lands harder: a longer flash, a deeper
             // rumble and the big shake instead of the bomb's quick jolt.
-            playSfx('bomb', isBarrel ? {rate: 0.7} : undefined);
-            haptic(isBarrel ? 'barrel' : 'bombHazard');
+            deferFeedback(() => {
+                playSfx('bomb', isBarrel ? {rate: 0.7} : undefined);
+                haptic(isBarrel ? 'barrel' : 'bombHazard');
+            });
 
             hurtFlashAnim.setValue(1);
             Animated.timing(hurtFlashAnim, {
@@ -889,17 +907,17 @@ export default function Play() {
         }
 
         // 💰 The money bag is worth 3 points, so it earns the coin jingle; plain
-        // cards get the blip. The detune is small on purpose — the old ±0.35
-        // range swung the pitch so wide that consecutive taps sounded like two
-        // different sounds.
-        if (box.isGolden) playSfx('coin');
-        else playSfxVaried('tap', 0.14);
-
-        // Cards had no haptic at all before — the raw Vibration API couldn't do
-        // one this light without feeling like a buzz. `tap` is the OS selection
-        // transient and is throttled in haptics.ts, so a fast round reads as a
-        // series of clicks under the finger rather than a rattle.
-        haptic(box.isGolden ? 'coin' : 'tap');
+        // cards get the blip.
+        //
+        // The hottest path in the game — this runs on every single card tap, so
+        // it's the one that most needs to stay off the frame's critical path.
+        // The detune is small on purpose: the old ±0.35 range swung the pitch so
+        // wide that consecutive taps sounded like two different sounds.
+        deferFeedback(() => {
+            if (box.isGolden) playSfx('coin');
+            else playSfxVaried('tap', 0.14);
+            haptic(box.isGolden ? 'coin' : 'tap');
+        });
 
         // Streak + honest tap count for the backend session
         streakRef.current += 1;
@@ -1178,7 +1196,11 @@ export default function Play() {
                     // mistake: it disappears without costing a heart either.
                     if (b.isBomb || b.isBarrel || b.isHeart || b.isGolden) return false;
 
-                    if (loseHeart()) haptic('loseHeart');
+                    // Deferred for a second reason on top of the frame budget:
+                    // this runs inside a setState updater, i.e. during React's
+                    // render phase, where a native side effect has no business
+                    // being fired synchronously.
+                    if (loseHeart()) deferFeedback(() => haptic('loseHeart'));
                     missHappenedRef.current = true;
                     // Drop the box instead of teleporting it back to the far edge:
                     // the spawner feeds the next one on its own cadence, so boxes

@@ -575,7 +575,7 @@ export default function LuckyWheelModal({visible, onClose, onSpinComplete, segme
                             <View style={[styles.spinButtonFixed, {left: CENTER - 38, top: CENTER - 38}]}>
                                 <Animated.View style={{transform: [{scale: isActive ? pulseAnim : 1}]}}>
                                     <TouchableOpacity
-                                        onPressIn={spin}
+                                        onPress={spin}
                                         disabled={spinning || !canSpin || !wheelReady}
                                         activeOpacity={0.82}
                                         accessible={true}
@@ -664,9 +664,16 @@ export default function LuckyWheelModal({visible, onClose, onSpinComplete, segme
                             </View>
                         )}
 
-                        {/* Close */}
+                        {/* Close — fires on release, not on press-in. Dismissing
+                            on touch-down tears the native Modal down while the
+                            gesture is still open, so the touch never gets its
+                            "up": the responder is left dangling and the next tap
+                            outside is swallowed clearing it. That's what made
+                            the wheel open only on every second press of the Home
+                            button. Anything that unmounts its own modal has to
+                            wait for the release. */}
                         <TouchableOpacity
-                            onPressIn={onClose}
+                            onPress={onClose}
                             activeOpacity={0.8}
                             style={styles.closeButton}
                             accessible={true}

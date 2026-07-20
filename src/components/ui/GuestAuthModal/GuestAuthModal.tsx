@@ -242,7 +242,7 @@ export default function GuestAuthModal({
     return (
         <Modal transparent visible={visible} animationType="none" onRequestClose={handleClose}>
             <TouchableWithoutFeedback
-                onPressIn={handleClose}
+                onPress={handleClose}
                 accessible={true}
                 accessibilityRole="button"
                 accessibilityLabel={t('close')}
@@ -347,7 +347,7 @@ export default function GuestAuthModal({
 
                         <TouchableOpacity
                             style={styles.submitButton}
-                            onPressIn={submit}
+                            onPress={submit}
                             disabled={busy}
                             activeOpacity={0.85}
                         >

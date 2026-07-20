@@ -33,42 +33,42 @@ const StackNavigator = ({initialRouteName = 'Welcome'}: StackNavigatorProps) => 
                 name="Play"
                 component={Play}
                 options={{
-                    animation: 'fade',
+                    animation: 'simple_push',
                 }}
             />
             <Stack.Screen
                 name="Settings"
                 component={Settings}
                 options={{
-                    animation: 'slide_from_right',
+                    animation: 'ios_from_right',
                 }}
             />
             <Stack.Screen
                 name="Progression"
                 component={Progression}
                 options={{
-                    animation: 'slide_from_right',
+                    animation: 'ios_from_right',
                 }}
             />
             <Stack.Screen
                 name="Challenges"
                 component={Challenges}
                 options={{
-                    animation: 'slide_from_right',
+                    animation: 'ios_from_right',
                 }}
             />
             <Stack.Screen
                 name="Shop"
                 component={Shop}
                 options={{
-                    animation: 'slide_from_right',
+                    animation: 'ios_from_right',
                 }}
             />
             <Stack.Screen
                 name="Profile"
                 component={Profile}
                 options={{
-                    animation: 'slide_from_right',
+                    animation: 'ios_from_right',
                 }}
             />
         </Stack.Navigator>

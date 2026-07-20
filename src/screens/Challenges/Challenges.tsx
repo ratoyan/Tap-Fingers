@@ -1,4 +1,4 @@
-import React, {useCallback, useMemo, useRef, useState} from 'react';
+import React, {useCallback, useRef, useState} from 'react';
 import {ActivityIndicator, FlatList, Text, View} from 'react-native';
 import {useFocusEffect} from '@react-navigation/core';
 import {useTranslation} from "react-i18next";
@@ -47,6 +47,17 @@ function sortRank(c: ChallengeWithProgress): number {
     return 2;                                                            // in progress
 }
 
+// Stable sort by rank, so the within-group order (server order) is preserved.
+// Applied once per fetched page — never on already-rendered items, otherwise
+// claiming a reward would re-rank the card and yank it out from under the tap.
+// The new order shows up the next time the screen is entered.
+function sortByRank(list: ChallengeWithProgress[]): ChallengeWithProgress[] {
+    return list
+        .map((item, index) => ({item, index}))
+        .sort((a, b) => sortRank(a.item) - sortRank(b.item) || a.index - b.index)
+        .map(({item}) => item);
+}
+
 function Challenges() {
     const {t} = useTranslation();
     const refreshProfile = useAuthStore(s => s.refreshProfile);
@@ -76,7 +87,10 @@ function Challenges() {
             const board = await challengeService.getMyChallenges(nextPage, PAGE_SIZE);
             pageRef.current = board.page;
             totalPagesRef.current = board.totalPages;
-            setItems(prev => (reset ? board.challenges : [...prev, ...board.challenges]));
+            // Each page is sorted on its own and appended, so loading more never
+            // reshuffles the rows the user is already looking at.
+            const page = sortByRank(board.challenges);
+            setItems(prev => (reset ? page : [...prev, ...page]));
         } catch (error) {
             console.error('Failed to load challenges:', error);
         } finally {
@@ -118,15 +132,6 @@ function Challenges() {
         }
     }
 
-    // Stable sort by rank so the within-group order (server order) is preserved.
-    const sortedItems = useMemo(
-        () => items
-            .map((item, index) => ({item, index}))
-            .sort((a, b) => sortRank(a.item) - sortRank(b.item) || a.index - b.index)
-            .map(({item}) => item),
-        [items],
-    );
-
     const renderFooter = () => {
         if (!loadingMore) return null;
         return (
@@ -151,7 +156,7 @@ function Challenges() {
                 </View>
             ) : (
                 <FlatList
-                    data={sortedItems}
+                    data={items}
                     keyExtractor={(item) => item.id.toString()}
                     renderItem={({item, index}) => (
                         <ChallengeCard

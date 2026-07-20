@@ -108,6 +108,19 @@ export default StyleSheet.create({
         fontWeight: '900',
         fontSize: ms(13),
     },
+    // Gold wash that sweeps over the whole card for the duration of the claim.
+    claimFlash: {
+        ...StyleSheet.absoluteFillObject,
+        backgroundColor: GOLD,
+    },
+    // Coin that flies up out of the collect button. Anchored to the button's
+    // corner and lifted by the claim animation; pointerEvents none so it never
+    // swallows a tap.
+    flyingCoin: {
+        position: 'absolute',
+        right: ms(30),
+        bottom: vs(10),
+    },
     lockedSubtitle: {
         color: 'rgba(255,255,255,0.45)',
         fontSize: ms(12),

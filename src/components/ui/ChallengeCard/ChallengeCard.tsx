@@ -16,6 +16,7 @@ import {
     PURPLE_DARK,
 } from "../../../constants/colors.ts";
 import LinearGradient from "react-native-linear-gradient";
+import {vs} from "../../../utils/responsive.ts";
 
 interface ChallengeCardProps {
     item: any;
@@ -30,6 +31,11 @@ function ChallengeCard({item, index = 0, onCollect}: ChallengeCardProps) {
     const entranceX = useRef(new Animated.Value(-30)).current;
     const progressAnim = useRef(new Animated.Value(0)).current;
     const collectPulse = useRef(new Animated.Value(1)).current;
+
+    // Claim animation: 0 -> 1 drives the card punch, the gold flash and the
+    // coin that flies up out of the button. Kept as one value so every part
+    // stays in sync, and native-driven (transform/opacity only).
+    const claim = useRef(new Animated.Value(0)).current;
 
     // Entrance: slide from left
     useEffect(() => {
@@ -71,6 +77,41 @@ function ChallengeCard({item, index = 0, onCollect}: ChallengeCardProps) {
         ).start();
     }, [item.finished]);
 
+    // Fire the claim animation and the network call together: the card should
+    // feel collected the instant it's tapped, not after the request lands.
+    const handleCollect = () => {
+        claim.setValue(0);
+        Animated.timing(claim, {
+            toValue: 1,
+            duration: 900,
+            useNativeDriver: true,
+        }).start();
+        onCollect?.();
+    };
+
+    // Quick punch up, then settle back.
+    const claimScale = claim.interpolate({
+        inputRange: [0, 0.25, 1],
+        outputRange: [1, 1.05, 1],
+    });
+    // Gold wash that flares and fades out.
+    const claimFlashOpacity = claim.interpolate({
+        inputRange: [0, 0.18, 1],
+        outputRange: [0, 0.35, 0],
+    });
+    const coinY = claim.interpolate({
+        inputRange: [0, 1],
+        outputRange: [0, -vs(70)],
+    });
+    const coinScale = claim.interpolate({
+        inputRange: [0, 0.3, 1],
+        outputRange: [0.6, 1.4, 1],
+    });
+    const coinOpacity = claim.interpolate({
+        inputRange: [0, 0.08, 0.65, 1],
+        outputRange: [0, 1, 1, 0],
+    });
+
     const getStatus = () => {
         if (item.locked)    return {label: `🔒 ${t('challengeLocked')}`,   bg: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.5)'};
         if (item.taken)     return {label: `✅ ${t('challengeClaimed')}`,   bg: 'rgba(50,205,50,0.2)',  color: LIGHT_GREEN};
@@ -102,7 +143,7 @@ function ChallengeCard({item, index = 0, onCollect}: ChallengeCardProps) {
                 styles.card,
                 {
                     opacity: entranceOpacity,
-                    transform: [{translateX: entranceX}],
+                    transform: [{translateX: entranceX}, {scale: claimScale}],
                 },
             ]}
         >
@@ -165,7 +206,7 @@ function ChallengeCard({item, index = 0, onCollect}: ChallengeCardProps) {
                                 <TouchableOpacity
                                     style={styles.collectBtn}
                                     activeOpacity={0.8}
-                                    onPress={onCollect}
+                                    onPress={handleCollect}
                                     accessible={true}
                                     accessibilityRole="button"
                                     accessibilityLabel={`${t('collect')} ${item.reward}`}
@@ -183,6 +224,24 @@ function ChallengeCard({item, index = 0, onCollect}: ChallengeCardProps) {
                         )}
                     </View>
                 )}
+
+                {/* Claim feedback — decorative only, must not intercept taps. */}
+                <Animated.View
+                    pointerEvents="none"
+                    style={[styles.claimFlash, {opacity: claimFlashOpacity}]}
+                />
+                <Animated.View
+                    pointerEvents="none"
+                    style={[
+                        styles.flyingCoin,
+                        {
+                            opacity: coinOpacity,
+                            transform: [{translateY: coinY}, {scale: coinScale}],
+                        },
+                    ]}
+                >
+                    <Coin width={22} height={20}/>
+                </Animated.View>
             </LinearGradient>
         </Animated.View>
     );

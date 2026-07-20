@@ -60,7 +60,10 @@
       "PowerShell(adb logcat *)",
       "PowerShell(npx react-native run-android --no-packager 2>&1 | Select-Object -Last 40)",
       "PowerShell(adb shell *)",
-      "PowerShell(New-Item *)"
+      "PowerShell(New-Item *)",
+      "Bash(npx jest *)",
+      "Skill(artifact-design)",
+      "Artifact"
     ]
   }
 }

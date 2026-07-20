@@ -38,6 +38,7 @@ import SlowIcon from '../../assets/icons/SlowIcon.tsx';
 import FlameIcon from '../../assets/icons/FlameIcon.tsx';
 import BoltIcon from '../../assets/icons/BoltIcon.tsx';
 import StarBurstIcon from '../../assets/icons/StarBurstIcon.tsx';
+import {BARREL_ART_SCALE} from '../../assets/icons/MineBarrel.tsx';
 
 // components
 import AnimatedBackground from '../../components/ui/Play/AnimatedBackground.tsx';
@@ -91,6 +92,18 @@ const HEART_DROP_EVERY_LEVELS = 4;
 const HEART_FALL_BOOST = 1.4;
 const BOMB_GAP_MIN_MS = 1200;
 const BOMB_GAP_MAX_MS = 4000;
+// Mine barrel: the second hazard, held back until BARREL_MIN_LEVEL so the early
+// levels teach the bomb on its own before a second trap joins it. Heavier than
+// the bomb — it drops slower and there are fewer of them per level — but the hit
+// is worse: a heart *and* a longer shake, and it wobbles as it comes down so it
+// never reads as just a differently-painted bomb.
+const BARREL_MIN_LEVEL = 3;
+const BARRELS_PER_LEVEL = 2;
+const BARREL_FALL_BOOST = 0.85;
+const BARREL_GAP_MIN_MS = 3000;
+const BARREL_GAP_MAX_MS = 7000;
+const BARREL_WOBBLE_DEG = 11;
+const BARREL_WOBBLE_SPEED = 0.055;
 // Clearing the field (bomb blast, boss defeated) drops the fall duration to this
 // fraction of the level's value, then it climbs back linearly over
 // DURATION_DIP_RECOVER_MS — the arena restarts gentle and eases back to the
@@ -115,20 +128,27 @@ function spawnBox(
     fromBottom = false,
     isBomb = false,
     isHeart = false,
+    isBarrel = false,
 ) {
-    const isGolden = !isBomb && !isHeart && Math.random() < GOLDEN_SPAWN_CHANCE;
+    const isGolden = !isBomb && !isHeart && !isBarrel && Math.random() < GOLDEN_SPAWN_CHANCE;
     // Spawn just off the edge the box travels from (below for fromBottom, above
     // otherwise) so it slides into view right away. The spacing between boxes
     // comes from the spawn cadence, not from a random head start off-screen —
     // that is what makes them arrive one after another like falling snow.
     const offset = card.size + Math.random() * 120;
     const y = fromBottom ? height + offset : -offset;
+    // The barrel is drawn wider than the card it inherits its size from (see
+    // BARREL_ART_SCALE in PlayBox), so its horizontal range has to account for
+    // the real artwork width — otherwise a barrel spawned at the far right hangs
+    // off the edge of the screen.
+    const spanSize = isBarrel ? card.size * BARREL_ART_SCALE : card.size;
+    const maxX = Math.max(0, width - spanSize);
     return {
         ...card,
         id: uuId.v4(),
-        x: Math.random() * (width - card.size),
+        x: Math.random() * maxX,
         y,
-        tx: Math.random() * (width - card.size),
+        tx: Math.random() * maxX,
         // Seed the vertical target in the travel direction so the box drifts on
         // screen smoothly from frame one (a flat 0 would yank a bottom-spawned
         // box upward across the whole screen in a single step).
@@ -143,6 +163,7 @@ function spawnBox(
         isGolden,
         isBomb,
         isHeart,
+        isBarrel,
     };
 }
 
@@ -185,6 +206,8 @@ export default function Play() {
     // Hazard bombs still owed for the current level; refilled to BOMBS_PER_LEVEL
     // on every level-up so each level drops exactly ten of them.
     const bombsLeftRef = useRef(BOMBS_PER_LEVEL);
+    // Same idea for the mine barrels, refilled on every level-up.
+    const barrelsLeftRef = useRef(BARRELS_PER_LEVEL);
     const levelRef = useRef(1);
     const watchAdUsedRef = useRef(0);
     const lastTapTimeRef = useRef(0);
@@ -472,6 +495,20 @@ export default function Play() {
         ]).start();
     }
 
+    // Heavier cousin of triggerMissShake, used when a mine barrel goes off:
+    // wider swings that take longer to settle, so the barrel feels like the
+    // bigger mistake of the two traps.
+    function triggerBarrelShake() {
+        Animated.sequence([
+            Animated.timing(shakeAnim, {toValue: 18, duration: 55, useNativeDriver: true}),
+            Animated.timing(shakeAnim, {toValue: -16, duration: 55, useNativeDriver: true}),
+            Animated.timing(shakeAnim, {toValue: 12, duration: 55, useNativeDriver: true}),
+            Animated.timing(shakeAnim, {toValue: -9, duration: 55, useNativeDriver: true}),
+            Animated.timing(shakeAnim, {toValue: 5, duration: 50, useNativeDriver: true}),
+            Animated.timing(shakeAnim, {toValue: 0, duration: 50, useNativeDriver: true}),
+        ]).start();
+    }
+
     function triggerLevelUp(newLevel: number) {
         setShowLevelUp(true);
         lvlUpOpacityAnim.setValue(1);
@@ -560,6 +597,7 @@ export default function Play() {
         countRef.current = 0;
         bombCountRef.current = INITIAL_BOMBS;
         bombsLeftRef.current = BOMBS_PER_LEVEL;
+        barrelsLeftRef.current = BARRELS_PER_LEVEL;
         levelRef.current = 1;
         comboCountRef.current = 0;
         streakRef.current = 0;
@@ -591,6 +629,19 @@ export default function Play() {
         // startGameSession() reloads the helper stock from the server (with an
         // offline local (Realm) fallback).
         startGameSession();
+    }
+
+    // Every heart loss funnels through here so the shield gets first refusal in
+    // exactly one place. Returns true when a heart was actually taken — the
+    // Hearts row animates the break itself off the new emptyCount.
+    function loseHeart(): boolean {
+        if (shieldActiveRef.current) {
+            shieldActiveRef.current = false;
+            setShieldActive(false);
+            return false;
+        }
+        setEmptyHeartCount(prev => prev + 1);
+        return true;
     }
 
     function boomBox(id: string) {
@@ -629,7 +680,7 @@ export default function Play() {
         setBoxesData(prev => {
             // Hazard bombs and the life pickup are wiped by the blast too, but
             // they score nothing — only the real cards on screen pay out.
-            const pts = prev.filter(b => !b.isBoom && !b.isBomb && !b.isHeart).length;
+            const pts = prev.filter(b => !b.isBoom && !b.isBomb && !b.isBarrel && !b.isHeart).length;
             countRef.current += pts;
             setCount(c => c + pts);
             setLevelCount(c => c + pts);
@@ -804,7 +855,8 @@ export default function Play() {
         // shield eats the hit, same as a missed card). No points, combo and
         // streak reset — the punishment for not looking before tapping. Letting
         // the bomb fall off-screen is free; only touching it hurts.
-        if (box.isBomb) {
+        if (box.isBomb || box.isBarrel) {
+            const isBarrel = !!box.isBarrel;
             tapsRef.current += 1;
             boomBox(box.id);
 
@@ -813,19 +865,24 @@ export default function Play() {
             streakRef.current = 0;
             setCombo(0);
 
-            if (shieldActiveRef.current) {
-                shieldActiveRef.current = false;
-                setShieldActive(false);
-            } else {
-                setEmptyHeartCount(prev => prev + 1);
+            loseHeart();
+
+            // The barrel is the heavier of the two traps, so its blast sits
+            // lower and its punishment lands harder: a longer flash, a deeper
+            // rumble and the big shake instead of the bomb's quick jolt.
+            playSfx('bomb', isBarrel ? {rate: 0.7} : undefined);
+            if (!cancelVibrationRef.current) {
+                Vibration.vibrate(isBarrel ? [0, 200, 80, 260] : [0, 120, 60, 200]);
             }
 
-            playSfx('bomb');
-            if (!cancelVibrationRef.current) Vibration.vibrate([0, 120, 60, 200]);
-
             hurtFlashAnim.setValue(1);
-            Animated.timing(hurtFlashAnim, {toValue: 0, duration: 550, useNativeDriver: true}).start();
-            triggerMissShake();
+            Animated.timing(hurtFlashAnim, {
+                toValue: 0,
+                duration: isBarrel ? 800 : 550,
+                useNativeDriver: true,
+            }).start();
+            if (isBarrel) triggerBarrelShake();
+            else triggerMissShake();
             return;
         }
 
@@ -881,8 +938,9 @@ export default function Play() {
             durationEffRef.current + DURATION_STEP,
         );
         levelRef.current += 1;
-        // Fresh level → a fresh batch of ten hazard bombs.
+        // Fresh level → a fresh batch of hazards, bombs and barrels alike.
         bombsLeftRef.current = BOMBS_PER_LEVEL;
+        barrelsLeftRef.current = BARRELS_PER_LEVEL;
         setLevel(levelRef.current);
         triggerLevelUp(levelRef.current);
 
@@ -1105,19 +1163,14 @@ export default function Play() {
                     const missed = fromBottom ? newY < 0 : newY + b.size > height;
                     if (!missed) return true;
 
-                    // A bomb that leaves the screen untouched is the correct
-                    // play — drop it silently, no heart, no shake. A missed bonus
+                    // A trap (bomb or mine barrel) that leaves the screen
+                    // untouched is the correct play — drop it silently, no
+                    // heart, no shake. A missed bonus
                     // (money bag) or life pickup is just a missed chance, not a
                     // mistake: it disappears without costing a heart either.
-                    if (b.isBomb || b.isHeart || b.isGolden) return false;
+                    if (b.isBomb || b.isBarrel || b.isHeart || b.isGolden) return false;
 
-                    if (shieldActiveRef.current) {
-                        shieldActiveRef.current = false;
-                        setShieldActive(false);
-                    } else {
-                        if (!cancelVibrationRef.current) Vibration.vibrate(500);
-                        setEmptyHeartCount(prev => prev + 1);
-                    }
+                    if (loseHeart() && !cancelVibrationRef.current) Vibration.vibrate(500);
                     missHappenedRef.current = true;
                     // Drop the box instead of teleporting it back to the far edge:
                     // the spawner feeds the next one on its own cadence, so boxes
@@ -1128,18 +1181,27 @@ export default function Play() {
 
                     const speed = 0.05 * slowSpeedRef.current;
                     // Bombs (and the life pickup) reach further per frame than the
-                    // cards → they fall noticeably, but not wildly, faster.
-                    const boost = b.isBomb ? BOMB_FALL_BOOST : b.isHeart ? HEART_FALL_BOOST : 1;
+                    // cards; the mine barrel reaches less — it's the heavy one.
+                    const boost = b.isBomb ? BOMB_FALL_BOOST
+                        : b.isBarrel ? BARREL_FALL_BOOST
+                            : b.isHeart ? HEART_FALL_BOOST : 1;
                     const reach = (durationEffRef.current + 10) * boost;
+                    const newY = b.y + (b.ty - b.y) * speed;
 
                     return {
                         ...b,
                         x: b.x + (b.tx - b.x) * speed,
-                        y: b.y + (b.ty - b.y) * speed,
+                        y: newY,
                         tx: Math.abs(b.tx - b.x) < 1 ? Math.random() * (width - b.size) : b.tx,
                         ty: fromBottom ? b.y - reach : b.y + reach,
-                        // Bombs never spin — they drop upright and straight.
-                        rotation: (b.isRotation && !b.isBomb) ? (b.rotation + 2) % 360 : b.rotation,
+                        // Traps never spin — they drop upright so their tell (the
+                        // lit fuse, the mine trigger) stays on top. The barrel is
+                        // the exception: it rocks side to side, derived from its
+                        // own height so the wobble is smooth and needs no extra
+                        // per-box state.
+                        rotation: b.isBarrel
+                            ? Math.sin(newY * BARREL_WOBBLE_SPEED) * BARREL_WOBBLE_DEG
+                            : (b.isRotation && !b.isBomb) ? (b.rotation + 2) % 360 : b.rotation,
                     };
                 })
             );
@@ -1221,6 +1283,49 @@ export default function Play() {
         };
 
         timeoutId = setTimeout(spawnBomb, nextGap());
+
+        return () => clearTimeout(timeoutId);
+    }, [isPlaying]);
+
+    // Mine-barrel spawner — its own timer for the same reason the bomb has one:
+    // the two traps must never share a beat, or they'd arrive as a pair and the
+    // player would learn the rhythm instead of watching the screen. Gaps are
+    // longer and the per-level budget is smaller, so a barrel is an event.
+    useEffect(() => {
+        if (!isPlaying) return;
+
+        let timeoutId: ReturnType<typeof setTimeout>;
+
+        const nextGap = () =>
+            (BARREL_GAP_MIN_MS + Math.random() * (BARREL_GAP_MAX_MS - BARREL_GAP_MIN_MS)) /
+            slowSpeedRef.current;
+
+        const spawnBarrel = () => {
+            const eligible =
+                !isBossFightRef.current &&
+                levelRef.current >= BARREL_MIN_LEVEL &&
+                barrelsLeftRef.current > 0;
+
+            if (eligible) {
+                barrelsLeftRef.current -= 1;
+                setBoxesData(prev => [
+                    ...prev,
+                    spawnBox(
+                        cardRef.current,
+                        durationEffRef.current,
+                        !!cardRef.current.fallFromBottom,
+                        false,
+                        false,
+                        true,
+                    ),
+                ]);
+            }
+            // Keeps ticking while ineligible (early levels, boss fight, budget
+            // spent) so the next level-up picks straight back up.
+            timeoutId = setTimeout(spawnBarrel, nextGap());
+        };
+
+        timeoutId = setTimeout(spawnBarrel, nextGap());
 
         return () => clearTimeout(timeoutId);
     }, [isPlaying]);

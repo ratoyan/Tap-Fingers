@@ -17,6 +17,7 @@ import Ghost from "../../../assets/icons/Ghost";
 import FlameIcon from "../../../assets/icons/FlameIcon";
 import BoltIcon from "../../../assets/icons/BoltIcon";
 import {FallingBomb, BombBlast} from "../../../assets/icons/FallingBomb";
+import {MineBarrel, BarrelBlast, BARREL_ART_SCALE} from "../../../assets/icons/MineBarrel";
 import {MoneyBag} from "../../../assets/icons/MoneyBag";
 import {HeartPlus} from "../../../assets/icons/HeartPlus";
 
@@ -103,6 +104,10 @@ function PlayBox({box, handlePress}: PlayBoxProps) {
     );
     const cardArt = useMemo(() => <Card1 width={100} height={100}/>, []);
     const bombArt = useMemo(() => <FallingBomb size={artSize}/>, [artSize]);
+    // The barrel is drawn a touch larger than the bomb — a heavier hazard should
+    // look heavier, and the extra bulk keeps the two apart at a glance.
+    const barrelSize = Math.round(artSize * BARREL_ART_SCALE);
+    const barrelArt = useMemo(() => <MineBarrel size={barrelSize}/>, [barrelSize]);
     const bagArt = useMemo(() => <MoneyBag size={artSize}/>, [artSize]);
     const heartArt = useMemo(() => <HeartPlus size={artSize}/>, [artSize]);
     const baseTransform: ViewStyle["transform"] = [
@@ -117,6 +122,38 @@ function PlayBox({box, handlePress}: PlayBoxProps) {
         position: "absolute",
         transform: baseTransform,
     };
+
+    // 🛢️ Mine barrel — the second hazard. Checked before isBomb so the two flags
+    // can never both win a render, and before the card art for the same reason
+    // the bomb is: a trap must always look like a trap, whatever skin is equipped.
+    // Like the bomb it drops upright — the mine trigger belongs on top.
+    if (box.isBarrel) {
+        // Rocks around its own centre as it falls (the game loop writes the
+        // angle into box.rotation) — a heavy drum tipping, not a spinning card.
+        const barrelTransform: ViewStyle["transform"] = [
+            {translateX: box.x + barrelSize / 2},
+            {translateY: box.y + barrelSize / 2},
+            {rotate: `${box.rotation || 0}deg`},
+            {translateX: -barrelSize / 2},
+            {translateY: -barrelSize / 2},
+        ];
+        const barrelStyle: ViewStyle = {position: "absolute", transform: barrelTransform};
+
+        return box.isBoom ? (
+            <View style={barrelStyle}>
+                <BarrelBlast size={barrelSize}/>
+            </View>
+        ) : (
+            <Pressable
+                onPressIn={() => handlePress(box)}
+                style={[barrelStyle, {zIndex: 1}]}
+                accessibilityRole="button"
+                accessibilityLabel="Mine barrel — do not tap"
+            >
+                {barrelArt}
+            </Pressable>
+        );
+    }
 
     // 💣 Hazard bomb — wins over every card art (admin SVG included) so the
     // trap always reads as a bomb, whatever skin the player has equipped. It is

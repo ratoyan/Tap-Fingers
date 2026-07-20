@@ -9,6 +9,7 @@ import useMusicAppState from "./src/hooks/useMusicAppState.tsx";
 import {playMusic, stopMusic} from "./src/utils/helpers.ts";
 import {loadSfx, refreshSfxMuted} from "./src/utils/sfx.ts";
 import {refreshHapticsEnabled} from "./src/utils/haptics.ts";
+import ScreenStatusBar from "./src/components/ui/ScreenStatusBar/ScreenStatusBar.tsx";
 import UpdateModal from "./src/components/ui/UpdateModal/UpdateModal.tsx";
 import NoticeModal from "./src/components/ui/NoticeModal/NoticeModal.tsx";
 import Splash from "./src/screens/Splash/Splash.tsx";
@@ -81,6 +82,10 @@ function App() {
     if (!sessionResolved) {
         return (
             <View style={{flex: 1, backgroundColor: DARK_PURPLE, alignItems: 'center', justifyContent: 'center'}}>
+                {/* This view sits between Splash and the first real screen, so
+                    without its own bar the status bar would flash back to the
+                    platform default for as long as the session check takes. */}
+                <ScreenStatusBar color={DARK_PURPLE}/>
                 <ActivityIndicator size="large" color="#FFD700"/>
             </View>
         );

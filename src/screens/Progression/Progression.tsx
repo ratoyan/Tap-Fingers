@@ -20,7 +20,8 @@ import EmptyProgression from "../../components/ui/EmptyProgression/EmptyProgress
 
 // styles
 import styles from './Progression.style.ts';
-import {WHITE} from "../../constants/colors.ts";
+import {PURPLE_DARK, WHITE} from "../../constants/colors.ts";
+import ScreenStatusBar from "../../components/ui/ScreenStatusBar/ScreenStatusBar.tsx";
 
 // Rows fetched per page. The backend caps `limit` at 100; 10 keeps each
 // scroll-triggered request small so new rows stream in smoothly.
@@ -131,6 +132,8 @@ function Progression() {
             accessible={true}
             accessibilityLabel="Progression screen"
         >
+            <ScreenStatusBar color={PURPLE_DARK}/>
+
             <BackHeader title={`🏆 ${t('progression')}`}/>
 
             {loading ? (

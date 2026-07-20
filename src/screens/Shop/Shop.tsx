@@ -14,6 +14,7 @@ import * as equippedRepo from "../../db/equippedRepo.ts";
 import {DEFAULT_BG_KEY, DEFAULT_CARD_KEY, mergeShopItem, registerShopIcons, ShopEntry} from "../../data/shopVisuals.ts";
 import {playSfx} from "../../utils/sfx.ts";
 import {haptic} from "../../utils/haptics.ts";
+import ScreenStatusBar from "../../components/ui/ScreenStatusBar/ScreenStatusBar.tsx";
 
 // components
 import BackHeader from "../../components/ui/BackHeader/BackHeader.tsx";
@@ -233,6 +234,8 @@ function Shop() {
             colors={[DARK_PURPLE, PURPLE_DARK, PURPLE_DARK, PURPLE]}
             style={styles.container}
         >
+            <ScreenStatusBar color={DARK_PURPLE}/>
+
             <View style={{paddingHorizontal: HORIZONAL_OFFSET, marginBottom: 15}}>
                 <BackHeader
                     title={`🛒 ${t('shop')}`}

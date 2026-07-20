@@ -62,6 +62,7 @@ import {useConfigStore} from '../../store/configStore.ts';
 // styles
 import styles from './Play.style.ts';
 import {GRADIENT_LIGHT, LILAC, ORANGE, ORANGE_RED} from '../../constants/colors.ts';
+import ScreenStatusBar from '../../components/ui/ScreenStatusBar/ScreenStatusBar.tsx';
 import {TOP_OFFSET} from "../../constants/uiConstants.ts";
 
 const {width, height} = Dimensions.get('window');
@@ -1525,6 +1526,18 @@ export default function Play() {
     // ─── Game content ─────────────────────────────────────────────────────────
     const gameContent = (
         <Animated.View style={[styles.container, {transform: [{translateX: shakeAnim}]}]}>
+            {/* Transparent, so whichever background the player has equipped runs
+                all the way to the top of the screen — a painted bar would cut a
+                hard line across an image or animated background. The arena is
+                the one screen where that edge is worth losing.
+
+                Safe because every element pinned to the top here (Level,
+                Progress, the header row and CoinCount) is already positioned
+                from insets.top, which now reports the real status bar height
+                instead of 0. Lives in gameContent so all three background
+                branches below get it. */}
+            <ScreenStatusBar translucent/>
+
             <View style={styles.zIndexStyle}>
                 <Level level={level}/>
             </View>

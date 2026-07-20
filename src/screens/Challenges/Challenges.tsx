@@ -14,6 +14,7 @@ import {haptic} from "../../utils/haptics.ts";
 // components
 import BackHeader from "../../components/ui/BackHeader/BackHeader.tsx";
 import ChallengeCard from "../../components/ui/ChallengeCard/ChallengeCard.tsx";
+import ScreenStatusBar from "../../components/ui/ScreenStatusBar/ScreenStatusBar.tsx";
 
 // styles
 import styles from './Challenges.style.ts';
@@ -156,6 +157,8 @@ function Challenges() {
             accessible={true}
             accessibilityLabel="Challenges screen"
         >
+            <ScreenStatusBar color={DARK_PURPLE}/>
+
             <BackHeader title={`🎯 ${t('challenges')}`}/>
 
             {loading ? (

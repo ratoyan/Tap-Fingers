@@ -2,6 +2,7 @@ import React, {useEffect, useRef} from 'react';
 import {Animated, Easing, StyleSheet, View} from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import Logo from '../../components/ui/Logo/Logo.tsx';
+import ScreenStatusBar from '../../components/ui/ScreenStatusBar/ScreenStatusBar.tsx';
 import styles from './Splash.style.ts';
 
 const TITLE  = 'TapFingers'.split('');
@@ -180,6 +181,10 @@ export default function Splash({onFinish}: Props) {
 
     return (
         <Animated.View style={[styles.container, {opacity: exit}]}>
+            {/* Matches the gradient's first stop, not the shared purple — the
+                splash is the one screen that opens on near-black. */}
+            <ScreenStatusBar color="#03000c"/>
+
             {/* Deep space background */}
             <LinearGradient
                 colors={['#03000c', '#0b001e', '#160035', '#0b001e', '#03000c']}

@@ -46,6 +46,7 @@ import {
     PURPLE, PURPLE_DARK, PURPLE_ONE,
     VIOLET,
 } from "../../constants/colors.ts";
+import ScreenStatusBar from "../../components/ui/ScreenStatusBar/ScreenStatusBar.tsx";
 import LinearGradient from 'react-native-linear-gradient';
 
 const {width, height} = Dimensions.get('window');
@@ -244,6 +245,8 @@ function Welcome() {
             colors={[DARK_PURPLE, PURPLE, MEDIUM_PURPLE]}
             style={styles.container}
         >
+            <ScreenStatusBar color={DARK_PURPLE}/>
+
             {/* Animated decorative layer */}
             <WelcomeBackground />
 

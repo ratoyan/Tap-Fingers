@@ -38,6 +38,7 @@ import {useKeyboardAwareScroll} from '../../hooks/useKeyboardAwareScroll.ts';
 // styles
 import styles from './Profile.style.ts';
 import {GRADIENT_LIGHT, PURPLE, PURPLE_DARK, VIOLET} from '../../constants/colors.ts';
+import ScreenStatusBar from '../../components/ui/ScreenStatusBar/ScreenStatusBar.tsx';
 
 // Extra bottom padding added on top of the keyboard height while it is open.
 const KEYBOARD_EXTRA_PADDING = 220;
@@ -362,6 +363,8 @@ function Profile() {
             accessible={true}
             accessibilityLabel="Profile screen"
         >
+            <ScreenStatusBar color={PURPLE_DARK}/>
+
             <BackHeader title={`👨‍🎓 ${t('profile')}`} />
 
             <KeyboardAvoidingView

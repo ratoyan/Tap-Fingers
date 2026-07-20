@@ -33,6 +33,7 @@ import ExitIcon from "../../assets/icons/ExitIcon.tsx";
 // styles
 import styles from './Settings.style.ts';
 import {DARK_PURPLE, GRADIENT_LIGHT, PURPLE, PURPLE_DARK, VIOLET_MEDIUM} from "../../constants/colors.ts";
+import ScreenStatusBar from "../../components/ui/ScreenStatusBar/ScreenStatusBar.tsx";
 
 function Settings() {
     const navigation = useNavigation<any>();
@@ -125,6 +126,8 @@ function Settings() {
             end={{x: 0.3, y: 1}}
             style={styles.container}
         >
+            <ScreenStatusBar color={DARK_PURPLE}/>
+
             <BackHeader
                 title={`⚙️ ${t('settings')}`}
                 isProfile={true}

@@ -31,6 +31,7 @@ import ExitModal from "../../components/ui/Play/ExitModal.tsx";
 import styles from './Home.style.ts';
 import globalStyles from '../../styles/globalStyle.ts';
 import {DARK_PURPLE, PURPLE} from "../../constants/colors.ts";
+import ScreenStatusBar from "../../components/ui/ScreenStatusBar/ScreenStatusBar.tsx";
 import LinearGradient from 'react-native-linear-gradient';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Home'>;
@@ -153,6 +154,8 @@ const Home: React.FC<Props> = () => {
             accessible={true}
             accessibilityLabel="Main menu screen"
         >
+            <ScreenStatusBar color={DARK_PURPLE}/>
+
             <ScrollView
                 style={styles.scroll}
                 contentContainerStyle={[styles.scrollContent, {paddingTop: insets.top + TOP_OFFSET}]}

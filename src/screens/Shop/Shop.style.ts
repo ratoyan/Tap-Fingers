@@ -6,6 +6,15 @@ export default StyleSheet.create({
     container: {
         flex: 1,
     },
+    // One pane per tab. Both stay mounted after their first visit; the inactive
+    // one is display:none'd rather than unmounted so switching costs a
+    // visibility flip instead of rebuilding a grid of animated SVG cards.
+    pane: {
+        flex: 1,
+    },
+    paneHidden: {
+        display: 'none',
+    },
     tabRow: {
         flexDirection: 'row',
         marginHorizontal: HORIZONAL_OFFSET,

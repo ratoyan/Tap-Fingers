@@ -37,6 +37,8 @@ const TAB_ICON_INACTIVE = 'rgba(255,255,255,0.45)';
 
 type TabType = 'card' | 'background';
 
+const TABS: TabType[] = ['card', 'background'];
+
 // Tier order: buyable/owned items on top, then unaffordable ("disabled") items,
 // then coming-soon teasers at the very bottom. Lower number sorts first.
 function sortTier(entry: ShopEntry, ownedKeys: Set<string>, coins: number): number {
@@ -69,6 +71,8 @@ function Shop() {
     const patchStats = useAuthStore(s => s.patchStats);
 
     const [activeTab, setActiveTab] = useState<TabType>('card');
+    // Tabs whose grid has been built at least once — see switchTab.
+    const [mountedTabs, setMountedTabs] = useState<Set<TabType>>(() => new Set<TabType>(['card']));
     const [showAdModal, setShowAdModal] = useState(false);
     const [loading, setLoading] = useState(true);
     const [busyKey, setBusyKey] = useState<string | null>(null);
@@ -80,6 +84,8 @@ function Shop() {
     const [activeBgKey, setActiveBgKey] = useState<string>(DEFAULT_BG_KEY);
 
     const tabAnim = useRef(new Animated.Value(0)).current;
+    // Measured so the indicator can slide on a transform instead of a percentage.
+    const [tabRowWidth, setTabRowWidth] = useState(0);
 
     // Free starter items count as owned even before they hit the inventory table.
     function isOwned(entry: ShopEntry) {
@@ -130,18 +136,27 @@ function Shop() {
     );
 
     function switchTab(tab: TabType) {
-        // Re-tapping the tab you're already on animates nothing, so it shouldn't
-        // sound like it did. Pitched up and quiet: navigation, not selection.
-        if (tab !== activeTab) {
+        if (tab === activeTab) return;
+
+        // Deferred off the press's critical path: both are synchronous native
+        // calls, and firing them inline delays the commit of the switch itself —
+        // exactly the frame the player is watching.
+        // Pitched up and quiet: navigation, not selection.
+        setTimeout(() => {
             playSfx('equip', {rate: 1.18, volume: 0.7});
             haptic('equip');
-        }
+        }, 0);
+
+        // First visit to a tab mounts its grid; after that both stay mounted and
+        // switching is just a visibility flip. Lazy rather than mounting both up
+        // front so opening the shop doesn't pay for a tab nobody looked at.
+        setMountedTabs(prev => (prev.has(tab) ? prev : new Set(prev).add(tab)));
         setActiveTab(tab);
         Animated.spring(tabAnim, {
             toValue: tab === 'card' ? 0 : 1,
             friction: 7,
             tension: 80,
-            useNativeDriver: false,
+            useNativeDriver: true,
         }).start();
     }
 
@@ -218,16 +233,20 @@ function Shop() {
     handleItemPressRef.current = handleItemPress;
     const onItemPress = useCallback((entry: ShopEntry) => handleItemPressRef.current(entry), []);
 
-    const tabIndicatorLeft = tabAnim.interpolate({
+    // translateX off a measured width rather than a `left: '0%' → '50%'`
+    // interpolation: percentage `left` is a layout prop, which the native driver
+    // can't touch, so the indicator's spring ran on the JS thread — the same one
+    // that was busy mounting the incoming grid. As a transform it runs on the UI
+    // thread and slides smoothly no matter what JS is doing.
+    const tabIndicatorX = tabAnim.interpolate({
         inputRange: [0, 1],
-        outputRange: ['0%', '50%'],
+        outputRange: [0, tabRowWidth / 2],
     });
 
-    // Items are pre-sorted at load time (see loadShop) and intentionally NOT
-    // re-sorted when the active key changes — equipping updates the "Equipped"
-    // badge but keeps the list order stable. It re-sorts on the next focus.
-    const items = activeTab === 'card' ? cardItems : bgItems;
-    const activeKey = activeTab === 'card' ? activeCardKey : activeBgKey;
+    // Both lists are pre-sorted at load time (see loadShop) and intentionally
+    // NOT re-sorted when the active key changes — equipping updates the
+    // "Equipped" badge but keeps the list order stable under the player's
+    // finger. They re-sort on the next focus.
 
     return (
         <LinearGradient
@@ -247,7 +266,7 @@ function Shop() {
             </View>
 
             {/* Tabs */}
-            <View style={styles.tabRow}>
+            <View style={styles.tabRow} onLayout={e => setTabRowWidth(e.nativeEvent.layout.width)}>
                 <Animated.View
                     style={[
                         styles.tab,
@@ -256,7 +275,8 @@ function Shop() {
                             position: 'absolute',
                             width: '50%',
                             height: '100%',
-                            left: tabIndicatorLeft,
+                            left: 0,
+                            transform: [{translateX: tabIndicatorX}],
                         },
                     ]}
                     pointerEvents="none"
@@ -313,25 +333,42 @@ function Shop() {
                     <ActivityIndicator size="large" color={WHITE}/>
                 </View>
             ) : (
-                <ScrollView
-                    key={activeTab}
-                    contentContainerStyle={{paddingBottom: 30, marginTop: 20, paddingHorizontal: HORIZONAL_OFFSET}}
-                    showsVerticalScrollIndicator={false}
-                >
-                    <View style={styles.grid}>
-                        {items.map((item, index) => (
-                            <ShopItem
-                                key={item.id}
-                                index={index}
-                                selected={item.key === activeKey}
-                                purchased={isOwned(item)}
-                                disabled={!isOwned(item) && coins < item.priceCoins}
-                                handlePress={onItemPress}
-                                item={item}
-                            />
-                        ))}
-                    </View>
-                </ScrollView>
+                // Both grids stay mounted once visited and the inactive one is
+                // hidden, instead of one keyed ScrollView that tore the whole
+                // list down and rebuilt it on every switch. Each ShopItem starts
+                // six animations on mount (badge spin/pulse, a staggered
+                // entrance delayed by index × 70ms, glow, shine, float) and
+                // renders SVG art, so remounting a full grid was the lag.
+                (TABS.map(tab => {
+                    if (!mountedTabs.has(tab)) return null;
+                    const list = tab === 'card' ? cardItems : bgItems;
+                    const equipped = tab === 'card' ? activeCardKey : activeBgKey;
+                    const isActive = tab === activeTab;
+
+                    return (
+                        <ScrollView
+                            key={tab}
+                            style={isActive ? styles.pane : styles.paneHidden}
+                            contentContainerStyle={{paddingBottom: 30, marginTop: 20, paddingHorizontal: HORIZONAL_OFFSET}}
+                            showsVerticalScrollIndicator={false}
+                        >
+                            <View style={styles.grid}>
+                                {list.map((item, index) => (
+                                    <ShopItem
+                                        key={item.id}
+                                        index={index}
+                                        selected={item.key === equipped}
+                                        purchased={isOwned(item)}
+                                        disabled={!isOwned(item) && coins < item.priceCoins}
+                                        handlePress={onItemPress}
+                                        item={item}
+                                        paused={!isActive}
+                                    />
+                                ))}
+                            </View>
+                        </ScrollView>
+                    );
+                }))
             )}
 
             <WatchAdModal

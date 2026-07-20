@@ -30,9 +30,17 @@ interface ShopItemProps {
     selected?: boolean;
     purchased?: boolean;
     disabled?: boolean;
+    /**
+     * True while this item's tab is hidden. Shop keeps both tabs mounted so
+     * switching between them doesn't remount a whole grid, which means the
+     * off-screen one would otherwise keep four animation loops running per item
+     * — including the glow, which can't use the native driver and so burns the
+     * JS thread for something nobody can see.
+     */
+    paused?: boolean;
 }
 
-function ShopItem({item, index = 0, handlePress, selected = false, purchased = false, disabled = false}: ShopItemProps) {
+function ShopItem({item, index = 0, handlePress, selected = false, purchased = false, disabled = false, paused = false}: ShopItemProps) {
 
     const {t} = useTranslation();
     const scaleAnim = useRef(new Animated.Value(1)).current;
@@ -56,7 +64,7 @@ function ShopItem({item, index = 0, handlePress, selected = false, purchased = f
     // Random-colors badge: a slowly sweeping rainbow disc with a gentle pulse,
     // so the indicator feels alive and signals "colourful" at a glance.
     useEffect(() => {
-        if (!item.randomColors) return;
+        if (!item.randomColors || paused) return;
         const spin = Animated.loop(
             Animated.timing(badgeSpin, {toValue: 1, duration: 4500, easing: Easing.linear, useNativeDriver: true}),
         );
@@ -69,7 +77,7 @@ function ShopItem({item, index = 0, handlePress, selected = false, purchased = f
         spin.start();
         pulse.start();
         return () => { spin.stop(); pulse.stop(); };
-    }, [item.randomColors]);
+    }, [item.randomColors, paused]);
 
     // Staggered entrance
     useEffect(() => {
@@ -91,17 +99,24 @@ function ShopItem({item, index = 0, handlePress, selected = false, purchased = f
 
     // Glow pulse when selected
     useEffect(() => {
-        if (!selected) {
+        if (!selected || paused) {
             glowAnim.setValue(0);
             return;
         }
-        Animated.loop(
+        // Held in a local and stopped on cleanup. It used to be started and
+        // dropped on the floor: an Animated.loop with no reference keeps running
+        // after the effect re-runs, so every re-select left another copy of a
+        // JS-driven (useNativeDriver can't animate borderColor) loop burning the
+        // thread for the rest of the session.
+        const loop = Animated.loop(
             Animated.sequence([
                 Animated.timing(glowAnim, {toValue: 1, duration: 900, useNativeDriver: false}),
                 Animated.timing(glowAnim, {toValue: 0.3, duration: 900, useNativeDriver: false}),
             ])
-        ).start();
-    }, [selected]);
+        );
+        loop.start();
+        return () => loop.stop();
+    }, [selected, paused]);
 
     // Bounce on select
     useEffect(() => {
@@ -118,7 +133,7 @@ function ShopItem({item, index = 0, handlePress, selected = false, purchased = f
 
     // Glossy shine that sweeps across the card on a gentle, staggered loop.
     useEffect(() => {
-        if (cardWidth === 0) return;
+        if (cardWidth === 0 || paused) return;
         const loop = Animated.loop(
             Animated.sequence([
                 Animated.delay(1600 + (index % 6) * 260),
@@ -128,12 +143,12 @@ function ShopItem({item, index = 0, handlePress, selected = false, purchased = f
         );
         loop.start();
         return () => loop.stop();
-    }, [cardWidth, index]);
+    }, [cardWidth, index, paused]);
 
     // Idle float — the card preview gently bobs (skip for full-bleed backgrounds,
     // where shifting the image would expose an edge).
     useEffect(() => {
-        if (isBackground) return;
+        if (isBackground || paused) return;
         const loop = Animated.loop(
             Animated.sequence([
                 Animated.timing(floatAnim, {toValue: 1, duration: 1600, easing: Easing.inOut(Easing.ease), useNativeDriver: true}),
@@ -142,7 +157,7 @@ function ShopItem({item, index = 0, handlePress, selected = false, purchased = f
         );
         const t = setTimeout(() => loop.start(), (index % 6) * 120);
         return () => { clearTimeout(t); loop.stop(); };
-    }, [isBackground, index]);
+    }, [isBackground, index, paused]);
 
     function onPressIn() {
         Animated.spring(scaleAnim, {toValue: 0.93, friction: 8, useNativeDriver: true}).start();

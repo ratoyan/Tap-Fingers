@@ -363,7 +363,7 @@ function Profile() {
             accessible={true}
             accessibilityLabel="Profile screen"
         >
-            <ScreenStatusBar color={PURPLE_DARK}/>
+            <ScreenStatusBar/>
 
             <BackHeader title={`👨‍🎓 ${t('profile')}`} />
 

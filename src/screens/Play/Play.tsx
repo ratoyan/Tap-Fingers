@@ -1562,7 +1562,7 @@ export default function Play() {
                 from insets.top, which now reports the real status bar height
                 instead of 0. Lives in gameContent so all three background
                 branches below get it. */}
-            <ScreenStatusBar translucent/>
+            <ScreenStatusBar/>
 
             <View style={styles.zIndexStyle}>
                 <Level level={level}/>

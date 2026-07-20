@@ -157,7 +157,7 @@ function Challenges() {
             accessible={true}
             accessibilityLabel="Challenges screen"
         >
-            <ScreenStatusBar color={DARK_PURPLE}/>
+            <ScreenStatusBar/>
 
             <BackHeader title={`🎯 ${t('challenges')}`}/>
 

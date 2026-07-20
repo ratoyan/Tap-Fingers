@@ -126,7 +126,7 @@ function Settings() {
             end={{x: 0.3, y: 1}}
             style={styles.container}
         >
-            <ScreenStatusBar color={DARK_PURPLE}/>
+            <ScreenStatusBar/>
 
             <BackHeader
                 title={`⚙️ ${t('settings')}`}

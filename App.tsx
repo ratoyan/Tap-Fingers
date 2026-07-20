@@ -85,7 +85,7 @@ function App() {
                 {/* This view sits between Splash and the first real screen, so
                     without its own bar the status bar would flash back to the
                     platform default for as long as the session check takes. */}
-                <ScreenStatusBar color={DARK_PURPLE}/>
+                <ScreenStatusBar/>
                 <ActivityIndicator size="large" color="#FFD700"/>
             </View>
         );

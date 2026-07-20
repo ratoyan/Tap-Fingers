@@ -205,7 +205,7 @@ export default function Splash({onFinish}: Props) {
         <Animated.View style={[styles.container, {opacity: exit}]}>
             {/* Matches the gradient's first stop, not the shared purple — the
                 splash is the one screen that opens on near-black. */}
-            <ScreenStatusBar color="#03000c"/>
+            <ScreenStatusBar/>
 
             {/* Deep space background */}
             <LinearGradient

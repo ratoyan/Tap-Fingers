@@ -184,7 +184,7 @@ const Home: React.FC<Props> = () => {
             accessible={true}
             accessibilityLabel="Main menu screen"
         >
-            <ScreenStatusBar color={DARK_PURPLE}/>
+            <ScreenStatusBar/>
 
             <ScrollView
                 style={styles.scroll}

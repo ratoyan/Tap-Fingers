@@ -253,7 +253,7 @@ function Welcome() {
             colors={[DARK_PURPLE, PURPLE, MEDIUM_PURPLE]}
             style={styles.container}
         >
-            <ScreenStatusBar color={DARK_PURPLE}/>
+            <ScreenStatusBar/>
 
             {/* Animated decorative layer */}
             <WelcomeBackground />

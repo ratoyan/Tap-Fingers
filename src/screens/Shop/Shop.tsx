@@ -257,7 +257,7 @@ function Shop() {
             colors={[DARK_PURPLE, PURPLE_DARK, PURPLE_DARK, PURPLE]}
             style={styles.container}
         >
-            <ScreenStatusBar color={DARK_PURPLE}/>
+            <ScreenStatusBar/>
 
             <View style={{paddingHorizontal: HORIZONAL_OFFSET, marginBottom: 15}}>
                 <BackHeader

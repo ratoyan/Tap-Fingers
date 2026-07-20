@@ -23,6 +23,10 @@
 		AA0016BB0016AA0016BB0016 /* hit.wav in Resources */ = {isa = PBXBuildFile; fileRef = AA0016AA0016AA0016AA0016 /* hit.wav */; };
 		AA0017BB0017AA0017BB0017 /* countdown.wav in Resources */ = {isa = PBXBuildFile; fileRef = AA0017AA0017AA0017AA0017 /* countdown.wav */; };
 		AA0018BB0018AA0018BB0018 /* go.wav in Resources */ = {isa = PBXBuildFile; fileRef = AA0018AA0018AA0018AA0018 /* go.wav */; };
+		AA0019BB0019AA0019BB0019 /* claim.wav in Resources */ = {isa = PBXBuildFile; fileRef = AA0019AA0019AA0019AA0019 /* claim.wav */; };
+		AA0020BB0020AA0020BB0020 /* purchase.wav in Resources */ = {isa = PBXBuildFile; fileRef = AA0020AA0020AA0020AA0020 /* purchase.wav */; };
+		AA0021BB0021AA0021BB0021 /* equip.wav in Resources */ = {isa = PBXBuildFile; fileRef = AA0021AA0021AA0021AA0021 /* equip.wav */; };
+		AA0022BB0022AA0022BB0022 /* denied.wav in Resources */ = {isa = PBXBuildFile; fileRef = AA0022AA0022AA0022AA0022 /* denied.wav */; };
 		AA0004BB0004AA0004BB0004 /* games2.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = AA0004AA0004AA0004AA0004 /* games2.mp3 */; };
 		AA0005BB0005AA0005BB0005 /* gamemusic2.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = AA0005AA0005AA0005AA0005 /* gamemusic2.mp3 */; };
 		AA0006BB0006AA0006BB0006 /* gamemusic3.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = AA0006AA0006AA0006AA0006 /* gamemusic3.mp3 */; };
@@ -51,6 +55,10 @@
 		AA0016AA0016AA0016AA0016 /* hit.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = hit.wav; path = TapFingers/hit.wav; sourceTree = "<group>"; };
 		AA0017AA0017AA0017AA0017 /* countdown.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = countdown.wav; path = TapFingers/countdown.wav; sourceTree = "<group>"; };
 		AA0018AA0018AA0018AA0018 /* go.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = go.wav; path = TapFingers/go.wav; sourceTree = "<group>"; };
+		AA0019AA0019AA0019AA0019 /* claim.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = claim.wav; path = TapFingers/claim.wav; sourceTree = "<group>"; };
+		AA0020AA0020AA0020AA0020 /* purchase.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = purchase.wav; path = TapFingers/purchase.wav; sourceTree = "<group>"; };
+		AA0021AA0021AA0021AA0021 /* equip.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = equip.wav; path = TapFingers/equip.wav; sourceTree = "<group>"; };
+		AA0022AA0022AA0022AA0022 /* denied.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = denied.wav; path = TapFingers/denied.wav; sourceTree = "<group>"; };
 		AA0004AA0004AA0004AA0004 /* games2.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; name = games2.mp3; path = TapFingers/games2.mp3; sourceTree = "<group>"; };
 		AA0005AA0005AA0005AA0005 /* gamemusic2.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; name = gamemusic2.mp3; path = TapFingers/gamemusic2.mp3; sourceTree = "<group>"; };
 		AA0006AA0006AA0006AA0006 /* gamemusic3.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; name = gamemusic3.mp3; path = TapFingers/gamemusic3.mp3; sourceTree = "<group>"; };
@@ -88,6 +96,10 @@
 				AA0016AA0016AA0016AA0016 /* hit.wav */,
 				AA0017AA0017AA0017AA0017 /* countdown.wav */,
 				AA0018AA0018AA0018AA0018 /* go.wav */,
+				AA0019AA0019AA0019AA0019 /* claim.wav */,
+				AA0020AA0020AA0020AA0020 /* purchase.wav */,
+				AA0021AA0021AA0021AA0021 /* equip.wav */,
+				AA0022AA0022AA0022AA0022 /* denied.wav */,
 				AA0004AA0004AA0004AA0004 /* games2.mp3 */,
 				AA0005AA0005AA0005AA0005 /* gamemusic2.mp3 */,
 				AA0006AA0006AA0006AA0006 /* gamemusic3.mp3 */,
@@ -216,6 +228,10 @@
 				AA0016BB0016AA0016BB0016 /* hit.wav in Resources */,
 				AA0017BB0017AA0017BB0017 /* countdown.wav in Resources */,
 				AA0018BB0018AA0018BB0018 /* go.wav in Resources */,
+				AA0019BB0019AA0019BB0019 /* claim.wav in Resources */,
+				AA0020BB0020AA0020BB0020 /* purchase.wav in Resources */,
+				AA0021BB0021AA0021BB0021 /* equip.wav in Resources */,
+				AA0022BB0022AA0022BB0022 /* denied.wav in Resources */,
 				AA0004BB0004AA0004BB0004 /* games2.mp3 in Resources */,
 				AA0005BB0005AA0005BB0005 /* gamemusic2.mp3 in Resources */,
 				AA0006BB0006AA0006BB0006 /* gamemusic3.mp3 in Resources */,

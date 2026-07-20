@@ -12,6 +12,7 @@ import * as shopService from "../../services/shopService.ts";
 import * as userService from "../../services/userService.ts";
 import * as equippedRepo from "../../db/equippedRepo.ts";
 import {DEFAULT_BG_KEY, DEFAULT_CARD_KEY, mergeShopItem, registerShopIcons, ShopEntry} from "../../data/shopVisuals.ts";
+import {playSfx} from "../../utils/sfx.ts";
 
 // components
 import BackHeader from "../../components/ui/BackHeader/BackHeader.tsx";
@@ -127,6 +128,9 @@ function Shop() {
     );
 
     function switchTab(tab: TabType) {
+        // Re-tapping the tab you're already on animates nothing, so it shouldn't
+        // sound like it did. Pitched up and quiet: navigation, not selection.
+        if (tab !== activeTab) playSfx('equip', {rate: 1.18, volume: 0.7});
         setActiveTab(tab);
         Animated.spring(tabAnim, {
             toValue: tab === 'card' ? 0 : 1,
@@ -161,22 +165,31 @@ function Shop() {
 
     async function handleItemPress(entry: ShopEntry) {
         // Teasers are locked — visible but not purchasable/equippable.
-        if (entry.comingSoon) return;
+        if (entry.comingSoon) return playSfx('denied');
         if (busyKey) return;
+        if (!isOwned(entry) && coins < entry.priceCoins) return playSfx('denied');
+
         setBusyKey(entry.key);
         try {
             if (isOwned(entry)) {
-                // Already owned (or free) — just equip it.
+                // Already owned (or free) — just equip it. The sound fires before
+                // the await: equipping writes to Realm and syncs to the server,
+                // and feedback that waits on either would lag behind the finger.
+                playSfx('equip');
                 await equip(entry);
-            } else if (coins >= entry.priceCoins) {
-                // Buy, then equip — matches the previous one-tap behaviour.
+            } else {
+                // Buy, then equip — matches the previous one-tap behaviour. This
+                // one DOES wait for the server: a ka-ching before the purchase
+                // confirms would be a lie if it then fails.
                 const result = await shopService.purchaseItem(entry.key);
                 setOwnedKeys(prev => new Set(prev).add(entry.key));
                 patchStats({coins: result.remainingCoins});
+                playSfx('purchase');
                 await equip(entry);
             }
         } catch (error) {
             console.error('Shop action failed:', error);
+            playSfx('denied');
             // Re-sync from the server so the UI reflects the real state.
             loadShop();
         } finally {

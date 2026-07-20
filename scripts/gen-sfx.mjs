@@ -294,6 +294,78 @@ function go() {
     return finish(out);
 }
 
+// ── Menu sounds ─────────────────────────────────────────────────────────────
+// Same palette as the in-game set, but pitched a little politer: these fire
+// while the player is reading a screen, not mid-round with music under them.
+
+// Challenge reward claimed — the biggest positive outside of gameplay. A rolled
+// major arpeggio that lands an octave up, over a slow bloom that glues the five
+// notes into one gesture instead of five separate beeps. Longer tails than
+// `heart` so it reads as a celebration rather than a pickup.
+function claim() {
+    const out = buf(1.0);
+    const notes = [783.99, 1046.5, 1318.5, 1568.0, 2093.0]; // G5 C6 E6 G6 C7
+    notes.forEach((hz, i) => {
+        const at = i * 0.055;
+        const tail = i === notes.length - 1 ? 0.42 : 0.13;
+        tone(out, {kind: 'triangle', freq: hz, amp: perc(0.004, tail, 0.55 - i * 0.03), start: at});
+        tone(out, {kind: 'sine', freq: hz * 2, amp: perc(0.004, tail * 0.4, 0.12), start: at});
+    });
+    tone(out, {kind: 'sine', freq: sweep(261.6, 523.25, 0.5), amp: perc(0.03, 0.34, 0.30)});
+    const shimmer = buf(1.0);
+    noise(shimmer, {amp: perc(0.02, 0.20, 0.5), seed: 8080});
+    highpass(shimmer, 6000);
+    mixInto(out, shimmer, 0.14);
+    return finish(out);
+}
+
+// Shop purchase — a register "ka-ching": a short low thump for the drawer, then
+// two bright bells a fourth apart. Deliberately shorter and less ceremonial than
+// `claim`; buying is a transaction, claiming is a payoff.
+function purchase() {
+    const out = buf(0.55);
+    tone(out, {kind: 'sine', freq: sweep(180, 90, 0.06), amp: perc(0.001, 0.05, 0.7)});
+    [1568.0, 2093.0].forEach((hz, i) => { // G6 → C7
+        const at = 0.035 + i * 0.075;
+        tone(out, {kind: 'triangle', freq: hz, amp: perc(0.002, i ? 0.20 : 0.09, 0.5), start: at});
+        tone(out, {kind: 'sine', freq: hz * 3, amp: perc(0.002, 0.045, 0.10), start: at});
+    });
+    const tick = buf(0.55);
+    noise(tick, {amp: perc(0.0005, 0.004, 0.5), seed: 606});
+    highpass(tick, 5000);
+    mixInto(out, tick, 0.3);
+    return finish(out);
+}
+
+// Equip / select — the quietest of the set. A two-note snap up a fifth with a
+// tick on the front. It fires on every list tap, so it has to be felt more than
+// heard: anything with a tail smears when the player tries several skins in a
+// row, which is exactly what people do in a shop.
+function equip() {
+    const out = buf(0.2);
+    const f = t => (t < 0.04 ? 880.0 : 1318.51); // A5 → E6
+    tone(out, {kind: 'triangle', freq: f, amp: perc(0.001, 0.055, 0.7)});
+    tone(out, {kind: 'sine', freq: t => f(t) * 2, amp: perc(0.001, 0.022, 0.15)});
+    const tick = buf(0.2);
+    noise(tick, {amp: perc(0.0005, 0.002, 0.5), seed: 1212});
+    highpass(tick, 5500);
+    mixInto(out, tick, 0.25);
+    return finish(out);
+}
+
+// Locked / can't afford — the only downward, dissonant sound in the game. That
+// contrast is what makes it read as "no". Lowpassed and normalised under the
+// others on purpose: it should inform, not punish someone for tapping a locked
+// item to see what it is.
+function denied() {
+    const out = buf(0.34);
+    const f = t => (t < 0.075 ? 415.30 : 349.23); // G#4 → F4
+    tone(out, {kind: 'square', freq: f, amp: perc(0.004, 0.075, 0.45)});
+    tone(out, {kind: 'sine', freq: t => f(t) / 2, amp: perc(0.004, 0.09, 0.30)});
+    lowpass(out, 2200);
+    return finish(out, 0.7);
+}
+
 // ── Run ─────────────────────────────────────────────────────────────────────
 
 const SOUNDS = {
@@ -306,6 +378,10 @@ const SOUNDS = {
     'hit.wav': hit,
     'countdown.wav': countdown,
     'go.wav': go,
+    'claim.wav': claim,
+    'purchase.wav': purchase,
+    'equip.wav': equip,
+    'denied.wav': denied,
 };
 
 console.log(`Generating ${Object.keys(SOUNDS).length} SFX @ ${SR}Hz mono 16-bit`);

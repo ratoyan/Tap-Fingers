@@ -8,6 +8,7 @@ import LinearGradient from 'react-native-linear-gradient';
 import * as challengeService from "../../services/challengeService.ts";
 import {ChallengeWithProgress} from "../../services/types.ts";
 import {useAuthStore} from "../../store/authStore.ts";
+import {playSfx} from "../../utils/sfx.ts";
 
 // components
 import BackHeader from "../../components/ui/BackHeader/BackHeader.tsx";
@@ -116,6 +117,9 @@ function Challenges() {
         setClaimingId(challengeId);
         try {
             await challengeService.claimChallenge(challengeId);
+            // After the server confirms, not on press — the fanfare is the
+            // receipt for the coins, and it would be a lie if the claim failed.
+            playSfx('claim');
             // Mark this challenge claimed in place (and pull the new coin balance)
             // rather than reloading from page 1 — keeps scroll position and the
             // already-loaded pages intact.
@@ -127,6 +131,7 @@ function Challenges() {
             await refreshProfile();
         } catch (error) {
             console.error('Failed to claim challenge:', error);
+            playSfx('denied');
         } finally {
             setClaimingId(null);
         }

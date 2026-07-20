@@ -44,7 +44,7 @@ export function ProgressionSkeleton() {
                     style={{
                         flexDirection: 'row',
                         alignItems: 'center',
-                        paddingVertical: vs(14),
+                        paddingVertical: vs(20),
                         paddingHorizontal: ms(18),
                         borderRadius: ms(24),
                         marginBottom: ms(16),
@@ -52,13 +52,13 @@ export function ProgressionSkeleton() {
                         borderColor: 'rgba(255,255,255,0.15)',
                     }}
                 >
-                    <Shimmer width={ms(46)} height={ms(46)} radius={ms(23)} delay={i * STAGGER}/>
+                    <Shimmer width={ms(50)} height={ms(50)} radius={ms(23)} delay={i * STAGGER}/>
                     <View style={{flex: 1, marginLeft: ms(14)}}>
-                        <Shimmer width="60%" height={vs(13)} radius={6} delay={i * STAGGER + 40}/>
+                        <Shimmer width="60%" height={vs(16)} radius={6} delay={i * STAGGER + 40}/>
                         <Shimmer
                             width="100%"
-                            height={ms(10)}
-                            radius={ms(10)}
+                            height={ms(15)}
+                            radius={ms(15)}
                             delay={i * STAGGER + 80}
                             style={{marginTop: vs(10)}}
                         />
@@ -81,19 +81,19 @@ export function ChallengesSkeleton() {
                         marginHorizontal: ms(10),
                         marginBottom: ms(16),
                         borderRadius: ms(22),
-                        padding: ms(18),
+                        padding: ms(20),
                         borderWidth: 1,
                         borderColor: 'rgba(255,255,255,0.12)',
                     }}
                 >
                     {/* Header: icon, title lines, status badge */}
                     <View style={{flexDirection: 'row', alignItems: 'center'}}>
-                        <Shimmer width={ms(44)} height={ms(44)} radius={ms(14)} delay={i * STAGGER}/>
+                        <Shimmer width={ms(50)} height={ms(50)} radius={ms(14)} delay={i * STAGGER}/>
                         <View style={{flex: 1, marginLeft: ms(12)}}>
-                            <Shimmer width="70%" height={vs(14)} radius={6} delay={i * STAGGER + 40}/>
-                            <Shimmer width="45%" height={vs(11)} radius={6} delay={i * STAGGER + 70} style={{marginTop: vs(7)}}/>
+                            <Shimmer width="70%" height={vs(20)} radius={6} delay={i * STAGGER + 40}/>
+                            <Shimmer width="45%" height={vs(16)} radius={6} delay={i * STAGGER + 70} style={{marginTop: vs(7)}}/>
                         </View>
-                        <Shimmer width={ms(70)} height={vs(20)} radius={ms(10)} delay={i * STAGGER + 100}/>
+                        <Shimmer width={ms(70)} height={vs(30)} radius={ms(10)} delay={i * STAGGER + 100}/>
                     </View>
 
                     {/* Progress bar */}

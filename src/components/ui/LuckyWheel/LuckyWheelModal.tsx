@@ -126,9 +126,18 @@ interface Props {
     visible: boolean;
     onClose: () => void;
     onSpinComplete?: () => void;
+    /**
+     * Wheel layout, fetched by Home on focus rather than here on open — by the
+     * time the player taps the button it's already in hand, so the wheel draws
+     * its prizes immediately instead of showing "loading" on a dead grey disc.
+     * `null` means still in flight, `[]` means the request finished with nothing
+     * usable (see `loadError` for which of the two messages to show).
+     */
+    segments: LuckyWheelSegment[] | null;
+    loadError?: boolean;
 }
 
-export default function LuckyWheelModal({visible, onClose, onSpinComplete}: Props) {
+export default function LuckyWheelModal({visible, onClose, onSpinComplete, segments, loadError = false}: Props) {
     const {t} = useTranslation();
     const patchStats = useAuthStore(s => s.patchStats);
 
@@ -169,9 +178,6 @@ export default function LuckyWheelModal({visible, onClose, onSpinComplete}: Prop
     const [winnerPos, setWinnerPos] = useState<number | null>(null);
     const [canSpin,  setCanSpin]  = useState(true);
     const [timeLeft, setTimeLeft] = useState('');
-    const [segments, setSegments] = useState<LuckyWheelSegment[] | null>(null);
-    const [loadError, setLoadError] = useState(false);
-
     const slices       = useMemo(() => buildSlices(segments ?? []), [segments]);
     const segmentAngle = slices.length > 0 ? 360 / slices.length : 360;
     const ringDots     = useMemo(() => buildRingDots(slices), [slices]);
@@ -186,13 +192,6 @@ export default function LuckyWheelModal({visible, onClose, onSpinComplete}: Prop
             winFlash.setValue(0);
             winnerLoopRef.current?.stop();
             resultLoopRef.current?.stop();
-
-            // Pull the latest wheel layout each time the modal opens, so admin
-            // edits show up without an app restart.
-            setLoadError(false);
-            userService.getLuckyWheelSegments()
-                .then(setSegments)
-                .catch(() => { setSegments([]); setLoadError(true); });
 
             Animated.parallel([
                 Animated.spring(modalScale,   {toValue: 1, friction: 6, tension: 65, useNativeDriver: true}),

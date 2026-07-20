@@ -14,6 +14,7 @@ import {useAuthStore} from "../../store/authStore.ts";
 import {useConfigStore} from "../../store/configStore.ts";
 import {syncGlobalConfig} from "../../services/configSync.ts";
 import * as userService from "../../services/userService.ts";
+import {LuckyWheelSegment} from "../../services/types.ts";
 import {storage} from "../../db/kvStore.ts";
 import {STORAGE_KEYS} from "../../utils/storageKeys.ts";
 import InAppReview from 'react-native-in-app-review';
@@ -60,6 +61,10 @@ const Home: React.FC<Props> = () => {
     const patchStats = useAuthStore(s => s.patchStats);
     const [showWheel, setShowWheel] = useState(false);
     const [canSpin, setCanSpin] = useState(false);
+    // Wheel layout, prefetched here so the modal opens with its prizes already
+    // drawn. null = still loading, [] = loaded but unusable.
+    const [wheelSegments, setWheelSegments] = useState<LuckyWheelSegment[] | null>(null);
+    const [wheelLoadError, setWheelLoadError] = useState(false);
     const [showAdModal, setShowAdModal] = useState(false);
     const [showExitModal, setShowExitModal] = useState(false);
     const checkCanSpin = useCallback(async () => {
@@ -93,6 +98,31 @@ const Home: React.FC<Props> = () => {
     );
 
     useFocusEffect(useCallback(() => { checkCanSpin(); }, [checkCanSpin]));
+
+    // Prefetch the wheel layout on every Home focus. It used to be fetched when
+    // the modal opened, which put a network round-trip between the player's tap
+    // and a usable wheel — they got a grey disc and the word "loading". Doing it
+    // here still picks up admin edits without an app restart (the reason it was
+    // re-fetched per open), just before the player asks rather than after.
+    //
+    // Guarded against a late response landing after the player has navigated
+    // away: without the flag this would setState on an unmounted screen every
+    // time someone opened Home and left again inside the request window.
+    useFocusEffect(useCallback(() => {
+        let active = true;
+        userService.getLuckyWheelSegments()
+            .then(segments => {
+                if (!active) return;
+                setWheelSegments(segments);
+                setWheelLoadError(false);
+            })
+            .catch(() => {
+                if (!active) return;
+                setWheelSegments([]);
+                setWheelLoadError(true);
+            });
+        return () => { active = false; };
+    }, []));
 
     // Re-pull the admin global config (ad switch / level length) on every Home
     // focus so an admin toggle reflects without a full app restart.
@@ -224,6 +254,8 @@ const Home: React.FC<Props> = () => {
                 visible={showWheel}
                 onClose={() => setShowWheel(false)}
                 onSpinComplete={() => setCanSpin(false)}
+                segments={wheelSegments}
+                loadError={wheelLoadError}
             />
 
             <WatchAdModal

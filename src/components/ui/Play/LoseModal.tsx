@@ -195,7 +195,7 @@ function LoseModal({visible, score, onRetry, onBack, onWatchAd, canWatchAd = tru
                 {adsEnabled && (canWatchAd ? (
                     <Animated.View style={[styles.adBtnWrap, {transform: [{scale: adPulseAnim}]}]}>
                         <TouchableOpacity
-                            onPress={onWatchAd}
+                            onPressIn={onWatchAd}
                             activeOpacity={0.85}
                             accessible={true}
                             accessibilityRole="button"
@@ -227,7 +227,7 @@ function LoseModal({visible, score, onRetry, onBack, onWatchAd, canWatchAd = tru
                 {/* Retry + Back row */}
                 <View style={styles.actions}>
                     <TouchableOpacity
-                        onPress={onBack}
+                        onPressIn={onBack}
                         activeOpacity={0.75}
                         style={styles.backBtn}
                         accessible={true}
@@ -239,7 +239,7 @@ function LoseModal({visible, score, onRetry, onBack, onWatchAd, canWatchAd = tru
                     </TouchableOpacity>
 
                     <TouchableOpacity
-                        onPress={onRetry}
+                        onPressIn={onRetry}
                         activeOpacity={0.8}
                         style={styles.retryWrap}
                         accessible={true}

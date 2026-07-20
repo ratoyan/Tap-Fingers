@@ -336,7 +336,7 @@ function BossBox({bossHP, bossMaxHP, level, onTap, boss}: Props) {
 
                 {/* Boss body */}
                 <TouchableOpacity
-                    onPress={handleTap}
+                    onPressIn={handleTap}
                     activeOpacity={0.95}
                     accessible={true}
                     accessibilityRole="button"

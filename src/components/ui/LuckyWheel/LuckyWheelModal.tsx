@@ -570,7 +570,7 @@ export default function LuckyWheelModal({visible, onClose, onSpinComplete}: Prop
                             <View style={[styles.spinButtonFixed, {left: CENTER - 38, top: CENTER - 38}]}>
                                 <Animated.View style={{transform: [{scale: isActive ? pulseAnim : 1}]}}>
                                     <TouchableOpacity
-                                        onPress={spin}
+                                        onPressIn={spin}
                                         disabled={spinning || !canSpin || !wheelReady}
                                         activeOpacity={0.82}
                                         accessible={true}
@@ -661,7 +661,7 @@ export default function LuckyWheelModal({visible, onClose, onSpinComplete}: Prop
 
                         {/* Close */}
                         <TouchableOpacity
-                            onPress={onClose}
+                            onPressIn={onClose}
                             activeOpacity={0.8}
                             style={styles.closeButton}
                             accessible={true}

@@ -118,7 +118,7 @@ function ExitModal({visible, onConfirm, onCancel}: ExitModalProps) {
 
                 <View style={styles.exitActions}>
                     <TouchableOpacity
-                        onPress={onConfirm}
+                        onPressIn={onConfirm}
                         activeOpacity={0.8}
                         style={styles.exitCancelBtn}
                         accessible={true}
@@ -128,7 +128,7 @@ function ExitModal({visible, onConfirm, onCancel}: ExitModalProps) {
                         <Text allowFontScaling={false} style={styles.exitCancelText}>{t('yes')}</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
-                        onPress={onCancel}
+                        onPressIn={onCancel}
                         activeOpacity={0.85}
                         style={styles.exitConfirmTouchable}
                         accessible={true}

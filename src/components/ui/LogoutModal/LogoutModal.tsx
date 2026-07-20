@@ -145,7 +145,7 @@ export default function LogoutModal({visible, onClose, onConfirm}: any) {
 
                 <View style={styles.buttonContainer}>
                     <TouchableOpacity style={[styles.button, styles.cancelButton]}
-                                      onPress={onClose}
+                                      onPressIn={onClose}
                                       activeOpacity={0.8}
                                       accessible={true}
                                       accessibilityRole="button"
@@ -160,7 +160,7 @@ export default function LogoutModal({visible, onClose, onConfirm}: any) {
                     </TouchableOpacity>
 
                     <TouchableOpacity style={styles.confirmTouchable}
-                                      onPress={onConfirm}
+                                      onPressIn={onConfirm}
                                       activeOpacity={0.85}
                                       accessible={true}
                                       accessibilityRole="button"

@@ -89,7 +89,7 @@ export default function UpdateModal({visible, storeUrl}: UpdateModalProps) {
                         {/* Update button */}
                         <Animated.View style={{transform: [{scale: pulseAnim}], width: '100%'}}>
                             <TouchableOpacity
-                                onPress={openStore}
+                                onPressIn={openStore}
                                 activeOpacity={0.85}
                                 style={styles.updateBtn}
                                 accessible={true}

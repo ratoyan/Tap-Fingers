@@ -44,7 +44,7 @@ function GameMenuModal({visible, onClose, onExit}: GameMenuModalProps) {
 
                     {/* Resume */}
                     <TouchableOpacity
-                        onPress={onClose}
+                        onPressIn={onClose}
                         activeOpacity={0.85}
                         style={styles.btn}
                         accessible={true}
@@ -64,7 +64,7 @@ function GameMenuModal({visible, onClose, onExit}: GameMenuModalProps) {
 
                     {/* Settings */}
                     <TouchableOpacity
-                        onPress={() => setSettingsVisible(true)}
+                        onPressIn={() => setSettingsVisible(true)}
                         activeOpacity={0.85}
                         style={[styles.btn, styles.settingsBtn]}
                         accessible={true}
@@ -76,7 +76,7 @@ function GameMenuModal({visible, onClose, onExit}: GameMenuModalProps) {
 
                     {/* Exit Game */}
                     <TouchableOpacity
-                        onPress={onExit}
+                        onPressIn={onExit}
                         activeOpacity={0.85}
                         style={styles.exitBtnWrapper}
                         accessible={true}

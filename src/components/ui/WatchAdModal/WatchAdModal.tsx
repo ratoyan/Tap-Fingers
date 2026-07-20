@@ -82,7 +82,7 @@ export default function WatchAdModal({visible, onClose, onCollect}: WatchAdModal
                         </View>
 
                         <TouchableOpacity
-                            onPress={onClose}
+                            onPressIn={onClose}
                             activeOpacity={0.8}
                             style={styles.closeBtnFull}
                             accessible={true}
@@ -110,7 +110,7 @@ export default function WatchAdModal({visible, onClose, onCollect}: WatchAdModal
 
                         <View style={styles.confirmActions}>
                             <TouchableOpacity
-                                onPress={onClose}
+                                onPressIn={onClose}
                                 activeOpacity={0.75}
                                 style={styles.noBtn}
                                 accessible={true}
@@ -120,7 +120,7 @@ export default function WatchAdModal({visible, onClose, onCollect}: WatchAdModal
                                 <Text allowFontScaling={false} style={styles.noBtnText}>{t('cancel')}</Text>
                             </TouchableOpacity>
                             <TouchableOpacity
-                                onPress={async () => {
+                                onPressIn={async () => {
                                     const data = await loadTodayData();
                                     await saveWatch(data);
                                     onCollect?.();

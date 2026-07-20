@@ -152,7 +152,7 @@ function LanguageModal({visible, onClose, onSelect, selectedLanguage}: LanguageM
                             <TouchableOpacity
                                 activeOpacity={0.8}
                                 style={styles.item}
-                                onPress={() => { onSelect(lang); onClose(); }}
+                                onPressIn={() => { onSelect(lang); onClose(); }}
                                 accessible={true}
                                 accessibilityRole="button"
                                 accessibilityState={{selected: isSelected}}

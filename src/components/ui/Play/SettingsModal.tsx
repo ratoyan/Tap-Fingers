@@ -129,7 +129,7 @@ export default function SettingsModal({visible, onClose}: SettingsModalProps) {
                 </View>
 
                 <TouchableOpacity
-                    onPress={onClose}
+                    onPressIn={onClose}
                     activeOpacity={0.85}
                     style={styles.closeBtn}
                     accessible={true}

@@ -242,7 +242,7 @@ export default function GuestAuthModal({
     return (
         <Modal transparent visible={visible} animationType="none" onRequestClose={handleClose}>
             <TouchableWithoutFeedback
-                onPress={handleClose}
+                onPressIn={handleClose}
                 accessible={true}
                 accessibilityRole="button"
                 accessibilityLabel={t('close')}
@@ -336,7 +336,7 @@ export default function GuestAuthModal({
                                 onSubmitEditing={submit}
                             />
                             <TouchableOpacity
-                                onPress={() => setShowPassword(v => !v)}
+                                onPressIn={() => setShowPassword(v => !v)}
                                 hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}
                                 accessibilityRole="button"
                                 accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
@@ -347,7 +347,7 @@ export default function GuestAuthModal({
 
                         <TouchableOpacity
                             style={styles.submitButton}
-                            onPress={submit}
+                            onPressIn={submit}
                             disabled={busy}
                             activeOpacity={0.85}
                         >
@@ -367,7 +367,7 @@ export default function GuestAuthModal({
 
                         {/* Switch between "create account" and "sign in to another account" */}
                         <TouchableOpacity
-                            onPress={toggleAuthMode}
+                            onPressIn={toggleAuthMode}
                             disabled={busy}
                             hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}
                         >

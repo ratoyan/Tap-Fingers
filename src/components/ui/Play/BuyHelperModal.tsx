@@ -156,7 +156,7 @@ function BuyHelperModal({visible, helperType, coins, watchAdUsed, onBuy, onWatch
                 {adsEnabled && (
                 <Animated.View style={[styles.adWrap, {transform: [{scale: adDisabled ? 1 : adPulseAnim}]}, adDisabled && {opacity: 0.35}]}>
                     <TouchableOpacity
-                        onPress={() => onWatchAd(helperType)}
+                        onPressIn={() => onWatchAd(helperType)}
                         activeOpacity={0.82}
                         disabled={adDisabled}
                         accessible={true}
@@ -187,7 +187,7 @@ function BuyHelperModal({visible, helperType, coins, watchAdUsed, onBuy, onWatch
                 {/* Buy + Cancel */}
                 <View style={styles.actions}>
                     <TouchableOpacity
-                        onPress={onClose}
+                        onPressIn={onClose}
                         activeOpacity={0.75}
                         style={styles.cancelBtn}
                         accessible={true}
@@ -198,7 +198,7 @@ function BuyHelperModal({visible, helperType, coins, watchAdUsed, onBuy, onWatch
                     </TouchableOpacity>
 
                     <TouchableOpacity
-                        onPress={() => canAfford && onBuy(helperType)}
+                        onPressIn={() => canAfford && onBuy(helperType)}
                         activeOpacity={canAfford ? 0.8 : 1}
                         style={[styles.buyWrap, !canAfford && {opacity: 0.4}]}
                         accessible={true}

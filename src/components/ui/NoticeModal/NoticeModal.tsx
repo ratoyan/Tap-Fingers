@@ -123,9 +123,9 @@ export default function NoticeModal() {
 
     return (
         <Modal visible={visible} transparent animationType="none" onRequestClose={hide}>
-            <Pressable style={styles.backdrop} onPress={hide}>
+            <Pressable style={styles.backdrop} onPressIn={hide}>
                 <Animated.View style={[styles.backdrop, {opacity: opacityAnim, position: 'absolute', top: 0, left: 0, right: 0, bottom: 0}]} />
-                <Pressable style={styles.cardPress} onPress={() => {}}>
+                <Pressable style={styles.cardPress} onPressIn={() => {}}>
                     <Animated.View
                         style={[
                             styles.cardWrapper,
@@ -152,7 +152,7 @@ export default function NoticeModal() {
 
                             {/* Close button */}
                             <TouchableOpacity
-                                onPress={hide}
+                                onPressIn={hide}
                                 hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}
                                 style={styles.closeBtn}
                                 accessibilityRole="button"
@@ -210,7 +210,7 @@ export default function NoticeModal() {
                             )}
 
                             <TouchableOpacity
-                                onPress={hide}
+                                onPressIn={hide}
                                 activeOpacity={0.85}
                                 style={[styles.button, {shadowColor: palette.glow}]}
                                 accessibilityRole="button"

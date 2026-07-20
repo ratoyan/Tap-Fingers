@@ -72,7 +72,7 @@ export default function PhotoPickerSheet({
         <Modal transparent visible={visible} animationType="none" onRequestClose={onClose}>
             {/* Backdrop */}
             <TouchableWithoutFeedback
-                onPress={onClose}
+                onPressIn={onClose}
                 accessible={true}
                 accessibilityRole="button"
                 accessibilityLabel={t('close')}
@@ -91,7 +91,7 @@ export default function PhotoPickerSheet({
 
                 {/* Camera option */}
                 <TouchableOpacity
-                    onPress={onCamera}
+                    onPressIn={onCamera}
                     activeOpacity={0.85}
                     style={styles.optionBtn}
                     accessible={true}
@@ -113,7 +113,7 @@ export default function PhotoPickerSheet({
 
                 {/* Gallery option */}
                 <TouchableOpacity
-                    onPress={onGallery}
+                    onPressIn={onGallery}
                     activeOpacity={0.85}
                     style={styles.optionBtn}
                     accessible={true}
@@ -135,7 +135,7 @@ export default function PhotoPickerSheet({
 
                 {/* Cancel */}
                 <TouchableOpacity
-                    onPress={onClose}
+                    onPressIn={onClose}
                     activeOpacity={0.7}
                     style={styles.cancelBtn}
                     accessible={true}

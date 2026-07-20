@@ -692,13 +692,13 @@ function Profile() {
             {deleteModal && (
                 <Pressable
                     style={styles.modalOverlay}
-                    onPress={() => !deleting && setDeleteModal(false)}
+                    onPressIn={() => !deleting && setDeleteModal(false)}
                 >
                     <KeyboardAvoidingView
                         style={styles.modalAvoider}
                         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                     >
-                    <Pressable style={styles.modalCard} onPress={() => {}}>
+                    <Pressable style={styles.modalCard} onPressIn={() => {}}>
                         <Text allowFontScaling={false} style={styles.modalTitle}>⚠️ {t('deleteAccountQuestion')}</Text>
                         <Text allowFontScaling={false} style={styles.modalMessage}>
                             {t('deleteAccountWarning')}
@@ -722,7 +722,7 @@ function Profile() {
                         <View style={styles.modalButtons}>
                             <TouchableOpacity
                                 style={[styles.modalBtn, styles.modalCancel]}
-                                onPress={() => setDeleteModal(false)}
+                                onPressIn={() => setDeleteModal(false)}
                                 disabled={deleting}
                                 activeOpacity={0.8}
                             >
@@ -730,7 +730,7 @@ function Profile() {
                             </TouchableOpacity>
                             <TouchableOpacity
                                 style={[styles.modalBtn, styles.modalDelete]}
-                                onPress={handleDeleteAccount}
+                                onPressIn={handleDeleteAccount}
                                 disabled={deleting}
                                 activeOpacity={0.85}
                             >

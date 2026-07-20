@@ -564,9 +564,14 @@ export default function Play() {
         navigation.goBack();
     }
 
+    // Backing out of the exit prompt resumes exactly the way closing the pause
+    // menu does — through the 3·2·1, not straight into a live arena. The player
+    // got here from the menu with the field frozen, so dropping them back in on
+    // the same frame they tap "no" costs them boxes they never saw coming.
+    // isPlaying is already false; the countdown's finish handler flips it back.
     function handleExitCancel() {
         setIsExitModal(false);
-        setIsPlaying(true);
+        setIsCountdown(true);
     }
 
     function gameOver() {

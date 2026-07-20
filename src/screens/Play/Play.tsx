@@ -83,7 +83,7 @@ const GOLDEN_SPAWN_CHANCE = 0.09;
 // They fall a bit quicker than the cards (BOMB_FALL_BOOST× the per-frame reach),
 // so they cross the screen faster and give the player less time to hesitate.
 const BOMBS_PER_LEVEL = 5;
-const BOMB_FALL_BOOST = 1.5;
+const BOMB_FALL_BOOST = 1.3;
 // Life pickup: every HEART_DROP_EVERY_LEVELS levels the game checks whether the
 // player has lost a heart; if so, one heart drops in (a bit quicker than the
 // cards). Tapping it gives the lost life back. Nothing drops on a full heart row.
@@ -313,7 +313,7 @@ export default function Play() {
         maxComboRef.current = 0;
         sessionStartRef.current = Date.now();
         sessionTokenRef.current = null;
-        setLevelLength(30);
+        setLevelLength(20);
 
         try {
             // The token returned here is what lets submitGameSession() report the

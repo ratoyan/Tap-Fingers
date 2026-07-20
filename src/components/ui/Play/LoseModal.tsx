@@ -43,7 +43,7 @@ interface LoseModalProps {
     adsEnabled?: boolean;
 }
 
-export default function LoseModal({visible, score, onRetry, onBack, onWatchAd, canWatchAd = true, adsEnabled = true}: LoseModalProps) {
+function LoseModal({visible, score, onRetry, onBack, onWatchAd, canWatchAd = true, adsEnabled = true}: LoseModalProps) {
     const {t} = useTranslation();
 
     const scaleAnim = useRef(new Animated.Value(0)).current;
@@ -444,3 +444,7 @@ const styles = StyleSheet.create({
         letterSpacing: 0.3,
     },
 });
+
+// Memoised: Play re-renders on every animation frame, and this subtree does
+// not change with it.
+export default React.memo(LoseModal);

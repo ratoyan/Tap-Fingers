@@ -29,4 +29,6 @@ function Level({level = 1}: LevelProps) {
     );
 }
 
-export default Level;
+// Memoised: Play re-renders on every animation frame, and this subtree does
+// not change with it.
+export default React.memo(Level);

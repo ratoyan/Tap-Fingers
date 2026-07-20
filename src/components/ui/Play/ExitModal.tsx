@@ -13,7 +13,7 @@ interface ExitModalProps {
     onCancel: () => void;
 }
 
-export default function ExitModal({visible, onConfirm, onCancel}: ExitModalProps) {
+function ExitModal({visible, onConfirm, onCancel}: ExitModalProps) {
     const {t} = useTranslation();
 
     // Keep mounted while the exit animation plays.
@@ -149,3 +149,7 @@ export default function ExitModal({visible, onConfirm, onCancel}: ExitModalProps
         </Animated.View>
     );
 }
+
+// Memoised: Play re-renders on every animation frame, and this subtree does
+// not change with it.
+export default React.memo(ExitModal);

@@ -82,7 +82,7 @@ function DamageFloat({onDone}: {onDone: () => void}) {
     );
 }
 
-export default function BossBox({bossHP, bossMaxHP, level, onTap, boss}: Props) {
+function BossBox({bossHP, bossMaxHP, level, onTap, boss}: Props) {
     const posX        = useRef(new Animated.Value(width / 2 - BOSS_SIZE / 2)).current;
     const posY        = useRef(new Animated.Value(height / 2 - BOSS_SIZE / 2)).current;
     const scaleAnim   = useRef(new Animated.Value(0)).current;
@@ -398,3 +398,7 @@ export default function BossBox({bossHP, bossMaxHP, level, onTap, boss}: Props) 
         </Animated.View>
     );
 }
+
+// Memoised: Play re-renders on every animation frame, and this subtree does
+// not change with it.
+export default React.memo(BossBox);

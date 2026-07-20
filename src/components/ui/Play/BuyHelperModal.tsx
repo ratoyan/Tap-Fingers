@@ -77,7 +77,7 @@ interface BuyHelperModalProps {
     adsEnabled?: boolean;
 }
 
-export default function BuyHelperModal({visible, helperType, coins, watchAdUsed, onBuy, onWatchAd, onClose, adsEnabled = true}: BuyHelperModalProps) {
+function BuyHelperModal({visible, helperType, coins, watchAdUsed, onBuy, onWatchAd, onClose, adsEnabled = true}: BuyHelperModalProps) {
     const {t} = useTranslation();
     const scaleAnim   = useRef(new Animated.Value(0.8)).current;
     const fadeAnim    = useRef(new Animated.Value(0)).current;
@@ -407,3 +407,7 @@ const styles = StyleSheet.create({
         letterSpacing: 0.5,
     },
 });
+
+// Memoised: Play re-renders on every animation frame, and this subtree does
+// not change with it.
+export default React.memo(BuyHelperModal);

@@ -1,4 +1,5 @@
 ﻿import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
+import {useStableCallback} from '../../hooks/useStableCallback.ts';
 import LinearGradient from 'react-native-linear-gradient';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {useFocusEffect, useNavigation} from '@react-navigation/core';
@@ -1330,6 +1331,52 @@ export default function Play() {
         return () => clearTimeout(timeoutId);
     }, [isPlaying]);
 
+    // ─── Stable handler identities ────────────────────────────────────────────
+    // The animation loop re-renders this screen ~60×/sec, so the plain function
+    // declarations above get a fresh identity every frame. Passing those
+    // straight to the (now memoised) children would defeat the memo and re-render
+    // every modal and helper button on every frame. These wrappers keep the prop
+    // identity fixed while still calling the latest closure.
+    const onMenu = useStableCallback(menuHandler);
+    const onBossTap = useStableCallback(handleBossTap);
+    const onRetry = useStableCallback(handleRetry);
+    const onExitConfirm = useStableCallback(handleExitConfirm);
+    const onExitCancel = useStableCallback(handleExitCancel);
+    const onWatchAdLose = useStableCallback(handleWatchAd);
+    const onMenuClose = useStableCallback(handleMenuClose);
+    const onMenuExit = useStableCallback(handleMenuExit);
+    const onCountdownFinish = useStableCallback(handleCountdownFinish);
+    const onBuyHelper = useStableCallback(handleBuyHelper);
+    const onWatchAdHelper = useStableCallback(handleWatchAdHelper);
+    const onBuyModalClose = useStableCallback(() => {
+        setBuyModal(null);
+        setIsPlaying(true);
+    });
+    const onShieldPress = useStableCallback(() => {
+        if (shieldCount > 0 && !shieldActive) {
+            handleShield();
+        } else if (!shieldActive) {
+            setIsPlaying(false);
+            setBuyModal('shield');
+        }
+    });
+    const onBombPress = useStableCallback(() => {
+        if (bombCount > 0) {
+            handleBomb();
+        } else {
+            setIsPlaying(false);
+            setBuyModal('bomb');
+        }
+    });
+    const onSlowPress = useStableCallback(() => {
+        if (slowCount > 0 && !slowActive) {
+            handleSlow();
+        } else if (!slowActive) {
+            setIsPlaying(false);
+            setBuyModal('slow');
+        }
+    });
+
     // ─── Render helpers ───────────────────────────────────────────────────────
     const comboLabel =
         combo >= 5 ? '🔥 INSANE!' :
@@ -1340,6 +1387,134 @@ export default function Play() {
 
     const LevelUpIcon = level >= 10 ? FlameIcon : level >= 5 ? BoltIcon : StarBurstIcon;
     const levelUpColor = level >= 10 ? '#FF6B00' : level >= 5 ? '#FFD700' : '#ffffff';
+
+    // The modals mount their full trees (SVG art, gradients) whether or not they
+    // are visible, so rebuilding this block every frame was pure waste. It only
+    // depends on modal visibility and the values they display.
+    const modals = useMemo(() => (
+        <>
+            <LoseModal
+                visible={isLoseModal}
+                score={count}
+                onRetry={onRetry}
+                onBack={onExitConfirm}
+                onWatchAd={onWatchAdLose}
+                canWatchAd={watchAdUsed < 2}
+                adsEnabled={adsEnabled}
+            />
+            <ExitModal visible={isExitModal} onConfirm={onExitConfirm} onCancel={onExitCancel}/>
+            <GameMenuModal visible={isMenuModal} onClose={onMenuClose} onExit={onMenuExit}/>
+            {isCountdown && <CountdownOverlay onFinish={onCountdownFinish}/>}
+            <BuyHelperModal
+                visible={buyModal !== null}
+                helperType={buyModal}
+                coins={coins}
+                watchAdUsed={watchAdUsed}
+                onBuy={onBuyHelper}
+                onWatchAd={onWatchAdHelper}
+                adsEnabled={adsEnabled}
+                onClose={onBuyModalClose}
+            />
+        </>
+    ), [isLoseModal, count, watchAdUsed, adsEnabled, isExitModal, isMenuModal,
+        isCountdown, buyModal, coins, onRetry, onExitConfirm, onExitCancel,
+        onWatchAdLose, onMenuClose, onMenuExit, onCountdownFinish, onBuyHelper,
+        onWatchAdHelper, onBuyModalClose]);
+
+    // Boxes are drawn back-to-front (newest behind), which the old code got by
+    // allocating two throwaway arrays per frame. Walking the list backwards does
+    // the same with no allocation — this runs 60×/sec with a box per element.
+    const renderedBoxes = useMemo(() => {
+        const out = [];
+        for (let i = boxesData.length - 1; i >= 0; i--) {
+            const box = boxesData[i];
+            out.push(<PlayBox key={box.id} box={box} handlePress={onBoxPress}/>);
+        }
+        return out;
+    }, [boxesData, onBoxPress]);
+
+    // The three helper buttons carry SVG art and only change when a helper count
+    // or active state does — not 60×/sec with the falling boxes.
+    const helpersRow = useMemo(() => (
+                <View style={[styles.helpersRow, {bottom: insets.bottom + 22}, isBossFight && {opacity: 0.3, pointerEvents: 'none'}]}>
+
+                    {/* Shield */}
+                    <Animated.View style={{transform: [{scale: shieldCount > 0 && !shieldActive ? bombPulseAnim : 1}]}}>
+                        <TouchableOpacity
+                            onPress={onShieldPress}
+                            disabled={shieldActive}
+                            activeOpacity={0.75}
+                            accessible={true}
+                            accessibilityRole="button"
+                            accessibilityLabel={shieldActive ? t('shieldActive') : shieldCount > 0 ? `${t('useShield')}, ${shieldCount} ${t('available')}` : t('buyShield')}
+                            accessibilityState={{disabled: shieldActive}}
+                            style={[
+                                styles.helperButton,
+                                {borderColor: shieldActive ? '#00e5ff' : shieldCount > 0 ? '#4fc3f7' : '#1a5276'},
+                                shieldActive && styles.helperButtonDisabled,
+                            ]}
+                        >
+                            <ShieldIcon size={28} color={shieldActive ? '#00e5ff' : shieldCount > 0 ? '#fff' : '#4fc3f7'}/>
+                            <View style={[styles.helperBadge, {backgroundColor: shieldCount > 0 ? '#0288d1' : '#1a3a4a'}]}>
+                                <Text allowFontScaling={false} style={styles.helperBadgeText}>{shieldCount > 0 ? shieldCount : '+'}</Text>
+                            </View>
+                        </TouchableOpacity>
+                    </Animated.View>
+
+                    {/* Bomb */}
+                    <Animated.View style={{transform: [{scale: bombCount > 0 ? bombPulseAnim : 1}]}}>
+                        <TouchableOpacity
+                            onPress={onBombPress}
+                            activeOpacity={0.75}
+                            accessible={true}
+                            accessibilityRole="button"
+                            accessibilityLabel={bombCount > 0 ? `${t('useBomb')}, ${bombCount} ${t('available')}` : t('buyBomb')}
+                            style={[
+                                styles.helperButton,
+                                styles.helperButtonBomb,
+                                {borderColor: bombCount > 0 ? ORANGE : '#5a2a1a'},
+                            ]}
+                        >
+                            <BombCard width={32} height={32}/>
+                            <View style={[styles.helperBadge, {backgroundColor: bombCount > 0 ? ORANGE_RED : '#3a1a0a'}]}>
+                                <Text allowFontScaling={false} style={styles.helperBadgeText}>{bombCount > 0 ? bombCount : '+'}</Text>
+                            </View>
+                        </TouchableOpacity>
+                    </Animated.View>
+
+                    {/* Slow Mo */}
+                    <Animated.View style={{transform: [{scale: slowCount > 0 && !slowActive ? bombPulseAnim : 1}]}}>
+                        <TouchableOpacity
+                            onPress={onSlowPress}
+                            disabled={slowActive}
+                            activeOpacity={0.75}
+                            accessible={true}
+                            accessibilityRole="button"
+                            accessibilityLabel={slowActive ? t('slowMotionActive') : slowCount > 0 ? `${t('useSlowMotion')}, ${slowCount} ${t('available')}` : t('buySlowMotion')}
+                            accessibilityState={{disabled: slowActive}}
+                            style={[
+                                styles.helperButton,
+                                {borderColor: slowActive ? '#b39ddb' : slowCount > 0 ? LILAC : '#4a2060'},
+                                slowActive && styles.helperButtonDisabled,
+                            ]}
+                        >
+                            {slowActive ? (
+                                <Text allowFontScaling={false} style={styles.slowCountdownText}>{slowTimer}</Text>
+                            ) : (
+                                <SlowIcon size={28} color={slowCount > 0 ? '#fff' : LILAC}/>
+                            )}
+                            {!slowActive && (
+                                <View
+                                    style={[styles.helperBadge, {backgroundColor: slowCount > 0 ? '#7b1fa2' : '#2a0a40'}]}>
+                                    <Text allowFontScaling={false} style={styles.helperBadgeText}>{slowCount > 0 ? slowCount : '+'}</Text>
+                                </View>
+                            )}
+                        </TouchableOpacity>
+                    </Animated.View>
+                </View>
+    ), [insets.bottom, isBossFight, shieldCount, shieldActive, bombCount,
+        slowCount, slowActive, slowTimer, bombPulseAnim, t,
+        onShieldPress, onBombPress, onSlowPress]);
 
     // ─── Game content ─────────────────────────────────────────────────────────
     const gameContent = (
@@ -1356,7 +1531,7 @@ export default function Play() {
             <View style={[styles.headerLeftView, {top: insets.top + TOP_OFFSET, zIndex: 2}]}>
                 <View style={styles.headerTopRow}>
                     <TouchableOpacity
-                        onPress={menuHandler}
+                        onPress={onMenu}
                         style={styles.menuBtn}
                         accessible={true}
                         accessibilityRole="button"
@@ -1422,7 +1597,7 @@ export default function Play() {
                     bossHP={bossHP}
                     bossMaxHP={bossMaxHP}
                     level={level}
-                    onTap={handleBossTap}
+                    onTap={onBossTap}
                     boss={boss}
                 />
             )}
@@ -1440,104 +1615,7 @@ export default function Play() {
                 </View>
             )}
 
-            {/* Helpers row */}
-            <View style={[styles.helpersRow, {bottom: insets.bottom + 22}, isBossFight && {opacity: 0.3, pointerEvents: 'none'}]}>
-
-                {/* Shield */}
-                <Animated.View style={{transform: [{scale: shieldCount > 0 && !shieldActive ? bombPulseAnim : 1}]}}>
-                    <TouchableOpacity
-                        onPress={() => {
-                            if (shieldCount > 0 && !shieldActive) {
-                                handleShield();
-                            } else if (!shieldActive) {
-                                setIsPlaying(false);
-                                setBuyModal('shield');
-                            }
-                        }}
-                        disabled={shieldActive}
-                        activeOpacity={0.75}
-                        accessible={true}
-                        accessibilityRole="button"
-                        accessibilityLabel={shieldActive ? t('shieldActive') : shieldCount > 0 ? `${t('useShield')}, ${shieldCount} ${t('available')}` : t('buyShield')}
-                        accessibilityState={{disabled: shieldActive}}
-                        style={[
-                            styles.helperButton,
-                            {borderColor: shieldActive ? '#00e5ff' : shieldCount > 0 ? '#4fc3f7' : '#1a5276'},
-                            shieldActive && styles.helperButtonDisabled,
-                        ]}
-                    >
-                        <ShieldIcon size={28} color={shieldActive ? '#00e5ff' : shieldCount > 0 ? '#fff' : '#4fc3f7'}/>
-                        <View style={[styles.helperBadge, {backgroundColor: shieldCount > 0 ? '#0288d1' : '#1a3a4a'}]}>
-                            <Text allowFontScaling={false} style={styles.helperBadgeText}>{shieldCount > 0 ? shieldCount : '+'}</Text>
-                        </View>
-                    </TouchableOpacity>
-                </Animated.View>
-
-                {/* Bomb */}
-                <Animated.View style={{transform: [{scale: bombCount > 0 ? bombPulseAnim : 1}]}}>
-                    <TouchableOpacity
-                        onPress={() => {
-                            if (bombCount > 0) {
-                                handleBomb();
-                            } else {
-                                setIsPlaying(false);
-                                setBuyModal('bomb');
-                            }
-                        }}
-                        activeOpacity={0.75}
-                        accessible={true}
-                        accessibilityRole="button"
-                        accessibilityLabel={bombCount > 0 ? `${t('useBomb')}, ${bombCount} ${t('available')}` : t('buyBomb')}
-                        style={[
-                            styles.helperButton,
-                            styles.helperButtonBomb,
-                            {borderColor: bombCount > 0 ? ORANGE : '#5a2a1a'},
-                        ]}
-                    >
-                        <BombCard width={32} height={32}/>
-                        <View style={[styles.helperBadge, {backgroundColor: bombCount > 0 ? ORANGE_RED : '#3a1a0a'}]}>
-                            <Text allowFontScaling={false} style={styles.helperBadgeText}>{bombCount > 0 ? bombCount : '+'}</Text>
-                        </View>
-                    </TouchableOpacity>
-                </Animated.View>
-
-                {/* Slow Mo */}
-                <Animated.View style={{transform: [{scale: slowCount > 0 && !slowActive ? bombPulseAnim : 1}]}}>
-                    <TouchableOpacity
-                        onPress={() => {
-                            if (slowCount > 0 && !slowActive) {
-                                handleSlow();
-                            } else if (!slowActive) {
-                                setIsPlaying(false);
-                                setBuyModal('slow');
-                            }
-                        }}
-                        disabled={slowActive}
-                        activeOpacity={0.75}
-                        accessible={true}
-                        accessibilityRole="button"
-                        accessibilityLabel={slowActive ? t('slowMotionActive') : slowCount > 0 ? `${t('useSlowMotion')}, ${slowCount} ${t('available')}` : t('buySlowMotion')}
-                        accessibilityState={{disabled: slowActive}}
-                        style={[
-                            styles.helperButton,
-                            {borderColor: slowActive ? '#b39ddb' : slowCount > 0 ? LILAC : '#4a2060'},
-                            slowActive && styles.helperButtonDisabled,
-                        ]}
-                    >
-                        {slowActive ? (
-                            <Text allowFontScaling={false} style={styles.slowCountdownText}>{slowTimer}</Text>
-                        ) : (
-                            <SlowIcon size={28} color={slowCount > 0 ? '#fff' : LILAC}/>
-                        )}
-                        {!slowActive && (
-                            <View
-                                style={[styles.helperBadge, {backgroundColor: slowCount > 0 ? '#7b1fa2' : '#2a0a40'}]}>
-                                <Text allowFontScaling={false} style={styles.helperBadgeText}>{slowCount > 0 ? slowCount : '+'}</Text>
-                            </View>
-                        )}
-                    </TouchableOpacity>
-                </Animated.View>
-            </View>
+            {helpersRow}
 
             {/* Shield active border */}
             {shieldActive && (
@@ -1554,38 +1632,9 @@ export default function Play() {
             <Animated.View pointerEvents="none"
                            style={[styles.flashOverlay, {opacity: hurtFlashAnim, backgroundColor: '#FF1744'}]}/>
 
-            <LoseModal
-                visible={isLoseModal}
-                score={count}
-                onRetry={handleRetry}
-                onBack={handleExitConfirm}
-                onWatchAd={handleWatchAd}
-                canWatchAd={watchAdUsed < 2}
-                adsEnabled={adsEnabled}
-            />
-            <ExitModal visible={isExitModal} onConfirm={handleExitConfirm} onCancel={handleExitCancel}/>
-            <GameMenuModal visible={isMenuModal} onClose={handleMenuClose} onExit={handleMenuExit}/>
-            {isCountdown && <CountdownOverlay onFinish={handleCountdownFinish}/>}
-            <BuyHelperModal
-                visible={buyModal !== null}
-                helperType={buyModal}
-                coins={coins}
-                watchAdUsed={watchAdUsed}
-                onBuy={handleBuyHelper}
-                onWatchAd={handleWatchAdHelper}
-                adsEnabled={adsEnabled}
-                onClose={() => {
-                    setBuyModal(null);
-                    setIsPlaying(true);
-                }}
-            />
+            {modals}
 
-            {boxesData
-                .slice()
-                .reverse()
-                .map(box => (
-                    <PlayBox key={box.id} box={box} handlePress={onBoxPress}/>
-                ))}
+            {renderedBoxes}
         </Animated.View>
     );
 

@@ -23,4 +23,6 @@ function Progress({ length = 40, coin = 0 }: ProgressProps) {
     );
 }
 
-export default Progress;
+// Memoised: Play re-renders on every animation frame, and this subtree does
+// not change with it.
+export default React.memo(Progress);

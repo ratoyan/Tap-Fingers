@@ -199,4 +199,6 @@ function Hearts({viewStyle, length = 7, emptyCount = 0, animating = false, size 
     );
 }
 
-export default Hearts;
+// Memoised: Play re-renders on every animation frame, and this subtree does
+// not change with it.
+export default React.memo(Hearts);

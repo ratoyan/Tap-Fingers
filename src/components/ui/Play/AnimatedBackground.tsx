@@ -231,7 +231,7 @@ interface Props {
     type: string;
 }
 
-export default function AnimatedBackground({type}: Props) {
+function AnimatedBackground({type}: Props) {
     switch (type) {
         case 'stars':   return <StarsBackground/>;
         case 'aurora':  return <AuroraBackground/>;
@@ -240,3 +240,7 @@ export default function AnimatedBackground({type}: Props) {
         default:        return null;
     }
 }
+
+// Memoised: Play re-renders on every animation frame, and this subtree does
+// not change with it.
+export default React.memo(AnimatedBackground);

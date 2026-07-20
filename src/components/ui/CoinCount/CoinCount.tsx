@@ -1,4 +1,5 @@
-﻿import {Text, View, StyleProp, TouchableOpacity} from "react-native";
+﻿import React from "react";
+import {Text, View, StyleProp, TouchableOpacity} from "react-native";
 
 // icons
 import Coin from "../../../assets/icons/Coin.tsx";
@@ -28,4 +29,6 @@ function CoinCount({count, viewStyles, onPress}: CoinCountProps) {
     );
 }
 
-export default CoinCount;
+// Memoised: Play re-renders on every animation frame, and this subtree does
+// not change with it.
+export default React.memo(CoinCount);

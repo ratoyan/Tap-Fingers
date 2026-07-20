@@ -18,7 +18,7 @@ interface GameMenuModalProps {
     onExit: () => void;
 }
 
-export default function GameMenuModal({visible, onClose, onExit}: GameMenuModalProps) {
+function GameMenuModal({visible, onClose, onExit}: GameMenuModalProps) {
     const {t} = useTranslation();
     const scaleAnim = useRef(new Animated.Value(0)).current;
     const [settingsVisible, setSettingsVisible] = useState(false);
@@ -186,3 +186,7 @@ const styles = StyleSheet.create({
         letterSpacing: 1.5,
     },
 });
+
+// Memoised: Play re-renders on every animation frame, and this subtree does
+// not change with it.
+export default React.memo(GameMenuModal);

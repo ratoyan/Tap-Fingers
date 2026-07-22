@@ -5,6 +5,8 @@ import {storage} from '../../../db/kvStore.ts';
 import LinearGradient from 'react-native-linear-gradient';
 import Svg, {Circle, G, Line, Path, Text as SvgText} from 'react-native-svg';
 import {STORAGE_KEYS} from '../../../utils/storageKeys.ts';
+import {playSfx} from '../../../utils/sfx.ts';
+import {haptic} from '../../../utils/haptics.ts';
 import {useAuthStore} from '../../../store/authStore.ts';
 import * as userService from '../../../services/userService.ts';
 import {LuckyWheelSegment} from '../../../services/types';
@@ -270,6 +272,12 @@ export default function LuckyWheelModal({visible, onClose, onSpinComplete, segme
     // the hub, the winning slice lighting up under the pointer, and a tumbling
     // confetti burst — then the prize card springs in and keeps breathing.
     function celebrateWin() {
+        // 0. The payoff: the game's biggest positive sound + haptic, fired the
+        // instant the wheel lands on a prize. 'claim' is reserved for exactly
+        // this kind of once-in-a-while reward (see utils/sfx.ts, utils/haptics.ts).
+        playSfx('claim');
+        haptic('claim');
+
         // 1. Gold flash across the card.
         winFlash.setValue(0);
         Animated.sequence([
@@ -349,6 +357,13 @@ export default function LuckyWheelModal({visible, onClose, onSpinComplete, segme
     async function spin() {
         if (spinning || !canSpin || slices.length === 0) return;
         setSpinning(true);
+
+        // Kick-off feedback: a launch blip + buzz the moment the wheel starts
+        // turning, so pressing Spin lands with the same weight as the rest of
+        // the game. The reward's own sound/haptic fires later in celebrateWin().
+        playSfx('go');
+        haptic('go');
+
         setResult(null);
         setWinnerPos(null);
         winnerLoopRef.current?.stop();

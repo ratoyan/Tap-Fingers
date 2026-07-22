@@ -9,6 +9,7 @@ import useMusicAppState from "./src/hooks/useMusicAppState.tsx";
 import {playMusic, stopMusic} from "./src/utils/helpers.ts";
 import {loadSfx, refreshSfxMuted} from "./src/utils/sfx.ts";
 import {refreshHapticsEnabled} from "./src/utils/haptics.ts";
+import {initAds} from "./src/utils/ads.ts";
 import ScreenStatusBar from "./src/components/ui/ScreenStatusBar/ScreenStatusBar.tsx";
 import UpdateModal from "./src/components/ui/UpdateModal/UpdateModal.tsx";
 import NoticeModal from "./src/components/ui/NoticeModal/NoticeModal.tsx";
@@ -45,6 +46,9 @@ function App() {
         // The haptics gate has nothing to preload — it just needs the persisted
         // vibration preference read once, before the first haptic() fires.
         refreshHapticsEnabled();
+        // Initialize the AdMob SDK once for the app's lifetime. Rewarded ads
+        // (the three "Watch Ad" buttons) load their own instance on demand.
+        initAds();
     }, []);
 
     // Pull the admin-controlled global config (ads on/off, level length) at

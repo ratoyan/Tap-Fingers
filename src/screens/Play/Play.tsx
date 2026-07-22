@@ -7,6 +7,7 @@ import {useTranslation} from 'react-i18next';
 import {loadMusic, pauceMusic, playMusic, releaseMusic, stopMusic} from '../../utils/helpers.ts';
 import {playSfx, playSfxVaried, refreshSfxMuted} from '../../utils/sfx.ts';
 import {haptic, refreshHapticsEnabled} from '../../utils/haptics.ts';
+import {showRewardedAd} from '../../utils/ads.ts';
 import {scale} from '../../utils/responsive.ts';
 import {
     Animated,
@@ -454,8 +455,11 @@ export default function Play() {
         await Promise.all([refreshSfxMuted(), refreshHapticsEnabled()]);
     }
 
-    function handleWatchAdHelper(type: HelperType) {
+    async function handleWatchAdHelper(type: HelperType) {
         if (watchAdUsedRef.current >= 2) return;
+        // Grant the free helper only after the rewarded ad is watched to the end.
+        const earned = await showRewardedAd();
+        if (!earned) return;
         watchAdUsedRef.current += 1;
         setWatchAdUsed(watchAdUsedRef.current);
         if (type === 'bomb') {
@@ -624,7 +628,10 @@ export default function Play() {
         stopMusic();
     }
 
-    function handleWatchAd() {
+    async function handleWatchAd() {
+        // Revive with a heart only after the rewarded ad is watched to the end.
+        const earned = await showRewardedAd();
+        if (!earned) return;
         setEmptyHeartCount(prev => Math.max(0, prev - 1));
         setIsLoseModal(false);
         setIsPlaying(true);

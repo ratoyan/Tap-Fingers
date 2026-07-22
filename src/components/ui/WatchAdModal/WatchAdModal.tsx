@@ -3,6 +3,7 @@ import {Animated, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import {useTranslation} from 'react-i18next';
 import {storage} from '../../../db/kvStore.ts';
+import {showRewardedAd} from '../../../utils/ads.ts';
 import {isTablet, ms, SW, vs} from '../../../utils/responsive.ts';
 import {STORAGE_KEYS} from '../../../utils/storageKeys.ts';
 import Coin from '../../../assets/icons/Coin.tsx';
@@ -45,6 +46,7 @@ export default function WatchAdModal({visible, onClose, onCollect}: WatchAdModal
     const {t} = useTranslation();
     const [limitReached, setLimitReached] = useState(false);
     const [watchedTimes, setWatchedTimes] = useState<string[]>([]);
+    const [loading, setLoading] = useState(false);
     const scaleAnim = useRef(new Animated.Value(0.85)).current;
 
     useEffect(() => {
@@ -121,13 +123,24 @@ export default function WatchAdModal({visible, onClose, onCollect}: WatchAdModal
                             </TouchableOpacity>
                             <TouchableOpacity
                                 onPressIn={async () => {
+                                    if (loading) return;
+                                    setLoading(true);
+                                    // Grant the reward only if the user actually
+                                    // watched the rewarded ad to completion.
+                                    const earned = await showRewardedAd();
+                                    if (!earned) {
+                                        setLoading(false);
+                                        return;
+                                    }
                                     const data = await loadTodayData();
                                     await saveWatch(data);
+                                    setLoading(false);
                                     onCollect?.();
                                     onClose();
                                 }}
                                 activeOpacity={0.85}
                                 style={styles.yesWrap}
+                                disabled={loading}
                                 accessible={true}
                                 accessibilityRole="button"
                                 accessibilityLabel={t('watchAd')}
@@ -137,7 +150,9 @@ export default function WatchAdModal({visible, onClose, onCollect}: WatchAdModal
                                     start={{x: 0, y: 0}} end={{x: 1, y: 0}}
                                     style={styles.yesBtn}
                                 >
-                                    <Text allowFontScaling={false} style={styles.yesBtnText}>{t('watchAd')}</Text>
+                                    <Text allowFontScaling={false} style={styles.yesBtnText}>
+                                        {loading ? '…' : t('watchAd')}
+                                    </Text>
                                 </LinearGradient>
                             </TouchableOpacity>
                         </View>

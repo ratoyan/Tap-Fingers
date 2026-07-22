@@ -63,7 +63,9 @@
       "PowerShell(New-Item *)",
       "Bash(npx jest *)",
       "Skill(artifact-design)",
-      "Artifact"
+      "Artifact",
+      "Bash(./gradlew.bat app:installDebug -PreactNativeDevServerPort=8081)",
+      "Bash(./gradlew.bat clean *)"
     ]
   }
 }

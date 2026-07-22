@@ -19,3 +19,17 @@ buildscript {
 }
 
 apply plugin: "com.facebook.react.rootproject"
+
+// react-native-google-mobile-ads 16.x bundles play-services-ads 25.4.0, which is
+// compiled with Kotlin 2.3.0 metadata. This project's Kotlin is 2.1.20 (bumping
+// it breaks other native modules — gesture-handler, safe-area-context — with an
+// internal compiler error), so instead we tell every Kotlin compile task to skip
+// the metadata version check. 2.1.20 can then read the newer .kotlin_module
+// files and the ads SDK links cleanly.
+allprojects {
+    tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+        compilerOptions {
+            freeCompilerArgs.add("-Xskip-metadata-version-check")
+        }
+    }
+}

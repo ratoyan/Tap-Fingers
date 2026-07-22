@@ -120,6 +120,18 @@ const DURATION_DIP_RECOVER_MS = 4000;
 // played without them. The boss fight still triggers on its own every 10 levels.
 const HELPER_GRANT_MIN_LEVEL = 20;
 
+// ─── Freeze pickup ───────────────────────────────────────────────────────────
+// An uncommon variant a plain card can roll into (mutually exclusive with the
+// money bag). Tapping it drops the whole field to FREEZE_SPEED for a short
+// burst — a free pocket slow-mo. No points, no combo; the reward is the pause
+// it buys. Like the money bag it's free to miss (letting it fall costs nothing).
+const FREEZE_SPAWN_CHANCE = 0.02;
+const FREEZE_SPEED = 0.4;            // field-speed factor while a freeze is active
+const FREEZE_DURATION_MS = 2500;
+// Held back until after level 4 — the early levels stay a plain tap game before
+// the freeze pickup is introduced.
+const FREEZE_MIN_LEVEL = 5;
+
 // ─── Falling-object sizes ────────────────────────────────────────────────────
 // Every falling object is sized as a share of the screen (responsive.scale maps
 // the reference-device pixel value onto the current screen width) instead of a
@@ -150,8 +162,13 @@ function spawnBox(
     isBomb = false,
     isHeart = false,
     isBarrel = false,
+    allowFreeze = false,
 ) {
-    const isGolden = !isBomb && !isHeart && !isBarrel && Math.random() < GOLDEN_SPAWN_CHANCE;
+    // A plain card can roll into a ❄️ freeze pickup; only if it doesn't can it
+    // still roll into the money bag. Hazards and the life pickup are never either.
+    const isPlainCard = !isBomb && !isHeart && !isBarrel;
+    const isFreeze = isPlainCard && allowFreeze && Math.random() < FREEZE_SPAWN_CHANCE;
+    const isGolden = isPlainCard && !isFreeze && Math.random() < GOLDEN_SPAWN_CHANCE;
     // Fixed, screen-relative size per object type. Hazards and the life pickup
     // take their own size (independent of the equipped card); a regular card
     // keeps its skin's size, scaled to the screen the same way. This overrides
@@ -190,6 +207,7 @@ function spawnBox(
         rotation: 0,
         isBoom: false,
         isGolden,
+        isFreeze,
         isBomb,
         isHeart,
         isBarrel,
@@ -268,6 +286,10 @@ export default function Play() {
     const slowCountRef = useRef(0);
     const slowIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
     const slowTimerValueRef = useRef(0);
+    // ❄️ Freeze: an extra field-speed factor that stacks with the slow-mo helper,
+    // plus the timeout that lifts it back to 1.
+    const freezeSpeedRef = useRef(1);
+    const freezeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const isBossFightRef = useRef(false);
     const bossHPRef = useRef(0);
     const bossMaxHPRef = useRef(0);
@@ -324,6 +346,7 @@ export default function Play() {
     const [shieldActive, setShieldActive] = useState(false);
     const [slowActive, setSlowActive] = useState(false);
     const [slowTimer, setSlowTimer] = useState(0);
+    const [freezeActive, setFreezeActive] = useState(false);
     const [isBossFight, setIsBossFight] = useState(false);
     const [bossHP, setBossHP] = useState(0);
     const [bossMaxHP, setBossMaxHP] = useState(0);
@@ -667,6 +690,9 @@ export default function Play() {
         shieldActiveRef.current = false;
         slowActiveRef.current = false;
         slowSpeedRef.current = 1;
+        // Clear any lingering ❄️ freeze.
+        freezeSpeedRef.current = 1;
+        if (freezeTimerRef.current) { clearTimeout(freezeTimerRef.current); freezeTimerRef.current = null; }
         watchAdUsedRef.current = 0;
         isBossFightRef.current = false;
         bossHPRef.current = 0;
@@ -680,6 +706,7 @@ export default function Play() {
         setCombo(0);
         setShieldActive(false);
         setSlowActive(false);
+        setFreezeActive(false);
         setWatchAdUsed(0);
         setIsBossFight(false);
         setBossHP(0);
@@ -814,6 +841,30 @@ export default function Play() {
         }, 1000);
     }
 
+    // Combined field-speed factor read by the physics/spawn loops. The slow-mo
+    // helper and the free ❄️ freeze pickup stack multiplicatively, so a freeze
+    // during an active slow-mo just slows things further instead of one value
+    // clobbering the other.
+    function effSlow(): number {
+        return slowSpeedRef.current * freezeSpeedRef.current;
+    }
+
+    // ─── Freeze pickup ────────────────────────────────────────────────────────
+    // Tapping a ❄️ drops the field speed to FREEZE_SPEED for a short burst — a
+    // free pocket slow-mo. Reuses the slow-mo helper's cyan flash for the cue.
+    function triggerFreeze() {
+        freezeSpeedRef.current = FREEZE_SPEED;
+        setFreezeActive(true);
+        slowFlashAnim.setValue(1);
+        Animated.timing(slowFlashAnim, {toValue: 0, duration: 800, useNativeDriver: true}).start();
+        if (freezeTimerRef.current) clearTimeout(freezeTimerRef.current);
+        freezeTimerRef.current = setTimeout(() => {
+            freezeSpeedRef.current = 1;
+            setFreezeActive(false);
+            freezeTimerRef.current = null;
+        }, FREEZE_DURATION_MS);
+    }
+
     // ─── Boss fight ───────────────────────────────────────────────────────────
 
     // Picks the admin boss for a level from the prefetched catalog: the boss
@@ -944,6 +995,16 @@ export default function Play() {
             }).start();
             if (isBarrel) triggerBarrelShake();
             else triggerMissShake();
+            return;
+        }
+
+        // ❄️ Freeze: a free pocket slow-mo. A utility pickup — no points and no
+        // combo of its own; the reward is the slowdown it turns on.
+        if (box.isFreeze) {
+            tapsRef.current += 1;
+            boomBox(box.id);
+            triggerFreeze();
+            deferFeedback(() => { playSfx('slow'); haptic('slow'); });
             return;
         }
 
@@ -1146,6 +1207,9 @@ export default function Play() {
             // and immediately leaves the screen left it armed to setCombo(0) on
             // an unmounted tree.
             if (comboTimerRef.current) clearTimeout(comboTimerRef.current);
+            // The ❄️ freeze timer is a wall-clock timeout that would otherwise
+            // fire setFreezeActive on an unmounted tree.
+            if (freezeTimerRef.current) clearTimeout(freezeTimerRef.current);
         };
     }, []);
 
@@ -1233,7 +1297,7 @@ export default function Play() {
                 prev.filter((b: any) => {
                     if (b.isBoom) return true;
 
-                    const speed = 0.05 * slowSpeedRef.current;
+                    const speed = 0.05 * effSlow();
                     const newY = b.y + (b.ty - b.y) * speed;
                     const missed = fromBottom ? newY < 0 : newY + b.size > height;
                     if (!missed) return true;
@@ -1241,9 +1305,10 @@ export default function Play() {
                     // A trap (bomb or mine barrel) that leaves the screen
                     // untouched is the correct play — drop it silently, no
                     // heart, no shake. A missed bonus
-                    // (money bag) or life pickup is just a missed chance, not a
-                    // mistake: it disappears without costing a heart either.
-                    if (b.isBomb || b.isBarrel || b.isHeart || b.isGolden) return false;
+                    // (money bag), the ❄️ freeze pickup or the life pickup is just
+                    // a missed chance, not a mistake: it disappears without costing
+                    // a heart either.
+                    if (b.isBomb || b.isBarrel || b.isHeart || b.isGolden || b.isFreeze) return false;
 
                     // Deferred for a second reason on top of the frame budget:
                     // this runs inside a setState updater, i.e. during React's
@@ -1258,7 +1323,7 @@ export default function Play() {
                 }).map((b: any) => {
                     if (b.isBoom) return b;
 
-                    const speed = 0.05 * slowSpeedRef.current;
+                    const speed = 0.05 * effSlow();
                     // Bombs (and the life pickup) reach further per frame than the
                     // cards; the mine barrel reaches less — it's the heavy one.
                     const boost = b.isBomb ? BOMB_FALL_BOOST
@@ -1312,7 +1377,7 @@ export default function Play() {
                 SPAWN_INTERVAL_MIN_MS,
                 SPAWN_INTERVAL_MS - (levelRef.current - 1) * SPAWN_INTERVAL_STEP_MS,
             );
-            return base / slowSpeedRef.current;
+            return base / effSlow();
         };
 
         const spawnOne = () => {
@@ -1321,7 +1386,16 @@ export default function Play() {
                 // how long a box takes to cross the screen versus the spawn gap.
                 setBoxesData(prev => [
                     ...prev,
-                    spawnBox(cardRef.current, durationEffRef.current, !!cardRef.current.fallFromBottom),
+                    spawnBox(
+                        cardRef.current,
+                        durationEffRef.current,
+                        !!cardRef.current.fallFromBottom,
+                        false,
+                        false,
+                        false,
+                        // ❄️ freeze pickups only start rolling after level 4.
+                        levelRef.current >= FREEZE_MIN_LEVEL,
+                    ),
                 ]);
             }
             timeoutId = setTimeout(spawnOne, nextDelay());
@@ -1344,7 +1418,7 @@ export default function Play() {
 
         const nextGap = () =>
             (BOMB_GAP_MIN_MS + Math.random() * (BOMB_GAP_MAX_MS - BOMB_GAP_MIN_MS)) /
-            slowSpeedRef.current;
+            effSlow();
 
         const spawnBomb = () => {
             const eligible = !isBossFightRef.current && bombsLeftRef.current > 0;
@@ -1377,7 +1451,7 @@ export default function Play() {
 
         const nextGap = () =>
             (BARREL_GAP_MIN_MS + Math.random() * (BARREL_GAP_MAX_MS - BARREL_GAP_MIN_MS)) /
-            slowSpeedRef.current;
+            effSlow();
 
         const spawnBarrel = () => {
             const eligible =
@@ -1653,6 +1727,13 @@ export default function Play() {
                 </Animated.View>
             )}
 
+            {/* ❄️ Freeze badge */}
+            {freezeActive && (
+                <View pointerEvents="none" style={styles.freezeBadge}>
+                    <Text allowFontScaling={false} style={styles.freezeText}>❄️ FROZEN</Text>
+                </View>
+            )}
+
             {/* Level up overlay */}
             {showLevelUp && (
                 <Animated.View
@@ -1710,6 +1791,11 @@ export default function Play() {
             {/* Shield active border */}
             {shieldActive && (
                 <View pointerEvents="none" style={styles.shieldBorder}/>
+            )}
+
+            {/* ❄️ Frozen-field tint (steady while a freeze is live) */}
+            {freezeActive && (
+                <View pointerEvents="none" style={styles.freezeOverlay}/>
             )}
 
             {/* Flash overlays */}

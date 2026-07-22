@@ -1,9 +1,9 @@
 import React, {useMemo} from "react";
-import {Pressable, View, ViewStyle} from "react-native";
+import {Pressable, Text, View, ViewStyle} from "react-native";
 import {SvgXml} from "react-native-svg";
 import {BoxType} from "../../../types/play.type.ts";
 import {ShopType} from "../../../types/shop.type.ts";
-import {BOMB_ORANGE, CYAN, DARK_NAVY, HOT_PINK} from "../../../constants/colors.ts";
+import {BOMB_ORANGE, DARK_NAVY, HOT_PINK} from "../../../constants/colors.ts";
 
 // icons
 import Card1 from "../../../assets/icons/Card1";
@@ -110,6 +110,13 @@ function PlayBox({box, handlePress}: PlayBoxProps) {
     const barrelArt = useMemo(() => <MineBarrel size={barrelSize}/>, [barrelSize]);
     const bagArt = useMemo(() => <MoneyBag size={artSize}/>, [artSize]);
     const heartArt = useMemo(() => <HeartPlus size={artSize}/>, [artSize]);
+    // ❄️ Freeze pickup — the plain snowflake emoji, sized to the box.
+    const freezeArt = useMemo(() => (
+        <Text allowFontScaling={false}
+            style={{fontSize: Math.round(artSize * 0.82), lineHeight: artSize, textAlign: "center", width: artSize}}>
+            ❄️
+        </Text>
+    ), [artSize]);
     const baseTransform: ViewStyle["transform"] = [
         {translateX: box.x + box.size / 2},
         {translateY: box.y + box.size / 2},
@@ -201,6 +208,28 @@ function PlayBox({box, handlePress}: PlayBoxProps) {
                 accessibilityLabel="Tap to regain a life"
             >
                 {heartArt}
+            </Pressable>
+        );
+    }
+
+    // ❄️ Freeze pickup — rendered by its own cyan snowflake art and, like the
+    // bag, it leaves no track behind when tapped. Drawn upright (no spin).
+    if (box.isFreeze) {
+        const freezeStyle: ViewStyle = {
+            position: "absolute",
+            transform: [{translateX: box.x}, {translateY: box.y}],
+        };
+
+        if (box.isBoom) return null;
+
+        return (
+            <Pressable
+                onPressIn={() => handlePress(box)}
+                style={[freezeStyle, {zIndex: 1}]}
+                accessibilityRole="button"
+                accessibilityLabel="Tap snowflake for slow motion"
+            >
+                {freezeArt}
             </Pressable>
         );
     }

@@ -167,6 +167,22 @@ export default StyleSheet.create({
         elevation: 0,
     },
 
+    // ── Freeze overlay (❄️ frozen field) ───────────────────────────
+    // A steady, subtle icy tint over the whole arena while a freeze is live, so
+    // the field itself looks frozen for the ~2.5s — not just the quick flash.
+    freezeOverlay: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        width,
+        height,
+        backgroundColor: 'rgba(120,210,255,0.12)',
+        borderWidth: 5,
+        borderColor: 'rgba(150,225,255,0.45)',
+        borderRadius: 38,
+        zIndex: 18,
+    },
+
     // ── Flash overlay ──────────────────────────────────────────────
     flashOverlay: {
         position: 'absolute',
@@ -195,6 +211,25 @@ export default StyleSheet.create({
         textShadowOffset: {width: 0, height: 2},
         textShadowRadius: 10,
         letterSpacing: 1.5,
+    },
+
+    // ── Freeze badge (❄️) ──────────────────────────────────────────
+    freezeBadge: {
+        position: 'absolute',
+        top: height * 0.24,
+        left: 0,
+        right: 0,
+        alignItems: 'center',
+        zIndex: 15,
+    },
+    freezeText: {
+        fontSize: ms(22),
+        fontWeight: '900',
+        color: CYAN,
+        textShadowColor: '#003b5c',
+        textShadowOffset: {width: 0, height: 2},
+        textShadowRadius: 10,
+        letterSpacing: 2,
     },
 
     // ── Level up overlay ───────────────────────────────────────────

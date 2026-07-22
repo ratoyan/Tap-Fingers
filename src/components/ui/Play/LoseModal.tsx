@@ -18,6 +18,7 @@ import Coin from '../../../assets/icons/Coin.tsx';
 import FullHeart from '../../../assets/icons/FullHeart.tsx';
 import RetryIcon from '../../../assets/icons/RetryIcon.tsx';
 import BackArrowIcon from '../../../assets/icons/BackArrowIcon.tsx';
+import ShareIcon from '../../../assets/icons/ShareIcon.tsx';
 
 // colors
 import {
@@ -305,7 +306,7 @@ function LoseModal({visible, score, onRetry, onBack, onWatchAd, canWatchAd = tru
                         style={styles.shareBorder}
                     >
                         <View style={styles.shareInner}>
-                            <Text allowFontScaling={false} style={styles.shareIcon}>📤</Text>
+                            <ShareIcon size={ms(20)}/>
                             <Text allowFontScaling={false} style={styles.shareBtnText}>{t('shareScore')}</Text>
                         </View>
                     </LinearGradient>
@@ -519,9 +520,6 @@ const styles = StyleSheet.create({
         // Glassy fill over the modal so the pill reads as its own surface
         // rather than a plain gradient outline.
         backgroundColor: 'rgba(46,20,66,0.85)',
-    },
-    shareIcon: {
-        fontSize: ms(18),
     },
     shareBtnText: {
         color: WHITE,

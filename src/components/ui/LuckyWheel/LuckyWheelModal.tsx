@@ -187,6 +187,9 @@ export default function LuckyWheelModal({visible, onClose, onSpinComplete, segme
 
     useEffect(() => {
         if (visible) {
+            // A light tick the moment the wheel opens — a menu-open feel, distinct
+            // from the heavy 'go' on spin and the 'claim' payoff on a win.
+            haptic('equip');
             checkCanSpin();
             setResult(null);
             setWinnerPos(null);

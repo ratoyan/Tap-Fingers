@@ -14,6 +14,7 @@ import ScreenStatusBar from "./src/components/ui/ScreenStatusBar/ScreenStatusBar
 import UpdateModal from "./src/components/ui/UpdateModal/UpdateModal.tsx";
 import NoticeModal from "./src/components/ui/NoticeModal/NoticeModal.tsx";
 import Splash from "./src/screens/Splash/Splash.tsx";
+import BottomBanner from "./src/components/ui/BottomBanner/BottomBanner.tsx";
 import {useAuthStore} from "./src/store/authStore.ts";
 import {syncGlobalConfig} from "./src/services/configSync.ts";
 import {navigationRef} from "./src/navigation/navigationRef.ts";
@@ -96,11 +97,17 @@ function App() {
     }
 
     return (
-        <NavigationContainer ref={navigationRef}>
-            <StackNavigator initialRouteName={authStatus === 'authed' ? 'Home' : 'Welcome'}/>
-            <UpdateModal visible={showUpdate} storeUrl={storeUrl}/>
-            <NoticeModal/>
-        </NavigationContainer>
+        // Column layout: the navigator fills the screen and BottomBanner sits
+        // below it, so the banner never overlaps screen content — it reserves
+        // its own strip at the very bottom (and collapses when there's no ad).
+        <View style={{flex: 1, backgroundColor: DARK_PURPLE}}>
+            <NavigationContainer ref={navigationRef}>
+                <StackNavigator initialRouteName={authStatus === 'authed' ? 'Home' : 'Welcome'}/>
+                <UpdateModal visible={showUpdate} storeUrl={storeUrl}/>
+                <NoticeModal/>
+            </NavigationContainer>
+            <BottomBanner/>
+        </View>
     );
 }
 

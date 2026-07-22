@@ -174,8 +174,11 @@ function Progression() {
                     ListEmptyComponent={<EmptyProgression/>}
                 />
             )}
-
-            <View style={{height: 50}}/>
+            {
+                !loading && myRank?.entry && (
+                    <View style={{height: 50}}/>
+                )
+            }
 
             {/* Signed-in player's own row, pinned over the bottom of the list. */}
             {!loading && myRank?.entry && (

@@ -18,8 +18,9 @@ import mobileAds, {
     TestIds,
 } from 'react-native-google-mobile-ads';
 
-// TEST unit — replace with the real per-platform unit ID for production.
+// TEST units — replace with the real per-platform unit IDs for production.
 const AD_UNIT_REWARDED = TestIds.REWARDED;
+export const AD_UNIT_BANNER = TestIds.BANNER;
 
 let initialized = false;
 

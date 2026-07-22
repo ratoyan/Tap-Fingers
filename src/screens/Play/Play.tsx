@@ -7,6 +7,7 @@ import {useTranslation} from 'react-i18next';
 import {loadMusic, pauceMusic, playMusic, releaseMusic, stopMusic} from '../../utils/helpers.ts';
 import {playSfx, playSfxVaried, refreshSfxMuted} from '../../utils/sfx.ts';
 import {haptic, refreshHapticsEnabled} from '../../utils/haptics.ts';
+import {scale} from '../../utils/responsive.ts';
 import {
     Animated,
     Dimensions,
@@ -117,6 +118,22 @@ const DURATION_DIP_RECOVER_MS = 4000;
 // played without them. The boss fight still triggers on its own every 10 levels.
 const HELPER_GRANT_MIN_LEVEL = 20;
 
+// ─── Falling-object sizes ────────────────────────────────────────────────────
+// Every falling object is sized as a share of the screen (responsive.scale maps
+// the reference-device pixel value onto the current screen width) instead of a
+// raw pixel count, so a balloon/bomb/heart that looks right on a 375-wide phone
+// stays in proportion on a tablet rather than shrinking to a dot.
+//
+// The hazards and the life pickup use their OWN fixed size here rather than
+// inheriting the equipped card's size — before this, equipping a larger card
+// skin (e.g. the 130px balloon) blew the bombs and hearts up along with it, so
+// a bomb was a different size depending on which skin you had on. Balloons (the
+// tappable cards) keep their per-skin size, scaled to the screen the same way;
+// admin SVG cards keep their own authored width/height, applied in PlayBox.
+const BOMB_SIZE = Math.round(scale(100));
+const HEART_SIZE = Math.round(scale(100));
+const BARREL_SIZE = Math.round(scale(100));
+
 function getDefaultBackground(level: number) {
     if (level > 4) return require('../../assets/images/background4.jpg');
     if (level > 3) return require('../../assets/images/background3.jpg');
@@ -133,20 +150,28 @@ function spawnBox(
     isBarrel = false,
 ) {
     const isGolden = !isBomb && !isHeart && !isBarrel && Math.random() < GOLDEN_SPAWN_CHANCE;
+    // Fixed, screen-relative size per object type. Hazards and the life pickup
+    // take their own size (independent of the equipped card); a regular card
+    // keeps its skin's size, scaled to the screen the same way. This overrides
+    // card.size (spread in below) so every spawned box carries the right size.
+    const size = isBomb ? BOMB_SIZE
+        : isBarrel ? BARREL_SIZE
+            : isHeart ? HEART_SIZE
+                : Math.round(scale(card.size ?? 100));
     // Spawn just off the edge the box travels from (below for fromBottom, above
     // otherwise) so it slides into view right away. The spacing between boxes
     // comes from the spawn cadence, not from a random head start off-screen —
     // that is what makes them arrive one after another like falling snow.
-    const offset = card.size + Math.random() * 120;
+    const offset = size + Math.random() * 120;
     const y = fromBottom ? height + offset : -offset;
-    // The barrel is drawn wider than the card it inherits its size from (see
-    // BARREL_ART_SCALE in PlayBox), so its horizontal range has to account for
-    // the real artwork width — otherwise a barrel spawned at the far right hangs
-    // off the edge of the screen.
-    const spanSize = isBarrel ? card.size * BARREL_ART_SCALE : card.size;
+    // The barrel is drawn wider than its box size (see BARREL_ART_SCALE in
+    // PlayBox), so its horizontal range has to account for the real artwork
+    // width — otherwise a barrel spawned at the far right hangs off the edge.
+    const spanSize = isBarrel ? size * BARREL_ART_SCALE : size;
     const maxX = Math.max(0, width - spanSize);
     return {
         ...card,
+        size,
         id: uuId.v4(),
         x: Math.random() * maxX,
         y,

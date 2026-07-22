@@ -30,6 +30,8 @@
   "watchAd": "Watch Ad",
   "getHeart": "+1 Heart",
   "score": "Score",
+  "shareScore": "Share Score",
+  "shareScoreMessage": "I scored {{score}} in TapFingers! 🎯 Can you beat me?",
   "resume": "RESUME",
   "close": "CLOSE",
   "pause": "PAUSE",

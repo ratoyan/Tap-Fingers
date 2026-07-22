@@ -30,6 +30,8 @@
   "watchAd": "Դիտել գովազդ",
   "getHeart": "+1 Սիրտ",
   "score": "Հաշիվ",
+  "shareScore": "Կիսվել հաշվով",
+  "shareScoreMessage": "Ես հավաքեցի {{score}} միավոր TapFingers-ում! 🎯 Կկարողանա՞ս գերազանցել ինձ:",
   "resume": "ՇԱՐՈՒՆԱԿԵԼ",
   "close": "ՓԱԿԵԼ",
   "pause": "ԿԱՍԵՑՆԵԼ",

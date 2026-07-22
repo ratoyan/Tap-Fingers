@@ -30,6 +30,8 @@
   "watchAd": "Смотреть рекламу",
   "getHeart": "+1 Сердце",
   "score": "Счёт",
+  "shareScore": "Поделиться счётом",
+  "shareScoreMessage": "Я набрал {{score}} очков в TapFingers! 🎯 Сможешь побить мой рекорд?",
   "resume": "ПРОДОЛЖИТЬ",
   "close": "ЗАКРЫТЬ",
   "pause": "ПАУЗА",

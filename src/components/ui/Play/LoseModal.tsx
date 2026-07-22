@@ -6,6 +6,8 @@ import {
     Animated,
     Easing,
     StyleSheet,
+    Share,
+    Platform,
 } from 'react-native';
 import {useTranslation} from 'react-i18next';
 import LinearGradient from 'react-native-linear-gradient';
@@ -31,6 +33,11 @@ import {
     WHITE,
     WHITE_100,
 } from '../../../constants/colors.ts';
+
+// Store link appended to the shared message so recipients can grab the game.
+const APP_URL = Platform.OS === 'ios'
+    ? 'https://apps.apple.com/app/idYOUR_APP_ID'
+    : 'https://play.google.com/store/apps/details?id=com.tapfingers';
 
 interface LoseModalProps {
     visible: boolean;
@@ -156,6 +163,16 @@ function LoseModal({visible, score, onRetry, onBack, onWatchAd, canWatchAd = tru
         return () => loops.forEach(l => l.stop());
     }, [visible]);
 
+    async function handleShare() {
+        try {
+            await Share.share({
+                message: `${t('shareScoreMessage', {score})}\n${APP_URL}`,
+            });
+        } catch {
+            // User dismissed the share sheet, or it's unavailable — nothing to do.
+        }
+    }
+
     const titleColor = glowAnim.interpolate({
         inputRange: [0, 1],
         outputRange: [ORCHID, PURPLE_LIGHT],
@@ -270,6 +287,29 @@ function LoseModal({visible, score, onRetry, onBack, onWatchAd, canWatchAd = tru
                         </LinearGradient>
                     </TouchableOpacity>
                 </View>
+
+                {/* Share score — gradient-bordered glassy pill under the main
+                    actions. Distinct from the gold ad button and solid retry. */}
+                <TouchableOpacity
+                    onPress={handleShare}
+                    activeOpacity={0.85}
+                    style={styles.shareWrap}
+                    accessible={true}
+                    accessibilityRole="button"
+                    accessibilityLabel={t('shareScore')}
+                >
+                    <LinearGradient
+                        colors={[ORCHID, PURPLE_LIGHT]}
+                        start={{x: 0, y: 0}}
+                        end={{x: 1, y: 0}}
+                        style={styles.shareBorder}
+                    >
+                        <View style={styles.shareInner}>
+                            <Text allowFontScaling={false} style={styles.shareIcon}>📤</Text>
+                            <Text allowFontScaling={false} style={styles.shareBtnText}>{t('shareScore')}</Text>
+                        </View>
+                    </LinearGradient>
+                </TouchableOpacity>
 
             </Animated.View>
         </View>
@@ -453,6 +493,41 @@ const styles = StyleSheet.create({
         fontSize: ms(16),
         fontWeight: '800',
         letterSpacing: 0.3,
+    },
+    shareWrap: {
+        width: '100%',
+        marginTop: vs(14),
+        borderRadius: ms(16),
+        overflow: 'hidden',
+        shadowColor: ORCHID,
+        shadowOffset: {width: 0, height: 3},
+        shadowOpacity: 0.45,
+        shadowRadius: 9,
+        elevation: 6,
+    },
+    shareBorder: {
+        borderRadius: ms(16),
+        padding: ms(1.5),
+    },
+    shareInner: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: ms(9),
+        paddingVertical: vs(12),
+        borderRadius: ms(15),
+        // Glassy fill over the modal so the pill reads as its own surface
+        // rather than a plain gradient outline.
+        backgroundColor: 'rgba(46,20,66,0.85)',
+    },
+    shareIcon: {
+        fontSize: ms(18),
+    },
+    shareBtnText: {
+        color: WHITE,
+        fontSize: ms(15),
+        fontWeight: '800',
+        letterSpacing: 0.4,
     },
 });
 

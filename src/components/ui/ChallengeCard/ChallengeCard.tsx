@@ -196,7 +196,13 @@ function ChallengeCard({item, index = 0, onCollect}: ChallengeCardProps) {
                         </View>
                         <View style={styles.progressLabel}>
                             <Text allowFontScaling={false} style={styles.progressText}>{t('progress')}</Text>
-                            <Text allowFontScaling={false} style={styles.progressText}>{item.progress} / 100</Text>
+                            <Text allowFontScaling={false} style={styles.progressText}>
+                                {/* Show real counts (2 / 10) when the caller provides them; the
+                                    bar itself stays percentage-driven. Falls back to X / 100. */}
+                                {typeof item.current === 'number' && typeof item.target === 'number'
+                                    ? `${item.current} / ${item.target}`
+                                    : `${item.progress} / 100`}
+                            </Text>
                         </View>
                     </>
                 )}

@@ -143,6 +143,12 @@
   "collect": "Collect",
   "done": "Done",
 
+  "dailyChallenges": "Daily Challenges",
+  "dailyGamesTitle": "Play 10 games",
+  "dailyCoinsTitle": "Collect 1000 coins",
+  "dailyLevelTitle": "Reach level 10",
+  "dailyResetsIn": "Resets in {{time}}",
+
   "bombBooster": "Bomb Booster",
   "bombBoosterDesc": "Instantly destroys all visible cards and scores the points.",
   "shield": "Shield",

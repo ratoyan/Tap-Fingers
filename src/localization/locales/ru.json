@@ -143,6 +143,12 @@
   "collect": "Забрать",
   "done": "Готово",
 
+  "dailyChallenges": "Ежедневные задания",
+  "dailyGamesTitle": "Сыграй 10 игр",
+  "dailyCoinsTitle": "Собери 1000 монет",
+  "dailyLevelTitle": "Достигни 10 уровня",
+  "dailyResetsIn": "Обновится через {{time}}",
+
   "bombBooster": "Бомба",
   "bombBoosterDesc": "Мгновенно уничтожает все видимые карты и начисляет очки.",
   "shield": "Щит",

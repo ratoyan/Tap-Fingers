@@ -8,6 +8,7 @@ import {InventoryEntry, Player, Profile, PlayerStats} from '../services/types';
 import {resolveBackgroundEntry, resolveCardEntry} from '../data/shopVisuals';
 import {useGlobalStore} from './globalStore';
 import {useShopStore} from './shopStore';
+import {useDailyChallengesStore} from './dailyChallengesStore';
 import {setUnauthorizedHandler} from '../services/sessionEvents';
 import {resetToWelcome} from '../navigation/navigationRef';
 import {seedHelperDefaults} from '../utils/helpers';
@@ -167,6 +168,10 @@ export const useAuthStore = create<AuthState>((set, get) => {
         logout: async () => {
             await authService.logout();
             profileRepo.clearProfile();
+            // Drop the device-local daily state/bonus before zeroing coins, so
+            // the next account in this session doesn't inherit them.
+            useDailyChallengesStore.getState().clear();
+            useGlobalStore.getState().clearBonusCoins();
             useGlobalStore.getState().setCoins(0);
             useGlobalStore.getState().setGems(0);
             useShopStore.getState().setCard(null);
@@ -179,6 +184,8 @@ export const useAuthStore = create<AuthState>((set, get) => {
             // server logout to call — just wipe the local caches/state and reset
             // navigation to the sign-in screen.
             profileRepo.clearProfile();
+            useDailyChallengesStore.getState().clear();
+            useGlobalStore.getState().clearBonusCoins();
             useGlobalStore.getState().setCoins(0);
             useGlobalStore.getState().setGems(0);
             useShopStore.getState().setCard(null);

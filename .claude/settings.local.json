@@ -65,7 +65,9 @@
       "Skill(artifact-design)",
       "Artifact",
       "Bash(./gradlew.bat app:installDebug -PreactNativeDevServerPort=8081)",
-      "Bash(./gradlew.bat clean *)"
+      "Bash(./gradlew.bat clean *)",
+      "Bash(php artisan *)",
+      "Skill(claude-in-chrome)"
     ]
   }
 }

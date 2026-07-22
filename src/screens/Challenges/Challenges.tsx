@@ -1,4 +1,4 @@
-import React, {useCallback, useRef, useState} from 'react';
+import React, {useCallback, useMemo, useRef, useState} from 'react';
 import {ActivityIndicator, FlatList, Text, View} from 'react-native';
 import {useFocusEffect} from '@react-navigation/core';
 import {useTranslation} from "react-i18next";
@@ -8,6 +8,8 @@ import LinearGradient from 'react-native-linear-gradient';
 import * as challengeService from "../../services/challengeService.ts";
 import {ChallengeWithProgress} from "../../services/types.ts";
 import {useAuthStore} from "../../store/authStore.ts";
+import {useDailyChallengesStore} from "../../store/dailyChallengesStore.ts";
+import {DAILY_CHALLENGES} from "../../data/dailyChallenges.ts";
 import {playSfx} from "../../utils/sfx.ts";
 import {haptic} from "../../utils/haptics.ts";
 
@@ -16,6 +18,7 @@ import BackHeader from "../../components/ui/BackHeader/BackHeader.tsx";
 import ChallengeCard from "../../components/ui/ChallengeCard/ChallengeCard.tsx";
 import {ChallengesSkeleton} from "../../components/ui/Shimmer/Skeletons.tsx";
 import ScreenStatusBar from "../../components/ui/ScreenStatusBar/ScreenStatusBar.tsx";
+import DailyChallengeIcon from "../../assets/icons/DailyChallengeIcon.tsx";
 
 // styles
 import styles from './Challenges.style.ts';
@@ -35,6 +38,9 @@ function toCardItem(c: ChallengeWithProgress) {
         id: c.id,
         title: c.title,
         progress: pct,
+        // Real counts for the label (e.g. 150 / 200); the bar stays percentage.
+        current: Math.min(c.progress.current, c.targetValue),
+        target: c.targetValue,
         reward: c.rewardCoins,
         locked: false,
         finished: c.progress.isCompleted,
@@ -70,6 +76,57 @@ function Challenges() {
     const [loading, setLoading] = useState(true);          // first page only
     const [loadingMore, setLoadingMore] = useState(false); // footer spinner
     const [claimingId, setClaimingId] = useState<number | null>(null);
+
+    // ── Daily challenges (device-local, no backend) ──────────────────────────
+    // Progress lives in the daily store; subscribe to it so a claim (or a game
+    // played elsewhere) re-renders the cards. `nowTick` drives the reset
+    // countdown and rolls the cycle over while the screen stays open.
+    const dailyItems = useDailyChallengesStore(s => s.items);
+    const dailyResetAt = useDailyChallengesStore(s => s.resetAt);
+    const [nowTick, setNowTick] = useState(() => Date.now());
+
+    useFocusEffect(
+        useCallback(() => {
+            const store = useDailyChallengesStore.getState();
+            store.hydrate();
+            store.refresh();
+            setNowTick(Date.now());
+            const iv = setInterval(() => {
+                useDailyChallengesStore.getState().refresh();
+                setNowTick(Date.now());
+            }, 60000);
+            return () => clearInterval(iv);
+        }, [])
+    );
+
+    const dailyViews = useMemo(() => DAILY_CHALLENGES.map(c => {
+        const item = dailyItems[c.id] ?? {current: 0, claimed: false};
+        const percent = c.target > 0
+            ? Math.min(100, Math.round((item.current / c.target) * 100))
+            : 0;
+        return {def: c, current: item.current, claimed: item.claimed, completed: item.current >= c.target, percent};
+    }), [dailyItems]);
+
+    const resetLabel = useMemo(() => {
+        const remaining = Math.max(0, dailyResetAt - nowTick);
+        const hrs = Math.floor(remaining / 3600000);
+        const mins = Math.floor((remaining % 3600000) / 60000);
+        const time = hrs > 0 ? `${hrs}h ${mins}m` : `${mins}m`;
+        return t('dailyResetsIn', {time});
+    }, [dailyResetAt, nowTick, t]);
+
+    // Claiming is synchronous (device-local): grant the coins, mark it claimed,
+    // and play the same fanfare the server challenges use.
+    function handleClaimDaily(id: string) {
+        const reward = useDailyChallengesStore.getState().claim(id);
+        if (reward != null) {
+            playSfx('claim');
+            haptic('claim');
+        } else {
+            playSfx('denied');
+            haptic('denied');
+        }
+    }
 
     // Pagination cursor in refs so onEndReached reads live values without the
     // callback having to be re-created on every appended page.
@@ -142,6 +199,49 @@ function Challenges() {
         }
     }
 
+    // Daily challenges + section titles, pinned above the server catalog.
+    const listHeader = (
+        <View>
+            <View style={{paddingHorizontal: 4, marginBottom: 10}}>
+                <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                    <DailyChallengeIcon size={26}/>
+                    <Text allowFontScaling={false} style={{color: WHITE, fontSize: 18, fontWeight: '700', marginLeft: 8}}>
+                        {t('dailyChallenges')}
+                    </Text>
+                </View>
+                <Text allowFontScaling={false} style={{color: 'rgba(255,255,255,0.6)', fontSize: 12, marginTop: 2}}>
+                    {resetLabel}
+                </Text>
+            </View>
+
+            {dailyViews.map((v, i) => (
+                <ChallengeCard
+                    key={v.def.id}
+                    index={i}
+                    item={{
+                        id: v.def.id,
+                        title: t(v.def.titleKey),
+                        progress: v.percent,
+                        current: v.current,
+                        target: v.def.target,
+                        reward: v.def.rewardCoins,
+                        locked: false,
+                        finished: v.completed,
+                        taken: v.claimed,
+                    }}
+                    onCollect={() => handleClaimDaily(v.def.id)}
+                />
+            ))}
+
+            <Text
+                allowFontScaling={false}
+                style={{color: WHITE, fontSize: 18, fontWeight: '700', marginTop: 18, marginBottom: 6, paddingHorizontal: 4}}
+            >
+                🏆 {t('challenges')}
+            </Text>
+        </View>
+    );
+
     const renderFooter = () => {
         if (!loadingMore) return null;
         return (
@@ -162,35 +262,40 @@ function Challenges() {
 
             <BackHeader title={`🎯 ${t('challenges')}`}/>
 
-            {loading ? (
-                <ChallengesSkeleton/>
-            ) : (
-                <FlatList
-                    data={items}
-                    keyExtractor={(item) => item.id.toString()}
-                    renderItem={({item, index}) => (
-                        <ChallengeCard
-                            item={toCardItem(item)}
-                            index={index}
-                            onCollect={() => handleClaim(item.id)}
-                        />
-                    )}
-                    contentContainerStyle={{paddingBottom: 40, marginTop: 20}}
-                    showsVerticalScrollIndicator={false}
-                    accessibilityRole="list"
-                    onEndReached={handleEndReached}
-                    onEndReachedThreshold={0.4}
-                    ListFooterComponent={renderFooter}
-                    ListEmptyComponent={
+            {/* Daily challenges live in the always-present list header, so they
+                stay visible while the server catalog (re)loads on every focus —
+                the skeleton only stands in for the server rows via the empty
+                slot below. */}
+            <FlatList
+                data={items}
+                keyExtractor={(item) => item.id.toString()}
+                renderItem={({item, index}) => (
+                    <ChallengeCard
+                        item={toCardItem(item)}
+                        index={index}
+                        onCollect={() => handleClaim(item.id)}
+                    />
+                )}
+                contentContainerStyle={{paddingBottom: 40, marginTop: 20}}
+                showsVerticalScrollIndicator={false}
+                accessibilityRole="list"
+                onEndReached={handleEndReached}
+                onEndReachedThreshold={0.4}
+                ListHeaderComponent={listHeader}
+                ListFooterComponent={renderFooter}
+                ListEmptyComponent={
+                    loading ? (
+                        <ChallengesSkeleton/>
+                    ) : (
                         <Text
                             allowFontScaling={false}
                             style={{color: 'rgba(255,255,255,0.6)', textAlign: 'center', marginTop: 40}}
                         >
                             —
                         </Text>
-                    }
-                />
-            )}
+                    )
+                }
+            />
         </LinearGradient>
     );
 }

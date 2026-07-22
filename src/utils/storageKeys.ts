@@ -17,4 +17,9 @@ export const STORAGE_KEYS = {
     DAILY_AD_WATCHES: 'daily_ad_watches',
     LAST_REVIEW_DATE: 'last_review_date',
     PROFILE_PHOTO:    'profile_photo',  // device-local profile picture (no backend)
+    // Daily challenges are a device-local feature (no backend): the player's
+    // per-cycle progress and the coins earned from claiming them both live only
+    // on this device — same "no backend" pattern as PROFILE_PHOTO above.
+    DAILY_CHALLENGES: 'daily_challenges',   // {periodStart, items:{id:{current,claimed}}}
+    DAILY_BONUS_COINS: 'daily_bonus_coins', // coins granted by claimed daily challenges
 };

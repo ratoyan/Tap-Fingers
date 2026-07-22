@@ -16,6 +16,8 @@ import NoticeModal from "./src/components/ui/NoticeModal/NoticeModal.tsx";
 import Splash from "./src/screens/Splash/Splash.tsx";
 import BottomBanner from "./src/components/ui/BottomBanner/BottomBanner.tsx";
 import {useAuthStore} from "./src/store/authStore.ts";
+import {useGlobalStore} from "./src/store/globalStore.ts";
+import {useDailyChallengesStore} from "./src/store/dailyChallengesStore.ts";
 import {syncGlobalConfig} from "./src/services/configSync.ts";
 import {navigationRef} from "./src/navigation/navigationRef.ts";
 import {DARK_PURPLE} from "./src/constants/colors.ts";
@@ -37,6 +39,14 @@ function App() {
     useEffect(() => {
         bootstrap();
     }, [bootstrap]);
+
+    // Load the device-local daily-challenge state and the coin bonus it feeds
+    // once on startup. Order-independent of bootstrap: setCoins re-layers the
+    // bonus on top of whatever server balance lands, so the two converge.
+    useEffect(() => {
+        useGlobalStore.getState().hydrateBonusCoins();
+        useDailyChallengesStore.getState().hydrate();
+    }, []);
 
     // The SFX pool is loaded for the app's lifetime rather than per screen: the
     // files are small (~370KB all told) and Settings, the pause menu and Play

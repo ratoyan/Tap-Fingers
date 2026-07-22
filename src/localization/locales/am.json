@@ -143,6 +143,12 @@
   "collect": "Հավաքել",
   "done": "Պատրաստ է",
 
+  "dailyChallenges": "Օրական մարտահրավերներ",
+  "dailyGamesTitle": "Խաղա 10 խաղ",
+  "dailyCoinsTitle": "Հավաքիր 1000 մետաղադրամ",
+  "dailyLevelTitle": "Հասիր 10-րդ մակարդակին",
+  "dailyResetsIn": "Թարմացվում է {{time}}-ից",
+
   "bombBooster": "Ռումբ",
   "bombBoosterDesc": "Ակնթարթորեն ոչնչացնում է բոլոր տեսանելի քարտերը և հաշվում միավորները։",
   "shield": "Վահան",

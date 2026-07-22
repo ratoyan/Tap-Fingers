@@ -21,6 +21,7 @@ import {colors} from '../../data/play.ts';
 import {STORAGE_KEYS} from '../../utils/storageKeys.ts';
 import {useShopStore} from '../../store/shopStore.ts';
 import {useAuthStore} from '../../store/authStore.ts';
+import {useDailyChallengesStore} from '../../store/dailyChallengesStore.ts';
 import * as gameService from '../../services/gameService.ts';
 import {withRetry} from '../../utils/withRetry.ts';
 import * as userService from '../../services/userService.ts';
@@ -419,6 +420,14 @@ export default function Play() {
 
         // Nothing to report: no server session, or the player never tapped.
         if (!token || taps <= 0) return;
+
+        // Advance the device-local daily challenges from this finished run: +1
+        // game, the run's banked coins (score), and the best level reached. Read
+        // from refs so it's correct even in the stale-closure cleanup path.
+        useDailyChallengesStore.getState().recordGame({
+            coins: score,
+            level: levelRef.current,
+        });
 
         // `score` is the real in-game score (≥ taps); `taps` is the honest tap
         // count the server uses for the tap-rate / coin-ceiling anti-cheat.
@@ -1001,6 +1010,10 @@ export default function Play() {
         barrelsLeftRef.current = BARRELS_PER_LEVEL;
         setLevel(levelRef.current);
         triggerLevelUp(levelRef.current);
+
+        // Register the level the instant it's reached, so the "reach level 10"
+        // daily challenge completes live rather than waiting for game end.
+        useDailyChallengesStore.getState().recordLevel(levelRef.current);
 
         // Every 4th level: if the player is down a heart, drop a life pickup.
         // A short delay keeps it from landing on top of the level-up overlay.

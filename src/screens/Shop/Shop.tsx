@@ -88,6 +88,20 @@ function Shop() {
     // Measured so the indicator can slide on a transform instead of a percentage.
     const [tabRowWidth, setTabRowWidth] = useState(0);
 
+    // The native push animation can't start until this screen's first commit
+    // lands, so whatever is mounted in that commit is dead time between the tap
+    // on the menu and the screen moving at all. Same trick switchTab already
+    // uses for a tab's grid, applied to opening the screen: the shell (header)
+    // commits immediately, the push starts, and the tabs + skeleton mount on
+    // the next frame while the screen is still off the right edge. loadShop()
+    // is *not* deferred — it goes out on the first commit, so the items arrive
+    // no later than before.
+    const [contentReady, setContentReady] = useState(false);
+    React.useEffect(() => {
+        const raf = requestAnimationFrame(() => setContentReady(true));
+        return () => cancelAnimationFrame(raf);
+    }, []);
+
     // Free starter items count as owned even before they hit the inventory table.
     function isOwned(entry: ShopEntry) {
         return ownedKeys.has(entry.key) || entry.priceCoins === 0;
@@ -282,6 +296,7 @@ function Shop() {
                 />
             </View>
 
+            {contentReady && <>
             {/* Tabs */}
             <View style={styles.tabRow} onLayout={e => setTabRowWidth(e.nativeEvent.layout.width)}>
                 <Animated.View
@@ -406,6 +421,7 @@ function Shop() {
                 }}
                 onClose={() => setShowAdModal(false)}
             />
+            </>}
         </LinearGradient>
     );
 }

@@ -170,7 +170,9 @@ const GIFTS_PER_DROP = 1;
 const BOMB_SIZE = Math.round(scale(100));
 const HEART_SIZE = Math.round(scale(100));
 const BARREL_SIZE = Math.round(scale(100));
-const GIFT_SIZE = Math.round(scale(100));
+// The gift is drawn a touch larger than the other drops — it's a rare event
+// (one every couple of levels), so it should read as the one worth reacting to.
+const GIFT_SIZE = Math.round(scale(120));
 const BAG_SIZE = Math.round(scale(100));
 
 function getDefaultBackground(level: number) {

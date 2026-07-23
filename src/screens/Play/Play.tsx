@@ -34,7 +34,6 @@ import uuId from 'react-native-uuid';
 import useMusicAppState from '../../hooks/useMusicAppState.tsx';
 
 // icons
-import Back from '../../assets/icons/Back.tsx';
 import MenuIcon from '../../assets/icons/MenuIcon.tsx';
 import BombCard from '../../assets/icons/BombCard.tsx';
 import ShieldIcon from '../../assets/icons/ShieldIcon.tsx';
@@ -83,7 +82,14 @@ const DURATION_STEP = 20;
 const INITIAL_BOMBS = 0;
 const COMBO_WINDOW_MS = 550;
 const COMBO_RESET_MS = 850;
-const GOLDEN_SPAWN_CHANCE = 0.09;
+// 💰 Money bag: the bonus drop, worth 3 points. It used to be a random roll on
+// every plain card, so a lucky stretch could rain bags while another level saw
+// almost none. Now it works like the hazards: its OWN timer plus a per-level
+// budget of MONEY_BAGS_PER_LEVEL, each after a re-randomised gap, so exactly
+// three arrive per level and never on a predictable beat. Free to miss.
+const MONEY_BAGS_PER_LEVEL = 3;
+const BAG_GAP_MIN_MS = 3500;
+const BAG_GAP_MAX_MS = 7000;
 // Hazard bombs fall in with the cards: tapping one costs a heart, letting it
 // fall past the edge is free. Every level — the first one included — drops
 // exactly BOMBS_PER_LEVEL of them, each after a random gap (never on a
@@ -165,6 +171,7 @@ const BOMB_SIZE = Math.round(scale(100));
 const HEART_SIZE = Math.round(scale(100));
 const BARREL_SIZE = Math.round(scale(100));
 const GIFT_SIZE = Math.round(scale(100));
+const BAG_SIZE = Math.round(scale(100));
 
 function getDefaultBackground(level: number) {
     if (level > 4) return require('../../assets/images/background4.jpg');
@@ -182,13 +189,14 @@ function spawnBox(
     isBarrel = false,
     isGift = false,
     allowFreeze = false,
+    isBag = false,
 ) {
-    // A plain card (never a hazard, the life pickup or a gift) can roll into a ❄️
-    // freeze pickup, else the 💰 money bag — mutually exclusive. The gift is not a
-    // roll: it's spawned explicitly by its own timer, so it comes in as a flag.
-    const isPlainCard = !isBomb && !isHeart && !isBarrel && !isGift;
+    // A plain card (never a hazard, the life pickup, a gift or a money bag) can
+    // roll into a ❄️ freeze pickup. The gift and the money bag are not rolls:
+    // each has its own timer and comes in as a flag.
+    const isPlainCard = !isBomb && !isHeart && !isBarrel && !isGift && !isBag;
     const isFreeze = isPlainCard && allowFreeze && Math.random() < FREEZE_SPAWN_CHANCE;
-    const isGolden = isPlainCard && !isFreeze && Math.random() < GOLDEN_SPAWN_CHANCE;
+    const isGolden = isBag;
     // Fixed, screen-relative size per object type. Hazards and the life pickup
     // take their own size (independent of the equipped card); a regular card
     // keeps its skin's size, scaled to the screen the same way. This overrides
@@ -197,7 +205,8 @@ function spawnBox(
         : isBarrel ? BARREL_SIZE
             : isHeart ? HEART_SIZE
                 : isGift ? GIFT_SIZE
-                    : Math.round(scale(card.size ?? 100));
+                    : isBag ? BAG_SIZE
+                        : Math.round(scale(card.size ?? 100));
     // Spawn just off the edge the box travels from (below for fromBottom, above
     // otherwise) so it slides into view right away. The spacing between boxes
     // comes from the spawn cadence, not from a random head start off-screen —
@@ -294,6 +303,8 @@ export default function Play() {
     const bombsLeftRef = useRef(BOMBS_PER_LEVEL);
     // Same idea for the mine barrels, refilled on every level-up.
     const barrelsLeftRef = useRef(BARRELS_PER_LEVEL);
+    // …and for the 💰 money bags: three per level, no more.
+    const bagsLeftRef = useRef(MONEY_BAGS_PER_LEVEL);
     const levelRef = useRef(1);
     const watchAdUsedRef = useRef(0);
     const lastTapTimeRef = useRef(0);
@@ -726,6 +737,7 @@ export default function Play() {
         bombCountRef.current = INITIAL_BOMBS;
         bombsLeftRef.current = BOMBS_PER_LEVEL;
         barrelsLeftRef.current = BARRELS_PER_LEVEL;
+        bagsLeftRef.current = MONEY_BAGS_PER_LEVEL;
         levelRef.current = 1;
         comboCountRef.current = 0;
         streakRef.current = 0;
@@ -1137,9 +1149,11 @@ export default function Play() {
             durationEffRef.current + DURATION_STEP,
         );
         levelRef.current += 1;
-        // Fresh level → a fresh batch of hazards, bombs and barrels alike.
+        // Fresh level → a fresh batch of hazards, bombs and barrels alike, plus
+        // the level's three money bags.
         bombsLeftRef.current = BOMBS_PER_LEVEL;
         barrelsLeftRef.current = BARRELS_PER_LEVEL;
+        bagsLeftRef.current = MONEY_BAGS_PER_LEVEL;
         setLevel(levelRef.current);
         triggerLevelUp(levelRef.current);
 
@@ -1580,6 +1594,48 @@ export default function Play() {
         };
 
         timeoutId = setTimeout(spawnBarrel, nextGap());
+
+        return () => clearTimeout(timeoutId);
+    }, [isPlaying]);
+
+    // 💰 Money-bag spawner — same shape as the hazard spawners, but for the bonus:
+    // a per-level budget of MONEY_BAGS_PER_LEVEL and a long, re-randomised gap
+    // before each one, so the level's three bags land spread out across it instead
+    // of clustering. Keeps ticking while ineligible (boss fight, budget spent) so
+    // the next level-up refills the budget and it picks straight back up.
+    useEffect(() => {
+        if (!isPlaying) return;
+
+        let timeoutId: ReturnType<typeof setTimeout>;
+
+        const nextGap = () =>
+            (BAG_GAP_MIN_MS + Math.random() * (BAG_GAP_MAX_MS - BAG_GAP_MIN_MS)) /
+            effSlow();
+
+        const spawnBag = () => {
+            const eligible = !isBossFightRef.current && bagsLeftRef.current > 0;
+
+            if (eligible) {
+                bagsLeftRef.current -= 1;
+                setBoxesData(prev => [
+                    ...prev,
+                    spawnBox(
+                        cardRef.current,
+                        durationEffRef.current,
+                        !!cardRef.current.fallFromBottom,
+                        false,   // isBomb
+                        false,   // isHeart
+                        false,   // isBarrel
+                        false,   // isGift
+                        false,   // allowFreeze
+                        true,    // isBag
+                    ),
+                ]);
+            }
+            timeoutId = setTimeout(spawnBag, nextGap());
+        };
+
+        timeoutId = setTimeout(spawnBag, nextGap());
 
         return () => clearTimeout(timeoutId);
     }, [isPlaying]);

@@ -7,15 +7,7 @@ import {BOMB_ORANGE, DARK_NAVY, HOT_PINK} from "../../../constants/colors.ts";
 
 // icons
 import Card1 from "../../../assets/icons/Card1";
-import Ballon from "../../../assets/icons/Ballon";
 import TrackIcon from "../../../assets/icons/TrackIcon";
-import StarCard from "../../../assets/icons/StarCard";
-import DiamondCard from "../../../assets/icons/DiamondCard";
-import HeartCard from "../../../assets/icons/HeartCard";
-import BombCard from "../../../assets/icons/BombCard";
-import Ghost from "../../../assets/icons/Ghost";
-import FlameIcon from "../../../assets/icons/FlameIcon";
-import BoltIcon from "../../../assets/icons/BoltIcon";
 import {FallingBomb, BombBlast} from "../../../assets/icons/FallingBomb";
 import {MineBarrel, BarrelBlast, BARREL_ART_SCALE} from "../../../assets/icons/MineBarrel";
 import {MoneyBag} from "../../../assets/icons/MoneyBag";

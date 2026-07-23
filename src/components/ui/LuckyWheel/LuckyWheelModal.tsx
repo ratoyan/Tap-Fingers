@@ -181,6 +181,21 @@ export default function LuckyWheelModal({visible, onClose, onSpinComplete, segme
     const [winnerPos, setWinnerPos] = useState<number | null>(null);
     const [canSpin,  setCanSpin]  = useState(true);
     const [timeLeft, setTimeLeft] = useState('');
+    // The card is held back one frame after the modal opens. Everything in the
+    // first commit — the ~70-node SVG wheel above all — has to be built before
+    // the native dialog is up and the fade-in below can even start, which is
+    // dead time between the player's tap and anything happening. The backdrop
+    // goes up on its own first; the card mounts on the next frame, still inside
+    // its own fade from opacity 0, so nothing is visibly missing.
+    const [contentReady, setContentReady] = useState(false);
+    useEffect(() => {
+        if (!visible) {
+            setContentReady(false);
+            return;
+        }
+        const raf = requestAnimationFrame(() => setContentReady(true));
+        return () => cancelAnimationFrame(raf);
+    }, [visible]);
     const slices       = useMemo(() => buildSlices(segments ?? []), [segments]);
     const segmentAngle = slices.length > 0 ? 360 / slices.length : 360;
     const ringDots     = useMemo(() => buildRingDots(slices), [slices]);
@@ -458,7 +473,7 @@ export default function LuckyWheelModal({visible, onClose, onSpinComplete, segme
                     }]}/>
                 ))}
 
-                <Animated.View style={[styles.cardWrapper, {transform: [{scale: modalScale}]}]}>
+                {contentReady && <Animated.View style={[styles.cardWrapper, {transform: [{scale: modalScale}]}]}>
                     <LinearGradient
                         colors={['#1e0040', '#0a0018', '#1a0038']}
                         start={{x: 0, y: 0}} end={{x: 1, y: 1}}
@@ -619,8 +634,13 @@ export default function LuckyWheelModal({visible, onClose, onSpinComplete, segme
                                 </Animated.View>
                             </View>
 
-                            {/* Confetti burst — pieces fly out, tumble and drop. */}
-                            {confettiAnims.map((a, i) => {
+                            {/* Confetti burst — pieces fly out, tumble and drop.
+                                Gated on `result` like the shock rings above: 30
+                                Animated.Views with four interpolated transforms
+                                each is the single heaviest thing in this modal,
+                                and it was being built every time the wheel
+                                opened for a burst that only plays after a win. */}
+                            {result && confettiAnims.map((a, i) => {
                                 const c   = CONFETTI[i];
                                 const rad = (c.angle * Math.PI) / 180;
                                 const tx  = a.dist.interpolate({inputRange: [0, 1], outputRange: [0, Math.cos(rad) * c.dist]});
@@ -708,7 +728,7 @@ export default function LuckyWheelModal({visible, onClose, onSpinComplete, segme
                         </TouchableOpacity>
 
                     </LinearGradient>
-                </Animated.View>
+                </Animated.View>}
             </Animated.View>
         </Modal>
     );

@@ -67,7 +67,9 @@
       "Bash(./gradlew.bat app:installDebug -PreactNativeDevServerPort=8081)",
       "Bash(./gradlew.bat clean *)",
       "Bash(php artisan *)",
-      "Skill(claude-in-chrome)"
+      "Skill(claude-in-chrome)",
+      "Read(//tmp/**)",
+      "Bash(ffmpeg -version)"
     ]
   }
 }

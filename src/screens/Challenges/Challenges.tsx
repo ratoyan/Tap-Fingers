@@ -1,4 +1,4 @@
-import React, {useCallback, useMemo, useRef, useState} from 'react';
+import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import {ActivityIndicator, FlatList, Text, View} from 'react-native';
 import {useFocusEffect} from '@react-navigation/core';
 import {useTranslation} from "react-i18next";
@@ -76,6 +76,20 @@ function Challenges() {
     const [loading, setLoading] = useState(true);          // first page only
     const [loadingMore, setLoadingMore] = useState(false); // footer spinner
     const [claimingId, setClaimingId] = useState<number | null>(null);
+
+    // The push animation can't start until this screen's first commit is done,
+    // so everything mounted in that commit is dead time between the tap on the
+    // menu and the screen moving at all. The list — daily cards, skeleton, the
+    // rows behind them — is by far the heaviest part of it, so it's held back
+    // one frame: the shell (gradient + header) commits immediately, the native
+    // push starts, and the list mounts on the next frame while the screen is
+    // still mostly off the right edge. The request below is *not* deferred — it
+    // goes out on the first commit, so the extra frame costs no load time.
+    const [contentReady, setContentReady] = useState(false);
+    useEffect(() => {
+        const raf = requestAnimationFrame(() => setContentReady(true));
+        return () => cancelAnimationFrame(raf);
+    }, []);
 
     // ── Daily challenges (device-local, no backend) ──────────────────────────
     // Progress lives in the daily store; subscribe to it so a claim (or a game
@@ -266,7 +280,7 @@ function Challenges() {
                 stay visible while the server catalog (re)loads on every focus —
                 the skeleton only stands in for the server rows via the empty
                 slot below. */}
-            <FlatList
+            {contentReady && <FlatList
                 data={items}
                 keyExtractor={(item) => item.id.toString()}
                 renderItem={({item, index}) => (
@@ -295,7 +309,7 @@ function Challenges() {
                         </Text>
                     )
                 }
-            />
+            />}
         </LinearGradient>
     );
 }

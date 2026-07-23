@@ -70,11 +70,21 @@ export function ProgressionSkeleton() {
     );
 }
 
-/** Challenges: cards with a title block, a progress bar and a reward row. */
+/**
+ * Challenges: cards with a title block and a progress bar.
+ *
+ * Deliberately coarser than the other two. This one sits *below* the daily
+ * challenges, which are real cards that render straight away — so it only has
+ * to cover the rest of the viewport, not sell a full screen of content. Every
+ * Shimmer is five native views and two native animation loops, and the version
+ * that mirrored the card line for line (five cards x five blocks) cost ~70ms
+ * of mount on its own: the loading state was a third of what made the screen
+ * slow to open.
+ */
 export function ChallengesSkeleton() {
     return (
         <View style={{marginTop: 20}}>
-            {Array.from({length: 5}, (_, i) => (
+            {Array.from({length: 3}, (_, i) => (
                 <View
                     key={i}
                     style={{
@@ -86,14 +96,12 @@ export function ChallengesSkeleton() {
                         borderColor: 'rgba(255,255,255,0.12)',
                     }}
                 >
-                    {/* Header: icon, title lines, status badge */}
+                    {/* Header: icon + title line */}
                     <View style={{flexDirection: 'row', alignItems: 'center'}}>
                         <Shimmer width={ms(50)} height={ms(50)} radius={ms(14)} delay={i * STAGGER}/>
                         <View style={{flex: 1, marginLeft: ms(12)}}>
                             <Shimmer width="70%" height={vs(20)} radius={6} delay={i * STAGGER + 40}/>
-                            <Shimmer width="45%" height={vs(16)} radius={6} delay={i * STAGGER + 70} style={{marginTop: vs(7)}}/>
                         </View>
-                        <Shimmer width={ms(70)} height={vs(30)} radius={ms(10)} delay={i * STAGGER + 100}/>
                     </View>
 
                     {/* Progress bar */}
@@ -101,12 +109,9 @@ export function ChallengesSkeleton() {
                         width="100%"
                         height={ms(10)}
                         radius={ms(10)}
-                        delay={i * STAGGER + 130}
+                        delay={i * STAGGER + 80}
                         style={{marginTop: vs(16), marginBottom: vs(6)}}
                     />
-
-                    {/* Reward row */}
-                    <Shimmer width="40%" height={vs(13)} radius={6} delay={i * STAGGER + 160} style={{marginTop: vs(10)}}/>
                 </View>
             ))}
         </View>

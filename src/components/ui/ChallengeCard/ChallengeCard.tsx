@@ -1,4 +1,4 @@
-﻿import React, {useEffect, useRef} from "react";
+﻿import React, {useEffect, useRef, useState} from "react";
 import {Animated, Text, TouchableOpacity, View} from "react-native";
 import {useTranslation} from "react-i18next";
 
@@ -36,20 +36,30 @@ function ChallengeCard({item, index = 0, onCollect}: ChallengeCardProps) {
     // coin that flies up out of the button. Kept as one value so every part
     // stays in sync, and native-driven (transform/opacity only).
     const claim = useRef(new Animated.Value(0)).current;
+    // The flash and the flying coin only exist while a claim is playing. They
+    // used to be mounted on every card for the card's whole life — including
+    // the Coin SVG, which is ~9 paths and the single most expensive node in
+    // here. Paid on every row of the list, for decoration almost none of them
+    // ever show.
+    const [claiming, setClaiming] = useState(false);
 
-    // Entrance: slide from left
+    // Entrance: slide from left. The stagger is capped so a long list doesn't
+    // keep the last rows invisible for over a second — past a handful of cards
+    // the cascade reads as lag, not as choreography.
+    const stagger = Math.min(index, 5) * 70;
+
     useEffect(() => {
         Animated.parallel([
             Animated.timing(entranceOpacity, {
                 toValue: 1,
                 duration: 350,
-                delay: index * 80,
+                delay: stagger,
                 useNativeDriver: true,
             }),
             Animated.timing(entranceX, {
                 toValue: 0,
                 duration: 350,
-                delay: index * 80,
+                delay: stagger,
                 useNativeDriver: true,
             }),
         ]).start();
@@ -61,10 +71,27 @@ function ChallengeCard({item, index = 0, onCollect}: ChallengeCardProps) {
         Animated.timing(progressAnim, {
             toValue: item.progress / 100,
             duration: 700,
-            delay: index * 80 + 200,
+            delay: stagger + 200,
             useNativeDriver: true,
         }).start();
     }, [item.progress]);
+
+    // Runs once the overlay is actually mounted, so the native driver has views
+    // to attach to — starting it from the press handler would animate a value
+    // nothing was listening to yet.
+    useEffect(() => {
+        if (!claiming) return;
+        claim.setValue(0);
+        const anim = Animated.timing(claim, {
+            toValue: 1,
+            duration: 900,
+            useNativeDriver: true,
+        });
+        anim.start(({finished}) => {
+            if (finished) setClaiming(false);
+        });
+        return () => anim.stop();
+    }, [claiming]);
 
     // Pulse collect button when finished
     useEffect(() => {
@@ -85,12 +112,7 @@ function ChallengeCard({item, index = 0, onCollect}: ChallengeCardProps) {
     // Fire the claim animation and the network call together: the card should
     // feel collected the instant it's tapped, not after the request lands.
     const handleCollect = () => {
-        claim.setValue(0);
-        Animated.timing(claim, {
-            toValue: 1,
-            duration: 900,
-            useNativeDriver: true,
-        }).start();
+        setClaiming(true);
         onCollect?.();
     };
 
@@ -239,23 +261,29 @@ function ChallengeCard({item, index = 0, onCollect}: ChallengeCardProps) {
                     </View>
                 )}
 
-                {/* Claim feedback — decorative only, must not intercept taps. */}
-                <Animated.View
-                    pointerEvents="none"
-                    style={[styles.claimFlash, {opacity: claimFlashOpacity}]}
-                />
-                <Animated.View
-                    pointerEvents="none"
-                    style={[
-                        styles.flyingCoin,
-                        {
-                            opacity: coinOpacity,
-                            transform: [{translateY: coinY}, {scale: coinScale}],
-                        },
-                    ]}
-                >
-                    <Coin width={22} height={20}/>
-                </Animated.View>
+                {/* Claim feedback — decorative only, must not intercept taps.
+                    Mounted for the ~900ms the animation runs and torn down
+                    after, so an idle card carries none of its cost. */}
+                {claiming && (
+                    <>
+                        <Animated.View
+                            pointerEvents="none"
+                            style={[styles.claimFlash, {opacity: claimFlashOpacity}]}
+                        />
+                        <Animated.View
+                            pointerEvents="none"
+                            style={[
+                                styles.flyingCoin,
+                                {
+                                    opacity: coinOpacity,
+                                    transform: [{translateY: coinY}, {scale: coinScale}],
+                                },
+                            ]}
+                        >
+                            <Coin width={22} height={20}/>
+                        </Animated.View>
+                    </>
+                )}
             </LinearGradient>
         </Animated.View>
     );

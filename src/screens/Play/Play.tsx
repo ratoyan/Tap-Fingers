@@ -95,10 +95,10 @@ const BOMB_FALL_BOOST = 1.3;
 // Life pickup: every HEART_DROP_EVERY_LEVELS levels the game checks whether the
 // player has lost a heart; if so, one heart drops in (a bit quicker than the
 // cards). Tapping it gives the lost life back. Nothing drops on a full heart row.
-const HEART_DROP_EVERY_LEVELS = 2;
-const HEART_FALL_BOOST = 1.4;
+const HEART_DROP_EVERY_LEVELS = 3;
+const HEART_FALL_BOOST = 1;
 const BOMB_GAP_MIN_MS = 1200;
-const BOMB_GAP_MAX_MS = 2000;
+const BOMB_GAP_MAX_MS = 4000;
 // Mine barrel: the second hazard, held back until BARREL_MIN_LEVEL so the early
 // levels teach the bomb on its own before a second trap joins it. Heavier than
 // the bomb — it drops slower and there are fewer of them per level — but the hit

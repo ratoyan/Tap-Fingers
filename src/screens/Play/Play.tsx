@@ -1845,8 +1845,8 @@ export default function Play() {
                     }]}
                 >
                     {giftReveal === 'win'
-                        ? <Coin width={64} height={68}/>
-                        : <BombBlast size={84}/>}
+                        ? <Coin width={44} height={48}/>
+                        : <BombBlast size={44}/>}
                     <Text
                         allowFontScaling={false}
                         style={[

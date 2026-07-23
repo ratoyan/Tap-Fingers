@@ -238,8 +238,11 @@ export default StyleSheet.create({
         top: height * 0.3,
         left: 0,
         right: 0,
+        flexDirection: 'row',
+        justifyContent: 'center',
         alignItems: 'center',
         zIndex: 16,
+        gap: 10
     },
     giftRevealText: {
         marginTop: ms(2),

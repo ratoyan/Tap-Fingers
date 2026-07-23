@@ -20,6 +20,7 @@ import {FallingBomb, BombBlast} from "../../../assets/icons/FallingBomb";
 import {MineBarrel, BarrelBlast, BARREL_ART_SCALE} from "../../../assets/icons/MineBarrel";
 import {MoneyBag} from "../../../assets/icons/MoneyBag";
 import {HeartPlus} from "../../../assets/icons/HeartPlus";
+import {GiftBox} from "../../../assets/icons/GiftBox";
 
 interface PlayBoxProps {
     box: any;
@@ -117,6 +118,8 @@ function PlayBox({box, handlePress}: PlayBoxProps) {
             ❄️
         </Text>
     ), [artSize]);
+    // 🎁 Mystery gift box — its own SVG art, sized to the box.
+    const giftArt = useMemo(() => <GiftBox size={artSize}/>, [artSize]);
     const baseTransform: ViewStyle["transform"] = [
         {translateX: box.x + box.size / 2},
         {translateY: box.y + box.size / 2},
@@ -230,6 +233,30 @@ function PlayBox({box, handlePress}: PlayBoxProps) {
                 accessibilityLabel="Tap snowflake for slow motion"
             >
                 {freezeArt}
+            </Pressable>
+        );
+    }
+
+    // 🎁 Mystery gift box — a gamble tapped for a random reward or a boom. Wins
+    // over the card/admin art (like the bag and the hazards) so a gift always
+    // reads as a gift whatever skin is equipped, and like the bag it leaves no
+    // track behind when tapped. Drawn upright (no spin).
+    if (box.isGift) {
+        const giftStyle: ViewStyle = {
+            position: "absolute",
+            transform: [{translateX: box.x}, {translateY: box.y}],
+        };
+
+        if (box.isBoom) return null;
+
+        return (
+            <Pressable
+                onPressIn={() => handlePress(box)}
+                style={[giftStyle, {zIndex: 1}]}
+                accessibilityRole="button"
+                accessibilityLabel="Tap the mystery gift"
+            >
+                {giftArt}
             </Pressable>
         );
     }

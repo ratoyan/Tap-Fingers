@@ -232,6 +232,25 @@ export default StyleSheet.create({
         letterSpacing: 2,
     },
 
+    // ── Gift reveal (🎁) ───────────────────────────────────────────
+    giftRevealOverlay: {
+        position: 'absolute',
+        top: height * 0.3,
+        left: 0,
+        right: 0,
+        alignItems: 'center',
+        zIndex: 16,
+    },
+    giftRevealText: {
+        marginTop: ms(2),
+        fontSize: ms(34),
+        fontWeight: '900',
+        letterSpacing: 1.5,
+        textShadowColor: '#000',
+        textShadowOffset: {width: 0, height: 2},
+        textShadowRadius: 8,
+    },
+
     // ── Level up overlay ───────────────────────────────────────────
     levelUpOverlay: {
         position: 'absolute',

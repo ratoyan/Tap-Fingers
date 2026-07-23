@@ -43,6 +43,8 @@ import FlameIcon from '../../assets/icons/FlameIcon.tsx';
 import BoltIcon from '../../assets/icons/BoltIcon.tsx';
 import StarBurstIcon from '../../assets/icons/StarBurstIcon.tsx';
 import {BARREL_ART_SCALE} from '../../assets/icons/MineBarrel.tsx';
+import Coin from '../../assets/icons/Coin.tsx';
+import {BombBlast} from '../../assets/icons/FallingBomb.tsx';
 
 // components
 import AnimatedBackground from '../../components/ui/Play/AnimatedBackground.tsx';
@@ -132,6 +134,21 @@ const FREEZE_DURATION_MS = 2500;
 // the freeze pickup is introduced.
 const FREEZE_MIN_LEVEL = 5;
 
+// ─── Gift / mystery prize box ─────────────────────────────────────────────────
+// A rare gamble drop, tied to the level-up rather than to a timer: every
+// GIFT_DROP_EVERY_LEVELS levels exactly ONE gift comes down (the life pickup
+// works the same way). Tapping it is a coin flip: GIFT_BOOM_CHANCE of the time it
+// 💥 booms and costs a heart like a hazard bomb, otherwise it pays out
+// GIFT_REWARD points (revealed as a 🪙 coin). Free to miss — letting it fall past
+// the edge costs nothing. Held back until GIFT_MIN_LEVEL so the very first level
+// stays a plain tap game before the gamble is introduced.
+const GIFT_BOOM_CHANCE = 0.5;   // odds a tapped gift booms instead of paying out
+const GIFT_REWARD = 5;
+const GIFT_MIN_LEVEL = 2;
+const GIFT_DROP_EVERY_LEVELS = 2;
+// Gifts per drop — one, so the level-up brings a single box, not a burst.
+const GIFTS_PER_DROP = 1;
+
 // ─── Falling-object sizes ────────────────────────────────────────────────────
 // Every falling object is sized as a share of the screen (responsive.scale maps
 // the reference-device pixel value onto the current screen width) instead of a
@@ -147,6 +164,7 @@ const FREEZE_MIN_LEVEL = 5;
 const BOMB_SIZE = Math.round(scale(100));
 const HEART_SIZE = Math.round(scale(100));
 const BARREL_SIZE = Math.round(scale(100));
+const GIFT_SIZE = Math.round(scale(100));
 
 function getDefaultBackground(level: number) {
     if (level > 4) return require('../../assets/images/background4.jpg');
@@ -162,11 +180,13 @@ function spawnBox(
     isBomb = false,
     isHeart = false,
     isBarrel = false,
+    isGift = false,
     allowFreeze = false,
 ) {
-    // A plain card can roll into a ❄️ freeze pickup; only if it doesn't can it
-    // still roll into the money bag. Hazards and the life pickup are never either.
-    const isPlainCard = !isBomb && !isHeart && !isBarrel;
+    // A plain card (never a hazard, the life pickup or a gift) can roll into a ❄️
+    // freeze pickup, else the 💰 money bag — mutually exclusive. The gift is not a
+    // roll: it's spawned explicitly by its own timer, so it comes in as a flag.
+    const isPlainCard = !isBomb && !isHeart && !isBarrel && !isGift;
     const isFreeze = isPlainCard && allowFreeze && Math.random() < FREEZE_SPAWN_CHANCE;
     const isGolden = isPlainCard && !isFreeze && Math.random() < GOLDEN_SPAWN_CHANCE;
     // Fixed, screen-relative size per object type. Hazards and the life pickup
@@ -176,7 +196,8 @@ function spawnBox(
     const size = isBomb ? BOMB_SIZE
         : isBarrel ? BARREL_SIZE
             : isHeart ? HEART_SIZE
-                : Math.round(scale(card.size ?? 100));
+                : isGift ? GIFT_SIZE
+                    : Math.round(scale(card.size ?? 100));
     // Spawn just off the edge the box travels from (below for fromBottom, above
     // otherwise) so it slides into view right away. The spacing between boxes
     // comes from the spawn cadence, not from a random head start off-screen —
@@ -208,6 +229,7 @@ function spawnBox(
         isBoom: false,
         isGolden,
         isFreeze,
+        isGift,
         isBomb,
         isHeart,
         isBarrel,
@@ -323,6 +345,9 @@ export default function Play() {
     const shakeAnim = useRef(new Animated.Value(0)).current;
     const lvlUpOpacityAnim = useRef(new Animated.Value(0)).current;
     const lvlUpScaleAnim = useRef(new Animated.Value(0.5)).current;
+    // 🎁 Gift-box reveal (the win/boom pop after tapping a mystery box).
+    const giftRevealOpacityAnim = useRef(new Animated.Value(0)).current;
+    const giftRevealScaleAnim = useRef(new Animated.Value(0.5)).current;
 
     // ─── State ────────────────────────────────────────────────────────────────
     const [count, setCount] = useState(0);
@@ -352,6 +377,8 @@ export default function Play() {
     const [bossMaxHP, setBossMaxHP] = useState(0);
     const [boss, setBoss] = useState<Boss | null>(null);
     const [showBossDefeated, setShowBossDefeated] = useState(false);
+    // 🎁 Which gift outcome to show in the reveal overlay ('win' | 'boom' | null).
+    const [giftReveal, setGiftReveal] = useState<'win' | 'boom' | null>(null);
 
     const levelIndex = Math.min(level - 1, 4);
 
@@ -612,6 +639,21 @@ export default function Play() {
         ]).start();
     }
 
+    // 🎁 Pops the gift outcome (a green "+5" on a win, a red "💥 BOOM" on a boom)
+    // for a beat so the coin-flip result reads clearly, then fades it out.
+    function triggerGiftReveal(good: boolean) {
+        setGiftReveal(good ? 'win' : 'boom');
+        giftRevealOpacityAnim.setValue(1);
+        giftRevealScaleAnim.setValue(0.4);
+        Animated.parallel([
+            Animated.spring(giftRevealScaleAnim, {toValue: 1, useNativeDriver: true, friction: 4}),
+            Animated.sequence([
+                Animated.delay(700),
+                Animated.timing(giftRevealOpacityAnim, {toValue: 0, duration: 350, useNativeDriver: true}),
+            ]),
+        ]).start(() => setGiftReveal(null));
+    }
+
     // ─── Game actions ─────────────────────────────────────────────────────────
 
     function menuHandler() {
@@ -770,7 +812,7 @@ export default function Play() {
         setBoxesData(prev => {
             // Hazard bombs and the life pickup are wiped by the blast too, but
             // they score nothing — only the real cards on screen pay out.
-            const pts = prev.filter(b => !b.isBoom && !b.isBomb && !b.isBarrel && !b.isHeart).length;
+            const pts = prev.filter(b => !b.isBoom && !b.isBomb && !b.isBarrel && !b.isHeart && !b.isGift).length;
             countRef.current += pts;
             setCount(c => c + pts);
             setLevelCount(c => c + pts);
@@ -1008,6 +1050,35 @@ export default function Play() {
             return;
         }
 
+        // 🎁 Mystery gift box: a gamble. GIFT_BOOM_CHANCE of the time it booms and
+        // costs a heart like a hazard bomb (combo/streak reset, hurt flash, shake);
+        // otherwise it pays out GIFT_REWARD points. Either way the outcome is shown
+        // by the reveal overlay. Free to miss — the fall-off path costs nothing.
+        if (box.isGift) {
+            tapsRef.current += 1;
+            boomBox(box.id);
+
+            if (Math.random() < GIFT_BOOM_CHANCE) {
+                if (comboTimerRef.current) clearTimeout(comboTimerRef.current);
+                comboCountRef.current = 0;
+                streakRef.current = 0;
+                setCombo(0);
+                loseHeart();
+                triggerGiftReveal(false);
+                deferFeedback(() => { playSfx('bomb'); haptic('bombHazard'); });
+                hurtFlashAnim.setValue(1);
+                Animated.timing(hurtFlashAnim, {toValue: 0, duration: 550, useNativeDriver: true}).start();
+                triggerMissShake();
+            } else {
+                countRef.current += GIFT_REWARD;
+                setCount(c => c + GIFT_REWARD);
+                setLevelCount(c => c + GIFT_REWARD);
+                triggerGiftReveal(true);
+                deferFeedback(() => { playSfx('coin'); haptic('coin'); });
+            }
+            return;
+        }
+
         // 💰 The money bag is worth 3 points, so it earns the coin jingle; plain
         // cards get the blip.
         //
@@ -1091,6 +1162,35 @@ export default function Play() {
                         !!cardRef.current.fallFromBottom,
                         false,
                         true,
+                    ),
+                ]);
+            }, 1200);
+        }
+
+        // 🎁 Every GIFT_DROP_EVERY_LEVELS levels: exactly GIFTS_PER_DROP mystery
+        // gift comes down — no timer, so the gamble stays a rare event tied to the
+        // level-up instead of a steady stream. Same short delay as the life pickup
+        // so it doesn't land under the level-up overlay.
+        if (
+            levelRef.current >= GIFT_MIN_LEVEL &&
+            levelRef.current % GIFT_DROP_EVERY_LEVELS === 0
+        ) {
+            setTimeout(() => {
+                // A boss fight owns the arena — skip the drop rather than throw a
+                // gift into it (boss levels are every 10th, so a multiple of 2 too).
+                if (isBossFightRef.current) return;
+                setBoxesData(prev => [
+                    ...prev,
+                    ...Array.from({length: GIFTS_PER_DROP}, () =>
+                        spawnBox(
+                            cardRef.current,
+                            durationEffRef.current,
+                            !!cardRef.current.fallFromBottom,
+                            false,
+                            false,
+                            false,
+                            true, // isGift
+                        ),
                     ),
                 ]);
             }, 1200);
@@ -1308,7 +1408,7 @@ export default function Play() {
                     // (money bag), the ❄️ freeze pickup or the life pickup is just
                     // a missed chance, not a mistake: it disappears without costing
                     // a heart either.
-                    if (b.isBomb || b.isBarrel || b.isHeart || b.isGolden || b.isFreeze) return false;
+                    if (b.isBomb || b.isBarrel || b.isHeart || b.isGolden || b.isFreeze || b.isGift) return false;
 
                     // Deferred for a second reason on top of the frame budget:
                     // this runs inside a setState updater, i.e. during React's
@@ -1390,9 +1490,10 @@ export default function Play() {
                         cardRef.current,
                         durationEffRef.current,
                         !!cardRef.current.fallFromBottom,
-                        false,
-                        false,
-                        false,
+                        false,   // isBomb
+                        false,   // isHeart
+                        false,   // isBarrel
+                        false,   // isGift — gifts have their own spawner below
                         // ❄️ freeze pickups only start rolling after level 4.
                         levelRef.current >= FREEZE_MIN_LEVEL,
                     ),
@@ -1732,6 +1833,30 @@ export default function Play() {
                 <View pointerEvents="none" style={styles.freezeBadge}>
                     <Text allowFontScaling={false} style={styles.freezeText}>❄️ FROZEN</Text>
                 </View>
+            )}
+
+            {/* 🎁 Gift reveal (win / boom pop) */}
+            {giftReveal && (
+                <Animated.View
+                    pointerEvents="none"
+                    style={[styles.giftRevealOverlay, {
+                        opacity: giftRevealOpacityAnim,
+                        transform: [{scale: giftRevealScaleAnim}],
+                    }]}
+                >
+                    {giftReveal === 'win'
+                        ? <Coin width={64} height={68}/>
+                        : <BombBlast size={84}/>}
+                    <Text
+                        allowFontScaling={false}
+                        style={[
+                            styles.giftRevealText,
+                            {color: giftReveal === 'win' ? '#FFD24A' : '#FF1744'},
+                        ]}
+                    >
+                        {giftReveal === 'win' ? `+${GIFT_REWARD}` : 'BOOM!'}
+                    </Text>
+                </Animated.View>
             )}
 
             {/* Level up overlay */}

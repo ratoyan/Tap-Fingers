@@ -34,8 +34,12 @@ function LanguageModal({visible, onClose, onSelect, selectedLanguage}: LanguageM
     // Per-item entrance values (slide up + fade), animated in a stagger.
     const itemAnims = useRef(languages.map(() => new Animated.Value(0))).current;
 
-    // Continuous soft pulse on the globe halo.
+    // Continuous soft pulse on the globe halo. Gated on `rendered`, not started
+    // on mount: the modal returns null while closed, so an ungated loop drove a
+    // value nothing was drawing — forever, for the whole time the player sat on
+    // the Settings screen.
     useEffect(() => {
+        if (!rendered) return;
         const loop = Animated.loop(
             Animated.sequence([
                 Animated.timing(glow, {
@@ -54,7 +58,7 @@ function LanguageModal({visible, onClose, onSelect, selectedLanguage}: LanguageM
         );
         loop.start();
         return () => loop.stop();
-    }, [glow]);
+    }, [glow, rendered]);
 
     useEffect(() => {
         if (visible) {

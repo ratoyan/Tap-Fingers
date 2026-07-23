@@ -1,4 +1,4 @@
-import React, {useCallback, useMemo, useRef, useState} from 'react';
+import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import {ActivityIndicator, FlatList, View} from 'react-native';
 import {useFocusEffect} from '@react-navigation/core';
 import {getTrophyEmoji} from "../../utils/helpers.ts";
@@ -35,6 +35,20 @@ function Progression() {
     const [loading, setLoading] = useState(true);        // first page only
     const [loadingMore, setLoadingMore] = useState(false); // footer spinner
     const [myRank, setMyRank] = useState<MyRank | null>(null); // signed-in player's own standing
+
+    // The native push animation can't start until this screen's first commit
+    // lands, so whatever is mounted in that commit is dead time between the tap
+    // on the menu and the screen moving at all. Here that was the skeleton —
+    // the loading state was the thing making the screen slow to open. It's held
+    // back one frame: the shell (status bar + header) commits immediately, the
+    // push starts, and the list mounts on the next frame while the screen is
+    // still off the right edge. The fetch below is *not* deferred, so nothing
+    // arrives any later than it used to.
+    const [contentReady, setContentReady] = useState(false);
+    useEffect(() => {
+        const raf = requestAnimationFrame(() => setContentReady(true));
+        return () => cancelAnimationFrame(raf);
+    }, []);
 
     // Pagination cursor kept in refs so onEndReached reads live values without
     // having to be re-created (and re-bound) on every appended page.
@@ -137,7 +151,7 @@ function Progression() {
 
             <BackHeader title={`🏆 ${t('progression')}`}/>
 
-            {loading ? (
+            {!contentReady ? null : loading ? (
                 <ProgressionSkeleton/>
             ) : (
                 <FlatList

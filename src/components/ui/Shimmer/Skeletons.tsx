@@ -34,11 +34,18 @@ export function ShopSkeleton() {
     );
 }
 
-/** Progression: leaderboard rows — rank dot, name/bar block, score. */
+/**
+ * Progression: leaderboard rows — rank dot, name/bar block.
+ *
+ * Trimmed for the same reason as ChallengesSkeleton below: at seven rows of
+ * four blocks this was 28 Shimmers, ~110ms of mount, and the only thing the
+ * screen had to build before the push animation could start. Five rows of
+ * three still fill the viewport and read as the same list.
+ */
 export function ProgressionSkeleton() {
     return (
         <View style={{marginTop: 20, paddingHorizontal: ms(10)}}>
-            {Array.from({length: 7}, (_, i) => (
+            {Array.from({length: 5}, (_, i) => (
                 <View
                     key={i}
                     style={{
@@ -63,7 +70,6 @@ export function ProgressionSkeleton() {
                             style={{marginTop: vs(10)}}
                         />
                     </View>
-                    <Shimmer width={ms(34)} height={vs(15)} radius={6} delay={i * STAGGER + 120} style={{marginLeft: ms(12)}}/>
                 </View>
             ))}
         </View>

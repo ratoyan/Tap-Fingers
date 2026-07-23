@@ -47,6 +47,19 @@ function Settings() {
     const [langModal, setLangModal] = useState(false);
     const [logoutModal, setLogoutModal] = useState(false);
 
+    // The native push animation can't start until this screen's first commit
+    // lands, so whatever is mounted in that commit is dead time between the tap
+    // on the menu and the screen moving at all. There's no one hot spot here —
+    // it's the eight gradients, five icons and three switches adding up — so
+    // the whole body is held back one frame: the shell (status bar + header)
+    // commits immediately, the push starts, and the rest mounts on the next
+    // frame while the screen is still off the right edge.
+    const [contentReady, setContentReady] = useState(false);
+    useEffect(() => {
+        const raf = requestAnimationFrame(() => setContentReady(true));
+        return () => cancelAnimationFrame(raf);
+    }, []);
+
     const getCurrentLanguage = () => {
         const langObj = languages.find((e: LanguageType) => e.code === currentLang);
         setLanguage(langObj || languages[2]);
@@ -134,6 +147,7 @@ function Settings() {
                 handleProfilePress={() => navigation.navigate('Profile')}
             />
 
+            {contentReady && <>
             {/* Audio Section */}
             <View style={styles.sectionHeader}>
                 <LinearGradient
@@ -243,6 +257,7 @@ function Settings() {
                 onClose={() => setLogoutModal(false)}
                 onConfirm={logOut}
             />
+            </>}
         </LinearGradient>
     );
 }

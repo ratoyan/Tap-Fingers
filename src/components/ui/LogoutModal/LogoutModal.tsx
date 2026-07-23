@@ -23,8 +23,12 @@ export default function LogoutModal({visible, onClose, onConfirm}: any) {
     const modalOpacity = useRef(new Animated.Value(0)).current;
     const glow = useRef(new Animated.Value(0)).current;
 
-    // Continuous soft pulse on the icon halo.
+    // Continuous soft pulse on the icon halo. Gated on `rendered`, not started
+    // on mount: the modal returns null while closed, so an ungated loop drove a
+    // value nothing was drawing — forever, for the whole time the player sat on
+    // the Settings screen.
     useEffect(() => {
+        if (!rendered) return;
         const loop = Animated.loop(
             Animated.sequence([
                 Animated.timing(glow, {
@@ -43,7 +47,7 @@ export default function LogoutModal({visible, onClose, onConfirm}: any) {
         );
         loop.start();
         return () => loop.stop();
-    }, [glow]);
+    }, [glow, rendered]);
 
     useEffect(() => {
         if (visible) {

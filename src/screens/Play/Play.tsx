@@ -792,7 +792,7 @@ export default function Play() {
 
     function boomBox(id: string) {
         setBoxesData(prev => prev.map(b => (b.id === id ? {...b, isBoom: true} : b)));
-        setTimeout(() => setBoxesData(prev => prev.filter(b => b.id !== id)), 2000);
+        setTimeout(() => setBoxesData(prev => prev.filter(b => b.id !== id)), 1500);
     }
 
     // ─── Bomb helper ──────────────────────────────────────────────────────────

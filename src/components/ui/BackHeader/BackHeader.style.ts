@@ -17,11 +17,14 @@ export default StyleSheet.create({
         marginLeft: ms(12),
     },
     backPosition: {
+        width: '16%',
+        height: 40,
         position: 'absolute',
         top: 0,
-        left: 0,
+        left: -20,
         flexDirection: 'row',
         alignItems: 'center',
+        justifyContent: 'center',
     },
     coinPosition: {
         position: 'absolute',

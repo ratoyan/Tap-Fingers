@@ -45,7 +45,7 @@ export function ShopSkeleton() {
 export function ProgressionSkeleton() {
     return (
         <View style={{marginTop: 20, paddingHorizontal: ms(10)}}>
-            {Array.from({length: 5}, (_, i) => (
+            {Array.from({length: 10}, (_, i) => (
                 <View
                     key={i}
                     style={{

@@ -18,7 +18,7 @@ export default StyleSheet.create({
     },
     backPosition: {
         width: '16%',
-        height: 40,
+        height: 30,
         position: 'absolute',
         top: 0,
         left: -20,

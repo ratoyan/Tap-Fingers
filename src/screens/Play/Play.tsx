@@ -13,6 +13,7 @@ import {
     Animated,
     Dimensions,
     ImageBackground,
+    PanResponder,
     Text,
     TouchableOpacity,
     View,
@@ -245,6 +246,26 @@ function spawnBox(
         isHeart,
         isBarrel,
     };
+}
+
+// Screen-space footprint of a falling box, mirroring how PlayBox lays each
+// variant out. Every type is positioned with its top-left at (x, y) — the
+// rotation transforms pivot around the centre and cancel out — but the barrel
+// is drawn wider than its box size and an admin SVG uses its authored
+// width/height. Used by the swipe layer below to work out what the finger is
+// over; the "square" card type is the one approximation (PlayBox rolls its own
+// random 101–150px size internally, so its hit area is the box size instead).
+function boxBounds(b: any): {w: number; h: number} {
+    if (b.isBarrel) {
+        const s = Math.round((b.size || 100) * BARREL_ART_SCALE);
+        return {w: s, h: s};
+    }
+    const isSpecial = b.isBomb || b.isHeart || b.isFreeze || b.isGift || b.isGolden;
+    if (!isSpecial && typeof b.iconSvg === 'string' && b.iconSvg.trim()) {
+        return {w: b.width || b.size || 100, h: b.height || b.size || 100};
+    }
+    const s = b.size || 100;
+    return {w: s, h: s};
 }
 
 // Sound and haptics are native calls, and they run on the JS thread — the same
@@ -1688,6 +1709,63 @@ export default function Play() {
         }
     });
 
+    // ─── Swipe-to-tap ─────────────────────────────────────────────────────────
+    // Tapping a box one at a time is only half the gesture players expect: press
+    // anywhere and drag, and everything the finger crosses should pop. A per-box
+    // Pressable can't do that — once a touch is granted to one view, the boxes it
+    // slides over never hear about it (and a box that pops mid-drag drops the
+    // responder entirely). So the arena gets ONE full-screen gesture layer that
+    // owns the touch and hit-tests the field itself, on press and on every move.
+    //
+    // It sits above the boxes (same zIndex, rendered last) but below the menu
+    // button, the helper row and the boss, so those keep their own presses. The
+    // Pressables inside PlayBox stay put: they're what a screen reader activates.
+    const boxesRef = useRef<any[]>([]);
+    boxesRef.current = boxesData;
+    // Boxes already popped by the current drag. handleTap ignores a box flagged
+    // isBoom, but that flag only lands on the next render — a fast finger can
+    // sample the same box twice before then, which would double-count the tap.
+    const swipeHitsRef = useRef<Set<string>>(new Set());
+
+    const hitSwipe = useCallback((px: number, py: number) => {
+        const list = boxesRef.current;
+        // renderedBoxes walks the list backwards, so index 0 is drawn frontmost —
+        // walking forwards here means the first match is the box on top.
+        for (let i = 0; i < list.length; i++) {
+            const b = list[i];
+            if (b.isBoom || swipeHitsRef.current.has(b.id)) continue;
+            const {w, h} = boxBounds(b);
+            if (px >= b.x && px <= b.x + w && py >= b.y && py <= b.y + h) {
+                swipeHitsRef.current.add(b.id);
+                handleTapRef.current(b);
+                return;
+            }
+        }
+    }, []);
+
+    // Every active finger is tested, not just the one that started the gesture:
+    // the layer is the sole responder now, so two-finger play has to come through
+    // nativeEvent.touches or it would quietly stop working.
+    const onSwipeTouch = useCallback((e: any) => {
+        const touches = e.nativeEvent?.touches;
+        if (touches?.length) {
+            for (let i = 0; i < touches.length; i++) {
+                hitSwipe(touches[i].locationX, touches[i].locationY);
+            }
+        } else {
+            hitSwipe(e.nativeEvent.locationX, e.nativeEvent.locationY);
+        }
+    }, [hitSwipe]);
+
+    const swipeResponder = useMemo(() => PanResponder.create({
+        onStartShouldSetPanResponder: () => true,
+        onMoveShouldSetPanResponder: () => true,
+        onPanResponderGrant: onSwipeTouch,
+        onPanResponderMove: onSwipeTouch,
+        onPanResponderRelease: () => swipeHitsRef.current.clear(),
+        onPanResponderTerminate: () => swipeHitsRef.current.clear(),
+    }), [onSwipeTouch]);
+
     // ─── Render helpers ───────────────────────────────────────────────────────
     const comboLabel =
         combo >= 5 ? '🔥 INSANE!' :
@@ -1994,6 +2072,14 @@ export default function Play() {
             {modals}
 
             {renderedBoxes}
+
+            {/* Swipe layer — last child on purpose: it shares the boxes' zIndex,
+                so rendering it after them puts it on top of the whole field while
+                still passing under the menu button, helpers and boss. Only while
+                the arena is live; a paused/countdown field must not react. */}
+            {isPlaying && (
+                <View style={styles.swipeLayer} {...swipeResponder.panHandlers}/>
+            )}
         </Animated.View>
     );
 

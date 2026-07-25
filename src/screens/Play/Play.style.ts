@@ -16,6 +16,17 @@ export default StyleSheet.create({
     boxItem: {
         position: 'absolute',
     },
+    // Full-arena gesture layer that turns a press-and-drag into taps on every
+    // box the finger crosses. Same zIndex as the boxes (it is rendered after
+    // them, so it wins) and below the menu button / helpers / boss.
+    swipeLayer: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        zIndex: 1,
+    },
     headerLeftView: {
         position: 'absolute',
         left: 10,

@@ -2058,7 +2058,7 @@ export default function Play() {
             {giftReveal && (
                 <Animated.View
                     pointerEvents="none"
-                    style={[styles.giftRevealOverlay, {
+                    style={[styles.giftRevealOverlay,{marginTop: 25}, {
                         opacity: giftRevealOpacityAnim,
                         transform: [{scale: giftRevealScaleAnim}],
                     }]}

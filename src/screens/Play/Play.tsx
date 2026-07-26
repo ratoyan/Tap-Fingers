@@ -83,12 +83,19 @@ const DURATION_STEP = 10;
 const INITIAL_BOMBS = 0;
 const COMBO_WINDOW_MS = 550;
 const COMBO_RESET_MS = 850;
-// 💰 Money bag: the bonus drop, worth 3 points. It used to be a random roll on
+// 💰 Money bag: the bonus drop, worth a random 1–5 points. It used to be a roll on
 // every plain card, so a lucky stretch could rain bags while another level saw
 // almost none. Now it works like the hazards: its OWN timer plus a per-level
 // budget of MONEY_BAGS_PER_LEVEL, each after a re-randomised gap, so exactly
 // three arrive per level and never on a predictable beat. Free to miss.
 const MONEY_BAGS_PER_LEVEL = 3;
+// What a tapped bag pays out — a fresh roll in [MONEY_BAG_MIN, MONEY_BAG_MAX]
+// every time, so a bag is a small gamble of its own. Revealed with the same 🪙
+// coin pop the gift uses, so the player sees exactly what this bag was worth.
+const MONEY_BAG_MIN = 1;
+const MONEY_BAG_MAX = 5;
+const rollMoneyBag = () =>
+    MONEY_BAG_MIN + Math.floor(Math.random() * (MONEY_BAG_MAX - MONEY_BAG_MIN + 1));
 const BAG_GAP_MIN_MS = 3500;
 const BAG_GAP_MAX_MS = 7000;
 // Hazard bombs fall in with the cards: tapping one costs a heart, letting it
@@ -411,8 +418,9 @@ export default function Play() {
     const [bossMaxHP, setBossMaxHP] = useState(0);
     const [boss, setBoss] = useState<Boss | null>(null);
     const [showBossDefeated, setShowBossDefeated] = useState(false);
-    // 🎁 Which gift outcome to show in the reveal overlay ('win' | 'boom' | null).
-    const [giftReveal, setGiftReveal] = useState<'win' | 'boom' | null>(null);
+    // 🎁 What the reveal overlay is showing: a win (with the coin amount that was
+    // just earned — the gift's payout or a money bag's) or a boom. null = hidden.
+    const [giftReveal, setGiftReveal] = useState<{kind: 'win' | 'boom'; amount: number} | null>(null);
 
     const levelIndex = Math.min(level - 1, 4);
 
@@ -673,10 +681,11 @@ export default function Play() {
         ]).start();
     }
 
-    // 🎁 Pops the gift outcome (a green "+5" on a win, a red "💥 BOOM" on a boom)
-    // for a beat so the coin-flip result reads clearly, then fades it out.
-    function triggerGiftReveal(good: boolean) {
-        setGiftReveal(good ? 'win' : 'boom');
+    // 🎁 Pops the outcome (a gold "+N" coin on a win, a red "💥 BOOM" on a boom)
+    // for a beat so the result reads clearly, then fades it out. The money bag
+    // reuses it too, passing its own payout as the amount.
+    function triggerGiftReveal(good: boolean, amount: number = GIFT_REWARD) {
+        setGiftReveal({kind: good ? 'win' : 'boom', amount});
         giftRevealOpacityAnim.setValue(1);
         giftRevealScaleAnim.setValue(0.4);
         Animated.parallel([
@@ -1108,13 +1117,13 @@ export default function Play() {
                 countRef.current += GIFT_REWARD;
                 setCount(c => c + GIFT_REWARD);
                 setLevelCount(c => c + GIFT_REWARD);
-                triggerGiftReveal(true);
+                triggerGiftReveal(true, GIFT_REWARD);
                 deferFeedback(() => { playSfx('coin'); haptic('coin'); });
             }
             return;
         }
 
-        // 💰 The money bag is worth 3 points, so it earns the coin jingle; plain
+        // 💰 The money bag is a bonus payout, so it earns the coin jingle; plain
         // cards get the blip.
         //
         // The hottest path in the game — this runs on every single card tap, so
@@ -1154,8 +1163,12 @@ export default function Play() {
             setCombo(0);
         }, COMBO_RESET_MS);
 
-        // Points: golden = 3 base, normal = 1, both × streak multiplier
-        const pts = box.isGolden ? 3 : 1;
+        // Points: golden = a fresh 1–5 roll, normal = 1, both × streak multiplier
+        const pts = box.isGolden ? rollMoneyBag() : 1;
+
+        // 💰 A bag is a payout like the gift, so it gets the same coin reveal —
+        // the player sees the exact number of coins the bag was worth.
+        if (box.isGolden) triggerGiftReveal(true, pts);
 
         boomBox(box.id);
         countRef.current += pts;
@@ -1980,17 +1993,17 @@ export default function Play() {
                         transform: [{scale: giftRevealScaleAnim}],
                     }]}
                 >
-                    {giftReveal === 'win'
+                    {giftReveal.kind === 'win'
                         ? <Coin width={44} height={48}/>
                         : <BombBlast size={44}/>}
                     <Text
                         allowFontScaling={false}
                         style={[
                             styles.giftRevealText,
-                            {color: giftReveal === 'win' ? '#FFD24A' : '#FF1744'},
+                            {color: giftReveal.kind === 'win' ? '#FFD24A' : '#FF1744'},
                         ]}
                     >
-                        {giftReveal === 'win' ? `+${GIFT_REWARD}` : 'BOOM!'}
+                        {giftReveal.kind === 'win' ? `+${giftReveal.amount}` : 'BOOM!'}
                     </Text>
                 </Animated.View>
             )}

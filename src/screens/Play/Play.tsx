@@ -149,7 +149,7 @@ const FREEZE_MIN_LEVEL = 5;
 // GIFT_REWARD points (revealed as a 🪙 coin). Free to miss — letting it fall past
 // the edge costs nothing. Held back until GIFT_MIN_LEVEL so the very first level
 // stays a plain tap game before the gamble is introduced.
-const GIFT_BOOM_CHANCE = 0.5;   // odds a tapped gift booms instead of paying out
+const GIFT_BOOM_CHANCE = 0.25;   // odds a tapped gift booms instead of paying out
 const GIFT_REWARD = 5;
 const GIFT_MIN_LEVEL = 2;
 const GIFT_DROP_EVERY_LEVELS = 2;

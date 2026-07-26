@@ -1,9 +1,7 @@
 import React, {useMemo} from "react";
 import {Pressable, Text, View, ViewStyle} from "react-native";
-import {SvgXml} from "react-native-svg";
-import {BoxType} from "../../../types/play.type.ts";
-import {ShopType} from "../../../types/shop.type.ts";
-import {BOMB_ORANGE, DARK_NAVY, HOT_PINK} from "../../../constants/colors.ts";
+import {SvgAst, parse} from "react-native-svg";
+import {DARK_NAVY} from "../../../constants/colors.ts";
 
 // icons
 import Card1 from "../../../assets/icons/Card1";
@@ -17,6 +15,12 @@ import {GiftBox} from "../../../assets/icons/GiftBox";
 interface PlayBoxProps {
     box: any;
     handlePress: (box: any) => void;
+    // Only a screen reader needs the per-box Pressable: ordinary play goes
+    // through the full-screen swipe layer in Play, which hit-tests the field
+    // itself. A Pressable is a responder-owning native view per falling box, so
+    // when nothing is listening it's paid for and never used — with it off the
+    // boxes are plain Views.
+    a11y?: boolean;
 }
 
 // Vibrant hues used when a card is flagged "random colors" in admin.
@@ -24,6 +28,29 @@ const RANDOM_COLORS = [
     '#FF5252', '#FF4081', '#E040FB', '#7C4DFF', '#536DFE',
     '#40C4FF', '#18FFFF', '#69F0AE', '#00E676', '#FFD740', '#FFAB40', '#FF6E40',
 ];
+
+// ─── SVG caches ──────────────────────────────────────────────────────────────
+// Turning an admin SVG string into react-native-svg's element tree is the most
+// expensive thing a spawning box does, and `SvgXml` re-parses on every mount —
+// so at a fast level the game paid for the same parse several times a second and
+// every spawn landed as a dropped frame. The art only ever comes from a handful
+// of skins, so parse once per distinct string and hand every box the same tree
+// (the AST holds immutable element descriptors — mounting it in many places at
+// once is fine). Same story for the recolour regexes: cached per colour.
+const AST_CACHE = new Map<string, any>();
+const TINT_CACHE = new Map<string, string>();
+// A skin swap or an admin edit can introduce new strings over a long session, so
+// the maps are bounded. Wholesale clear rather than a real LRU: a miss only
+// costs one re-parse, and the working set is a couple of entries.
+const CACHE_MAX = 48;
+
+function cached<T>(map: Map<string, T>, key: string, make: () => T): T {
+    if (map.has(key)) return map.get(key) as T;
+    const made = make();
+    if (map.size >= CACHE_MAX) map.clear();
+    map.set(key, made);
+    return made;
+}
 
 // Stable colour per box: same id → same hue for the box's whole lifetime
 // (ids survive the fall-animation reset), so a card doesn't flicker colour.
@@ -37,13 +64,107 @@ function pickColor(id: string): string {
 // card renders in one random hue regardless of how its artwork was authored.
 // `none`/`transparent` are preserved so cut-outs and outlines stay intact.
 function tintSvg(xml: string, color: string): string {
-    return xml
-        .replace(/(fill|stroke)\s*=\s*"(?!none|transparent)[^"]*"/gi, `$1="${color}"`)
-        .replace(/(fill|stroke)\s*=\s*'(?!none|transparent)[^']*'/gi, `$1='${color}'`)
-        .replace(/(fill|stroke)\s*:\s*(?!none|transparent)[^;"']+/gi, `$1:${color}`);
+    return cached(TINT_CACHE, `${color}|${xml}`, () =>
+        xml
+            .replace(/(fill|stroke)\s*=\s*"(?!none|transparent)[^"]*"/gi, `$1="${color}"`)
+            .replace(/(fill|stroke)\s*=\s*'(?!none|transparent)[^']*'/gi, `$1='${color}'`)
+            .replace(/(fill|stroke)\s*:\s*(?!none|transparent)[^;"']+/gi, `$1:${color}`),
+    );
 }
 
-function PlayBox({box, handlePress}: PlayBoxProps) {
+function parseSvg(xml: string): any {
+    return cached(AST_CACHE, xml, () => {
+        try {
+            return parse(xml);
+        } catch {
+            return null;
+        }
+    });
+}
+
+// ─── Placement ───────────────────────────────────────────────────────────────
+// Screen placement for a falling box, by variant.
+//
+// This is what the game loop drives. Positions no longer go through React state:
+// the loop mutates the box and writes the style built below straight onto the
+// box's native view every frame (see the animation loop in Play.tsx). A box is
+// only re-rendered when its art changes — and since the object is mutated in
+// place, such a render still paints the box where it currently is.
+const spinOf = (box: any): any[] =>
+    (box?.isRotation && box?.rotation) ? [{rotate: `${box.rotation}deg`}] : [];
+
+// Rotation pivots around the artwork's centre: shift to the centre, turn, shift
+// back. With no rotation the two shifts cancel and the box sits at (x, y).
+function pivot(box: any, w: number, h: number, spin: any[]): ViewStyle["transform"] {
+    return [
+        {translateX: box.x + w / 2},
+        {translateY: box.y + h / 2},
+        ...spin,
+        {translateX: -w / 2},
+        {translateY: -h / 2},
+    ] as ViewStyle["transform"];
+}
+
+// Branch order mirrors the render below exactly — a box must never be drawn by
+// one variant and positioned by another.
+function buildBoxTransform(box: any): ViewStyle["transform"] {
+    const size = box.size || 100;
+
+    // The barrel is drawn wider than its box and rocks as it falls, so it pivots
+    // on its own artwork size and always carries the angle.
+    if (box.isBarrel) {
+        const s = Math.round(size * BARREL_ART_SCALE);
+        return pivot(box, s, s, [{rotate: `${box.rotation || 0}deg`}]);
+    }
+    // Traps and pickups drop upright — no pivot maths needed.
+    if (box.isBomb || box.isHeart || box.isFreeze || box.isGift) {
+        return [{translateX: box.x}, {translateY: box.y}] as ViewStyle["transform"];
+    }
+    if (box.isGolden) return pivot(box, size, size, spinOf(box));
+    if (typeof box.iconSvg === "string" && box.iconSvg.trim()) {
+        return pivot(box, box.width || size, box.height || size, spinOf(box));
+    }
+    // Square and default cards both pivot on the box size.
+    return pivot(box, size, size, spinOf(box));
+}
+
+// A square card's size is rolled once and kept on the box: the box outlives this
+// component instance (its art can be re-created, and its popped copy draws the
+// hole marker), and a fresh roll there would resize the card mid-flight.
+function squareSizeOf(box: any): [number, number] {
+    if (!box.__squareSize) {
+        const random = Math.floor(Math.random() * 50) + 101;
+        box.__squareSize = [random, random];
+    }
+    return box.__squareSize;
+}
+
+// True only for the box the `square` branch below actually draws — every special
+// and the admin SVG win over the card art, so they're ruled out first.
+function isSquareCard(box: any): boolean {
+    if (box.isBarrel || box.isBomb || box.isHeart || box.isFreeze || box.isGift || box.isGolden) return false;
+    if (typeof box.iconSvg === "string" && box.iconSvg.trim()) return false;
+    return (box?.typeName?.toLowerCase?.() ?? "") === "square";
+}
+
+// The complete style of a live (falling) box.
+//
+// Exported for the game loop: it hands this straight to the box's native view
+// every frame (`setNativeProps({style})`) instead of re-rendering. It's the whole
+// style, not just the transform, so what the loop pushes is exactly what a render
+// would have committed — the two can't disagree about a box.
+export function buildBoxStyle(box: any): ViewStyle {
+    const style: ViewStyle = {
+        position: "absolute",
+        zIndex: 1,
+        transform: buildBoxTransform(box),
+    };
+    if (!isSquareCard(box)) return style;
+    const [w, h] = squareSizeOf(box);
+    return {...style, width: w, height: h, backgroundColor: box.color || "blue", borderRadius: 10};
+}
+
+function PlayBox({box, handlePress, a11y}: PlayBoxProps) {
 
     const typeName = box?.typeName?.toLowerCase?.() ?? "";
 
@@ -57,25 +178,11 @@ function PlayBox({box, handlePress}: PlayBoxProps) {
             : box.iconSvg),
         [box.iconSvg, box.randomColors, randomColor],
     );
-    // Square cards lock in a random size once. Hoisted to the top (not computed
-    // inside the `square` branch) so this hook always runs — a box that gains an
-    // admin SVG mid-flight switches branches, and a conditional hook there would
-    // change the hook count between renders ("rendered fewer hooks").
-    const squareSize = useMemo<[number, number]>(() => {
-        const random = Math.floor(Math.random() * 50) + 101;
-        return [random, random];
-    }, []);
-
     // The artwork is the expensive part of a falling box — an admin SVG is dozens
     // of nodes, and Card1/MoneyBag/… are SVGs too. None of it changes while a box
-    // falls; only its position does. But the game loop hands every box a fresh
-    // object each frame, so React.memo on this component can't help and the whole
-    // art tree would re-render 60×/sec, per box.
-    //
-    // Memoising the *elements* fixes that on its own: React bails out of a
-    // subtree when the element is referentially identical, so the per-frame
-    // re-render only rebuilds the wrapper's style and leaves the art untouched.
-    // That's what makes a screen full of SVG cards affordable.
+    // falls; only its position does, and that no longer goes through React at all
+    // (the loop writes the new style onto the native view). So these elements are
+    // built once per box and the box only re-renders when its art really changes.
     //
     // Sizes are hoisted here (not read inside the branches) so these hooks always
     // run in the same order, whichever art branch is taken below. Elements for
@@ -87,13 +194,22 @@ function PlayBox({box, handlePress}: PlayBoxProps) {
     // keep the artwork's own aspect ratio.
     const hasAdminDims = !!(box.width || box.height);
 
+    // Parsed once per distinct SVG string across the whole session (AST_CACHE),
+    // so the tenth balloon of a level costs a mount and nothing more.
+    const svgAst = useMemo(
+        () => (typeof tintedSvg === "string" && tintedSvg.trim() ? parseSvg(tintedSvg) : null),
+        [tintedSvg],
+    );
     const svgArt = useMemo(
         () => (
-            <SvgXml xml={tintedSvg} width={svgW} height={svgH}
-                color={box.randomColors ? randomColor : undefined}
-                preserveAspectRatio={hasAdminDims ? "none" : "xMidYMid meet"}/>
+            <SvgAst ast={svgAst} override={{
+                width: svgW,
+                height: svgH,
+                color: box.randomColors ? randomColor : undefined,
+                preserveAspectRatio: hasAdminDims ? "none" : "xMidYMid meet",
+            }}/>
         ),
-        [tintedSvg, svgW, svgH, box.randomColors, randomColor, hasAdminDims],
+        [svgAst, svgW, svgH, box.randomColors, randomColor, hasAdminDims],
     );
     const cardArt = useMemo(() => <Card1 width={100} height={100}/>, []);
     const bombArt = useMemo(() => <FallingBomb size={artSize}/>, [artSize]);
@@ -112,17 +228,39 @@ function PlayBox({box, handlePress}: PlayBoxProps) {
     ), [artSize]);
     // 🎁 Mystery gift box — its own SVG art, sized to the box.
     const giftArt = useMemo(() => <GiftBox size={artSize}/>, [artSize]);
-    const baseTransform: ViewStyle["transform"] = [
-        {translateX: box.x + box.size / 2},
-        {translateY: box.y + box.size / 2},
-        ...((box?.isRotation && box?.rotation) ? [{rotate: `${box.rotation}deg`}] : []),
-        {translateX: -box.size / 2},
-        {translateY: -box.size / 2},
-    ];
 
-    const commonStyle: ViewStyle = {
-        position: "absolute",
-        transform: baseTransform,
+    // Popped boxes (the hole marker, a blast) sit where they were hit and never
+    // move again, so they only need the placement — no zIndex, as before.
+    const trackStyle: ViewStyle = {position: "absolute", transform: buildBoxTransform(box)};
+
+    // Hands the loop the native view to drive. Assigned onto the box itself:
+    // the box object *is* the game entity the loop walks, so the view it owns
+    // belongs on it (React passes null here on unmount, which clears it).
+    const takeNode = (node: any) => { box.node = node; };
+
+    // Live boxes are plain Views: the swipe layer in Play owns the touch and
+    // hit-tests the field, so a per-box responder is dead weight. With a screen
+    // reader on, the Pressable comes back — that's what gets activated.
+    //
+    // The style is the same object the loop will push from here on, so the box's
+    // first painted frame and every frame after it come from one place.
+    const wrap = (children: React.ReactNode, label: string) => {
+        const style = buildBoxStyle(box);
+        return a11y ? (
+            <Pressable
+                ref={takeNode}
+                onPressIn={() => handlePress(box)}
+                style={style}
+                accessibilityRole="button"
+                accessibilityLabel={label}
+            >
+                {children}
+            </Pressable>
+        ) : (
+            <View ref={takeNode} style={style}>
+                {children}
+            </View>
+        );
     };
 
     // 🛢️ Mine barrel — the second hazard. Checked before isBomb so the two flags
@@ -130,103 +268,36 @@ function PlayBox({box, handlePress}: PlayBoxProps) {
     // the bomb is: a trap must always look like a trap, whatever skin is equipped.
     // Like the bomb it drops upright — the mine trigger belongs on top.
     if (box.isBarrel) {
-        // Rocks around its own centre as it falls (the game loop writes the
-        // angle into box.rotation) — a heavy drum tipping, not a spinning card.
-        const barrelTransform: ViewStyle["transform"] = [
-            {translateX: box.x + barrelSize / 2},
-            {translateY: box.y + barrelSize / 2},
-            {rotate: `${box.rotation || 0}deg`},
-            {translateX: -barrelSize / 2},
-            {translateY: -barrelSize / 2},
-        ];
-        const barrelStyle: ViewStyle = {position: "absolute", transform: barrelTransform};
-
         return box.isBoom ? (
-            <View style={barrelStyle}>
+            <View style={trackStyle}>
                 <BarrelBlast size={barrelSize}/>
             </View>
-        ) : (
-            <Pressable
-                onPressIn={() => handlePress(box)}
-                style={[barrelStyle, {zIndex: 1}]}
-                accessibilityRole="button"
-                accessibilityLabel="Mine barrel — do not tap"
-            >
-                {barrelArt}
-            </Pressable>
-        );
+        ) : wrap(barrelArt, "Mine barrel — do not tap");
     }
 
     // 💣 Hazard bomb — wins over every card art (admin SVG included) so the
     // trap always reads as a bomb, whatever skin the player has equipped. It is
     // never golden; its own red halo does the highlighting.
     if (box.isBomb) {
-        const bombSize = artSize;
-        // No spin, no tilt: the bomb drops upright, so the lit fuse stays on top.
-        const bombTransform: ViewStyle["transform"] = [
-            {translateX: box.x},
-            {translateY: box.y},
-        ];
-        const bombStyle: ViewStyle = {position: "absolute", transform: bombTransform};
-
         return box.isBoom ? (
-            <View style={bombStyle}>
-                <BombBlast size={bombSize}/>
+            <View style={trackStyle}>
+                <BombBlast size={artSize}/>
             </View>
-        ) : (
-            <Pressable
-                onPressIn={() => handlePress(box)}
-                style={[bombStyle, {zIndex: 1}]}
-                accessibilityRole="button"
-                accessibilityLabel="Bomb — do not tap"
-            >
-                {bombArt}
-            </Pressable>
-        );
+        ) : wrap(bombArt, "Bomb — do not tap");
     }
 
     // ❤️ Life pickup — falls only when the player has a heart to win back.
     // Like the bag, it leaves no track behind when tapped.
     if (box.isHeart) {
-        const heartStyle: ViewStyle = {
-            position: "absolute",
-            transform: [{translateX: box.x}, {translateY: box.y}],
-        };
-
         if (box.isBoom) return null;
-
-        return (
-            <Pressable
-                onPressIn={() => handlePress(box)}
-                style={[heartStyle, {zIndex: 1}]}
-                accessibilityRole="button"
-                accessibilityLabel="Tap to regain a life"
-            >
-                {heartArt}
-            </Pressable>
-        );
+        return wrap(heartArt, "Tap to regain a life");
     }
 
     // ❄️ Freeze pickup — rendered by its own cyan snowflake art and, like the
     // bag, it leaves no track behind when tapped. Drawn upright (no spin).
     if (box.isFreeze) {
-        const freezeStyle: ViewStyle = {
-            position: "absolute",
-            transform: [{translateX: box.x}, {translateY: box.y}],
-        };
-
         if (box.isBoom) return null;
-
-        return (
-            <Pressable
-                onPressIn={() => handlePress(box)}
-                style={[freezeStyle, {zIndex: 1}]}
-                accessibilityRole="button"
-                accessibilityLabel="Tap snowflake for slow motion"
-            >
-                {freezeArt}
-            </Pressable>
-        );
+        return wrap(freezeArt, "Tap snowflake for slow motion");
     }
 
     // 🎁 Mystery gift box — a gamble tapped for a random reward or a boom. Wins
@@ -234,55 +305,19 @@ function PlayBox({box, handlePress}: PlayBoxProps) {
     // reads as a gift whatever skin is equipped, and like the bag it leaves no
     // track behind when tapped. Drawn upright (no spin).
     if (box.isGift) {
-        const giftStyle: ViewStyle = {
-            position: "absolute",
-            transform: [{translateX: box.x}, {translateY: box.y}],
-        };
-
         if (box.isBoom) return null;
-
-        return (
-            <Pressable
-                onPressIn={() => handlePress(box)}
-                style={[giftStyle, {zIndex: 1}]}
-                accessibilityRole="button"
-                accessibilityLabel="Tap the mystery gift"
-            >
-                {giftArt}
-            </Pressable>
-        );
+        return wrap(giftArt, "Tap the mystery gift");
     }
 
     // 💰 Bonus money bag (what used to be the "golden" box). It replaces the
     // card art entirely — the old glow-around-the-card treatment is gone — but
     // the tap behaviour is unchanged: same handler, same bonus points.
+    //
+    // Tapped: the bag is simply gone — no leftover track/hole marker behind
+    // it, unlike the cards.
     if (box.isGolden) {
-        const bagSize = artSize;
-        const bagStyle: ViewStyle = {
-            position: "absolute",
-            transform: [
-                {translateX: box.x + bagSize / 2},
-                {translateY: box.y + bagSize / 2},
-                ...((box?.isRotation && box?.rotation) ? [{rotate: `${box.rotation}deg`}] : []),
-                {translateX: -bagSize / 2},
-                {translateY: -bagSize / 2},
-            ],
-        };
-
-        // Tapped: the bag is simply gone — no leftover track/hole marker behind
-        // it, unlike the cards.
         if (box.isBoom) return null;
-
-        return (
-            <Pressable
-                onPressIn={() => handlePress(box)}
-                style={[bagStyle, {zIndex: 1}]}
-                accessibilityRole="button"
-                accessibilityLabel="Tap money bag"
-            >
-                {bagArt}
-            </Pressable>
-        );
+        return wrap(bagArt, "Tap money bag");
     }
 
     // 🖌️ Admin-authored SVG (backend icon_svg) — wins over the on-device art so
@@ -291,78 +326,32 @@ function PlayBox({box, handlePress}: PlayBoxProps) {
     // falls back to the on-device size. The transform is recentred on those
     // dimensions so a non-square card still pivots/positions correctly.
     if (typeof box.iconSvg === "string" && box.iconSvg.trim()) {
-        const svgTransform: ViewStyle["transform"] = [
-            {translateX: box.x + svgW / 2},
-            {translateY: box.y + svgH / 2},
-            ...((box?.isRotation && box?.rotation) ? [{rotate: `${box.rotation}deg`}] : []),
-            {translateX: -svgW / 2},
-            {translateY: -svgH / 2},
-        ];
-        const svgStyle: ViewStyle = {position: "absolute", transform: svgTransform};
         return box.isBoom ? (
-            <View style={svgStyle}>
+            <View style={trackStyle}>
                 <TrackIcon width={svgW} height={svgH}
                     color={box.randomColors ? randomColor : (box.trackColor ?? box.color ?? DARK_NAVY)}/>
             </View>
-        ) : (
-            <Pressable
-                onPressIn={() => handlePress(box)}
-                style={[svgStyle, {zIndex: 1}]}
-                accessibilityRole="button"
-                accessibilityLabel="Tap card"
-            >
-                {svgArt}
-            </Pressable>
-        );
+        ) : wrap(svgArt, "Tap card");
     }
 
-    // 🟦 Square
+    // 🟦 Square — no artwork of its own: a coloured rounded box, whose size
+    // buildBoxStyle above rolls once and keeps on the box.
     if (typeName === "square") {
-        const size = squareSize;
+        const size = squareSizeOf(box);
 
         return box.isBoom ? (
-                <View style={commonStyle}>
-                    <TrackIcon width={size[0]} height={size[1]} color={box.color || "blue"}/>
-                </View>
-            )
-            :
-            (
-                <Pressable
-                    onPressIn={() => handlePress(box)}
-                    accessibilityRole="button"
-                    accessibilityLabel="Tap card"
-                    style={[
-                        commonStyle,
-                        {
-                            width: size[0],
-                            height: size[1],
-                            backgroundColor: box.color || "blue",
-                            zIndex: 1,
-                            borderRadius: 10
-                        },
-                    ]}
-                />
-            )
+            <View style={trackStyle}>
+                <TrackIcon width={size[0]} height={size[1]} color={box.color || "blue"}/>
+            </View>
+        ) : wrap(null, "Tap card");
     }
-
 
     // 🃏 Default (Card)
     return box.isBoom ? (
-            <View style={commonStyle}>
-                <TrackIcon width={100} height={100} color={DARK_NAVY}/>
-            </View>
-        )
-        :
-        (
-            <Pressable
-                onPressIn={() => handlePress(box)}
-                style={[commonStyle, {zIndex: 1}]}
-                accessibilityRole="button"
-                accessibilityLabel="Tap card"
-            >
-                {cardArt}
-            </Pressable>
-        )
+        <View style={trackStyle}>
+            <TrackIcon width={100} height={100} color={DARK_NAVY}/>
+        </View>
+    ) : wrap(cardArt, "Tap card");
 }
 
 export default React.memo(PlayBox);

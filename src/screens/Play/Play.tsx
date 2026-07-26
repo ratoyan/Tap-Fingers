@@ -188,12 +188,20 @@ const BIG_SCREEN_FACTOR = width > BIG_SCREEN_W ? 0.8 : 1;
 const boxScale = (size: number) => Math.round(scale(size) * BIG_SCREEN_FACTOR);
 
 const BOMB_SIZE = boxScale(100);
-const HEART_SIZE = boxScale(120);
-const BARREL_SIZE = boxScale(140);
+const HEART_SIZE = boxScale(100);
+const BARREL_SIZE = boxScale(110);
 // The gift is drawn a touch larger than the other drops — it's a rare event
 // (one every couple of levels), so it should read as the one worth reacting to.
 const GIFT_SIZE = boxScale(120);
 const BAG_SIZE = boxScale(110);
+// ❄️ Freeze pickup — its own size like the other specials. It spawns as a roll on
+// a plain card, so before this it inherited the equipped skin's size and a big
+// skin made the snowflake bigger than the bomb next to it.
+const FREEZE_SIZE = boxScale(90);
+// 🃏 The tappable card. A skin carries its own size (a 130 balloon stays bigger
+// than a 100 card); CARD_SIZE is what a skin without one falls back to.
+const CARD_BASE = 100;
+const CARD_SIZE = boxScale(CARD_BASE);
 // How far a finger must travel from where it landed before the swipe layer stops
 // treating the gesture as a tap (see the swipe-to-tap section). Tied to the drop
 // size so it means the same thing on every screen: a quarter of a box clears a
@@ -225,16 +233,18 @@ function spawnBox(
     const isPlainCard = !isBomb && !isHeart && !isBarrel && !isGift && !isBag;
     const isFreeze = isPlainCard && allowFreeze && Math.random() < FREEZE_SPAWN_CHANCE;
     const isGolden = isBag;
-    // Fixed, screen-relative size per object type. Hazards and the life pickup
-    // take their own size (independent of the equipped card); a regular card
-    // keeps its skin's size, scaled to the screen the same way. This overrides
-    // card.size (spread in below) so every spawned box carries the right size.
+    // Fixed, screen-relative size per object type. Every special (hazards, the
+    // life pickup, the freeze pickup, the gift, the bag) takes its own size,
+    // independent of the equipped card; a regular card keeps its skin's size,
+    // scaled to the screen the same way. This overrides card.size (spread in
+    // below) so every spawned box carries the right size.
     const size = isBomb ? BOMB_SIZE
         : isBarrel ? BARREL_SIZE
             : isHeart ? HEART_SIZE
                 : isGift ? GIFT_SIZE
                     : isBag ? BAG_SIZE
-                        : boxScale(card.size ?? 100);
+                        : isFreeze ? FREEZE_SIZE
+                            : card.size ? boxScale(card.size) : CARD_SIZE;
     // Spawn just off the edge the box travels from (below for fromBottom, above
     // otherwise) so it slides into view right away. The spacing between boxes
     // comes from the spawn cadence, not from a random head start off-screen —
@@ -766,6 +776,16 @@ export default function Play() {
         setIsPlaying(false);
         setIsLoseModal(true);
         stopMusic();
+        // ❄️ A live freeze dies with the run. Its tint and FROZEN badge would
+        // otherwise sit on top of the lose modal until the wall-clock timer
+        // happened to expire, and the speed factor would still be in place if the
+        // player revived off the rewarded ad — a revive on a frozen field.
+        if (freezeTimerRef.current) {
+            clearTimeout(freezeTimerRef.current);
+            freezeTimerRef.current = null;
+        }
+        freezeSpeedRef.current = 1;
+        setFreezeActive(false);
     }
 
     async function handleWatchAd() {

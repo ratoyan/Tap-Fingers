@@ -174,14 +174,26 @@ const GIFTS_PER_DROP = 1;
 // skin (e.g. the 130px balloon) blew the bombs and hearts up along with it, so
 // a bomb was a different size depending on which skin you had on. Balloons (the
 // tappable cards) keep their per-skin size, scaled to the screen the same way;
-// admin SVG cards keep their own authored width/height, applied in PlayBox.
-const BOMB_SIZE = Math.round(scale(100));
-const HEART_SIZE = Math.round(scale(100));
-const BARREL_SIZE = Math.round(scale(100));
+// admin SVG cards keep their own authored width/height, shrunk alongside the
+// rest on a big screen (below) and applied in PlayBox.
+//
+// 📱 Big-screen shrink: `scale` is linear in width, which is right for phones but
+// wrong for tablets — on an 820 dp iPad it turns a 100 dp card into 219 dp, so a
+// few oversized boxes fill the whole field and the game reads as zoomed-in. A
+// finger doesn't grow with the screen, so past BIG_SCREEN_W every drop falls at
+// BIG_SCREEN_FACTOR of its scaled size (820 dp iPad → 153 dp instead of 219).
+// Phones stay exactly as they were: at 400 dp and under the factor is 1.
+const BIG_SCREEN_W = 500;
+const BIG_SCREEN_FACTOR = width > BIG_SCREEN_W ? 0.8 : 1;
+const boxScale = (size: number) => Math.round(scale(size) * BIG_SCREEN_FACTOR);
+
+const BOMB_SIZE = boxScale(100);
+const HEART_SIZE = boxScale(120);
+const BARREL_SIZE = boxScale(140);
 // The gift is drawn a touch larger than the other drops — it's a rare event
 // (one every couple of levels), so it should read as the one worth reacting to.
-const GIFT_SIZE = Math.round(scale(120));
-const BAG_SIZE = Math.round(scale(100));
+const GIFT_SIZE = boxScale(120);
+const BAG_SIZE = boxScale(110);
 
 function getDefaultBackground(level: number) {
     if (level > 4) return require('../../assets/images/background4.jpg');
@@ -216,7 +228,7 @@ function spawnBox(
             : isHeart ? HEART_SIZE
                 : isGift ? GIFT_SIZE
                     : isBag ? BAG_SIZE
-                        : Math.round(scale(card.size ?? 100));
+                        : boxScale(card.size ?? 100);
     // Spawn just off the edge the box travels from (below for fromBottom, above
     // otherwise) so it slides into view right away. The spacing between boxes
     // comes from the spawn cadence, not from a random head start off-screen —
@@ -231,6 +243,11 @@ function spawnBox(
     return {
         ...card,
         size,
+        // PlayBox draws an admin SVG at its authored width/height, ahead of size,
+        // so those get the big-screen shrink too — otherwise they'd be the one
+        // drop still coming down full-size on a tablet.
+        ...(card.width ? {width: Math.round(card.width * BIG_SCREEN_FACTOR)} : null),
+        ...(card.height ? {height: Math.round(card.height * BIG_SCREEN_FACTOR)} : null),
         id: uuId.v4(),
         x: Math.random() * maxX,
         y,

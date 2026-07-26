@@ -143,7 +143,7 @@ const HELPER_GRANT_MIN_LEVEL = 20;
 // it buys. Like the money bag it's free to miss (letting it fall costs nothing).
 const FREEZE_SPAWN_CHANCE = 0.02;
 const FREEZE_SPEED = 0.4;            // field-speed factor while a freeze is active
-const FREEZE_DURATION_MS = 2500;
+const FREEZE_DURATION_MS = 5000;
 // Held back until after level 4 — the early levels stay a plain tap game before
 // the freeze pickup is introduced.
 const FREEZE_MIN_LEVEL = 5;

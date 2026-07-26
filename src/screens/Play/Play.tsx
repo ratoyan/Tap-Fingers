@@ -181,8 +181,8 @@ const GIFTS_PER_DROP = 1;
 // wrong for tablets — on an 820 dp iPad it turns a 100 dp card into 219 dp, so a
 // few oversized boxes fill the whole field and the game reads as zoomed-in. A
 // finger doesn't grow with the screen, so past BIG_SCREEN_W every drop falls at
-// BIG_SCREEN_FACTOR of its scaled size (820 dp iPad → 153 dp instead of 219).
-// Phones stay exactly as they were: at 400 dp and under the factor is 1.
+// BIG_SCREEN_FACTOR of its scaled size. Phones are untouched: at BIG_SCREEN_W and
+// under the factor is 1, so they get exactly what `scale` always gave them.
 const BIG_SCREEN_W = 500;
 const BIG_SCREEN_FACTOR = width > BIG_SCREEN_W ? 0.8 : 1;
 const boxScale = (size: number) => Math.round(scale(size) * BIG_SCREEN_FACTOR);
@@ -194,6 +194,12 @@ const BARREL_SIZE = boxScale(140);
 // (one every couple of levels), so it should read as the one worth reacting to.
 const GIFT_SIZE = boxScale(120);
 const BAG_SIZE = boxScale(110);
+// How far a finger must travel from where it landed before the swipe layer stops
+// treating the gesture as a tap (see the swipe-to-tap section). Tied to the drop
+// size so it means the same thing on every screen: a quarter of a box clears a
+// resting finger's jitter comfortably while staying well inside a real swipe's
+// per-frame travel, so swipe-to-pop still pops everything the finger crosses.
+const SWIPE_MIN_DIST = Math.round(BOMB_SIZE * 0.25);
 
 function getDefaultBackground(level: number) {
     if (level > 4) return require('../../assets/images/background4.jpg');
@@ -1756,8 +1762,26 @@ export default function Play() {
     // isBoom, but that flag only lands on the next render — a fast finger can
     // sample the same box twice before then, which would double-count the tap.
     const swipeHitsRef = useRef<Set<string>>(new Set());
+    // Where each active finger landed, and whether it has popped anything yet.
+    // A plain tap on a box that overlaps another used to pop BOTH: the tapped box
+    // is only flagged isBoom on the next render, so the very next move sample —
+    // and a resting finger always jitters a pixel or two — skipped it and found
+    // the box *behind* it at the same point. So until a finger has travelled
+    // SWIPE_MIN_DIST from where it landed the gesture is still a tap, and a tap
+    // pops exactly one box. Past that it's a swipe and pops everything it crosses.
+    const touchStartRef = useRef<Map<number, {x: number; y: number; popped: boolean}>>(new Map());
 
-    const hitSwipe = useCallback((px: number, py: number) => {
+    const hitSwipe = useCallback((id: number, px: number, py: number) => {
+        let start = touchStartRef.current.get(id);
+        if (!start) {
+            start = {x: px, y: py, popped: false};
+            touchStartRef.current.set(id, start);
+        } else if (start.popped) {
+            const dx = px - start.x;
+            const dy = py - start.y;
+            if (dx * dx + dy * dy < SWIPE_MIN_DIST * SWIPE_MIN_DIST) return;
+        }
+
         const list = boxesRef.current;
         // renderedBoxes walks the list backwards, so index 0 is drawn frontmost —
         // walking forwards here means the first match is the box on top.
@@ -1767,6 +1791,7 @@ export default function Play() {
             const {w, h} = boxBounds(b);
             if (px >= b.x && px <= b.x + w && py >= b.y && py <= b.y + h) {
                 swipeHitsRef.current.add(b.id);
+                start.popped = true;
                 handleTapRef.current(b);
                 return;
             }
@@ -1775,26 +1800,34 @@ export default function Play() {
 
     // Every active finger is tested, not just the one that started the gesture:
     // the layer is the sole responder now, so two-finger play has to come through
-    // nativeEvent.touches or it would quietly stop working.
+    // nativeEvent.touches or it would quietly stop working. Each is tracked by its
+    // own identifier so one finger's tap/swipe state never gates another's.
     const onSwipeTouch = useCallback((e: any) => {
         const touches = e.nativeEvent?.touches;
         if (touches?.length) {
             for (let i = 0; i < touches.length; i++) {
-                hitSwipe(touches[i].locationX, touches[i].locationY);
+                const t = touches[i];
+                hitSwipe(t.identifier ?? i, t.locationX, t.locationY);
             }
         } else {
-            hitSwipe(e.nativeEvent.locationX, e.nativeEvent.locationY);
+            const n = e.nativeEvent;
+            hitSwipe(n.identifier ?? 0, n.locationX, n.locationY);
         }
     }, [hitSwipe]);
+
+    const endSwipe = useCallback(() => {
+        swipeHitsRef.current.clear();
+        touchStartRef.current.clear();
+    }, []);
 
     const swipeResponder = useMemo(() => PanResponder.create({
         onStartShouldSetPanResponder: () => true,
         onMoveShouldSetPanResponder: () => true,
         onPanResponderGrant: onSwipeTouch,
         onPanResponderMove: onSwipeTouch,
-        onPanResponderRelease: () => swipeHitsRef.current.clear(),
-        onPanResponderTerminate: () => swipeHitsRef.current.clear(),
-    }), [onSwipeTouch]);
+        onPanResponderRelease: endSwipe,
+        onPanResponderTerminate: endSwipe,
+    }), [onSwipeTouch, endSwipe]);
 
     // ─── Render helpers ───────────────────────────────────────────────────────
     const comboLabel =

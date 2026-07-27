@@ -1,5 +1,5 @@
 import React, {useCallback, useState} from 'react';
-import {BackHandler, Platform, ScrollView, Text, TouchableOpacity, View} from "react-native";
+import {BackHandler, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View} from "react-native";
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {RootStackParamList} from '../../types/RootStackParamList';
 import {MenuType} from "../../types/menu.type.ts";
@@ -21,13 +21,14 @@ import {STORAGE_KEYS} from "../../utils/storageKeys.ts";
 import InAppReview from 'react-native-in-app-review';
 
 // components
-import MenuButton from "../../components/ui/MenuButton/MenuButton.tsx";
+import MenuButton, {MENU_ENTER_LEAD, MENU_ENTER_STAGGER} from "../../components/ui/MenuButton/MenuButton.tsx";
 import CoinCount from "../../components/ui/CoinCount/CoinCount.tsx";
 import Logo from "../../components/ui/Logo/Logo.tsx";
 import LuckyWheelModal from "../../components/ui/LuckyWheel/LuckyWheelModal.tsx";
 import LuckyWheelButton from "../../components/ui/LuckyWheelButton/LuckyWheelButton.tsx";
 import WatchAdModal from "../../components/ui/WatchAdModal/WatchAdModal.tsx";
 import ExitModal from "../../components/ui/Play/ExitModal.tsx";
+import Entrance from "../../components/ui/Entrance/Entrance.tsx";
 
 // styles
 import styles from './Home.style.ts';
@@ -45,6 +46,11 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Home'>;
 // in between.
 const PROFILE_REFRESH_MS = 30_000;
 let lastProfileRefresh = 0;
+
+// The account hints bring up the rear: they wait for the last menu button to
+// have been dealt, so the eye isn't pulled below the menu mid-arrival. Derived
+// from MenuButton's own timings so the two can't drift apart.
+const HINT_DELAY = MENU_ENTER_LEAD + menus.length * MENU_ENTER_STAGGER + 120;
 
 const Home: React.FC<Props> = () => {
     const insets = useSafeAreaInsets();
@@ -198,12 +204,18 @@ const Home: React.FC<Props> = () => {
                 bounces={true}
             >
                 {/* No fixed size — Logo derives one from the viewport so it
-                    scales on small phones and tablets alike. */}
-                <Logo viewStyles={styles.logo}/>
+                    scales on small phones and tablets alike. The zoom starts
+                    just under 1 so it settles *into* the screen. */}
+                <Entrance from="above" distance={34} scaleFrom={0.84} duration={560}>
+                    <Logo viewStyles={styles.logo}/>
+                </Entrance>
 
+                {/* The buttons run their own arrival (fly-in from alternating
+                    sides + icon pop + gloss sweep) off `index` — see
+                    MenuButton. Nothing to wrap here. */}
                 <View accessible={true} accessibilityLabel="Main menu options">
                     {menus.map((menu: MenuType, index: number) => (
-                        <MenuButton menu={menu} key={index}/>
+                        <MenuButton menu={menu} index={index} key={index}/>
                     ))}
                 </View>
 
@@ -212,50 +224,76 @@ const Home: React.FC<Props> = () => {
                     email pending confirmation → confirm it. Both go to Profile,
                     which is otherwise buried in Settings. */}
                 {isGuestNoEmail && (
-                    <TouchableOpacity
-                        onPress={() => navigation.navigate('Profile')}
-                        activeOpacity={0.85}
-                        style={accountHint.wrap}
-                        accessibilityRole="button"
-                        accessibilityLabel={t('createYourAccount')}
-                    >
-                        <Text allowFontScaling={false} style={accountHint.icon}>👻</Text>
-                        <Text allowFontScaling={false} style={accountHint.label} numberOfLines={1}>
-                            {t('createYourAccount')}
-                        </Text>
-                        <Text allowFontScaling={false} style={accountHint.arrow}>›</Text>
-                    </TouchableOpacity>
+                    <Entrance delay={HINT_DELAY} distance={18} duration={420}>
+                        <TouchableOpacity
+                            onPress={() => navigation.navigate('Profile')}
+                            activeOpacity={0.85}
+                            style={accountHint.wrap}
+                            accessibilityRole="button"
+                            accessibilityLabel={t('createYourAccount')}
+                        >
+                            <Text allowFontScaling={false} style={accountHint.icon}>👻</Text>
+                            <Text allowFontScaling={false} style={accountHint.label} numberOfLines={1}>
+                                {t('createYourAccount')}
+                            </Text>
+                            <Text allowFontScaling={false} style={accountHint.arrow}>›</Text>
+                        </TouchableOpacity>
+                    </Entrance>
                 )}
 
                 {needsEmailVerify && (
-                    <TouchableOpacity
-                        onPress={() => navigation.navigate('Profile')}
-                        activeOpacity={0.85}
-                        style={[accountHint.wrap, verifyHint.wrap]}
-                        accessibilityRole="button"
-                        accessibilityLabel={t('confirmEmailBanner')}
-                    >
-                        <Text allowFontScaling={false} style={accountHint.icon}>📧</Text>
-                        <Text allowFontScaling={false} style={accountHint.label} numberOfLines={1}>
-                            {t('confirmEmailBanner')}
-                        </Text>
-                        <Text allowFontScaling={false} style={accountHint.arrow}>›</Text>
-                    </TouchableOpacity>
+                    <Entrance delay={HINT_DELAY} distance={18} duration={420}>
+                        <TouchableOpacity
+                            onPress={() => navigation.navigate('Profile')}
+                            activeOpacity={0.85}
+                            style={[accountHint.wrap, verifyHint.wrap]}
+                            accessibilityRole="button"
+                            accessibilityLabel={t('confirmEmailBanner')}
+                        >
+                            <Text allowFontScaling={false} style={accountHint.icon}>📧</Text>
+                            <Text allowFontScaling={false} style={accountHint.label} numberOfLines={1}>
+                                {t('confirmEmailBanner')}
+                            </Text>
+                            <Text allowFontScaling={false} style={accountHint.arrow}>›</Text>
+                        </TouchableOpacity>
+                    </Entrance>
                 )}
 
             </ScrollView>
 
-            <CoinCount
-                count={coins}
-                viewStyles={[globalStyles.coinView, {top: insets.top + TOP_OFFSET}]}
-                onPress={adsEnabled ? () => setShowAdModal(true) : undefined}
-            />
+            {/* The pill's absolute placement moves onto the wrapper — an
+                Animated.View can't be positioned by a child's own style. */}
+            <Entrance
+                from="above"
+                distance={40}
+                duration={480}
+                delay={60}
+                style={[globalStyles.coinView, {top: insets.top + TOP_OFFSET}]}
+            >
+                <CoinCount
+                    count={coins}
+                    onPress={adsEnabled ? () => setShowAdModal(true) : undefined}
+                />
+            </Entrance>
 
-            <LuckyWheelButton
-                canSpin={canSpin}
-                top={insets.top + TOP_OFFSET + 5}
-                onPress={() => setShowWheel(true)}
-            />
+            {/* A full-screen, touch-transparent layer: the wheel button pins
+                itself absolutely, so it needs a parent that still spans the
+                screen for its own top/left to mean what it did before. */}
+            <Entrance
+                from="left"
+                distance={90}
+                scaleFrom={0.8}
+                duration={520}
+                delay={140}
+                style={StyleSheet.absoluteFill}
+                pointerEvents="box-none"
+            >
+                <LuckyWheelButton
+                    canSpin={canSpin}
+                    top={insets.top + TOP_OFFSET + 5}
+                    onPress={() => setShowWheel(true)}
+                />
+            </Entrance>
 
             <LuckyWheelModal
                 visible={showWheel}

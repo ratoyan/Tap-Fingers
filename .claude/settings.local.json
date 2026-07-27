@@ -78,7 +78,8 @@
       "Bash(python -c \"import PIL,sys; print\\('PIL', PIL.__version__\\)\")",
       "PowerShell(& \"C:\\\\Users\\\\gorat\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\C--rob-project-mobile-TapFingers\\\\d0090bae-507a-4451-bd2a-343686e60684\\\\scratchpad\\\\bbox.ps1\")",
       "PowerShell(& \"C:\\\\Users\\\\gorat\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\C--rob-project-mobile-TapFingers\\\\d0090bae-507a-4451-bd2a-343686e60684\\\\scratchpad\\\\gen_splash.ps1\")",
-      "PowerShell(& \"C:\\\\Users\\\\gorat\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\C--rob-project-mobile-TapFingers\\\\d0090bae-507a-4451-bd2a-343686e60684\\\\scratchpad\\\\radius.ps1\")"
+      "PowerShell(& \"C:\\\\Users\\\\gorat\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\C--rob-project-mobile-TapFingers\\\\d0090bae-507a-4451-bd2a-343686e60684\\\\scratchpad\\\\radius.ps1\")",
+      "Bash(echo \"exit:$?\")"
     ]
   }
 }

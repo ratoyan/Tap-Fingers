@@ -3,6 +3,10 @@ import {Animated, Easing, StyleSheet, Text, TouchableOpacity, View} from 'react-
 import LinearGradient from 'react-native-linear-gradient';
 import {ms, vs} from '../../../utils/responsive.ts';
 import {GOLD} from '../../../constants/colors.ts';
+import {FERRIS_ASPECT, FerrisWheelRim, FerrisWheelStand} from '../../../assets/icons/FerrisWheelIcon.tsx';
+
+// Diameter of the wheel art — roughly where the 🎡 glyph sat before.
+const WHEEL_SIZE = ms(34);
 
 interface LuckyWheelButtonProps {
     canSpin: boolean;
@@ -116,12 +120,16 @@ export default function LuckyWheelButton({canSpin, top, onPress}: LuckyWheelButt
                                 style={styles.sheen}
                                 pointerEvents="none"
                             />
-                            <Animated.Text
-                                allowFontScaling={false}
-                                style={[styles.emoji, {transform: [{rotate}]}]}
-                            >
-                                🎡
-                            </Animated.Text>
+                            {/* Only the wheel turns. The spinner layer is a
+                                square whose centre is the hub, so `rotate`
+                                pivots exactly there; the stand sits in flow on
+                                top of it and never moves. */}
+                            <View style={styles.wheelIcon}>
+                                <Animated.View style={[styles.wheelSpinner, {transform: [{rotate}]}]}>
+                                    <FerrisWheelRim size={WHEEL_SIZE}/>
+                                </Animated.View>
+                                <FerrisWheelStand size={WHEEL_SIZE}/>
+                            </View>
                             <View style={styles.divider}/>
                             <Text allowFontScaling={false} style={styles.label}>SPIN</Text>
                         </LinearGradient>
@@ -197,9 +205,16 @@ const styles = StyleSheet.create({
         right: 0,
         height: '46%',
     },
-    emoji: {
-        fontSize: ms(32),
-        lineHeight: ms(38),
+    wheelIcon: {
+        width: WHEEL_SIZE,
+        height: WHEEL_SIZE * FERRIS_ASPECT,
+    },
+    wheelSpinner: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        width: WHEEL_SIZE,
+        height: WHEEL_SIZE,
     },
     divider: {
         width: '60%',

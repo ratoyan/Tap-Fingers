@@ -19,6 +19,7 @@ import {LuckyWheelSegment} from "../../services/types.ts";
 import {storage} from "../../db/kvStore.ts";
 import {STORAGE_KEYS} from "../../utils/storageKeys.ts";
 import InAppReview from 'react-native-in-app-review';
+import {useDeferredFocusEffect} from "../../hooks/useDeferredFocusEffect.ts";
 
 // components
 import MenuButton, {MENU_ENTER_LEAD, MENU_ENTER_STAGGER} from "../../components/ui/MenuButton/MenuButton.tsx";
@@ -86,7 +87,11 @@ const Home: React.FC<Props> = () => {
         );
     }, []);
 
-    useFocusEffect(
+    // Deferred, like everything else below: `new Sound(...)` opens and decodes
+    // the mp3, and on a cold start the file isn't in the OS page cache yet — a
+    // solid frame's worth of work, previously landing mid-entrance along with
+    // playMusic's own 200ms timer.
+    useDeferredFocusEffect(
         React.useCallback(() => {
             // This runs every time the screen is focused
             releaseMusic();
@@ -104,7 +109,7 @@ const Home: React.FC<Props> = () => {
         }, [])
     );
 
-    useFocusEffect(useCallback(() => { checkCanSpin(); }, [checkCanSpin]));
+    useDeferredFocusEffect(useCallback(() => { checkCanSpin(); }, [checkCanSpin]));
 
     // Prefetch the wheel layout on every Home focus. It used to be fetched when
     // the modal opened, which put a network round-trip between the player's tap
@@ -115,7 +120,7 @@ const Home: React.FC<Props> = () => {
     // Guarded against a late response landing after the player has navigated
     // away: without the flag this would setState on an unmounted screen every
     // time someone opened Home and left again inside the request window.
-    useFocusEffect(useCallback(() => {
+    useDeferredFocusEffect(useCallback(() => {
         let active = true;
         userService.getLuckyWheelSegments()
             .then(segments => {
@@ -133,7 +138,7 @@ const Home: React.FC<Props> = () => {
 
     // Re-pull the admin global config (ad switch / level length) on every Home
     // focus so an admin toggle reflects without a full app restart.
-    useFocusEffect(useCallback(() => { syncGlobalConfig(); }, []));
+    useDeferredFocusEffect(useCallback(() => { syncGlobalConfig(); }, []));
 
     useFocusEffect(
         useCallback(() => {
@@ -151,7 +156,7 @@ const Home: React.FC<Props> = () => {
     // PROFILE_REFRESH_MS. Firing on *every* focus hammered /player/profile each
     // time the player bounced back to Home; coins/gems already update
     // optimistically via patchStats, so this is just a periodic safety reconcile.
-    useFocusEffect(
+    useDeferredFocusEffect(
         useCallback(() => {
             const now = Date.now();
             if (now - lastProfileRefresh < PROFILE_REFRESH_MS) return;
@@ -164,17 +169,24 @@ const Home: React.FC<Props> = () => {
         }, [refreshProfile])
     );
 
-    useFocusEffect(
+    useDeferredFocusEffect(
         useCallback(() => {
             const requestReviewIfNeeded = async () => {
                 if (!InAppReview.isAvailable()) return;
                 const raw = await storage.getItem(STORAGE_KEYS.LAST_REVIEW_DATE);
                 const now = new Date();
-                if (raw) {
-                    const last = new Date(raw);
-                    const diffDays = (now.getTime() - last.getTime()) / (1000 * 60 * 60 * 24);
-                    if (diffDays < 3) return;
+                // First ever visit: only stamp the clock. Asking someone who has
+                // not played a single round to rate the game is both a bad ask
+                // and, because it spins up Play Services and a native dialog,
+                // the single heaviest thing that used to happen on this screen —
+                // and it happened exactly once, on the first entrance.
+                if (!raw) {
+                    await storage.setItem(STORAGE_KEYS.LAST_REVIEW_DATE, now.toISOString());
+                    return;
                 }
+                const last = new Date(raw);
+                const diffDays = (now.getTime() - last.getTime()) / (1000 * 60 * 60 * 24);
+                if (diffDays < 3) return;
                 await storage.setItem(STORAGE_KEYS.LAST_REVIEW_DATE, now.toISOString());
                 await InAppReview.RequestInAppReview().catch(() => {});
             };
@@ -204,9 +216,10 @@ const Home: React.FC<Props> = () => {
                 bounces={true}
             >
                 {/* No fixed size — Logo derives one from the viewport so it
-                    scales on small phones and tablets alike. The zoom starts
-                    just under 1 so it settles *into* the screen. */}
-                <Entrance from="above" distance={34} scaleFrom={0.84} duration={560}>
+                    scales on small phones and tablets alike. The zoom starts a
+                    whisker under 1 so it settles *into* the screen; any deeper
+                    and the logo reads as being thrown at the player. */}
+                <Entrance from="above" distance={16} scaleFrom={0.96} duration={640}>
                     <Logo viewStyles={styles.logo}/>
                 </Entrance>
 
@@ -224,7 +237,7 @@ const Home: React.FC<Props> = () => {
                     email pending confirmation → confirm it. Both go to Profile,
                     which is otherwise buried in Settings. */}
                 {isGuestNoEmail && (
-                    <Entrance delay={HINT_DELAY} distance={18} duration={420}>
+                    <Entrance delay={HINT_DELAY} distance={12} duration={480}>
                         <TouchableOpacity
                             onPress={() => navigation.navigate('Profile')}
                             activeOpacity={0.85}
@@ -242,7 +255,7 @@ const Home: React.FC<Props> = () => {
                 )}
 
                 {needsEmailVerify && (
-                    <Entrance delay={HINT_DELAY} distance={18} duration={420}>
+                    <Entrance delay={HINT_DELAY} distance={12} duration={480}>
                         <TouchableOpacity
                             onPress={() => navigation.navigate('Profile')}
                             activeOpacity={0.85}
@@ -265,9 +278,9 @@ const Home: React.FC<Props> = () => {
                 Animated.View can't be positioned by a child's own style. */}
             <Entrance
                 from="above"
-                distance={40}
-                duration={480}
-                delay={60}
+                distance={18}
+                duration={520}
+                delay={50}
                 style={[globalStyles.coinView, {top: insets.top + TOP_OFFSET}]}
             >
                 <CoinCount
@@ -281,10 +294,10 @@ const Home: React.FC<Props> = () => {
                 screen for its own top/left to mean what it did before. */}
             <Entrance
                 from="left"
-                distance={90}
-                scaleFrom={0.8}
-                duration={520}
-                delay={140}
+                distance={26}
+                scaleFrom={0.94}
+                duration={560}
+                delay={120}
                 style={StyleSheet.absoluteFill}
                 pointerEvents="box-none"
             >

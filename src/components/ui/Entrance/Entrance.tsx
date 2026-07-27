@@ -15,6 +15,9 @@ import {useFocusEffect} from '@react-navigation/core';
 /** The side the element starts on: 'below' drops in from under its final spot. */
 type Direction = 'below' | 'above' | 'left' | 'right' | 'none';
 
+// Shared with MenuButton so everything on a screen decelerates alike.
+const SETTLE = Easing.bezier(0.16, 1, 0.3, 1);
+
 interface EntranceProps {
     children: React.ReactNode;
     /** ms before this element starts moving. Stagger a list with `index * step`. */
@@ -50,10 +53,16 @@ function Entrance({
                 toValue: 1,
                 duration,
                 delay,
-                // A touch of overshoot so the element settles into place instead
-                // of stopping dead — the difference between "moved" and "landed".
-                easing: Easing.out(Easing.back(1.4)),
+                // The same decelerating curve MenuButton uses: quick off the
+                // mark, long tail, no overshoot. It replaced an Easing.back —
+                // the bounce read as bounce, and on a screen you see dozens of
+                // times a session that gets old faster than it charms.
+                easing: SETTLE,
                 useNativeDriver: true,
+                // Native-driven animations don't register with InteractionManager
+                // on their own. Opting in lets a screen park its heavy focus work
+                // behind the entrance — see useDeferredFocusEffect.
+                isInteraction: true,
             });
 
             anim.start();
@@ -62,10 +71,11 @@ function Entrance({
         }, [t, delay, duration]),
     );
 
-    // Fades in over the first half of the travel: fully opaque before the
-    // overshoot, so the bounce reads as motion rather than a flicker.
+    // Fades a little behind the travel rather than ahead of it — with no
+    // overshoot to cover, finishing the fade early would leave the tail of the
+    // move looking like nothing was happening.
     const opacity = t.interpolate({
-        inputRange: [0, 0.55],
+        inputRange: [0, 0.7],
         outputRange: [0, 1],
         extrapolate: 'clamp',
     });

@@ -193,7 +193,7 @@ const Home: React.FC<Props> = () => {
                 // padding rather than replacing it, so the centred block still
                 // clears the coin counter and wheel button pinned up there when
                 // the content is tall enough to reach them.
-                contentContainerStyle={[styles.scrollContent, {paddingTop: insets.top + TOP_OFFSET + vs(20)}]}
+                contentContainerStyle={[styles.scrollContent, {paddingTop: insets.top + TOP_OFFSET + vs(10)}]}
                 showsVerticalScrollIndicator={false}
                 bounces={true}
             >

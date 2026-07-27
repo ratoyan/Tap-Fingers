@@ -9,10 +9,15 @@
         <item name="android:windowBackground">@color/splash_background</item>
     </style>
 
-    <!-- Launch theme. Backported below API 31 by androidx.core:core-splashscreen. -->
+    <!-- Launch theme. Backported below API 31 by androidx.core:core-splashscreen.
+         The icon is laid out in a fixed 240dp square on every device and masked
+         to a circle of 2/3 that, so splash_logo carries its own padding: the
+         artwork fills 56% of the drawable (~134dp). The logo's furthest opaque
+         pixel would touch the mask at 58.7%, so this keeps a margin and nothing
+         is clipped. Density buckets keep it crisp from mdpi to xxxhdpi. -->
     <style name="SplashTheme" parent="Theme.SplashScreen">
         <item name="windowSplashScreenBackground">@color/splash_background</item>
-        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_foreground</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_logo</item>
         <item name="postSplashScreenTheme">@style/AppTheme</item>
     </style>
 

@@ -48,19 +48,33 @@ function App() {
         useDailyChallengesStore.getState().hydrate();
     }, []);
 
-    // The SFX pool is loaded for the app's lifetime rather than per screen: the
-    // files are small (~370KB all told) and Settings, the pause menu and Play
-    // all reach for the same voices. Loading it here also means the very first
-    // tap of a round is already decoded instead of missing its sound.
+    // Startup work that the first screen doesn't need is held back until the
+    // splash has handed over. All three of these do their work on the MAIN
+    // thread — the same thread the splash's native-driver animations write to
+    // every frame — so running them under the splash was what made it stutter:
+    // the AdMob SDK init does disk I/O and reflection there, and the SFX pool
+    // is 20 MediaPlayer prepares (file open + codec each). The extra delay past
+    // splashDone keeps them off the frame where the navigator mounts, which is
+    // the other busy moment of startup.
     useEffect(() => {
-        refreshSfxMuted().finally(loadSfx);
-        // The haptics gate has nothing to preload — it just needs the persisted
-        // vibration preference read once, before the first haptic() fires.
-        refreshHapticsEnabled();
-        // Initialize the AdMob SDK once for the app's lifetime. Rewarded ads
-        // (the three "Watch Ad" buttons) load their own instance on demand.
-        initAds();
-    }, []);
+        if (!splashDone) return;
+        const timer = setTimeout(() => {
+            // The SFX pool is loaded for the app's lifetime rather than per
+            // screen: the files are small (~370KB all told) and Settings, the
+            // pause menu and Play all reach for the same voices. Home is still
+            // several taps away from a round, so it's decoded long before the
+            // first tap needs it.
+            refreshSfxMuted().finally(loadSfx);
+            // The haptics gate has nothing to preload — it just needs the
+            // persisted vibration preference read once, before the first
+            // haptic() fires.
+            refreshHapticsEnabled();
+            // Initialize the AdMob SDK once for the app's lifetime. Rewarded ads
+            // (the three "Watch Ad" buttons) load their own instance on demand.
+            initAds();
+        }, 600);
+        return () => clearTimeout(timer);
+    }, [splashDone]);
 
     // Pull the admin-controlled global config (ads on/off, level length) at
     // startup AND every time the app returns to the foreground, so an admin
@@ -74,17 +88,25 @@ function App() {
         return () => sub.remove();
     }, []);
 
+    // Also deferred past the splash: needUpdate() hits the store listing over
+    // the network and reads the installed package info natively. The modal it
+    // raises sits on top of the navigator, so nothing about it needs to be
+    // resolved before the splash ends.
     useEffect(() => {
+        if (!splashDone) return;
+        let cancelled = false;
         (async () => {
             try {
                 const needsUpdate = await VersionCheck.needUpdate();
+                if (cancelled) return;
                 if (needsUpdate?.isNeeded) {
                     if (needsUpdate.storeUrl) setStoreUrl(needsUpdate.storeUrl);
                     setShowUpdate(true);
                 }
             } catch {}
         })();
-    }, []);
+        return () => { cancelled = true; };
+    }, [splashDone]);
 
     const sessionResolved = authStatus === 'authed' || authStatus === 'unauthed';
 

@@ -9,6 +9,7 @@ import {loadMusic, playMusic, releaseMusic} from "../../utils/helpers.ts";
 import {useFocusEffect, useNavigation} from "@react-navigation/core";
 import {menus} from "../../data/menu.ts";
 import {TOP_OFFSET} from "../../constants/uiConstants.ts";
+import {vs} from "../../utils/responsive.ts";
 import {useGlobalStore} from "../../store/globalStore.ts";
 import {useAuthStore} from "../../store/authStore.ts";
 import {useConfigStore} from "../../store/configStore.ts";
@@ -188,11 +189,17 @@ const Home: React.FC<Props> = () => {
 
             <ScrollView
                 style={styles.scroll}
-                contentContainerStyle={[styles.scrollContent, {paddingTop: insets.top + TOP_OFFSET}]}
+                // The safe-area/offset padding is *added* to the style's own top
+                // padding rather than replacing it, so the centred block still
+                // clears the coin counter and wheel button pinned up there when
+                // the content is tall enough to reach them.
+                contentContainerStyle={[styles.scrollContent, {paddingTop: insets.top + TOP_OFFSET + vs(20)}]}
                 showsVerticalScrollIndicator={false}
                 bounces={true}
             >
-                <Logo width={160} height={160} viewStyles={styles.logo}/>
+                {/* No fixed size — Logo derives one from the viewport so it
+                    scales on small phones and tablets alike. */}
+                <Logo viewStyles={styles.logo}/>
 
                 <View accessible={true} accessibilityLabel="Main menu options">
                     {menus.map((menu: MenuType, index: number) => (

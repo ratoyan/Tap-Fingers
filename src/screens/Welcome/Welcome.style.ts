@@ -14,6 +14,11 @@ import {ms, vs, isTablet} from '../../utils/responsive.ts';
 // Cap the content column so it doesn't stretch edge-to-edge on big screens.
 const CONTENT_MAX = isTablet ? 520 : 460;
 
+// Breathing room added below the form while the keyboard is open, on top of the
+// keyboard height itself — so the last field and the buttons can be scrolled
+// comfortably clear of it instead of sitting right on its top edge.
+export const KEYBOARD_EXTRA_PADDING = vs(110);
+
 export default StyleSheet.create({
     container: {
         flex: 1,

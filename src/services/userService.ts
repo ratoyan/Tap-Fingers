@@ -2,6 +2,7 @@ import api from './api';
 import { API_ORIGIN } from './config';
 import {
     AdRewardResult,
+    DailyBonusResult,
     HelperPurchaseResult,
     HelperType,
     LuckyWheelResult,
@@ -83,6 +84,16 @@ export async function getMyScores(): Promise<ScoreEntry[]> {
 
 export async function claimAdReward(): Promise<AdRewardResult> {
     const { data } = await api.post('/player/ad-reward');
+    return data.data;
+}
+
+// Credits a claimed daily challenge's coins to the server balance. The daily
+// challenges are tracked on-device, so the server takes the challenge id and the
+// device's 24h cycle start as the claim's identity: replaying the same pair is
+// idempotent (see PlayerService::claimDailyBonus), which is what makes the
+// client's retry queue safe.
+export async function claimDailyBonus(challengeId: string, cycleStart: number): Promise<DailyBonusResult> {
+    const { data } = await api.post('/player/daily-bonus', { challengeId, cycleStart });
     return data.data;
 }
 

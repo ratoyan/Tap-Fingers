@@ -10,6 +10,7 @@ import {useGlobalStore} from './globalStore';
 import {useShopStore} from './shopStore';
 import {useDailyChallengesStore} from './dailyChallengesStore';
 import {setUnauthorizedHandler} from '../services/sessionEvents';
+import {setServerCoinsHandler} from '../services/statsEvents';
 import {resetToWelcome} from '../navigation/navigationRef';
 import {seedHelperDefaults} from '../utils/helpers';
 import {withRetry} from '../utils/withRetry';
@@ -81,6 +82,17 @@ export const useAuthStore = create<AuthState>((set, get) => {
         }
         profileRepo.saveProfile(profile);
         applyProfile(profile);
+        settleDailyBonus();
+    }
+
+    // A daily-challenge reward claimed while offline — or in a session killed
+    // before the call landed — is still owed by the backend. Once a session is
+    // restored, settle the queue. Fire-and-forget: the coins are already visible
+    // via the local bonus offset, so a failed flush just waits for the next one.
+    function settleDailyBonus() {
+        useDailyChallengesStore.getState().hydrate()
+            .then(() => useDailyChallengesStore.getState().flushPending())
+            .catch(() => {});
     }
 
     return {
@@ -99,6 +111,9 @@ export const useAuthStore = create<AuthState>((set, get) => {
             const cached = profileRepo.loadProfile();
             if (cached) {
                 applyProfile(cached);
+                // This path never touches the network, so it's the one launch
+                // where a queued claim would otherwise sit unsent all session.
+                settleDailyBonus();
                 return;
             }
 
@@ -198,3 +213,7 @@ export const useAuthStore = create<AuthState>((set, get) => {
 
 // Wire the axios layer's "unrecoverable 401" event to the session teardown.
 setUnauthorizedHandler(() => useAuthStore.getState().sessionExpired());
+
+// Let the daily-challenge claim queue apply a credited coin total to the
+// session's stats (no-op before bootstrap, when stats is still null).
+setServerCoinsHandler(total => useAuthStore.getState().patchStats({coins: total}));

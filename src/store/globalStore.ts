@@ -7,18 +7,26 @@ import {STORAGE_KEYS} from '../utils/storageKeys';
 // response (game end, purchase, challenge claim) reconciles them with the
 // backend via setCoins/setGems.
 //
-// `bonusCoins` is the one exception: it holds coins earned from the client-only
-// daily challenges (see dailyChallengesStore). The backend knows nothing about
-// them, so they are persisted on-device and re-layered on top of every
-// server-authoritative coin value in setCoins(). This keeps the daily reward
-// visible and persistent across profile refreshes and app restarts. Trade-off:
-// because the server balance excludes them, a purchase funded purely by bonus
-// coins would be rejected server-side — bonus coins inflate the on-device
-// balance only.
+// `bonusCoins` is the one exception: it holds coins from claimed daily
+// challenges that the server has NOT credited yet. Claiming pays out instantly
+// on-device (grantBonusCoins) and queues the claim for the backend; once
+// POST /player/daily-bonus confirms it, settleBonusCoins() drops the coins from
+// the offset in the same tick the server's new total arrives, so the displayed
+// balance never moves — the coins just change owner from "device" to "server".
+//
+// While a claim is still queued (offline), the offset is layered on top of every
+// server-authoritative value in setCoins() so the reward stays visible across
+// profile refreshes and restarts.
+//
+// A leftover NEGATIVE value is possible on devices that upgraded from the old
+// build, where a purchase the bonus helped fund was completed on-device and
+// charged against the offset. It still means the same thing — server coins
+// already spent locally — and `server + bonusCoins` still shows the true
+// spendable balance, so hydrateBonusCoins keeps honouring it.
 interface GlobalState {
     coins: number;      // displayed total = server coins + bonusCoins
     gems: number;
-    bonusCoins: number; // device-local coins from claimed daily challenges
+    bonusCoins: number; // claimed daily-challenge coins the server hasn't credited yet
     addCoins: (amount: number) => void;
     minusCoins: (amount: number) => void;
     setCoins: (value: number) => void;
@@ -26,6 +34,10 @@ interface GlobalState {
     // Adds a claimed daily-challenge reward to the on-device bonus and persists
     // it. Bumps the displayed balance immediately.
     grantBonusCoins: (amount: number) => void;
+    // Drops a now-server-credited reward from the offset WITHOUT touching the
+    // displayed balance: the caller applies the server's new total in the same
+    // tick, and that total already includes these coins.
+    settleBonusCoins: (amount: number) => void;
     // Loads the persisted bonus once on app start and layers it onto the
     // currently displayed balance. Safe to call before or after the first
     // setCoins — the balance converges to server + bonus either way.
@@ -73,6 +85,16 @@ export const useGlobalStore = create<GlobalState>((set, get) => ({
             bonusCoins: nextBonus,
             coins: state.coins + amount,
         }));
+        storage.setItem(STORAGE_KEYS.DAILY_BONUS_COINS, JSON.stringify(nextBonus));
+    },
+
+    settleBonusCoins: (amount: number) => {
+        if (amount <= 0) return;
+        const nextBonus = get().bonusCoins - amount;
+        // `coins` is deliberately untouched — the caller immediately calls
+        // patchStats/setCoins with the server total, which recomputes the
+        // display as (server total + the shrunken offset).
+        set({bonusCoins: nextBonus});
         storage.setItem(STORAGE_KEYS.DAILY_BONUS_COINS, JSON.stringify(nextBonus));
     },
 

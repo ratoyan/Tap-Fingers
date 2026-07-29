@@ -5,12 +5,14 @@ import {useFocusEffect} from "@react-navigation/core";
 import {useGlobalStore} from "../../store/globalStore.ts";
 import {useAuthStore} from "../../store/authStore.ts";
 import {useConfigStore} from "../../store/configStore.ts";
+import {useDailyChallengesStore} from "../../store/dailyChallengesStore.ts";
 import {HORIZONAL_OFFSET} from "../../constants/uiConstants.ts";
 
 // services / data
 import * as shopService from "../../services/shopService.ts";
 import * as userService from "../../services/userService.ts";
 import * as equippedRepo from "../../db/equippedRepo.ts";
+import * as localOwnedRepo from "../../db/localOwnedRepo.ts";
 import {DEFAULT_BG_KEY, DEFAULT_CARD_KEY, mergeShopItem, registerShopIcons, ShopEntry} from "../../data/shopVisuals.ts";
 import {playSfx} from "../../utils/sfx.ts";
 import {haptic} from "../../utils/haptics.ts";
@@ -109,15 +111,21 @@ function Shop() {
 
     async function loadShop() {
         try {
-            const [items, inventory] = await Promise.all([
+            const [items, inventory, localOwned] = await Promise.all([
                 shopService.getItems(),
                 shopService.getInventory(),
+                localOwnedRepo.loadLocalOwned(),
             ]);
 
             registerShopIcons(items);
             const merged = items.map(mergeShopItem);
 
-            const owned = new Set(inventory.map(e => e.item.key));
+            // The server inventory is the source of truth. `localOwned` is the
+            // legacy set from builds where daily-challenge coins never reached
+            // the backend, so those purchases only ever existed on-device —
+            // unioned in so upgrading players don't lose them. Nothing writes to
+            // it any more (see localOwnedRepo).
+            const owned = new Set([...inventory.map(e => e.item.key), ...localOwned]);
             setOwnedKeys(owned);
             // Equipped skins are read from Realm first (the player's last local
             // equip), falling back to the server's active item, then the default.
@@ -237,6 +245,13 @@ function Shop() {
                 setTimeout(() => { playSfx('equip'); haptic('equip'); }, 0);
                 await equip(entry);
             } else {
+                // Daily-challenge rewards are claimed on-device and credited to
+                // the server in the background. Settle anything still queued
+                // before spending, or the server sees a smaller balance than the
+                // one the player is looking at and refuses a purchase they can
+                // genuinely afford.
+                await useDailyChallengesStore.getState().flushPending();
+
                 // Buy, then equip — matches the previous one-tap behaviour. This
                 // one DOES wait for the server: a ka-ching before the purchase
                 // confirms would be a lie if it then fails.

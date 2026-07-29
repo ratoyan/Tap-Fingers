@@ -96,9 +96,19 @@ api.interceptors.response.use(
     }
 );
 
-function normaliseError(err: any): Error {
+// Every rejection the app sees is one of these: the backend's message, plus the
+// HTTP status when there was a response. Callers that must tell "the server
+// refused this" from "the request never landed" read `status` — a transport
+// failure (offline, timeout) leaves it undefined.
+export interface ApiError extends Error {
+    status?: number;
+}
+
+function normaliseError(err: any): ApiError {
     const msg = err?.response?.data?.message ?? err?.message ?? 'Network error';
-    return new Error(msg);
+    const out: ApiError = new Error(msg);
+    out.status = err?.response?.status;
+    return out;
 }
 
 export default api;

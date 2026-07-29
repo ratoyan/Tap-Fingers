@@ -234,6 +234,15 @@ export interface AdRewardResult {
     adsRemaining: number;
 }
 
+// Result of crediting a claimed daily challenge (POST /player/daily-bonus).
+// `alreadyClaimed` means the server had already paid this exact claim — the
+// request was a retry, and `coinsEarned` is 0 rather than an error.
+export interface DailyBonusResult {
+    coinsEarned: number;
+    totalCoins: number;
+    alreadyClaimed: boolean;
+}
+
 export interface LuckyWheelPrize {
     type: 'coins' | HelperType;
     value: number;

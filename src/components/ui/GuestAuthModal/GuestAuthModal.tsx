@@ -212,8 +212,8 @@ export default function GuestAuthModal({
 
     // Signs the guest into a DIFFERENT, already-existing account. Unlike the
     // sign-up above (which upgrades this guest in place), this swaps to another
-    // account's session, so the guest's local progress is left behind on the
-    // server under its own guest_id.
+    // account's session — and since nobody could ever sign back into that guest,
+    // authService deletes it as part of the switch, progress included.
     async function handleEmailLogin() {
         if (busy) return;
         const trimmedEmail = email.trim();

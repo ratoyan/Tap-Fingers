@@ -1,135 +1,161 @@
 import {StyleSheet} from 'react-native';
-import {DARK_PURPLE, GRADIENT_LIGHT, ORCHID, PURPLE_DARK, WHITE} from '../../constants/colors.ts';
+import {GRADIENT_LIGHT, VIOLET, WHITE} from '../../constants/colors.ts';
 import {HORIZONAL_OFFSET} from '../../constants/uiConstants.ts';
-import {ms, scale, vs, SW} from '../../utils/responsive.ts';
+import {ms, vs} from '../../utils/responsive.ts';
+
+// Vertical rhythm between the stacked blocks (hero → stats → cards → danger).
+const BLOCK_GAP = vs(14);
 
 export default StyleSheet.create({
     container: {
         flex: 1,
         paddingHorizontal: HORIZONAL_OFFSET,
     },
+    flex: {
+        flex: 1,
+    },
     scrollContainer: {
         alignItems: 'center',
-        paddingTop: vs(24),
+        paddingTop: vs(16),
         paddingBottom: vs(40),
     },
-
-    /* ── Avatar section ─────────────────────────────── */
-    avatarSection: {
-        alignItems: 'center',
-        marginBottom: vs(20),
+    /* Every block in the scroll is full width; the wrappers are Entrance views,
+       which hug their content unless told to stretch. */
+    block: {
+        width: '100%',
+        marginTop: BLOCK_GAP,
     },
-    avatarWrapper: {
-        shadowColor: DARK_PURPLE,
-        shadowOffset: {width: 0, height: 8},
-        shadowOpacity: 0.6,
-        shadowRadius: 16,
-        elevation: 12,
+    blockFirst: {
+        width: '100%',
     },
-    avatar: {
-        width: ms(130),
-        height: ms(130),
-        borderRadius: ms(65),
-        borderWidth: 3,
-        borderColor: ORCHID,
-    },
-    avatarPlaceholder: {
-        backgroundColor: 'rgba(255,255,255,0.12)',
-        alignItems: 'center',
-        justifyContent: 'center',
-        overflow: 'hidden',
-    },
-    avatarEmoji: {
-        fontSize: ms(64),
-        textAlign: 'center',
-    },
-    cameraOverlay: {
-        position: 'absolute',
-        bottom: 0,
-        right: 0,
-        width: ms(36),
-        height: ms(36),
-        borderRadius: ms(18),
-        backgroundColor: PURPLE_DARK,
-        borderWidth: 2,
-        borderColor: WHITE,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    cameraIcon: {
-        fontSize: ms(16),
-    },
-    avatarUploading: {
-        backgroundColor: PURPLE_DARK,
-    },
-    changePhotoText: {
-        color: 'rgba(255,255,255,0.65)',
-        fontSize: ms(13),
-        marginTop: vs(8),
-        fontWeight: '600',
-        letterSpacing: 0.4,
+    // The danger zone stands apart from the settings above it.
+    blockWide: {
+        width: '100%',
+        marginTop: vs(26),
     },
 
-    /* ── Greeting ───────────────────────────────────── */
-    greeting: {
-        fontSize: ms(24),
+    /* ── Stat tiles row ─────────────────────────────── */
+    statsRow: {
+        flexDirection: 'row',
+        width: '100%',
+        gap: ms(10),
+    },
+
+    /* ── Inputs ─────────────────────────────────────── */
+    // Focus is drawn on the field itself rather than with a glow: these sit
+    // inside translucent cards where a shadow would just muddy the panel.
+    input: {
+        width: '100%',
+        paddingVertical: vs(13),
+        paddingHorizontal: ms(14),
+        borderRadius: ms(14),
+        borderWidth: 1.5,
+        borderColor: 'rgba(255,255,255,0.14)',
+        backgroundColor: 'rgba(255,255,255,0.13)',
         color: WHITE,
-        fontWeight: 'bold',
-        textShadowColor: 'rgba(0,0,0,0.3)',
-        textShadowOffset: {width: 1, height: 1},
-        textShadowRadius: 4,
-        marginBottom: vs(28),
+        fontSize: ms(16),
         textAlign: 'center',
+    },
+    accountInput: {
+        width: '100%',
+        paddingVertical: vs(12),
+        paddingHorizontal: ms(14),
+        borderRadius: ms(13),
+        borderWidth: 1.5,
+        borderColor: 'rgba(255,255,255,0.14)',
+        backgroundColor: 'rgba(255,255,255,0.13)',
+        color: WHITE,
+        fontSize: ms(15),
+        marginBottom: vs(10),
+    },
+    inputFocused: {
+        borderColor: VIOLET,
+        backgroundColor: 'rgba(255,255,255,0.19)',
+    },
+    // The 6-digit confirmation code: wide tracking so the digits read as slots.
+    codeInput: {
+        textAlign: 'center',
+        letterSpacing: ms(10),
+        fontSize: ms(22),
+        fontWeight: '800',
+        paddingVertical: vs(14),
+    },
+
+    /* ── Card action button (Save / Update / Confirm) ── */
+    // Only the single-field cards need this: everywhere else the field above the
+    // button already carries its own bottom margin.
+    actionSpacer: {
+        height: vs(10),
+    },
+    actionButton: {
+        width: '100%',
+        marginTop: vs(2),
+        borderRadius: ms(14),
+        overflow: 'hidden',
+        shadowColor: GRADIENT_LIGHT,
+        shadowOffset: {width: 0, height: 4},
+        shadowOpacity: 0.45,
+        shadowRadius: 10,
+        elevation: 6,
+    },
+    actionGradient: {
+        minHeight: vs(46),
+        paddingVertical: vs(12),
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    actionText: {
+        color: WHITE,
+        fontSize: ms(14.5),
+        fontWeight: '800',
+        letterSpacing: 0.6,
+    },
+    actionDisabled: {
+        opacity: 0.42,
+    },
+
+    /* ── Confirm email card ─────────────────────────── */
+    verifyHint: {
+        color: 'rgba(255,255,255,0.78)',
+        fontSize: ms(13),
+        lineHeight: ms(19),
+        marginBottom: vs(12),
+    },
+    resendText: {
+        color: '#FFD8A8',
+        fontSize: ms(13),
+        fontWeight: '700',
+        textAlign: 'center',
+        marginTop: vs(14),
     },
 
     /* ── Guest view ─────────────────────────────────── */
-    guestSection: {
-        width: SW * 0.8,
-        alignSelf: 'center',
-        alignItems: 'center',
-        paddingTop: vs(10),
-    },
-    ghostAvatarWrap: {
-        shadowColor: '#fff',
-        shadowOffset: {width: 0, height: 0},
-        shadowOpacity: 0.25,
-        shadowRadius: 20,
-        elevation: 10,
-        marginBottom: vs(16),
-    },
-    guestName: {
-        fontSize: ms(26),
-        fontWeight: '800',
-        color: WHITE,
-        marginBottom: vs(12),
-        letterSpacing: 0.5,
-    },
-    guestUsername: {
-        color: WHITE,
-        fontSize: ms(16),
-        fontWeight: '700',
-        textAlign: 'center',
-        marginBottom: vs(4),
+    guestIdChip: {
+        marginTop: vs(10),
+        paddingHorizontal: ms(12),
+        paddingVertical: vs(5),
+        borderRadius: ms(999),
+        backgroundColor: 'rgba(0,0,0,0.28)',
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.16)',
     },
     guestIdText: {
-        color: 'rgba(255,255,255,0.5)',
+        color: 'rgba(255,255,255,0.62)',
         fontSize: ms(11),
-        textAlign: 'center',
-        marginBottom: vs(12),
-        letterSpacing: 0.3,
+        letterSpacing: 0.4,
+        fontWeight: '600',
     },
     guestHint: {
-        color: 'rgba(255,255,255,0.55)',
+        color: 'rgba(255,255,255,0.75)',
         fontSize: ms(14),
         textAlign: 'center',
-        lineHeight: ms(22),
-        marginBottom: vs(24),
+        lineHeight: ms(21),
     },
     dividerRow: {
         flexDirection: 'row',
         alignItems: 'center',
         width: '100%',
-        marginVertical: vs(14),
+        marginVertical: vs(12),
         gap: ms(10),
     },
     dividerLine: {
@@ -143,15 +169,14 @@ export default StyleSheet.create({
         fontWeight: '600',
         letterSpacing: 0.5,
     },
-    /* ── Guest auth buttons (open the sign-up / sign-in sheet) ── */
     authButtons: {
         width: '100%',
         alignItems: 'center',
-        marginTop: vs(4),
     },
     primaryAuthButton: {
         width: '100%',
         borderRadius: ms(16),
+        overflow: 'hidden',
         shadowColor: GRADIENT_LIGHT,
         shadowOffset: {width: 0, height: 6},
         shadowOpacity: 0.5,
@@ -163,7 +188,6 @@ export default StyleSheet.create({
         justifyContent: 'center',
         paddingVertical: vs(16),
         minHeight: vs(54),
-        borderRadius: ms(16),
     },
     primaryAuthText: {
         color: WHITE,
@@ -188,34 +212,6 @@ export default StyleSheet.create({
         fontWeight: '800',
         letterSpacing: 0.5,
     },
-
-    /* ── Input card ─────────────────────────────────── */
-    inputCard: {
-        width: '100%',
-        backgroundColor: 'rgba(255,255,255,0.12)',
-        borderRadius: ms(20),
-        padding: ms(16),
-        borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.2)',
-    },
-    inputLabel: {
-        color: 'rgba(255,255,255,0.7)',
-        fontSize: ms(13),
-        fontWeight: '700',
-        marginBottom: vs(8),
-        letterSpacing: 0.5,
-        textTransform: 'uppercase',
-    },
-    input: {
-        width: '100%',
-        padding: ms(14),
-        borderRadius: ms(14),
-        backgroundColor: 'rgba(255,255,255,0.15)',
-        color: WHITE,
-        fontSize: ms(16),
-        textAlign: 'center',
-    },
-
     formFootnote: {
         color: 'rgba(255,255,255,0.5)',
         fontSize: ms(12),
@@ -224,47 +220,20 @@ export default StyleSheet.create({
         letterSpacing: 0.3,
     },
 
-    /* ── Confirm email card ─────────────────────────── */
-    verifyCard: {
-        borderColor: 'rgba(247,151,30,0.6)',
-        backgroundColor: 'rgba(247,151,30,0.12)',
-    },
-    verifyHint: {
-        color: 'rgba(255,255,255,0.7)',
-        fontSize: ms(13),
-        lineHeight: ms(19),
-        marginBottom: vs(10),
-    },
-    resendText: {
-        color: GRADIENT_LIGHT,
-        fontSize: ms(13),
-        fontWeight: '700',
-        textAlign: 'center',
-        marginTop: vs(12),
-    },
-
-    /* ── Account credential inputs ──────────────────── */
-    accountInput: {
-        width: '100%',
-        paddingVertical: vs(12),
-        paddingHorizontal: ms(14),
-        borderRadius: ms(12),
-        backgroundColor: 'rgba(255,255,255,0.15)',
-        color: WHITE,
-        fontSize: ms(15),
-        marginBottom: vs(10),
-    },
-
     /* ── Delete account (danger) ────────────────────── */
     deleteButton: {
         width: '100%',
-        marginTop: vs(22),
         paddingVertical: vs(15),
         borderRadius: ms(16),
         borderWidth: 1.5,
         borderColor: 'rgba(229,72,77,0.7)',
         backgroundColor: 'rgba(229,72,77,0.12)',
         alignItems: 'center',
+        shadowColor: '#E5484D',
+        shadowOffset: {width: 0, height: 4},
+        shadowOpacity: 0.35,
+        shadowRadius: 12,
+        elevation: 4,
     },
     deleteButtonText: {
         color: '#FF6B6E',

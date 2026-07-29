@@ -3,7 +3,6 @@ import {
     View,
     Text,
     TextInput,
-    Image,
     TouchableOpacity,
     Pressable,
     ScrollView,
@@ -29,7 +28,11 @@ import BackHeader from '../../components/ui/BackHeader/BackHeader.tsx';
 import PhotoPickerSheet from '../../components/ui/PhotoPickerSheet/PhotoPickerSheet.tsx';
 import CameraModal from '../../components/ui/CameraModal/CameraModal.tsx';
 import GuestAuthModal, {GuestAuthMode} from '../../components/ui/GuestAuthModal/GuestAuthModal.tsx';
-import Ghost from '../../assets/icons/Ghost.tsx';
+import Entrance from '../../components/ui/Entrance/Entrance.tsx';
+import PressScale from '../../components/ui/PressScale/PressScale.tsx';
+import ProfileHero from '../../components/ui/Profile/ProfileHero.tsx';
+import SectionCard from '../../components/ui/Profile/SectionCard.tsx';
+import StatTile from '../../components/ui/Profile/StatTile.tsx';
 
 // data
 import {avatarForId} from '../../data/avatars.ts';
@@ -37,7 +40,7 @@ import {useKeyboardAwareScroll} from '../../hooks/useKeyboardAwareScroll.ts';
 
 // styles
 import styles from './Profile.style.ts';
-import {GRADIENT_LIGHT, PURPLE, PURPLE_DARK, VIOLET} from '../../constants/colors.ts';
+import {CYAN, GOLD, GRADIENT_LIGHT, ORCHID, PURPLE, PURPLE_DARK, VIOLET, WHITE} from '../../constants/colors.ts';
 import ScreenStatusBar from '../../components/ui/ScreenStatusBar/ScreenStatusBar.tsx';
 
 // Extra bottom padding added on top of the keyboard height while it is open.
@@ -48,6 +51,17 @@ const KEYBOARD_EXTRA_PADDING = 220;
 // "Resend code" link underneath its code box, and with the number pad up they
 // both ended up behind the keys. Sized to cover that pair.
 const KEYBOARD_REVEAL_OFFSET = 165;
+
+// The screen arrives one block at a time, top to bottom. Small step: the list is
+// short, and a longer one turns opening your own profile into waiting for it.
+const ENTER_STEP = 70;
+// Each stat tile's count-up starts a beat after the one to its left, so the row
+// tallies left to right instead of flickering all at once.
+const TILE_STEP = 90;
+
+// Which field owns the focus accent. The inputs live in translucent cards where
+// a glow would muddy the panel, so focus is drawn on the field's own border.
+type FieldKey = 'name' | 'emailPwd' | 'newEmail' | 'curPwd' | 'newPwd' | 'code';
 
 function Profile() {
     const {t} = useTranslation();
@@ -96,6 +110,8 @@ function Profile() {
     const [verifying,  setVerifying]  = useState(false);
     const [resending,  setResending]  = useState(false);
 
+    const [focusedField, setFocusedField] = useState<FieldKey | null>(null);
+
     const isGuest = player?.accountType === 'guest';
     const isEmailAccount = player?.accountType === 'email';
     // Email accounts that haven't confirmed their address yet.
@@ -116,6 +132,15 @@ function Profile() {
     // button can still be scrolled clear of the keys instead of sitting flush on them.
     const keyboardSpacerStyle =
         keyboardHeight > 0 ? {paddingBottom: keyboardHeight + KEYBOARD_EXTRA_PADDING} : null;
+
+    // Every field wires both: the accent state, and the hook that scrolls it
+    // clear of the keyboard.
+    const focusField = (key: FieldKey) => () => {
+        setFocusedField(key);
+        onInputFocus();
+    };
+    const blurField = () => setFocusedField(null);
+    const fieldStyle = (key: FieldKey, base: any) => [base, focusedField === key && styles.inputFocused];
 
     // Keep the editable name field in sync with the server username.
     useEffect(() => {
@@ -322,41 +347,37 @@ function Profile() {
     // Confirm-email card — shared by the guest (pending) and email (unverified) views.
     function renderVerifyCard() {
         return (
-            <View style={[styles.inputCard, styles.verifyCard, {marginBottom: 14}]}>
-                <Text allowFontScaling={false} style={styles.inputLabel}>📧  {t('confirmEmail')}</Text>
+            <SectionCard icon="📧" title={t('confirmEmail')} tone="alert">
                 <Text allowFontScaling={false} style={styles.verifyHint}>
                     {t('confirmEmailHint', {email: player?.email ?? ''})}
                 </Text>
                 <TextInput
                     value={verifyCode}
                     onChangeText={(v) => setVerifyCode(v.replace(/[^0-9]/g, '').slice(0, 6))}
-                    style={[styles.accountInput, {textAlign: 'center', letterSpacing: 6, fontSize: 22}]}
+                    style={fieldStyle('code', [styles.accountInput, styles.codeInput])}
                     placeholder="••••••"
                     placeholderTextColor={VIOLET}
                     keyboardType="number-pad"
                     maxLength={6}
-                    onFocus={onInputFocus}
+                    onFocus={focusField('code')}
+                    onBlur={blurField}
                     editable={!verifying}
                     allowFontScaling={false}
                     returnKeyType="done"
                     onSubmitEditing={handleVerifyEmail}
                 />
+                <ActionButton label={t('confirm')} busy={verifying} onPress={handleVerifyEmail} />
                 <TouchableOpacity
-                    onPress={handleVerifyEmail}
-                    disabled={verifying}
-                    activeOpacity={0.8}
-                    style={[saveBtn, verifying && {opacity: 0.4}]}
+                    onPress={handleResendCode}
+                    disabled={resending}
+                    hitSlop={{top: 8, bottom: 8, left: 8, right: 8}}
+                    accessibilityRole="button"
                 >
-                    {verifying
-                        ? <ActivityIndicator size="small" color="#fff"/>
-                        : <Text allowFontScaling={false} style={saveBtnText}>{t('confirm')}</Text>}
-                </TouchableOpacity>
-                <TouchableOpacity onPress={handleResendCode} disabled={resending} hitSlop={{top: 8, bottom: 8, left: 8, right: 8}}>
                     <Text allowFontScaling={false} style={styles.resendText}>
                         {resending ? t('loading') : t('resendCode')}
                     </Text>
                 </TouchableOpacity>
-            </View>
+            </SectionCard>
         );
     }
 
@@ -374,7 +395,7 @@ function Profile() {
             <BackHeader title={`👨‍🎓 ${t('profile')}`} />
 
             <KeyboardAvoidingView
-                style={{flex: 1}}
+                style={styles.flex}
                 behavior={Platform.OS === 'ios' ? 'padding' : undefined}
             >
                 <ScrollView
@@ -389,283 +410,271 @@ function Profile() {
 
                     {isGuest ? (
                         /* ── Guest view ──────────────────────── */
-                        <View style={styles.guestSection}>
-                            <View style={styles.ghostAvatarWrap}>
-                                <Ghost size={110} color="rgba(255,255,255,0.9)" eyeColor="#6a0dad" />
-                            </View>
-
-                            <Text allowFontScaling={false} style={styles.guestName}>👻 {t('guestPlayer')}</Text>
-                            {!!player?.username && (
-                                <Text allowFontScaling={false} style={styles.guestUsername}>{player.username}</Text>
-                            )}
-                            {!!player?.guestId && (
-                                <Text allowFontScaling={false} style={styles.guestIdText} selectable>
-                                    ID: {player.guestId}
-                                </Text>
-                            )}
-                            <Text allowFontScaling={false} style={styles.guestHint}>
-                                {t('guestSaveHint')}
-                            </Text>
+                        <>
+                            <Entrance from="below" distance={22} style={styles.blockFirst}>
+                                <ProfileHero
+                                    ghost
+                                    name={player?.username || t('guestPlayer')}
+                                    chip={t('guestPlayer')}
+                                    chipTone="guest"
+                                    chipAccessibilityLabel={`${t('accountType')}: ${player?.accountType ?? ''}`}
+                                    email={player?.email}
+                                    emailVerified={player?.emailVerified !== false}
+                                >
+                                    {!!player?.guestId && (
+                                        <View style={styles.guestIdChip}>
+                                            <Text allowFontScaling={false} style={styles.guestIdText} selectable>
+                                                ID: {player.guestId}
+                                            </Text>
+                                        </View>
+                                    )}
+                                </ProfileHero>
+                            </Entrance>
 
                             {/* A guest with a pending email confirms it here (and only
-                                then becomes a real account); otherwise the two
-                                buttons that open the sign-up / sign-in sheet. */}
-                            {guestPendingEmail ? renderVerifyCard() : (
-                                <View style={styles.authButtons}>
-                                    <TouchableOpacity
-                                        style={styles.primaryAuthButton}
-                                        onPress={() => openAuthModal('register')}
-                                        activeOpacity={0.85}
-                                        accessibilityRole="button"
-                                        accessibilityLabel={t('createAccount')}
-                                    >
-                                        <LinearGradient
-                                            colors={[PURPLE_DARK, GRADIENT_LIGHT]}
-                                            start={{x: 0, y: 0}}
-                                            end={{x: 1, y: 1}}
-                                            style={styles.primaryAuthGradient}
-                                        >
-                                            <Text allowFontScaling={false} style={styles.primaryAuthText}>
-                                                ✨  {t('createAccount')}
-                                            </Text>
-                                        </LinearGradient>
-                                    </TouchableOpacity>
-
-                                    <View style={styles.dividerRow}>
-                                        <View style={styles.dividerLine} />
-                                        <Text allowFontScaling={false} style={styles.dividerText}>{t('or')}</Text>
-                                        <View style={styles.dividerLine} />
-                                    </View>
-
-                                    <TouchableOpacity
-                                        style={styles.secondaryAuthButton}
-                                        onPress={() => openAuthModal('login')}
-                                        activeOpacity={0.85}
-                                        accessibilityRole="button"
-                                        accessibilityLabel={t('signIn')}
-                                    >
-                                        <Text allowFontScaling={false} style={styles.secondaryAuthText}>
-                                            👋  {t('signIn')}
+                                then becomes a real account); otherwise the card that
+                                opens the sign-up / sign-in sheet. */}
+                            <Entrance delay={ENTER_STEP} from="below" distance={22} style={styles.block}>
+                                {guestPendingEmail ? renderVerifyCard() : (
+                                    <SectionCard icon="✨" title={t('createYourAccount')}>
+                                        <Text allowFontScaling={false} style={styles.guestHint}>
+                                            {t('guestSaveHint')}
                                         </Text>
-                                    </TouchableOpacity>
 
-                                    <Text allowFontScaling={false} style={styles.formFootnote}>
-                                        🔒 {t('progressSafeNote')}
-                                    </Text>
-                                </View>
-                            )}
+                                        <View style={styles.authButtons}>
+                                            <PressScale
+                                                onPress={() => openAuthModal('register')}
+                                                style={styles.primaryAuthButton}
+                                                accessibilityLabel={t('createAccount')}
+                                            >
+                                                <LinearGradient
+                                                    colors={[PURPLE_DARK, GRADIENT_LIGHT]}
+                                                    start={{x: 0, y: 0}}
+                                                    end={{x: 1, y: 1}}
+                                                    style={styles.primaryAuthGradient}
+                                                >
+                                                    <Text allowFontScaling={false} style={styles.primaryAuthText}>
+                                                        ✨  {t('createAccount')}
+                                                    </Text>
+                                                </LinearGradient>
+                                            </PressScale>
+
+                                            <View style={styles.dividerRow}>
+                                                <View style={styles.dividerLine} />
+                                                <Text allowFontScaling={false} style={styles.dividerText}>{t('or')}</Text>
+                                                <View style={styles.dividerLine} />
+                                            </View>
+
+                                            <PressScale
+                                                onPress={() => openAuthModal('login')}
+                                                style={styles.secondaryAuthButton}
+                                                accessibilityLabel={t('signIn')}
+                                            >
+                                                <Text allowFontScaling={false} style={styles.secondaryAuthText}>
+                                                    👋  {t('signIn')}
+                                                </Text>
+                                            </PressScale>
+
+                                            <Text allowFontScaling={false} style={styles.formFootnote}>
+                                                🔒 {t('progressSafeNote')}
+                                            </Text>
+                                        </View>
+                                    </SectionCard>
+                                )}
+                            </Entrance>
 
                             {/* Delete guest account — wipes this guest session and its progress */}
-                            <TouchableOpacity
-                                style={styles.deleteButton}
-                                onPress={() => { setDeletePassword(''); setDeleteModal(true); }}
-                                activeOpacity={0.85}
-                            >
-                                <Text allowFontScaling={false} style={styles.deleteButtonText}>🗑  {t('deleteAccount')}</Text>
-                            </TouchableOpacity>
-                        </View>
+                            <Entrance delay={ENTER_STEP * 2} from="below" distance={22} style={styles.block}>
+                                <PressScale
+                                    onPress={() => { setDeletePassword(''); setDeleteModal(true); }}
+                                    style={styles.deleteButton}
+                                    accessibilityLabel={t('deleteAccount')}
+                                >
+                                    <Text allowFontScaling={false} style={styles.deleteButtonText}>
+                                        🗑  {t('deleteAccount')}
+                                    </Text>
+                                </PressScale>
+                            </Entrance>
+                        </>
                     ) : (
                         /* ── Logged-in view ──────────────────── */
                         <>
-                            <View style={styles.avatarSection}>
-                                <TouchableOpacity
-                                    onPress={() => setSheetVisible(true)}
-                                    activeOpacity={0.85}
-                                    accessibilityRole="button"
-                                    accessibilityLabel={t('changePhoto')}
-                                >
-                                    <View style={styles.avatarWrapper}>
-                                        {shownPhoto ? (
-                                            <Image
-                                                source={{uri: shownPhoto}}
-                                                style={styles.avatar}
-                                                accessibilityRole="image"
-                                                accessibilityLabel="User profile picture"
-                                            />
-                                        ) : (
-                                            <LinearGradient
-                                                colors={avatar.colors}
-                                                start={{x: 0, y: 0}}
-                                                end={{x: 1, y: 1}}
-                                                style={[styles.avatar, styles.avatarPlaceholder]}
-                                            >
-                                                <Text allowFontScaling={false} style={styles.avatarEmoji}>
-                                                    {avatar.emoji}
-                                                </Text>
-                                            </LinearGradient>
-                                        )}
-                                        {uploadingPhoto ? (
-                                            <View style={[styles.cameraOverlay, styles.avatarUploading]}>
-                                                <ActivityIndicator size="small" color="#fff" />
-                                            </View>
-                                        ) : (
-                                            <View style={styles.cameraOverlay}>
-                                                <Text allowFontScaling={false} style={styles.cameraIcon}>📷</Text>
-                                            </View>
-                                        )}
-                                    </View>
-                                </TouchableOpacity>
-                                <Text allowFontScaling={false} style={styles.changePhotoText}>{t('changePhoto')}</Text>
-                            </View>
+                            <Entrance from="below" distance={22} style={styles.blockFirst}>
+                                <ProfileHero
+                                    eyebrow={t('greeting', {name: displayName})}
+                                    name={displayName}
+                                    chip={player?.accountType ?? '—'}
+                                    chipTone={isEmailAccount ? 'email' : 'social'}
+                                    chipAccessibilityLabel={`${t('accountType')}: ${player?.accountType ?? ''}`}
+                                    photo={shownPhoto}
+                                    fallbackEmoji={avatar.emoji}
+                                    fallbackColors={avatar.colors}
+                                    uploading={uploadingPhoto}
+                                    onPressAvatar={() => setSheetVisible(true)}
+                                    photoHint={t('changePhoto')}
+                                    email={player?.email}
+                                    emailVerified={player?.emailVerified !== false}
+                                />
+                            </Entrance>
 
-                            <Text allowFontScaling={false} style={styles.greeting}>{t('greeting', {name: displayName})}</Text>
+                            {/* The record, as tiles: the numbers roll up on arrival. */}
+                            <Entrance delay={ENTER_STEP} from="below" distance={22} style={styles.block}>
+                                <View style={styles.statsRow}>
+                                    <StatTile
+                                        icon="🏆"
+                                        label={t('highScore')}
+                                        value={stats?.highScore ?? 0}
+                                        tint={GOLD}
+                                    />
+                                    <StatTile
+                                        icon="🎮"
+                                        label={t('gamesPlayed')}
+                                        value={stats?.totalGames ?? 0}
+                                        tint={CYAN}
+                                        delay={TILE_STEP}
+                                    />
+                                    <StatTile
+                                        icon="🪙"
+                                        label={t('coins')}
+                                        value={stats?.coins ?? 0}
+                                        tint={ORCHID}
+                                        delay={TILE_STEP * 2}
+                                    />
+                                </View>
+                            </Entrance>
 
                             {/* Confirm email — shown only for unverified email accounts */}
-                            {needsEmailVerify && renderVerifyCard()}
+                            {needsEmailVerify && (
+                                <Entrance delay={ENTER_STEP * 2} from="below" distance={22} style={styles.block}>
+                                    {renderVerifyCard()}
+                                </Entrance>
+                            )}
 
                             {/* Editable, server-owned username */}
-                            <View style={styles.inputCard}>
-                                <Text allowFontScaling={false} style={styles.inputLabel}>✏️  {t('name')}</Text>
-                                <TextInput
-                                    value={nameInput}
-                                    onChangeText={setNameInput}
-                                    style={styles.input}
-                                    placeholder={t('enterYourName')}
-                                    placeholderTextColor={VIOLET}
-                                    autoCapitalize="none"
-                                    maxLength={32}
-                                    returnKeyType="done"
-                                    onFocus={onInputFocus}
-                                    onSubmitEditing={handleSaveName}
-                                    accessibilityLabel="Username input field"
-                                />
-                                <TouchableOpacity
-                                    onPress={handleSaveName}
-                                    disabled={!nameChanged || savingName}
-                                    activeOpacity={0.8}
-                                    style={[saveBtn, (!nameChanged || savingName) && {opacity: 0.4}]}
-                                >
-                                    {savingName
-                                        ? <ActivityIndicator size="small" color="#fff"/>
-                                        : <Text allowFontScaling={false} style={saveBtnText}>{t('save')}</Text>}
-                                </TouchableOpacity>
-                            </View>
-
-                            {/* Read-only server stats */}
-                            <View style={[styles.inputCard, {marginTop: 14}]}>
-                                <Text allowFontScaling={false} style={styles.inputLabel}>📊  {t('stats')}</Text>
-                                <View style={statRow}>
-                                    <Text allowFontScaling={false} style={statKey}>{t('accountType')}</Text>
-                                    <Text allowFontScaling={false} style={statVal}>{player?.accountType ?? '—'}</Text>
-                                </View>
-                                {!!player?.email && (
-                                    <View style={statRow}>
-                                        <Text allowFontScaling={false} style={statKey}>{t('email')}</Text>
-                                        <Text allowFontScaling={false} style={statVal} numberOfLines={1}>{player.email}</Text>
-                                    </View>
-                                )}
-                                <View style={statRow}>
-                                    <Text allowFontScaling={false} style={statKey}>{t('highScore')}</Text>
-                                    <Text allowFontScaling={false} style={statVal}>{stats?.highScore ?? 0}</Text>
-                                </View>
-                                <View style={statRow}>
-                                    <Text allowFontScaling={false} style={statKey}>{t('gamesPlayed')}</Text>
-                                    <Text allowFontScaling={false} style={statVal}>{stats?.totalGames ?? 0}</Text>
-                                </View>
-                                <View style={statRow}>
-                                    <Text allowFontScaling={false} style={statKey}>{t('coins')}</Text>
-                                    <Text allowFontScaling={false} style={statVal}>{stats?.coins ?? 0}</Text>
-                                </View>
-                            </View>
+                            <Entrance delay={ENTER_STEP * 3} from="below" distance={22} style={styles.block}>
+                                <SectionCard icon="✏️" title={t('name')}>
+                                    <TextInput
+                                        value={nameInput}
+                                        onChangeText={setNameInput}
+                                        style={fieldStyle('name', styles.input)}
+                                        placeholder={t('enterYourName')}
+                                        placeholderTextColor={VIOLET}
+                                        autoCapitalize="none"
+                                        maxLength={32}
+                                        returnKeyType="done"
+                                        onFocus={focusField('name')}
+                                        onBlur={blurField}
+                                        onSubmitEditing={handleSaveName}
+                                        accessibilityLabel="Username input field"
+                                    />
+                                    <View style={styles.actionSpacer} />
+                                    <ActionButton
+                                        label={t('save')}
+                                        busy={savingName}
+                                        disabled={!nameChanged}
+                                        onPress={handleSaveName}
+                                    />
+                                </SectionCard>
+                            </Entrance>
 
                             {/* Change email — email accounts only */}
                             {isEmailAccount && (
-                                <View style={[styles.inputCard, {marginTop: 14}]}>
-                                    <Text allowFontScaling={false} style={styles.inputLabel}>✉️  {t('changeEmail')}</Text>
-                                    <TextInput
-                                        value={emailPwd}
-                                        onChangeText={setEmailPwd}
-                                        style={styles.accountInput}
-                                        placeholder={t('currentPassword')}
-                                        placeholderTextColor={VIOLET}
-                                        secureTextEntry
-                                        autoCapitalize="none"
-                                        autoCorrect={false}
-                                        editable={!savingEmail}
-                                        allowFontScaling={false}
-                                        onFocus={onInputFocus}
-                                    />
-                                    <TextInput
-                                        value={newEmail}
-                                        onChangeText={setNewEmail}
-                                        style={styles.accountInput}
-                                        placeholder={t('newEmail')}
-                                        placeholderTextColor={VIOLET}
-                                        keyboardType="email-address"
-                                        autoCapitalize="none"
-                                        autoCorrect={false}
-                                        editable={!savingEmail}
-                                        allowFontScaling={false}
-                                        returnKeyType="done"
-                                        onFocus={onInputFocus}
-                                        onSubmitEditing={handleChangeEmail}
-                                    />
-                                    <TouchableOpacity
-                                        onPress={handleChangeEmail}
-                                        disabled={savingEmail}
-                                        activeOpacity={0.8}
-                                        style={[saveBtn, savingEmail && {opacity: 0.4}]}
-                                    >
-                                        {savingEmail
-                                            ? <ActivityIndicator size="small" color="#fff"/>
-                                            : <Text allowFontScaling={false} style={saveBtnText}>{t('updateEmail')}</Text>}
-                                    </TouchableOpacity>
-                                </View>
+                                <Entrance delay={ENTER_STEP * 4} from="below" distance={22} style={styles.block}>
+                                    <SectionCard icon="✉️" title={t('changeEmail')}>
+                                        <TextInput
+                                            value={emailPwd}
+                                            onChangeText={setEmailPwd}
+                                            style={fieldStyle('emailPwd', styles.accountInput)}
+                                            placeholder={t('currentPassword')}
+                                            placeholderTextColor={VIOLET}
+                                            secureTextEntry
+                                            autoCapitalize="none"
+                                            autoCorrect={false}
+                                            editable={!savingEmail}
+                                            allowFontScaling={false}
+                                            onFocus={focusField('emailPwd')}
+                                            onBlur={blurField}
+                                        />
+                                        <TextInput
+                                            value={newEmail}
+                                            onChangeText={setNewEmail}
+                                            style={fieldStyle('newEmail', styles.accountInput)}
+                                            placeholder={t('newEmail')}
+                                            placeholderTextColor={VIOLET}
+                                            keyboardType="email-address"
+                                            autoCapitalize="none"
+                                            autoCorrect={false}
+                                            editable={!savingEmail}
+                                            allowFontScaling={false}
+                                            returnKeyType="done"
+                                            onFocus={focusField('newEmail')}
+                                            onBlur={blurField}
+                                            onSubmitEditing={handleChangeEmail}
+                                        />
+                                        <ActionButton
+                                            label={t('updateEmail')}
+                                            busy={savingEmail}
+                                            onPress={handleChangeEmail}
+                                        />
+                                    </SectionCard>
+                                </Entrance>
                             )}
 
                             {/* Change password — email accounts only */}
                             {isEmailAccount && (
-                                <View style={[styles.inputCard, {marginTop: 14}]}>
-                                    <Text allowFontScaling={false} style={styles.inputLabel}>🔒  {t('changePassword')}</Text>
-                                    <TextInput
-                                        value={curPwd}
-                                        onChangeText={setCurPwd}
-                                        style={styles.accountInput}
-                                        placeholder={t('currentPassword')}
-                                        placeholderTextColor={VIOLET}
-                                        secureTextEntry
-                                        autoCapitalize="none"
-                                        autoCorrect={false}
-                                        editable={!savingPwd}
-                                        allowFontScaling={false}
-                                        onFocus={onInputFocus}
-                                    />
-                                    <TextInput
-                                        value={newPwd}
-                                        onChangeText={setNewPwd}
-                                        style={styles.accountInput}
-                                        placeholder={t('newPassword')}
-                                        placeholderTextColor={VIOLET}
-                                        secureTextEntry
-                                        autoCapitalize="none"
-                                        autoCorrect={false}
-                                        editable={!savingPwd}
-                                        allowFontScaling={false}
-                                        returnKeyType="done"
-                                        onFocus={onInputFocus}
-                                        onSubmitEditing={handleChangePassword}
-                                    />
-                                    <TouchableOpacity
-                                        onPress={handleChangePassword}
-                                        disabled={savingPwd}
-                                        activeOpacity={0.8}
-                                        style={[saveBtn, savingPwd && {opacity: 0.4}]}
-                                    >
-                                        {savingPwd
-                                            ? <ActivityIndicator size="small" color="#fff"/>
-                                            : <Text allowFontScaling={false} style={saveBtnText}>{t('updatePassword')}</Text>}
-                                    </TouchableOpacity>
-                                </View>
+                                <Entrance delay={ENTER_STEP * 5} from="below" distance={22} style={styles.block}>
+                                    <SectionCard icon="🔒" title={t('changePassword')}>
+                                        <TextInput
+                                            value={curPwd}
+                                            onChangeText={setCurPwd}
+                                            style={fieldStyle('curPwd', styles.accountInput)}
+                                            placeholder={t('currentPassword')}
+                                            placeholderTextColor={VIOLET}
+                                            secureTextEntry
+                                            autoCapitalize="none"
+                                            autoCorrect={false}
+                                            editable={!savingPwd}
+                                            allowFontScaling={false}
+                                            onFocus={focusField('curPwd')}
+                                            onBlur={blurField}
+                                        />
+                                        <TextInput
+                                            value={newPwd}
+                                            onChangeText={setNewPwd}
+                                            style={fieldStyle('newPwd', styles.accountInput)}
+                                            placeholder={t('newPassword')}
+                                            placeholderTextColor={VIOLET}
+                                            secureTextEntry
+                                            autoCapitalize="none"
+                                            autoCorrect={false}
+                                            editable={!savingPwd}
+                                            allowFontScaling={false}
+                                            returnKeyType="done"
+                                            onFocus={focusField('newPwd')}
+                                            onBlur={blurField}
+                                            onSubmitEditing={handleChangePassword}
+                                        />
+                                        <ActionButton
+                                            label={t('updatePassword')}
+                                            busy={savingPwd}
+                                            onPress={handleChangePassword}
+                                        />
+                                    </SectionCard>
+                                </Entrance>
                             )}
 
                             {/* Delete account — bottom, danger zone */}
-                            <TouchableOpacity
-                                style={styles.deleteButton}
-                                onPress={() => { setDeletePassword(''); setDeleteModal(true); }}
-                                activeOpacity={0.85}
-                            >
-                                <Text allowFontScaling={false} style={styles.deleteButtonText}>🗑  {t('deleteAccount')}</Text>
-                            </TouchableOpacity>
+                            <Entrance delay={ENTER_STEP * 6} from="below" distance={22} style={styles.blockWide}>
+                                <PressScale
+                                    onPress={() => { setDeletePassword(''); setDeleteModal(true); }}
+                                    style={styles.deleteButton}
+                                    accessibilityLabel={t('deleteAccount')}
+                                >
+                                    <Text allowFontScaling={false} style={styles.deleteButtonText}>
+                                        🗑  {t('deleteAccount')}
+                                    </Text>
+                                </PressScale>
+                            </Entrance>
                         </>
                     )}
 
@@ -756,36 +765,41 @@ function Profile() {
     );
 }
 
-// Local style objects for the Save button + read-only stat rows.
-const saveBtn = {
-    marginTop: 12,
-    paddingVertical: 11,
-    borderRadius: 14,
-    backgroundColor: 'rgba(255,255,255,0.22)',
-    alignItems: 'center' as const,
-};
-const saveBtnText = {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '800' as const,
-    letterSpacing: 0.5,
-};
-const statRow = {
-    flexDirection: 'row' as const,
-    justifyContent: 'space-between' as const,
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.08)',
-};
-const statKey = {
-    color: 'rgba(255,255,255,0.6)',
-    fontSize: 14,
-    fontWeight: '600' as const,
-};
-const statVal = {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '800' as const,
-};
+// The one button shape every card ends with: a gradient bar that dips under the
+// finger, dims when there's nothing to save, and swaps its label for a spinner
+// while the request is in flight.
+function ActionButton({
+    label,
+    onPress,
+    busy = false,
+    disabled = false,
+}: {
+    label: string;
+    onPress: () => void;
+    busy?: boolean;
+    disabled?: boolean;
+}) {
+    const off = busy || disabled;
+    return (
+        <PressScale
+            onPress={onPress}
+            disabled={off}
+            scaleTo={0.97}
+            style={[styles.actionButton, off && styles.actionDisabled]}
+            accessibilityLabel={label}
+        >
+            <LinearGradient
+                colors={[PURPLE_DARK, GRADIENT_LIGHT]}
+                start={{x: 0, y: 0}}
+                end={{x: 1, y: 1}}
+                style={styles.actionGradient}
+            >
+                {busy
+                    ? <ActivityIndicator size="small" color={WHITE} />
+                    : <Text allowFontScaling={false} style={styles.actionText}>{label}</Text>}
+            </LinearGradient>
+        </PressScale>
+    );
+}
 
 export default Profile;

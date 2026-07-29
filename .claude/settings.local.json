@@ -96,7 +96,13 @@
       "Bash(cd *)",
       "PowerShell($g = Invoke-RestMethod -Uri \"http://127.0.0.1:8000/api/auth/guest\" -Method POST -ContentType 'application/json' -Body '{\"deviceId\":\"shape-probe\",\"platform\":\"android\"}'; \"=== auth/guest data keys ===\"; $g.data | Get-Member -MemberType NoteProperty | Select-Object -ExpandProperty Name; \"=== player ===\"; $g.data.player | ConvertTo-Json -Depth 3; \"=== profile ===\"; $h = @{Authorization=\"Bearer $\\($g.data.accessToken\\)\"}; \\(Invoke-RestMethod -Uri \"http://127.0.0.1:8000/api/player/profile\" -Headers $h\\).data | ConvertTo-Json -Depth 3)",
       "Bash(awk '/function adReward/,/^    }/' app/Services/PlayerService.php)",
-      "PowerShell(& \"C:\\\\Users\\\\gorat\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\C--rob-project-mobile-TapFingers\\\\42f577df-c547-431f-a77a-afdcfabb925b\\\\scratchpad\\\\bonus.ps1\")"
+      "PowerShell(& \"C:\\\\Users\\\\gorat\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\C--rob-project-mobile-TapFingers\\\\42f577df-c547-431f-a77a-afdcfabb925b\\\\scratchpad\\\\bonus.ps1\")",
+      "Bash(curl -s -m 8 -o /dev/null -w \"%{http_code}\\\\n\" http://127.0.0.1:8000/api/player/lucky-wheel)",
+      "Bash(curl -s -m 8 http://127.0.0.1:8000/api/health)",
+      "Bash(php -r \"require 'vendor/autoload.php'; echo \\\\Composer\\\\InstalledVersions::getPrettyVersion\\('nesbot/carbon'\\), PHP_EOL;\")",
+      "Bash(curl -s -m 10 -X POST http://127.0.0.1:8000/api/auth/guest -H \"Content-Type: application/json\" -H \"X-Platform: android\" -d '{}')",
+      "Bash(php -l app/Services/PlayerService.php)",
+      "Bash(php -l app/Http/Controllers/Api/PlayerController.php)"
     ]
   }
 }

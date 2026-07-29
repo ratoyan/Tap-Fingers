@@ -254,10 +254,21 @@ export interface LuckyWheelSegment {
     value: number;
 }
 
+// The wheel layout together with the server's verdict on today's free spin.
+// `canSpin` is authoritative — the device's own last-spin date is only an
+// offline fallback, because the two drift apart (reinstall, server-side reset).
+export interface LuckyWheelState {
+    segments: LuckyWheelSegment[];
+    canSpin: boolean;
+    /** Seconds until the daily spin resets (server midnight); 0 when available. */
+    nextSpinInSeconds: number;
+}
+
 export interface LuckyWheelResult {
     index: number;
     prize: LuckyWheelPrize;
     stats: { coins: number; bombCount: number; slowCount: number; shieldCount: number };
+    nextSpinInSeconds: number;
 }
 
 export interface HelperPurchaseResult {

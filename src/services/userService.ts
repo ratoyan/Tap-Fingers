@@ -6,7 +6,7 @@ import {
     HelperPurchaseResult,
     HelperType,
     LuckyWheelResult,
-    LuckyWheelSegment,
+    LuckyWheelState,
     Player,
     Profile,
     ScoreEntry,
@@ -97,9 +97,20 @@ export async function claimDailyBonus(challengeId: string, cycleStart: number): 
     return data.data;
 }
 
-export async function getLuckyWheelSegments(): Promise<LuckyWheelSegment[]> {
+// Mirrors PlayerService::SPIN_COOLDOWN_SECONDS on the backend: one spin per
+// rolling 24h, counted from the last spin. Only used for the offline fallback —
+// whenever the server answers, its own countdown wins.
+export const SPIN_COOLDOWN_SECONDS = 86_400;
+
+// Layout + whether the spin is available right now. The cooldown is the
+// server's call (see LuckyWheelState), so it travels with the layout.
+export async function getLuckyWheel(): Promise<LuckyWheelState> {
     const { data } = await api.get('/player/lucky-wheel');
-    return data.data.segments;
+    return {
+        segments:          data.data.segments ?? [],
+        canSpin:           !!data.data.canSpin,
+        nextSpinInSeconds: data.data.nextSpinInSeconds ?? 0,
+    };
 }
 
 export async function spinLuckyWheel(): Promise<LuckyWheelResult> {

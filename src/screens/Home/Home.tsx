@@ -1,4 +1,4 @@
-import React, {useCallback, useState} from 'react';
+import React, {useCallback, useRef, useState} from 'react';
 import {BackHandler, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View} from "react-native";
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {RootStackParamList} from '../../types/RootStackParamList';
@@ -69,23 +69,60 @@ const Home: React.FC<Props> = () => {
     const patchStats = useAuthStore(s => s.patchStats);
     const [showWheel, setShowWheel] = useState(false);
     const [canSpin, setCanSpin] = useState(false);
+    // Seconds left of the wheel's 24h cooldown, as the server counted them. 0
+    // while a spin is available; drives the modal's "next spin in" countdown.
+    const [nextSpinInSeconds, setNextSpinInSeconds] = useState(0);
     // Wheel layout, prefetched here so the modal opens with its prizes already
     // drawn. null = still loading, [] = loaded but unusable.
     const [wheelSegments, setWheelSegments] = useState<LuckyWheelSegment[] | null>(null);
+    // The latest layout, readable from callbacks without making them depend on
+    // (and re-fire with) the state itself.
+    const wheelSegmentsRef = useRef<LuckyWheelSegment[] | null>(null);
+    wheelSegmentsRef.current = wheelSegments;
     const [wheelLoadError, setWheelLoadError] = useState(false);
     const [showAdModal, setShowAdModal] = useState(false);
     const [showExitModal, setShowExitModal] = useState(false);
-    const checkCanSpin = useCallback(async () => {
+    // Offline fallback only. The server owns the cooldown (it enforces it on
+    // POST /player/lucky-wheel either way); this device-local date is what we
+    // fall back to when the state request doesn't land, and it is deliberately
+    // permissive — a spin the server refuses just comes back as a 429.
+    const checkCanSpinOffline = useCallback(async () => {
         const raw = await storage.getItem(STORAGE_KEYS.LUCKY_SPIN_DATE);
-        if (!raw) { setCanSpin(true); return; }
-        const last = new Date(raw);
-        const now = new Date();
-        setCanSpin(
-            last.getFullYear() !== now.getFullYear() ||
-            last.getMonth() !== now.getMonth() ||
-            last.getDate() !== now.getDate()
+        const last = raw ? new Date(raw).getTime() : NaN;
+        // Never spun on this device, or an unreadable value — let them tap and
+        // let the server decide.
+        if (!Number.isFinite(last)) { setCanSpin(true); setNextSpinInSeconds(0); return; }
+        const left = Math.max(
+            0,
+            Math.round(userService.SPIN_COOLDOWN_SECONDS - (Date.now() - last) / 1000),
         );
+        setCanSpin(left === 0);
+        setNextSpinInSeconds(left);
     }, []);
+
+    // Pull the wheel layout + cooldown from the server. Shared by the focus
+    // prefetch and by the modal's 429 path, where the device thought a spin was
+    // available and the server disagreed — only it knows how long is left.
+    const refreshWheelState = useCallback(async (isStale: () => boolean = () => false) => {
+        try {
+            const state = await userService.getLuckyWheel();
+            if (isStale()) return;
+            setWheelSegments(state.segments);
+            setWheelLoadError(false);
+            setCanSpin(state.canSpin);
+            setNextSpinInSeconds(state.nextSpinInSeconds);
+        } catch {
+            if (isStale()) return;
+            // Keep a layout we already have — a failed refresh (e.g. the one
+            // after a 429, with the modal open) must not blank a working wheel.
+            const known = wheelSegmentsRef.current;
+            setWheelSegments(known ?? []);
+            setWheelLoadError(!known || known.length === 0);
+            // No verdict from the server — fall back to the device's own record
+            // so the button isn't stuck dead while offline.
+            checkCanSpinOffline();
+        }
+    }, [checkCanSpinOffline]);
 
     // Deferred, like everything else below: `new Sound(...)` opens and decodes
     // the mp3, and on a cold start the file isn't in the OS page cache yet — a
@@ -109,32 +146,21 @@ const Home: React.FC<Props> = () => {
         }, [])
     );
 
-    useDeferredFocusEffect(useCallback(() => { checkCanSpin(); }, [checkCanSpin]));
-
-    // Prefetch the wheel layout on every Home focus. It used to be fetched when
-    // the modal opened, which put a network round-trip between the player's tap
-    // and a usable wheel — they got a grey disc and the word "loading". Doing it
-    // here still picks up admin edits without an app restart (the reason it was
-    // re-fetched per open), just before the player asks rather than after.
+    // Prefetch the wheel layout AND the spin cooldown on every Home focus. It
+    // used to be fetched when the modal opened, which put a network round-trip
+    // between the player's tap and a usable wheel — they got a grey disc and the
+    // word "loading". Doing it here still picks up admin edits without an app
+    // restart (the reason it was re-fetched per open), just before the player
+    // asks rather than after.
     //
     // Guarded against a late response landing after the player has navigated
     // away: without the flag this would setState on an unmounted screen every
     // time someone opened Home and left again inside the request window.
     useDeferredFocusEffect(useCallback(() => {
         let active = true;
-        userService.getLuckyWheelSegments()
-            .then(segments => {
-                if (!active) return;
-                setWheelSegments(segments);
-                setWheelLoadError(false);
-            })
-            .catch(() => {
-                if (!active) return;
-                setWheelSegments([]);
-                setWheelLoadError(true);
-            });
+        refreshWheelState(() => !active);
         return () => { active = false; };
-    }, []));
+    }, [refreshWheelState]));
 
     // Re-pull the admin global config (ad switch / level length) on every Home
     // focus so an admin toggle reflects without a full app restart.
@@ -311,8 +337,20 @@ const Home: React.FC<Props> = () => {
             <LuckyWheelModal
                 visible={showWheel}
                 onClose={() => setShowWheel(false)}
-                onSpinComplete={() => setCanSpin(false)}
+                onSpinComplete={seconds => {
+                    setCanSpin(false);
+                    setNextSpinInSeconds(seconds);
+                }}
+                onSpinRejected={() => {
+                    // The server says the spin isn't ready (429) — the device
+                    // thought otherwise. Trust the server, and re-pull the state
+                    // for the real time left on the cooldown.
+                    setCanSpin(false);
+                    refreshWheelState();
+                }}
                 segments={wheelSegments}
+                canSpin={canSpin}
+                nextSpinInSeconds={nextSpinInSeconds}
                 loadError={wheelLoadError}
             />
 

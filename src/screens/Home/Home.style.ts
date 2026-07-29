@@ -29,4 +29,9 @@ export default StyleSheet.create({
     logo: {
         marginBottom: -LOGO_SIZE * 0.19,
     },
+    // Lined up with the coin pill above it (globalStyles.coinView, right: 10) so
+    // the "+N" rises straight into the balance it just changed.
+    coinGain: {
+        right: 10,
+    },
 });

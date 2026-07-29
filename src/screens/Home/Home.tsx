@@ -28,6 +28,7 @@ import Logo from "../../components/ui/Logo/Logo.tsx";
 import LuckyWheelModal from "../../components/ui/LuckyWheel/LuckyWheelModal.tsx";
 import LuckyWheelButton from "../../components/ui/LuckyWheelButton/LuckyWheelButton.tsx";
 import WatchAdModal from "../../components/ui/WatchAdModal/WatchAdModal.tsx";
+import CoinGain from "../../components/ui/CoinGain/CoinGain.tsx";
 import ExitModal from "../../components/ui/Play/ExitModal.tsx";
 import Entrance from "../../components/ui/Entrance/Entrance.tsx";
 
@@ -82,6 +83,8 @@ const Home: React.FC<Props> = () => {
     const [wheelLoadError, setWheelLoadError] = useState(false);
     const [showAdModal, setShowAdModal] = useState(false);
     const [showExitModal, setShowExitModal] = useState(false);
+    // Coins an ad just paid out, held only for as long as the "+N" pop plays.
+    const [coinGain, setCoinGain] = useState<number | null>(null);
     // Offline fallback only. The server owns the cooldown (it enforces it on
     // POST /player/lucky-wheel either way); this device-local date is what we
     // fall back to when the state request doesn't land, and it is deliberately
@@ -354,6 +357,9 @@ const Home: React.FC<Props> = () => {
                 loadError={wheelLoadError}
             />
 
+            {/* The reward the ad just paid, popping up under the coin pill. */}
+            <CoinGain amount={coinGain} onDone={() => setCoinGain(null)} style={styles.coinGain} />
+
             <WatchAdModal
                 visible={showAdModal}
                 onCollect={async () => {
@@ -361,6 +367,10 @@ const Home: React.FC<Props> = () => {
                         // Server grants the coins and enforces the daily ad cap.
                         const result = await userService.claimAdReward();
                         patchStats({coins: result.totalCoins});
+                        // Show what it actually paid: the amount is the server's
+                        // to decide, so it's read off the response rather than
+                        // repeating the "+10" the modal advertised.
+                        setCoinGain(result.coinsEarned);
                     } catch {
                         // Daily limit reached or offline — leave the balance as-is.
                     }

@@ -23,6 +23,7 @@ import BackHeader from "../../components/ui/BackHeader/BackHeader.tsx";
 import ShopItem from "../../components/ui/ShopItem/ShopItem.tsx";
 import {ShopSkeleton} from "../../components/ui/Shimmer/Skeletons.tsx";
 import WatchAdModal from "../../components/ui/WatchAdModal/WatchAdModal.tsx";
+import CoinGain from "../../components/ui/CoinGain/CoinGain.tsx";
 
 // icons
 import CardsIcon from "../../assets/icons/CardsIcon.tsx";
@@ -77,6 +78,8 @@ function Shop() {
     // Tabs whose grid has been built at least once — see switchTab.
     const [mountedTabs, setMountedTabs] = useState<Set<TabType>>(() => new Set<TabType>(['card']));
     const [showAdModal, setShowAdModal] = useState(false);
+    // Coins an ad just paid out, held only for as long as the "+N" pop plays.
+    const [coinGain, setCoinGain] = useState<number | null>(null);
     const [loading, setLoading] = useState(true);
     const [busyKey, setBusyKey] = useState<string | null>(null);
 
@@ -424,12 +427,22 @@ function Shop() {
                 }))
             )}
 
+            {/* The reward the ad just paid, popping up under the header's pill. */}
+            <CoinGain
+                amount={coinGain}
+                onDone={() => setCoinGain(null)}
+                style={{right: HORIZONAL_OFFSET + 4}}
+            />
+
             <WatchAdModal
                 visible={showAdModal}
                 onCollect={async () => {
                     try {
                         const result = await userService.claimAdReward();
                         patchStats({coins: result.totalCoins});
+                        // What the server actually paid, not the modal's advertised
+                        // figure.
+                        setCoinGain(result.coinsEarned);
                     } catch {
                         // Daily limit reached or offline.
                     }

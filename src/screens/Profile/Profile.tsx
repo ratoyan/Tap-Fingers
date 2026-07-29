@@ -42,6 +42,12 @@ import ScreenStatusBar from '../../components/ui/ScreenStatusBar/ScreenStatusBar
 
 // Extra bottom padding added on top of the keyboard height while it is open.
 const KEYBOARD_EXTRA_PADDING = 220;
+// How much room to keep free *below* the focused field when scrolling it clear
+// of the keyboard. The default 48 only clears the field itself, which is too
+// little here: the confirm-email card carries the "Confirm" button and the
+// "Resend code" link underneath its code box, and with the number pad up they
+// both ended up behind the keys. Sized to cover that pair.
+const KEYBOARD_REVEAL_OFFSET = 165;
 
 function Profile() {
     const {t} = useTranslation();
@@ -104,7 +110,7 @@ function Profile() {
 
     // Keep the focused input above the keyboard (edge-to-edge disables the
     // native resize on Android SDK 36 / RN 0.84, so we handle it in JS).
-    const {scrollRef, keyboardHeight, onScroll, onInputFocus} = useKeyboardAwareScroll();
+    const {scrollRef, keyboardHeight, onScroll, onInputFocus} = useKeyboardAwareScroll(KEYBOARD_REVEAL_OFFSET);
     // Bottom room while the keyboard is up: the keyboard's own height (it overlaps
     // the view under edge-to-edge) plus a breathing gap, so the lowest card and its
     // button can still be scrolled clear of the keys instead of sitting flush on them.

@@ -9,6 +9,10 @@ import {FERRIS_ASPECT, FerrisWheelRim, FerrisWheelStand} from '../../../assets/i
 // Diameter of the wheel art — roughly where the 🎡 glyph sat before.
 const WHEEL_SIZE = ms(34);
 
+// One turn, in ms: brisk when a free spin is waiting, idling otherwise.
+const SPIN_FAST = 3500;
+const SPIN_SLOW = 9000;
+
 interface LuckyWheelButtonProps {
     canSpin: boolean;
     top: number;
@@ -23,22 +27,50 @@ export default function LuckyWheelButton({canSpin, top, onPress}: LuckyWheelButt
     const pulseAnim = useRef(new Animated.Value(1)).current;   // attention breathe
     const haloAnim = useRef(new Animated.Value(0)).current;    // halo pulse
 
+    // Where the running loop was, the last time the speed changed: the phase it
+    // started from and the wall-clock moment it started. A linear loop's position
+    // is pure arithmetic, so this recovers it without an Animated listener (which
+    // native-driven values only report back to JS at a cost).
+    const spinPhase = useRef({offset: 0, at: 0, duration: SPIN_SLOW});
+
     // The wheel always turns — quickly with a glowing halo when a free spin is
     // ready, slow and calm otherwise.
+    //
+    // `canSpin` arrives from the server a moment after Home mounts (first sign-in
+    // especially), so this effect re-runs while the wheel is mid-revolution.
+    // Restarting the loop outright would snap it back to 12 o'clock and read as a
+    // stutter, so instead we pick up at the phase it had reached and only finish
+    // *this* turn short, at the new speed. From the next turn on it's a plain loop.
     useEffect(() => {
-        const spin = Animated.loop(
+        const duration = canSpin ? SPIN_FAST : SPIN_SLOW;
+        const prev = spinPhase.current;
+        const now = Date.now();
+        const offset = prev.at
+            ? (prev.offset + (now - prev.at) / prev.duration) % 1
+            : 0;
+        spinPhase.current = {offset, at: now, duration};
+
+        spinAnim.setValue(offset);
+        const spin = Animated.sequence([
+            // The remainder of the turn already under way.
             Animated.timing(spinAnim, {
                 toValue: 1,
-                duration: canSpin ? 3500 : 9000,
+                duration: duration * (1 - offset),
                 easing: Easing.linear,
                 useNativeDriver: true,
             }),
-        );
+            // …then whole turns forever. The loop's reset to 0 lands on 360° = 0°.
+            Animated.loop(
+                Animated.timing(spinAnim, {
+                    toValue: 1,
+                    duration,
+                    easing: Easing.linear,
+                    useNativeDriver: true,
+                }),
+            ),
+        ]);
         spin.start();
-        return () => {
-            spin.stop();
-            spinAnim.setValue(0);
-        };
+        return () => spin.stop();
     }, [canSpin]);
 
     // Border glow + breathe + halo, only while a free spin is available.

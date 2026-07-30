@@ -339,7 +339,7 @@ export default function GuestAuthModal({
                                 onPressIn={() => setShowPassword(v => !v)}
                                 hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}
                                 accessibilityRole="button"
-                                accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
+                                accessibilityLabel={showPassword ? t('hidePassword') : t('showPassword')}
                             >
                                 <EyeIcon size={fieldIconSize} off={!showPassword} color={iconColor('password')} />
                             </TouchableOpacity>

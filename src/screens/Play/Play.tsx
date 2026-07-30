@@ -117,7 +117,7 @@ const BAG_GAP_MAX_MS = 7000;
 // fall past the edge is free. Every level — the first one included — drops
 // exactly BOMBS_PER_LEVEL of them, each after a random gap (never on a
 // predictable beat), from their own timer independent of the card spawner.
-// They fall a bit quicker than the cards (BOMB_FALL_BOOST× the per-frame reach),
+// They fall a bit quicker than the cards (BOMB_FALL_BOOST× the card fall speed),
 // so they cross the screen faster and give the player less time to hesitate.
 const BOMBS_PER_LEVEL = 5;
 const BOMB_FALL_BOOST = 1.3;
@@ -146,6 +146,39 @@ const BARREL_WOBBLE_SPEED = 0.055;
 // level's real pace instead of throwing full-speed boxes at a fresh screen.
 const DURATION_DIP_FACTOR = 0.4;
 const DURATION_DIP_RECOVER_MS = 4000;
+
+// ─── Motion ──────────────────────────────────────────────────────────────────
+// Everything on the field moves on wall-clock time, not on frame count.
+//
+// The loop used to advance a box by a fixed FRACTION of its remaining travel on
+// every frame, with no dt anywhere in the maths — so the fall speed was whatever
+// the frame rate happened to be. A stutter (a spawn, a GC pause, a native sound
+// call) slowed every box down for as long as it lasted and the stream sped back
+// up the moment frames caught up, which is exactly the "quick, then slow" the
+// field was showing; a 90/120 Hz screen ran the whole game 1.5–2× too fast.
+// A frame now advances each box by speed × elapsed time, so a dropped frame
+// costs one frame of smoothness and nothing else, and every device plays at the
+// same pace.
+//
+// FALL_SPEED_SCALE converts the level's `duration` (which was never a duration —
+// it's the per-frame reach) into px/second, calibrated so a 60 fps device falls
+// at exactly the speed it always did: the old integrator settled at
+// reach × 0.05 / 1.05 px per frame.
+const REF_FPS = 60;
+const FALL_SPEED_SCALE = (0.05 / 1.05) * REF_FPS;
+// A frame longer than this counts as this long. After a real stall (an ad, a
+// modal, the JS thread blocked) the field must resume where it was rather than
+// teleport a screen's worth of boxes into the player.
+const MAX_FRAME_MS = 50;
+// Sideways drift: a box eases toward a random x and picks a new target once it
+// arrives. DRIFT_RATE_PER_SEC is the old per-frame 0.05 easing expressed as a
+// rate, so the drift feels the same; the cap is new, because a fresh target on
+// the far side of the screen used to start the ease at ~1000 px/s — a sideways
+// lurch that then died away, every couple of seconds, on every box.
+const DRIFT_RATE_PER_SEC = -Math.log(1 - 0.05) * REF_FPS;
+const DRIFT_MAX_PX_PER_SEC = 420;
+// Spin of a card flagged "rotation", in degrees per second (was 2° per frame).
+const SPIN_DEG_PER_SEC = 2 * REF_FPS;
 // Free helpers (bomb every 10 levels, slow every 15, shield every 20) only start
 // dropping once the player reaches this level — the early game is meant to be
 // played without them. The boss fight still triggers on its own every 10 levels.
@@ -282,11 +315,13 @@ function spawnBox(
         id: uuId.v4(),
         x: Math.random() * maxX,
         y,
+        // Only the horizontal axis has a target now. The vertical one used to
+        // chase a `ty` seeded at 0, which meant a box spawned 200 px above the
+        // screen covered 5% of that gap on its very first frame — a ~10 px jump,
+        // five times the steady-state step — and then settled. Every single box
+        // shot in and slowed down. The fall is a plain constant speed instead
+        // (see the animation loop), so a box enters at the pace it keeps.
         tx: Math.random() * maxX,
-        // Seed the vertical target in the travel direction so the box drifts on
-        // screen smoothly from frame one (a flat 0 would yank a bottom-spawned
-        // box upward across the whole screen in a single step).
-        ty: fromBottom ? y - (duration + 10) : 0,
         color: isGolden ? '#FFD700' : colors[Math.floor(Math.random() * colors.length)],
         duration,
         // Seed the spin angle so the per-frame increment in the animation loop
@@ -313,14 +348,18 @@ function spawnBox(
 // variant out. Every type is positioned with its top-left at (x, y) — the
 // rotation transforms pivot around the centre and cancel out — but the barrel
 // is drawn wider than its box size and an admin SVG uses its authored
-// width/height. Used by the swipe layer below to work out what the finger is
-// over; the "square" card type is the one approximation (PlayBox rolls its own
-// random 101–150px size internally, so its hit area is the box size instead).
+// width/height. Used by the swipe layer to work out what the finger is over and
+// by the animation loop to know when a box has really left the screen.
 function boxBounds(b: any): {w: number; h: number} {
     if (b.isBarrel) {
         const s = Math.round((b.size || 100) * BARREL_ART_SCALE);
         return {w: s, h: s};
     }
+    // A "square" card draws at a size PlayBox rolls once and keeps on the box
+    // (101–150 px), not at box.size. This used to fall through to box.size, so
+    // the bottom-right of every square card was drawn but not tappable — and the
+    // loop retired it up to 50 px early.
+    if (b.__squareSize) return {w: b.__squareSize[0], h: b.__squareSize[1]};
     const isSpecial = b.isBomb || b.isHeart || b.isFreeze || b.isGift || b.isGolden;
     if (!isSpecial && typeof b.iconSvg === 'string' && b.iconSvg.trim()) {
         return {w: b.width || b.size || 100, h: b.height || b.size || 100};
@@ -1306,12 +1345,12 @@ export default function Play() {
 
     function levelUp() {
         durationRef.current += DURATION_STEP;
-        // Keep whatever bomb deficit is still recovering: shift the effective
-        // duration by the same step instead of snapping it to the new target.
-        durationEffRef.current = Math.min(
-            durationRef.current,
-            durationEffRef.current + DURATION_STEP,
-        );
+        // durationEff is deliberately NOT bumped along with it. It used to be, so
+        // every level-up snapped the whole field to the new speed on a single
+        // frame — a 33% jump at level 2, right on top of the level-up overlay.
+        // Left behind, the recovery ramp in the animation loop walks it up to the
+        // new target over about a second and a half, so the level gets faster
+        // without the field ever lurching.
         levelRef.current += 1;
         // Fresh level → a fresh batch of hazards, bombs and barrels alike, plus
         // the level's three money bags.
@@ -1406,10 +1445,9 @@ export default function Play() {
             userService.grantHelper('shield').then(r => applyServerHelperCount('shield', r.count)).catch(() => {});
         }
 
-        // The boxes already in the air adopt the new level's duration. Mutated in
-        // place — `duration` only seeds a box's travel target at spawn, nothing
-        // renders it, so this needs no re-render at all.
-        for (const b of liveRef.current) b.duration = durationRef.current;
+        // The boxes already in the air adopt the new level's speed on their own:
+        // the loop reads durationEff for the whole field rather than a per-box
+        // copy, so nothing has to be written onto them here.
     }
 
     // ─── App state (background → auto-pause & open menu) ─────────────────────
@@ -1563,15 +1601,21 @@ export default function Play() {
         lastFrameTsRef.current = 0;
 
         const animate = (ts: number) => {
-            // Walk the effective duration back up to the level's duration after a
-            // dip (bomb / boss), covering the whole gap in DURATION_DIP_RECOVER_MS.
-            // dt is clamped so one stalled frame can't skip the recovery.
+            // How much wall-clock time this frame covers. Everything below is
+            // scaled by it, so the field runs at the same pace on a 60 Hz phone,
+            // a 120 Hz one, and a frame that arrived late. Clamped so a stall
+            // resumes the fall instead of teleporting it.
             const prevTs = lastFrameTsRef.current;
             lastFrameTsRef.current = ts;
-            const dt = prevTs ? Math.min(ts - prevTs, 100) : 16;
+            const dtMs = Math.min(prevTs ? ts - prevTs : 1000 / REF_FPS, MAX_FRAME_MS);
+            const dt = dtMs / 1000;
+
+            // Walk the effective duration back up to the level's duration after a
+            // dip (bomb / boss / revive) or a level-up, covering the whole gap in
+            // DURATION_DIP_RECOVER_MS.
             if (durationEffRef.current < durationRef.current) {
                 const step =
-                    (durationRef.current * (1 - DURATION_DIP_FACTOR) * dt) /
+                    (durationRef.current * (1 - DURATION_DIP_FACTOR) * dtMs) /
                     DURATION_DIP_RECOVER_MS;
                 durationEffRef.current = Math.min(
                     durationRef.current,
@@ -1585,11 +1629,20 @@ export default function Play() {
             }
 
             // Per-card travel direction (admin-managed). fromBottom → the box
-            // floats UP and is "missed" when its top edge leaves the screen top;
-            // otherwise it falls DOWN and is missed when its bottom passes the
-            // screen bottom. The leading edge crosses the far boundary in both.
+            // floats UP and is "missed" once it has cleared the screen top;
+            // otherwise it falls DOWN and is missed once it has cleared the
+            // screen bottom. The whole box leaves the arena in both.
             const fromBottom = !!cardRef.current.fallFromBottom;
-            const speed = 0.05 * effSlow();
+            // Field-wide factors, computed once per frame rather than per box.
+            // `field` is the slow-mo helper × the ❄️ freeze pickup.
+            const field = effSlow();
+            const fallPxPerSec = (durationEffRef.current + 10) * FALL_SPEED_SCALE * field;
+            const fallStep = fallPxPerSec * dt;
+            // Sideways ease, as a share of the remaining distance for THIS frame's
+            // length — the dt-correct form of the old flat 0.05 per frame.
+            const driftFactor = 1 - Math.exp(-DRIFT_RATE_PER_SEC * field * dt);
+            const driftCap = DRIFT_MAX_PX_PER_SEC * field * dt;
+            const spinStep = SPIN_DEG_PER_SEC * field * dt;
 
             // The frame's real work: walk the live boxes, advance each one and
             // push its new style onto its own native view.
@@ -1608,17 +1661,26 @@ export default function Play() {
 
             for (let i = 0; i < list.length; i++) {
                 const b = list[i];
-                // Bombs (and the life pickup) reach further per frame than the
-                // cards; the mine barrel reaches less — it's the heavy one.
+                // Bombs (and the life pickup) travel faster than the cards; the
+                // mine barrel travels slower — it's the heavy one.
                 const boost = b.isBomb ? BOMB_FALL_BOOST
                     : b.isBarrel ? BARREL_FALL_BOOST
                         : b.isHeart ? HEART_FALL_BOOST : 1;
-                const reach = (durationEffRef.current + 10) * boost;
+                // What this box actually covers on screen — the barrel is drawn
+                // wider than its box, an admin SVG carries its own dimensions.
+                const {w, h} = boxBounds(b);
                 const oldX = b.x;
                 const oldY = b.y;
-                const newY = oldY + (b.ty - oldY) * speed;
+                const newY = fromBottom
+                    ? oldY - fallStep * boost
+                    : oldY + fallStep * boost;
 
-                if (fromBottom ? newY < 0 : newY + b.size > height) {
+                // Retired only once the WHOLE box has cleared the far edge. The
+                // old test fired the moment the leading edge touched it, so a box
+                // blinked out of existence while it was still fully on screen —
+                // and the heart for missing it was charged a beat before the
+                // player had run out of screen to tap it in.
+                if (fromBottom ? newY + h < 0 : newY > height) {
                     // Off the far edge. Drop the box instead of teleporting it
                     // back: the spawner feeds the next one on its own cadence, so
                     // boxes keep arriving one at a time rather than in a re-synced
@@ -1637,17 +1699,27 @@ export default function Play() {
                     continue;
                 }
 
-                b.x = oldX + (b.tx - oldX) * speed;
+                // Sideways drift toward the current target, capped so a target
+                // picked across the screen eases in instead of lurching, and kept
+                // inside the arena using the box's real width (the old maths used
+                // b.size, which let a barrel or a wide admin card drift off the
+                // right edge).
+                const maxX = Math.max(0, width - w);
+                if (b.tx > maxX) b.tx = maxX;
+                let dx = (b.tx - oldX) * driftFactor;
+                if (dx > driftCap) dx = driftCap;
+                else if (dx < -driftCap) dx = -driftCap;
+
+                b.x = Math.min(maxX, Math.max(0, oldX + dx));
                 b.y = newY;
-                b.tx = Math.abs(b.tx - oldX) < 1 ? Math.random() * (width - b.size) : b.tx;
-                b.ty = fromBottom ? oldY - reach : oldY + reach;
+                if (Math.abs(b.tx - b.x) < 1) b.tx = Math.random() * maxX;
                 // Traps never spin — they drop upright so their tell (the lit
                 // fuse, the mine trigger) stays on top. The barrel is the
                 // exception: it rocks side to side, derived from its own height so
                 // the wobble is smooth and needs no extra per-box state.
                 b.rotation = b.isBarrel
                     ? Math.sin(newY * BARREL_WOBBLE_SPEED) * BARREL_WOBBLE_DEG
-                    : (b.isRotation && !b.isBomb) ? (b.rotation + 2) % 360 : b.rotation;
+                    : (b.isRotation && !b.isBomb) ? (b.rotation + spinStep) % 360 : b.rotation;
 
                 // Null until PlayBox has mounted the box (its first frame) and
                 // again after it unmounts. Style props have to travel nested
@@ -1969,10 +2041,10 @@ export default function Play() {
 
     // ─── Render helpers ───────────────────────────────────────────────────────
     const comboLabel =
-        combo >= 5 ? '🔥 INSANE!' :
-            combo >= 4 ? '💥 MEGA!' :
-                combo >= 3 ? '⚡ COMBO x' + combo :
-                    '✨ COMBO x' + combo;
+        combo >= 5 ? t('comboInsane') :
+            combo >= 4 ? t('comboMega') :
+                combo >= 3 ? t('comboBig', {count: combo}) :
+                    t('comboSmall', {count: combo});
 
 
     const LevelUpIcon = level >= 10 ? FlameIcon : level >= 5 ? BoltIcon : StarBurstIcon;
@@ -2177,7 +2249,7 @@ export default function Play() {
             {/* ❄️ Freeze badge */}
             {freezeActive && (
                 <View pointerEvents="none" style={styles.freezeBadge}>
-                    <Text allowFontScaling={false} style={styles.freezeText}>❄️ FROZEN</Text>
+                    <Text allowFontScaling={false} style={styles.freezeText}>{t('frozen')}</Text>
                 </View>
             )}
 
@@ -2200,7 +2272,7 @@ export default function Play() {
                             {color: giftReveal.kind === 'win' ? '#FFD24A' : '#FF1744'},
                         ]}
                     >
-                        {giftReveal.kind === 'win' ? `+${giftReveal.amount}` : 'BOOM!'}
+                        {giftReveal.kind === 'win' ? `+${giftReveal.amount}` : t('boom')}
                     </Text>
                 </Animated.View>
             )}
@@ -2216,7 +2288,7 @@ export default function Play() {
                 >
                     <LevelUpIcon size={56}/>
                     <Text allowFontScaling={false} style={[styles.levelUpText, {color: levelUpColor}]}>
-                        LEVEL {level}!
+                        {t('levelUpBanner', {level})}
                     </Text>
                 </Animated.View>
             )}
@@ -2225,10 +2297,10 @@ export default function Play() {
             {isBossFight && (
                 <View pointerEvents="none" style={styles.bossFightBanner}>
                     <Text allowFontScaling={false} style={styles.bossFightText}>
-                        ⚔️ BOSS FIGHT ⚔️
+                        {t('bossFight')}
                     </Text>
                     <Text allowFontScaling={false} style={styles.bossFightSub}>
-                        {(boss?.name || getBossTier(level).name).toUpperCase()} • TAP TO DESTROY
+                        {t('tapToDestroy', {name: (boss?.name || getBossTier(level).name).toUpperCase()})}
                     </Text>
                 </View>
             )}
@@ -2249,10 +2321,10 @@ export default function Play() {
                 <View style={styles.bossDefeatedOverlay}>
                     <Text allowFontScaling={false} style={styles.bossDefeatedEmoji}>🏆</Text>
                     <Text allowFontScaling={false} style={styles.bossDefeatedText}>
-                        {(boss?.name || getBossTier(level).name).toUpperCase()} DEFEATED!
+                        {t('bossDefeated', {name: (boss?.name || getBossTier(level).name).toUpperCase()})}
                     </Text>
                     <Text allowFontScaling={false} style={styles.bossDefeatedReward}>
-                        +{bossRewardRef.current} coins • ❤️ restored
+                        {t('bossReward', {count: bossRewardRef.current})}
                     </Text>
                 </View>
             )}

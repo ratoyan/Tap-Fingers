@@ -103,7 +103,18 @@
       "Bash(curl -s -m 10 -X POST http://127.0.0.1:8000/api/auth/guest -H \"Content-Type: application/json\" -H \"X-Platform: android\" -d '{}')",
       "Bash(php -l app/Services/PlayerService.php)",
       "Bash(php -l app/Http/Controllers/Api/PlayerController.php)",
-      "Bash(curl -s -m 3 -o /dev/null -w \"metro:%{http_code}\\\\n\" http://127.0.0.1:8081/status)"
+      "Bash(curl -s -m 3 -o /dev/null -w \"metro:%{http_code}\\\\n\" http://127.0.0.1:8081/status)",
+      "Bash(grep -rn \"cancelExitHint\\\\|confirmExitHint\\\\|t\\('avatar'\\\\|t\\(\\\\`avatar\" src/)",
+      "Bash(grep -vE \"t\\\\\\('|t\\\\\\(\\\\`[a-zA-Z]\")",
+      "Bash(echo \"///\")",
+      "Bash(perl -0pi -e ' *)",
+      "Bash(python -)",
+      "Bash(perl -0pi -e \"s/accessibilityLabel=\\\\\"Main menu screen\\\\\"/accessibilityLabel={t\\('homeScreen'\\)}/; s/accessibilityLabel=\\\\\"Main menu options\\\\\"/accessibilityLabel={t\\('homeMenuLabel'\\)}/;\" src/screens/Home/Home.tsx)",
+      "Bash(perl -0pi -e \"s/accessibilityLabel=\\\\\"Profile screen\\\\\"/accessibilityLabel={t\\('profileScreen'\\)}/; s/accessibilityLabel=\\\\\"Username input field\\\\\"/accessibilityLabel={t\\('usernameField'\\)}/;\" src/screens/Profile/Profile.tsx)",
+      "Bash(perl -0pi -e \"s/accessibilityLabel=\\\\\"Progression screen\\\\\"/accessibilityLabel={t\\('progressionScreen'\\)}/;\" src/screens/Progression/Progression.tsx)",
+      "Bash(perl -0pi -e \"s/accessibilityLabel=\\\\\"Challenges screen\\\\\"/accessibilityLabel={t\\('challengesScreen'\\)}/;\" src/screens/Challenges/Challenges.tsx)",
+      "Bash(perl -0pi -e \"s/'Hide password' : 'Show password'/t\\('hidePassword'\\) : t\\('showPassword'\\)/; s/'Show password' : 'Hide password'/t\\('showPassword'\\) : t\\('hidePassword'\\)/;\" src/components/ui/GuestAuthModal/GuestAuthModal.tsx src/screens/Welcome/Welcome.tsx)",
+      "Bash(perl -0pi -e \"s/accessibilityLabel=\\\\{t\\\\\\('coinsGained', \\\\{count: amount\\\\}\\\\\\)\\\\}/accessibilityLabel={tr\\('coinsGained', {count: amount}\\)}/;\" src/components/ui/CoinGain/CoinGain.tsx)"
     ]
   }
 }

@@ -43,7 +43,7 @@ function Settings() {
     const [music, setMusic] = useState(true);
     const [sound, setSound] = useState(true);
     const [vibration, setVibration] = useState(false);
-    const [language, setLanguage] = useState<LanguageType>({name: 'Armenian', code: 'am'});
+    const [language, setLanguage] = useState<LanguageType>(languages[0]);
     const [langModal, setLangModal] = useState(false);
     const [logoutModal, setLogoutModal] = useState(false);
 
@@ -156,7 +156,7 @@ function Settings() {
                     end={{x: 1, y: 0}}
                     style={styles.sectionLine}
                 />
-                <Text allowFontScaling={false} style={styles.sectionTitle}>🎵 AUDIO</Text>
+                <Text allowFontScaling={false} style={styles.sectionTitle}>{t('audioSection')}</Text>
                 <LinearGradient
                     colors={['#DDA0DD', '#8e2de2']}
                     start={{x: 0, y: 0}}
@@ -195,7 +195,7 @@ function Settings() {
                     end={{x: 1, y: 0}}
                     style={styles.sectionLine}
                 />
-                <Text allowFontScaling={false} style={styles.sectionTitle}>🌐 GENERAL</Text>
+                <Text allowFontScaling={false} style={styles.sectionTitle}>{t('generalSection')}</Text>
                 <LinearGradient
                     colors={['#DDA0DD', '#4a00e0']}
                     start={{x: 0, y: 0}}
@@ -207,7 +207,7 @@ function Settings() {
             <View style={styles.card}>
                 <SettingRow
                     label={t('language')}
-                    valueText={language.name}
+                    valueText={language.native}
                     onPress={() => setLangModal(true)}
                     viewStyle={{borderBottomWidth: 0}}
                     icon={<LanguageIcon size={20} color={DARK_PURPLE}/>}

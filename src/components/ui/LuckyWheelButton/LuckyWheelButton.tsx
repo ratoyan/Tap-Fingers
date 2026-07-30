@@ -1,6 +1,7 @@
 import React, {useEffect, useRef} from 'react';
 import {Animated, Easing, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
+import {useTranslation} from 'react-i18next';
 import {ms, vs} from '../../../utils/responsive.ts';
 import {GOLD} from '../../../constants/colors.ts';
 import {FERRIS_ASPECT, FerrisWheelRim, FerrisWheelStand} from '../../../assets/icons/FerrisWheelIcon.tsx';
@@ -15,6 +16,7 @@ interface LuckyWheelButtonProps {
 }
 
 export default function LuckyWheelButton({canSpin, top, onPress}: LuckyWheelButtonProps) {
+    const {t} = useTranslation();
     const scaleAnim = useRef(new Animated.Value(1)).current;   // press feedback
     const glowAnim = useRef(new Animated.Value(0)).current;    // border glow
     const spinAnim = useRef(new Animated.Value(0)).current;    // wheel rotation
@@ -97,7 +99,7 @@ export default function LuckyWheelButton({canSpin, top, onPress}: LuckyWheelButt
                     activeOpacity={0.9}
                     accessible={true}
                     accessibilityRole="button"
-                    accessibilityLabel={canSpin ? 'Lucky wheel, free spin available' : 'Lucky wheel'}
+                    accessibilityLabel={canSpin ? t('luckyWheelFreeLabel') : t('luckyWheelLabel')}
                     onPressIn={() =>
                         Animated.spring(scaleAnim, {toValue: 0.88, useNativeDriver: true}).start()
                     }
@@ -131,7 +133,7 @@ export default function LuckyWheelButton({canSpin, top, onPress}: LuckyWheelButt
                                 <FerrisWheelStand size={WHEEL_SIZE}/>
                             </View>
                             <View style={styles.divider}/>
-                            <Text allowFontScaling={false} style={styles.label}>SPIN</Text>
+                            <Text allowFontScaling={false} style={styles.label}>{t('spinShort')}</Text>
                         </LinearGradient>
                     </Animated.View>
 
@@ -147,7 +149,7 @@ export default function LuckyWheelButton({canSpin, top, onPress}: LuckyWheelButt
 
                     {canSpin && (
                         <View style={styles.freeBadge}>
-                            <Text allowFontScaling={false} style={styles.freeBadgeText}>★ FREE</Text>
+                            <Text allowFontScaling={false} style={styles.freeBadgeText}>{t('freeSpinBadge')}</Text>
                         </View>
                     )}
                 </TouchableOpacity>

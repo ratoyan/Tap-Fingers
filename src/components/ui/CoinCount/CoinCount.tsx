@@ -1,6 +1,7 @@
 import React, {useEffect, useRef} from "react";
 import {Animated, Easing, Text, View, StyleProp, TouchableOpacity} from "react-native";
 import LinearGradient from "react-native-linear-gradient";
+import {useTranslation} from "react-i18next";
 
 // icons
 import Coin from "../../../assets/icons/Coin.tsx";
@@ -15,6 +16,7 @@ interface CoinCountProps {
 }
 
 function CoinCount({count, viewStyles, onPress}: CoinCountProps) {
+    const {t} = useTranslation();
     // The pill only earns a "+" when it actually leads somewhere: Home and Shop
     // hand over a handler only while ads are enabled, and Play never does. So
     // the badge follows onPress rather than a flag every caller would have to
@@ -46,7 +48,7 @@ function CoinCount({count, viewStyles, onPress}: CoinCountProps) {
             style={[styles.container, viewStyles && viewStyles]}
             accessible={true}
             accessibilityRole={onPress ? 'button' : 'text'}
-            accessibilityLabel={`${count} coins`}
+            accessibilityLabel={t('coinsLabel', {count})}
         >
             <View style={styles.coinWrap}>
                 <Coin width={22} height={20}/>

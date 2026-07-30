@@ -265,7 +265,7 @@ function Welcome() {
                 activeOpacity={0.8}
                 hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}
                 accessibilityRole="button"
-                accessibilityLabel={muted ? 'Turn sound on' : 'Turn sound off'}
+                accessibilityLabel={muted ? t('turnSoundOn') : t('turnSoundOff')}
             >
                 {muted
                     ? <SoundOffIcon size={24} color="#fff" />
@@ -393,7 +393,7 @@ function Welcome() {
                                     onPress={() => setShowPassword(v => !v)}
                                     hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}
                                     accessibilityRole="button"
-                                    accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
+                                    accessibilityLabel={showPassword ? t('hidePassword') : t('showPassword')}
                                 >
                                     <EyeIcon size={fieldIconSize} off={!showPassword} color={iconColor('password')} />
                                 </TouchableOpacity>

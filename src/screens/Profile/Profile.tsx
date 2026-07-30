@@ -418,7 +418,7 @@ function Profile() {
             colors={[PURPLE_DARK, PURPLE]}
             style={styles.container}
             accessible={true}
-            accessibilityLabel="Profile screen"
+            accessibilityLabel={t('profileScreen')}
         >
             <ScreenStatusBar/>
 
@@ -454,7 +454,7 @@ function Profile() {
                                     {!!player?.guestId && (
                                         <View style={styles.guestIdChip}>
                                             <Text allowFontScaling={false} style={styles.guestIdText} selectable>
-                                                ID: {player.guestId}
+                                                {t('idLabel')} {player.guestId}
                                             </Text>
                                         </View>
                                     )}
@@ -587,7 +587,7 @@ function Profile() {
                                         onFocus={focusField('name')}
                                         onBlur={blurField}
                                         onSubmitEditing={handleSaveName}
-                                        accessibilityLabel="Username input field"
+                                        accessibilityLabel={t('usernameField')}
                                     />
                                     <View style={styles.actionSpacer} />
                                     <ActionButton

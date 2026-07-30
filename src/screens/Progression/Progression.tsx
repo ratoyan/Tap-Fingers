@@ -145,7 +145,7 @@ function Progression() {
         <View
             style={styles.container}
             accessible={true}
-            accessibilityLabel="Progression screen"
+            accessibilityLabel={t('progressionScreen')}
         >
             <ScreenStatusBar/>
 

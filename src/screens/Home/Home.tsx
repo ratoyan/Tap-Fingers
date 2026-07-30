@@ -230,7 +230,7 @@ const Home: React.FC<Props> = () => {
             end={{x: 1, y: 1}}
             style={styles.container}
             accessible={true}
-            accessibilityLabel="Main menu screen"
+            accessibilityLabel={t('homeScreen')}
         >
             <ScreenStatusBar/>
 
@@ -255,7 +255,7 @@ const Home: React.FC<Props> = () => {
                 {/* The buttons run their own arrival (fly-in from alternating
                     sides + icon pop + gloss sweep) off `index` — see
                     MenuButton. Nothing to wrap here. */}
-                <View accessible={true} accessibilityLabel="Main menu options">
+                <View accessible={true} accessibilityLabel={t('homeMenuLabel')}>
                     {menus.map((menu: MenuType, index: number) => (
                         <MenuButton menu={menu} index={index} key={index}/>
                     ))}

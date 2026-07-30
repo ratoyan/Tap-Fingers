@@ -1,6 +1,7 @@
 import React, {useEffect, useRef} from 'react';
 import {Animated, Easing, StyleProp, StyleSheet, Text, ViewStyle} from 'react-native';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
+import {useTranslation} from 'react-i18next';
 
 import Coin from '../../../assets/icons/Coin.tsx';
 import {playSfx} from '../../../utils/sfx.ts';
@@ -37,6 +38,8 @@ interface CoinGainProps {
 }
 
 function CoinGain({amount, onDone, offsetY = 44, style}: CoinGainProps) {
+    // `t` here is the animation's progress value, so the translator is aliased.
+    const {t: tr} = useTranslation();
     const insets = useSafeAreaInsets();
     const t = useRef(new Animated.Value(0)).current;
     // Callers pass an inline closure; keeping it in a ref means a parent
@@ -84,7 +87,7 @@ function CoinGain({amount, onDone, offsetY = 44, style}: CoinGainProps) {
         <Animated.View
             pointerEvents="none"
             accessibilityLiveRegion="polite"
-            accessibilityLabel={`+${amount} coins`}
+            accessibilityLabel={tr('coinsGained', {count: amount})}
             style={[
                 styles.pill,
                 {top: insets.top + TOP_OFFSET + vs(offsetY)},

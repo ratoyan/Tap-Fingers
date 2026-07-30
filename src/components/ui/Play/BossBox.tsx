@@ -2,6 +2,7 @@ import React, {useEffect, useRef, useState} from 'react';
 import {Animated, Dimensions, Easing, Text, TouchableOpacity, View} from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import {SvgXml} from 'react-native-svg';
+import {useTranslation} from 'react-i18next';
 import {Boss} from '../../../services/types.ts';
 
 const {width, height} = Dimensions.get('window');
@@ -87,6 +88,7 @@ function DamageFloat({onDone}: {onDone: () => void}) {
 }
 
 function BossBox({bossHP, bossMaxHP, level, onTap, boss}: Props) {
+    const {t} = useTranslation();
     const posX        = useRef(new Animated.Value(width / 2 - BOSS_SIZE / 2)).current;
     const posY        = useRef(new Animated.Value(height / 2 - BOSS_SIZE / 2)).current;
     const scaleAnim   = useRef(new Animated.Value(0)).current;
@@ -368,7 +370,7 @@ function BossBox({bossHP, bossMaxHP, level, onTap, boss}: Props) {
                     activeOpacity={0.95}
                     accessible={true}
                     accessibilityRole="button"
-                    accessibilityLabel={`Attack ${bossName}, ${bossHP} of ${bossMaxHP} health`}
+                    accessibilityLabel={t('attackBoss', {name: bossName, hp: bossHP, maxHp: bossMaxHP})}
                 >
                     <LinearGradient
                         colors={bodyColors}

@@ -1,6 +1,7 @@
 import React, {useMemo} from "react";
 import {Pressable, Text, View, ViewStyle} from "react-native";
 import {SvgAst, parse} from "react-native-svg";
+import i18n from "../../../localization/i18n.ts";
 import {DARK_NAVY} from "../../../constants/colors.ts";
 
 // icons
@@ -94,8 +95,13 @@ const spinOf = (box: any): any[] =>
     (box?.isRotation && box?.rotation) ? [{rotate: `${box.rotation}deg`}] : [];
 
 // Rotation pivots around the artwork's centre: shift to the centre, turn, shift
-// back. With no rotation the two shifts cancel and the box sits at (x, y).
+// back. With no rotation the two shifts cancel, so the four-entry form is dropped
+// for the plain translate it works out to — this is rebuilt and pushed across to
+// the native view for every box on every frame, and most cards never spin.
 function pivot(box: any, w: number, h: number, spin: any[]): ViewStyle["transform"] {
+    if (!spin.length) {
+        return [{translateX: box.x}, {translateY: box.y}] as ViewStyle["transform"];
+    }
     return [
         {translateX: box.x + w / 2},
         {translateY: box.y + h / 2},
@@ -244,7 +250,13 @@ function PlayBox({box, handlePress, a11y}: PlayBoxProps) {
     //
     // The style is the same object the loop will push from here on, so the box's
     // first painted frame and every frame after it come from one place.
-    const wrap = (children: React.ReactNode, label: string) => {
+    // `labelKey` is resolved through i18n only on the screen-reader path — this
+    // is the hottest component in the game (one instance per falling box) and a
+    // useTranslation() subscription per box would be paid on every render for a
+    // string that ordinary play never reads. The instance is used directly for
+    // the same reason; the language can only change from Settings, never while
+    // the arena is live.
+    const wrap = (children: React.ReactNode, labelKey: string) => {
         const style = buildBoxStyle(box);
         return a11y ? (
             <Pressable
@@ -252,7 +264,7 @@ function PlayBox({box, handlePress, a11y}: PlayBoxProps) {
                 onPressIn={() => handlePress(box)}
                 style={style}
                 accessibilityRole="button"
-                accessibilityLabel={label}
+                accessibilityLabel={i18n.t(labelKey)}
             >
                 {children}
             </Pressable>
@@ -272,7 +284,7 @@ function PlayBox({box, handlePress, a11y}: PlayBoxProps) {
             <View style={trackStyle}>
                 <BarrelBlast size={barrelSize}/>
             </View>
-        ) : wrap(barrelArt, "Mine barrel — do not tap");
+        ) : wrap(barrelArt, "dontTapBarrel");
     }
 
     // 💣 Hazard bomb — wins over every card art (admin SVG included) so the
@@ -283,21 +295,21 @@ function PlayBox({box, handlePress, a11y}: PlayBoxProps) {
             <View style={trackStyle}>
                 <BombBlast size={artSize}/>
             </View>
-        ) : wrap(bombArt, "Bomb — do not tap");
+        ) : wrap(bombArt, "dontTapBomb");
     }
 
     // ❤️ Life pickup — falls only when the player has a heart to win back.
     // Like the bag, it leaves no track behind when tapped.
     if (box.isHeart) {
         if (box.isBoom) return null;
-        return wrap(heartArt, "Tap to regain a life");
+        return wrap(heartArt, "tapHeart");
     }
 
     // ❄️ Freeze pickup — rendered by its own cyan snowflake art and, like the
     // bag, it leaves no track behind when tapped. Drawn upright (no spin).
     if (box.isFreeze) {
         if (box.isBoom) return null;
-        return wrap(freezeArt, "Tap snowflake for slow motion");
+        return wrap(freezeArt, "tapSnowflake");
     }
 
     // 🎁 Mystery gift box — a gamble tapped for a random reward or a boom. Wins
@@ -306,7 +318,7 @@ function PlayBox({box, handlePress, a11y}: PlayBoxProps) {
     // track behind when tapped. Drawn upright (no spin).
     if (box.isGift) {
         if (box.isBoom) return null;
-        return wrap(giftArt, "Tap the mystery gift");
+        return wrap(giftArt, "tapGift");
     }
 
     // 💰 Bonus money bag (what used to be the "golden" box). It replaces the
@@ -317,7 +329,7 @@ function PlayBox({box, handlePress, a11y}: PlayBoxProps) {
     // it, unlike the cards.
     if (box.isGolden) {
         if (box.isBoom) return null;
-        return wrap(bagArt, "Tap money bag");
+        return wrap(bagArt, "tapMoneyBag");
     }
 
     // 🖌️ Admin-authored SVG (backend icon_svg) — wins over the on-device art so
@@ -331,7 +343,7 @@ function PlayBox({box, handlePress, a11y}: PlayBoxProps) {
                 <TrackIcon width={svgW} height={svgH}
                     color={box.randomColors ? randomColor : (box.trackColor ?? box.color ?? DARK_NAVY)}/>
             </View>
-        ) : wrap(svgArt, "Tap card");
+        ) : wrap(svgArt, "tapCard");
     }
 
     // 🟦 Square — no artwork of its own: a coloured rounded box, whose size
@@ -343,7 +355,7 @@ function PlayBox({box, handlePress, a11y}: PlayBoxProps) {
             <View style={trackStyle}>
                 <TrackIcon width={size[0]} height={size[1]} color={box.color || "blue"}/>
             </View>
-        ) : wrap(null, "Tap card");
+        ) : wrap(null, "tapCard");
     }
 
     // 🃏 Default (Card)
@@ -351,7 +363,7 @@ function PlayBox({box, handlePress, a11y}: PlayBoxProps) {
         <View style={trackStyle}>
             <TrackIcon width={100} height={100} color={DARK_NAVY}/>
         </View>
-    ) : wrap(cardArt, "Tap card");
+    ) : wrap(cardArt, "tapCard");
 }
 
 export default React.memo(PlayBox);

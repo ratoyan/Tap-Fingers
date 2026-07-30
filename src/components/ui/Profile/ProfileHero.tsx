@@ -1,6 +1,7 @@
 import React, {useEffect, useRef} from 'react';
 import {ActivityIndicator, Animated, Easing, Image, StyleSheet, Text, View} from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
+import {useTranslation} from 'react-i18next';
 import Svg, {Circle} from 'react-native-svg';
 
 import PressScale from '../PressScale/PressScale.tsx';
@@ -83,6 +84,7 @@ function ProfileHero({
     emailVerified,
     children,
 }: ProfileHeroProps) {
+    const {t} = useTranslation();
     const gloss = useRef(new Animated.Value(0)).current;
     const breathe = useRef(new Animated.Value(0)).current;
     const orbit = useRef(new Animated.Value(0)).current;
@@ -132,7 +134,7 @@ function ProfileHero({
             source={{uri: photo}}
             style={styles.avatar}
             accessibilityRole="image"
-            accessibilityLabel="Profile photo"
+            accessibilityLabel={t('profilePhoto')}
         />
     ) : (
         <LinearGradient

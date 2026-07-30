@@ -1,5 +1,6 @@
 import React, {useEffect, useRef} from "react";
 import {Animated, TouchableOpacity} from "react-native";
+import {useTranslation} from "react-i18next";
 
 // styles
 import styles from './GameSwitch.style.ts';
@@ -16,6 +17,7 @@ function GameSwitch({
                         onChange,
                     }: GameSwitchProps) {
     const anim = useRef(new Animated.Value(value ? 1 : 0)).current;
+    const {t} = useTranslation();
 
     useEffect(() => {
         Animated.timing(anim, {
@@ -44,8 +46,8 @@ function GameSwitch({
             accessible={true}
             accessibilityRole="switch"
             accessibilityState={{ checked: value }}
-            accessibilityLabel="Sound"
-            accessibilityHint="Double tap to toggle sound on or off"
+            accessibilityLabel={t('sound')}
+            accessibilityHint={t('toggleSoundHint')}
         >
             <Animated.View
                 style={[

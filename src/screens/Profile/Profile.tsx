@@ -381,6 +381,36 @@ function Profile() {
         );
     }
 
+    // Danger-zone button — same one for guests and signed-in players. Laid out as
+    // a row (icon badge · label · chevron) rather than a centred label so it reads
+    // as "opens a confirmation", not as a one-tap wipe.
+    function renderDeleteButton() {
+        return (
+            <PressScale
+                onPress={() => { setDeletePassword(''); setDeleteModal(true); }}
+                style={styles.deleteButton}
+                wrapperStyle={styles.deleteButtonWrapper}
+                scaleTo={0.97}
+                accessibilityLabel={t('deleteAccount')}
+            >
+                <LinearGradient
+                    colors={['rgba(229,72,77,0.30)', 'rgba(229,72,77,0.10)']}
+                    start={{x: 0, y: 0}}
+                    end={{x: 1, y: 1}}
+                    style={styles.deleteGradient}
+                >
+                    <View style={styles.deleteIconBadge}>
+                        <Text allowFontScaling={false} style={styles.deleteIcon}>🗑</Text>
+                    </View>
+                    <Text allowFontScaling={false} style={styles.deleteButtonText} numberOfLines={2}>
+                        {t('deleteAccount')}
+                    </Text>
+                    <Text allowFontScaling={false} style={styles.deleteChevron}>›</Text>
+                </LinearGradient>
+            </PressScale>
+        );
+    }
+
     // ── Render ──────────────────────────────────────────────
 
     return (
@@ -485,15 +515,7 @@ function Profile() {
 
                             {/* Delete guest account — wipes this guest session and its progress */}
                             <Entrance delay={ENTER_STEP * 2} from="below" distance={22} style={styles.block}>
-                                <PressScale
-                                    onPress={() => { setDeletePassword(''); setDeleteModal(true); }}
-                                    style={styles.deleteButton}
-                                    accessibilityLabel={t('deleteAccount')}
-                                >
-                                    <Text allowFontScaling={false} style={styles.deleteButtonText}>
-                                        🗑  {t('deleteAccount')}
-                                    </Text>
-                                </PressScale>
+                                {renderDeleteButton()}
                             </Entrance>
                         </>
                     ) : (
@@ -665,15 +687,7 @@ function Profile() {
 
                             {/* Delete account — bottom, danger zone */}
                             <Entrance delay={ENTER_STEP * 6} from="below" distance={22} style={styles.blockWide}>
-                                <PressScale
-                                    onPress={() => { setDeletePassword(''); setDeleteModal(true); }}
-                                    style={styles.deleteButton}
-                                    accessibilityLabel={t('deleteAccount')}
-                                >
-                                    <Text allowFontScaling={false} style={styles.deleteButtonText}>
-                                        🗑  {t('deleteAccount')}
-                                    </Text>
-                                </PressScale>
+                                {renderDeleteButton()}
                             </Entrance>
                         </>
                     )}

@@ -9,6 +9,8 @@
     "start": "react-native start",
     "test": "jest",
     "clean": "cd android && .\\gradlew.bat clean",
+    "build-apk": "node scripts/build.js apk",
+    "build-aab": "node scripts/build.js aab",
     "publish": "cd android && .\\gradlew.bat assembleRelease && move /y app\\build\\outputs\\apk\\release\\app-release.apk app\\build\\outputs\\apk\\release\\TapFingers.apk && start \"\" app\\build\\outputs\\apk\\release",
     "log:android": "react-native log-android",
     "log:ios": "react-native log-ios",

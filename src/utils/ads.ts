@@ -3,21 +3,19 @@
 //
 // Ad network: Yandex Mobile Ads (yandex-mobile-ads plugin).
 //
-// DEMO MODE: every request uses Yandex's official demo unit IDs, so a real fill
-// is never served and clicks are safe during development. Swap AD_UNIT_REWARDED
-// and AD_UNIT_BANNER for the real unit IDs from the Yandex Partner interface
-// (R-M-XXXXXX-Y format) before release — nothing else here changes. Yandex unit
-// IDs are per-app, not per-platform, so one ID covers Android and iOS.
+// Which unit IDs a build requests is decided in adUnits.ts, off the generated
+// ADS_ENV flag: every build serves Yandex's demo units except the release AAB
+// (`npm run build-aab`), which is the only one that flips to the real units.
 //
 // The reward is granted by the caller ONLY when showRewardedAd() resolves true,
 // i.e. the user actually watched to the reward point. A failed load, no fill,
 // or an early dismissal resolves false and the caller grants nothing.
 
 import {MobileAds, RewardedAdLoader} from 'yandex-mobile-ads';
+import {AD_UNIT_REWARDED} from './adUnits.ts';
 
-// DEMO units — replace with the real unit IDs for production.
-const AD_UNIT_REWARDED = 'demo-rewarded-yandex';
-export const AD_UNIT_BANNER = 'demo-banner-yandex';
+// Re-exported so BottomBanner keeps its single ads-module import.
+export {AD_UNIT_BANNER} from './adUnits.ts';
 
 let initialized = false;
 

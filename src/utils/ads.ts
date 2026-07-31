@@ -1,26 +1,23 @@
 // Rewarded-ad gateway for the three "Watch Ad" buttons in the app
 // (Home/Shop coin reward, Play lose-screen heart revive, Play free helper).
 //
-// TEST MODE: every request uses Google's official TestIds.REWARDED unit, so a
-// real fill is never served and clicks are safe during development. Swap
-// AD_UNIT_REWARDED for the real AdMob unit ID (per platform) before release —
-// nothing else here changes.
+// Ad network: Yandex Mobile Ads (yandex-mobile-ads plugin).
+//
+// DEMO MODE: every request uses Yandex's official demo unit IDs, so a real fill
+// is never served and clicks are safe during development. Swap AD_UNIT_REWARDED
+// and AD_UNIT_BANNER for the real unit IDs from the Yandex Partner interface
+// (R-M-XXXXXX-Y format) before release — nothing else here changes. Yandex unit
+// IDs are per-app, not per-platform, so one ID covers Android and iOS.
 //
 // The reward is granted by the caller ONLY when showRewardedAd() resolves true,
 // i.e. the user actually watched to the reward point. A failed load, no fill,
 // or an early dismissal resolves false and the caller grants nothing.
 
-import mobileAds, {
-    AdEventType,
-    MaxAdContentRating,
-    RewardedAd,
-    RewardedAdEventType,
-    TestIds,
-} from 'react-native-google-mobile-ads';
+import {MobileAds, RewardedAdLoader} from 'yandex-mobile-ads';
 
-// TEST units — replace with the real per-platform unit IDs for production.
-const AD_UNIT_REWARDED = TestIds.REWARDED;
-export const AD_UNIT_BANNER = TestIds.BANNER;
+// DEMO units — replace with the real unit IDs for production.
+const AD_UNIT_REWARDED = 'demo-rewarded-yandex';
+export const AD_UNIT_BANNER = 'demo-banner-yandex';
 
 let initialized = false;
 
@@ -29,12 +26,18 @@ let initialized = false;
 export async function initAds(): Promise<void> {
     if (initialized) return;
     try {
-        await mobileAds().setRequestConfiguration({
-            maxAdContentRating: MaxAdContentRating.PG,
-            tagForChildDirectedTreatment: false,
-            tagForUnderAgeOfConsent: false,
-        });
-        await mobileAds().initialize();
+        // Consent flags must be set before initialize() so the very first ad
+        // request already respects them.
+        //
+        // setUserConsent(false) = no personal data collected for targeting,
+        // i.e. the same "non-personalized ads only" stance the app had before.
+        // Flip to true once a real consent dialog is shown to GDPR users.
+        MobileAds.setUserConsent(false);
+        // The app never asks for location permission, so location is off too.
+        MobileAds.setLocationConsent(false);
+        // Not a kids' app — leave COPPA/age restriction off.
+        MobileAds.setAgeRestrictedUser(false);
+        await MobileAds.initialize();
         initialized = true;
     } catch {
         // Leave initialized=false so a later call can retry; showRewardedAd()
@@ -45,62 +48,45 @@ export async function initAds(): Promise<void> {
 // Loads a fresh rewarded ad and shows it as soon as it's ready.
 // Resolves true only if the user earned the reward, false on any failure,
 // no-fill, or early dismissal.
-export function showRewardedAd(): Promise<boolean> {
-    return new Promise(resolve => {
+export async function showRewardedAd(): Promise<boolean> {
+    let ad;
+    try {
+        // A loader per request keeps the flow simple: no stale ad is ever shown
+        // and nothing has to be kept alive between "Watch Ad" taps.
+        const loader = await RewardedAdLoader.create();
+        ad = await loader.loadAd({adUnitId: AD_UNIT_REWARDED});
+    } catch {
+        // Create/load failure or no fill — the caller grants nothing.
+        return false;
+    }
+
+    const rewarded = ad;
+    return new Promise<boolean>(resolve => {
         let settled = false;
         let earned = false;
 
-        const rewarded = RewardedAd.createForAdRequest(AD_UNIT_REWARDED, {
-            requestNonPersonalizedAdsOnly: true,
-        });
-
-        const subs: Array<() => void> = [];
-        const cleanup = () => {
-            subs.forEach(unsub => {
-                try {
-                    unsub();
-                } catch {}
-            });
-            subs.length = 0;
-        };
         const finish = (value: boolean) => {
             if (settled) return;
             settled = true;
-            cleanup();
             resolve(value);
         };
 
-        subs.push(
-            rewarded.addAdEventListener(RewardedAdEventType.LOADED, () => {
-                try {
-                    rewarded.show();
-                } catch {
-                    finish(false);
-                }
-            }),
-        );
-        subs.push(
-            rewarded.addAdEventListener(RewardedAdEventType.EARNED_REWARD, () => {
-                earned = true;
-            }),
-        );
-        // CLOSED fires after the user dismisses the ad; earned tells us whether
-        // they reached the reward point before closing.
-        subs.push(
-            rewarded.addAdEventListener(AdEventType.CLOSED, () => {
-                finish(earned);
-            }),
-        );
-        subs.push(
-            rewarded.addAdEventListener(AdEventType.ERROR, () => {
-                finish(false);
-            }),
-        );
-
-        try {
-            rewarded.load();
-        } catch {
+        rewarded.onRewarded = () => {
+            earned = true;
+        };
+        // onAdDismissed fires after the user closes the ad; `earned` tells us
+        // whether they reached the reward point before closing. The SDK tears
+        // down its own listeners when the native ad object is released, so
+        // there's nothing to unsubscribe here.
+        rewarded.onAdDismissed = () => {
+            finish(earned);
+        };
+        rewarded.onAdFailedToShow = () => {
             finish(false);
-        }
+        };
+
+        rewarded.show().catch(() => {
+            finish(false);
+        });
     });
 }

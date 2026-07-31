@@ -2,7 +2,7 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.VIBRATE" />
-    <!-- Advertising ID — required so the (planned) ads SDK can read the Google
+    <!-- Advertising ID — required so the Yandex ads SDK can read the Google
          Advertising ID on Android 13+. Without it Play replaces the ID with
          zeros, breaking ad serving/attribution. Keep the Play Console
          "advertising ID" declaration set to YES to match this. -->
@@ -23,9 +23,8 @@
       android:theme="@style/AppTheme"
       android:usesCleartextTraffic="${usesCleartextTraffic}"
       android:supportsRtl="true">
-      <!-- The AdMob APPLICATION_ID meta-data is injected automatically by
-           react-native-google-mobile-ads from the "android_app_id" set in
-           app.json — do not add it here or the manifest merger will conflict. -->
+      <!-- Yandex Mobile Ads needs no app-level ID in the manifest: the unit IDs
+           in src/utils/ads.ts identify the app. Nothing to declare here. -->
       <activity
         android:name=".MainActivity"
         android:label="@string/app_name"

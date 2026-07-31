@@ -10,6 +10,7 @@ import {haptic, refreshHapticsEnabled} from '../../utils/haptics.ts';
 import {showRewardedAd} from '../../utils/ads.ts';
 import {scale} from '../../utils/responsive.ts';
 import {
+    AccessibilityInfo,
     Animated,
     Dimensions,
     ImageBackground,
@@ -50,7 +51,7 @@ import {BombBlast} from '../../assets/icons/FallingBomb.tsx';
 import AnimatedBackground from '../../components/ui/Play/AnimatedBackground.tsx';
 import BossBox, {getBossTier} from '../../components/ui/Play/BossBox.tsx';
 import CoinCount from '../../components/ui/CoinCount/CoinCount.tsx';
-import PlayBox from '../../components/ui/Play/PlayBox.tsx';
+import PlayBox, {buildBoxStyle} from '../../components/ui/Play/PlayBox.tsx';
 import Hearts from '../../components/ui/Play/Hearts.tsx';
 import LoseModal from '../../components/ui/Play/LoseModal.tsx';
 import ExitModal from '../../components/ui/Play/ExitModal.tsx';
@@ -78,24 +79,45 @@ const HEARTS_LENGTH = 7;
 const SPAWN_INTERVAL_MS = 900;
 const SPAWN_INTERVAL_MIN_MS = 380;
 const SPAWN_INTERVAL_STEP_MS = 45;
+// How many boxes may be in the air at once. The stream used to be bounded only
+// by "fall time ÷ spawn gap", which is fine on the intended cadence but has no
+// floor: a slow device (or a level where the gap has tightened to its minimum
+// while the fall is still long) accumulates boxes, and past a point every extra
+// box costs the frame that all the others need. The card spawner skips its beat
+// at MAX_CARD_BOXES; the specials (hazards, pickups, gift, bag) get the higher
+// ceiling and hold their per-level budget for the next gap instead of spending it
+// on a box that can't fit. Both sit well above the ~8 a normal level reaches, so
+// they only ever bite when something has already gone wrong.
+const MAX_CARD_BOXES = 14;
+const MAX_LIVE_BOXES = 20;
+// How long a popped box's aftermath (a card's hole marker, a trap's blast) stays
+// on screen after the tap.
+const TRACK_LINGER_MS = 1500;
 const INITIAL_DURATION = 30;
 const DURATION_STEP = 10;
 const INITIAL_BOMBS = 0;
 const COMBO_WINDOW_MS = 550;
 const COMBO_RESET_MS = 850;
-// 💰 Money bag: the bonus drop, worth 3 points. It used to be a random roll on
+// 💰 Money bag: the bonus drop, worth a random 1–5 points. It used to be a roll on
 // every plain card, so a lucky stretch could rain bags while another level saw
 // almost none. Now it works like the hazards: its OWN timer plus a per-level
 // budget of MONEY_BAGS_PER_LEVEL, each after a re-randomised gap, so exactly
 // three arrive per level and never on a predictable beat. Free to miss.
 const MONEY_BAGS_PER_LEVEL = 3;
+// What a tapped bag pays out — a fresh roll in [MONEY_BAG_MIN, MONEY_BAG_MAX]
+// every time, so a bag is a small gamble of its own. Revealed with the same 🪙
+// coin pop the gift uses, so the player sees exactly what this bag was worth.
+const MONEY_BAG_MIN = 1;
+const MONEY_BAG_MAX = 5;
+const rollMoneyBag = () =>
+    MONEY_BAG_MIN + Math.floor(Math.random() * (MONEY_BAG_MAX - MONEY_BAG_MIN + 1));
 const BAG_GAP_MIN_MS = 3500;
 const BAG_GAP_MAX_MS = 7000;
 // Hazard bombs fall in with the cards: tapping one costs a heart, letting it
 // fall past the edge is free. Every level — the first one included — drops
 // exactly BOMBS_PER_LEVEL of them, each after a random gap (never on a
 // predictable beat), from their own timer independent of the card spawner.
-// They fall a bit quicker than the cards (BOMB_FALL_BOOST× the per-frame reach),
+// They fall a bit quicker than the cards (BOMB_FALL_BOOST× the card fall speed),
 // so they cross the screen faster and give the player less time to hesitate.
 const BOMBS_PER_LEVEL = 5;
 const BOMB_FALL_BOOST = 1.3;
@@ -124,6 +146,39 @@ const BARREL_WOBBLE_SPEED = 0.055;
 // level's real pace instead of throwing full-speed boxes at a fresh screen.
 const DURATION_DIP_FACTOR = 0.4;
 const DURATION_DIP_RECOVER_MS = 4000;
+
+// ─── Motion ──────────────────────────────────────────────────────────────────
+// Everything on the field moves on wall-clock time, not on frame count.
+//
+// The loop used to advance a box by a fixed FRACTION of its remaining travel on
+// every frame, with no dt anywhere in the maths — so the fall speed was whatever
+// the frame rate happened to be. A stutter (a spawn, a GC pause, a native sound
+// call) slowed every box down for as long as it lasted and the stream sped back
+// up the moment frames caught up, which is exactly the "quick, then slow" the
+// field was showing; a 90/120 Hz screen ran the whole game 1.5–2× too fast.
+// A frame now advances each box by speed × elapsed time, so a dropped frame
+// costs one frame of smoothness and nothing else, and every device plays at the
+// same pace.
+//
+// FALL_SPEED_SCALE converts the level's `duration` (which was never a duration —
+// it's the per-frame reach) into px/second, calibrated so a 60 fps device falls
+// at exactly the speed it always did: the old integrator settled at
+// reach × 0.05 / 1.05 px per frame.
+const REF_FPS = 60;
+const FALL_SPEED_SCALE = (0.05 / 1.05) * REF_FPS;
+// A frame longer than this counts as this long. After a real stall (an ad, a
+// modal, the JS thread blocked) the field must resume where it was rather than
+// teleport a screen's worth of boxes into the player.
+const MAX_FRAME_MS = 50;
+// Sideways drift: a box eases toward a random x and picks a new target once it
+// arrives. DRIFT_RATE_PER_SEC is the old per-frame 0.05 easing expressed as a
+// rate, so the drift feels the same; the cap is new, because a fresh target on
+// the far side of the screen used to start the ease at ~1000 px/s — a sideways
+// lurch that then died away, every couple of seconds, on every box.
+const DRIFT_RATE_PER_SEC = -Math.log(1 - 0.05) * REF_FPS;
+const DRIFT_MAX_PX_PER_SEC = 420;
+// Spin of a card flagged "rotation", in degrees per second (was 2° per frame).
+const SPIN_DEG_PER_SEC = 2 * REF_FPS;
 // Free helpers (bomb every 10 levels, slow every 15, shield every 20) only start
 // dropping once the player reaches this level — the early game is meant to be
 // played without them. The boss fight still triggers on its own every 10 levels.
@@ -136,7 +191,7 @@ const HELPER_GRANT_MIN_LEVEL = 20;
 // it buys. Like the money bag it's free to miss (letting it fall costs nothing).
 const FREEZE_SPAWN_CHANCE = 0.02;
 const FREEZE_SPEED = 0.4;            // field-speed factor while a freeze is active
-const FREEZE_DURATION_MS = 2500;
+const FREEZE_DURATION_MS = 5000;
 // Held back until after level 4 — the early levels stay a plain tap game before
 // the freeze pickup is introduced.
 const FREEZE_MIN_LEVEL = 5;
@@ -149,7 +204,7 @@ const FREEZE_MIN_LEVEL = 5;
 // GIFT_REWARD points (revealed as a 🪙 coin). Free to miss — letting it fall past
 // the edge costs nothing. Held back until GIFT_MIN_LEVEL so the very first level
 // stays a plain tap game before the gamble is introduced.
-const GIFT_BOOM_CHANCE = 0.5;   // odds a tapped gift booms instead of paying out
+const GIFT_BOOM_CHANCE = 0.25;   // odds a tapped gift booms instead of paying out
 const GIFT_REWARD = 5;
 const GIFT_MIN_LEVEL = 2;
 const GIFT_DROP_EVERY_LEVELS = 2;
@@ -167,14 +222,40 @@ const GIFTS_PER_DROP = 1;
 // skin (e.g. the 130px balloon) blew the bombs and hearts up along with it, so
 // a bomb was a different size depending on which skin you had on. Balloons (the
 // tappable cards) keep their per-skin size, scaled to the screen the same way;
-// admin SVG cards keep their own authored width/height, applied in PlayBox.
-const BOMB_SIZE = Math.round(scale(100));
-const HEART_SIZE = Math.round(scale(100));
-const BARREL_SIZE = Math.round(scale(100));
+// admin SVG cards keep their own authored width/height, shrunk alongside the
+// rest on a big screen (below) and applied in PlayBox.
+//
+// 📱 Big-screen shrink: `scale` is linear in width, which is right for phones but
+// wrong for tablets — on an 820 dp iPad it turns a 100 dp card into 219 dp, so a
+// few oversized boxes fill the whole field and the game reads as zoomed-in. A
+// finger doesn't grow with the screen, so past BIG_SCREEN_W every drop falls at
+// BIG_SCREEN_FACTOR of its scaled size. Phones are untouched: at BIG_SCREEN_W and
+// under the factor is 1, so they get exactly what `scale` always gave them.
+const BIG_SCREEN_W = 500;
+const BIG_SCREEN_FACTOR = width > BIG_SCREEN_W ? 0.8 : 1;
+const boxScale = (size: number) => Math.round(scale(size) * BIG_SCREEN_FACTOR);
+
+const BOMB_SIZE = boxScale(100);
+const HEART_SIZE = boxScale(100);
+const BARREL_SIZE = boxScale(110);
 // The gift is drawn a touch larger than the other drops — it's a rare event
 // (one every couple of levels), so it should read as the one worth reacting to.
-const GIFT_SIZE = Math.round(scale(120));
-const BAG_SIZE = Math.round(scale(100));
+const GIFT_SIZE = boxScale(120);
+const BAG_SIZE = boxScale(110);
+// ❄️ Freeze pickup — its own size like the other specials. It spawns as a roll on
+// a plain card, so before this it inherited the equipped skin's size and a big
+// skin made the snowflake bigger than the bomb next to it.
+const FREEZE_SIZE = boxScale(90);
+// 🃏 The tappable card. A skin carries its own size (a 130 balloon stays bigger
+// than a 100 card); CARD_SIZE is what a skin without one falls back to.
+const CARD_BASE = 100;
+const CARD_SIZE = boxScale(CARD_BASE);
+// How far a finger must travel from where it landed before the swipe layer stops
+// treating the gesture as a tap (see the swipe-to-tap section). Tied to the drop
+// size so it means the same thing on every screen: a quarter of a box clears a
+// resting finger's jitter comfortably while staying well inside a real swipe's
+// per-frame travel, so swipe-to-pop still pops everything the finger crosses.
+const SWIPE_MIN_DIST = Math.round(BOMB_SIZE * 0.25);
 
 function getDefaultBackground(level: number) {
     if (level > 4) return require('../../assets/images/background4.jpg');
@@ -200,16 +281,18 @@ function spawnBox(
     const isPlainCard = !isBomb && !isHeart && !isBarrel && !isGift && !isBag;
     const isFreeze = isPlainCard && allowFreeze && Math.random() < FREEZE_SPAWN_CHANCE;
     const isGolden = isBag;
-    // Fixed, screen-relative size per object type. Hazards and the life pickup
-    // take their own size (independent of the equipped card); a regular card
-    // keeps its skin's size, scaled to the screen the same way. This overrides
-    // card.size (spread in below) so every spawned box carries the right size.
+    // Fixed, screen-relative size per object type. Every special (hazards, the
+    // life pickup, the freeze pickup, the gift, the bag) takes its own size,
+    // independent of the equipped card; a regular card keeps its skin's size,
+    // scaled to the screen the same way. This overrides card.size (spread in
+    // below) so every spawned box carries the right size.
     const size = isBomb ? BOMB_SIZE
         : isBarrel ? BARREL_SIZE
             : isHeart ? HEART_SIZE
                 : isGift ? GIFT_SIZE
                     : isBag ? BAG_SIZE
-                        : Math.round(scale(card.size ?? 100));
+                        : isFreeze ? FREEZE_SIZE
+                            : card.size ? boxScale(card.size) : CARD_SIZE;
     // Spawn just off the edge the box travels from (below for fromBottom, above
     // otherwise) so it slides into view right away. The spacing between boxes
     // comes from the spawn cadence, not from a random head start off-screen —
@@ -224,20 +307,33 @@ function spawnBox(
     return {
         ...card,
         size,
+        // PlayBox draws an admin SVG at its authored width/height, ahead of size,
+        // so those get the big-screen shrink too — otherwise they'd be the one
+        // drop still coming down full-size on a tablet.
+        ...(card.width ? {width: Math.round(card.width * BIG_SCREEN_FACTOR)} : null),
+        ...(card.height ? {height: Math.round(card.height * BIG_SCREEN_FACTOR)} : null),
         id: uuId.v4(),
         x: Math.random() * maxX,
         y,
+        // Only the horizontal axis has a target now. The vertical one used to
+        // chase a `ty` seeded at 0, which meant a box spawned 200 px above the
+        // screen covered 5% of that gap on its very first frame — a ~10 px jump,
+        // five times the steady-state step — and then settled. Every single box
+        // shot in and slowed down. The fall is a plain constant speed instead
+        // (see the animation loop), so a box enters at the pace it keeps.
         tx: Math.random() * maxX,
-        // Seed the vertical target in the travel direction so the box drifts on
-        // screen smoothly from frame one (a flat 0 would yank a bottom-spawned
-        // box upward across the whole screen in a single step).
-        ty: fromBottom ? y - (duration + 10) : 0,
         color: isGolden ? '#FFD700' : colors[Math.floor(Math.random() * colors.length)],
         duration,
         // Seed the spin angle so the per-frame increment in the animation loop
         // has a numeric base to grow from (cards flagged isRotation by the admin
         // or their on-device visual). Without this it starts as NaN and never spins.
         rotation: 0,
+        // The native view this box drives, filled in by PlayBox's ref, and the
+        // flag that marks it spent (tapped or fallen past the edge). Declared
+        // here so every box has the same shape from birth — the loop touches
+        // both on every frame.
+        node: null as any,
+        __dead: false,
         isBoom: false,
         isGolden,
         isFreeze,
@@ -252,14 +348,18 @@ function spawnBox(
 // variant out. Every type is positioned with its top-left at (x, y) — the
 // rotation transforms pivot around the centre and cancel out — but the barrel
 // is drawn wider than its box size and an admin SVG uses its authored
-// width/height. Used by the swipe layer below to work out what the finger is
-// over; the "square" card type is the one approximation (PlayBox rolls its own
-// random 101–150px size internally, so its hit area is the box size instead).
+// width/height. Used by the swipe layer to work out what the finger is over and
+// by the animation loop to know when a box has really left the screen.
 function boxBounds(b: any): {w: number; h: number} {
     if (b.isBarrel) {
         const s = Math.round((b.size || 100) * BARREL_ART_SCALE);
         return {w: s, h: s};
     }
+    // A "square" card draws at a size PlayBox rolls once and keeps on the box
+    // (101–150 px), not at box.size. This used to fall through to box.size, so
+    // the bottom-right of every square card was drawn but not tappable — and the
+    // loop retired it up to 50 px early.
+    if (b.__squareSize) return {w: b.__squareSize[0], h: b.__squareSize[1]};
     const isSpecial = b.isBomb || b.isHeart || b.isFreeze || b.isGift || b.isGolden;
     if (!isSpecial && typeof b.iconSvg === 'string' && b.iconSvg.trim()) {
         return {w: b.width || b.size || 100, h: b.height || b.size || 100};
@@ -269,10 +369,10 @@ function boxBounds(b: any): {w: number; h: number} {
 }
 
 // Sound and haptics are native calls, and they run on the JS thread — the same
-// thread the box loop below drives at 60fps by setState-ing every frame. Fired
-// inline from a tap handler they land *before* React commits that tap's render,
-// so their cost is added straight onto the frame's budget and the whole field
-// visibly hitches for a beat on every tap.
+// thread the box loop below drives at 60fps. Fired inline from a tap handler they
+// land *before* React commits that tap's render, so their cost is added straight
+// onto the frame's budget and the whole field visibly hitches for a beat on every
+// tap.
 //
 // Deferring by one macrotask lets React commit and paint first; the feedback
 // then fires roughly a frame later, which is imperceptible for a sound or a
@@ -334,7 +434,6 @@ export default function Play() {
     const comboCountRef = useRef(0);
     const comboTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const streakRef = useRef(0);
-    const missHappenedRef = useRef(false);
     const shieldActiveRef = useRef(false);
     const slowActiveRef = useRef(false);
     const slowSpeedRef = useRef(1);
@@ -394,8 +493,29 @@ export default function Play() {
     const [isMenuModal, setIsMenuModal] = useState(false);
     const [isCountdown, setIsCountdown] = useState(false);
     const [buyModal, setBuyModal] = useState<HelperType | null>(null);
-    // Starts empty — the spawn effect drips the first box in immediately.
+    // ─── The field ────────────────────────────────────────────────────────────
+    // `boxesData` is the *render list* — which boxes exist. It changes only when
+    // one spawns or leaves, never while they fall: the animation loop mutates the
+    // box objects in place and writes each new style straight onto its native
+    // view (see PlayBox.buildBoxStyle). Driving positions through setState
+    // instead meant a full re-render of this screen, a fresh object per box and a
+    // React commit 60×/sec — the single biggest cost on the field, and the reason
+    // a busy screen stuttered.
+    //
+    // `liveRef` always holds the same array as `boxesData`: it's what the loop,
+    // the swipe hit-test and the spawners read, so none of them can act on a
+    // frame-old snapshot. Starts empty — the spawn effect drips the first box in
+    // immediately.
     const [boxesData, setBoxesData] = useState<any[]>([]);
+    const liveRef = useRef<any[]>([]);
+    // Popped boxes still showing their aftermath (a card's hole marker, a
+    // trap's blast) for TRACK_LINGER_MS. They're out of the live list the instant
+    // they're tapped — nothing moves them, nothing can hit-test them, and because
+    // each is a frozen copy React re-renders it exactly once.
+    const [tracks, setTracks] = useState<any[]>([]);
+    const trackTimersRef = useRef<Set<ReturnType<typeof setTimeout>>>(new Set());
+    // A screen reader turns the per-box Pressables back on (see PlayBox).
+    const [a11y, setA11y] = useState(false);
     const [bombCount, setBombCount] = useState(INITIAL_BOMBS);
     const [combo, setCombo] = useState(0);
     const [watchAdUsed, setWatchAdUsed] = useState(0);
@@ -411,8 +531,9 @@ export default function Play() {
     const [bossMaxHP, setBossMaxHP] = useState(0);
     const [boss, setBoss] = useState<Boss | null>(null);
     const [showBossDefeated, setShowBossDefeated] = useState(false);
-    // 🎁 Which gift outcome to show in the reveal overlay ('win' | 'boom' | null).
-    const [giftReveal, setGiftReveal] = useState<'win' | 'boom' | null>(null);
+    // 🎁 What the reveal overlay is showing: a win (with the coin amount that was
+    // just earned — the gift's payout or a money bag's) or a boom. null = hidden.
+    const [giftReveal, setGiftReveal] = useState<{kind: 'win' | 'boom'; amount: number} | null>(null);
 
     const levelIndex = Math.min(level - 1, 4);
 
@@ -673,10 +794,11 @@ export default function Play() {
         ]).start();
     }
 
-    // 🎁 Pops the gift outcome (a green "+5" on a win, a red "💥 BOOM" on a boom)
-    // for a beat so the coin-flip result reads clearly, then fades it out.
-    function triggerGiftReveal(good: boolean) {
-        setGiftReveal(good ? 'win' : 'boom');
+    // 🎁 Pops the outcome (a gold "+N" coin on a win, a red "💥 BOOM" on a boom)
+    // for a beat so the result reads clearly, then fades it out. The money bag
+    // reuses it too, passing its own payout as the amount.
+    function triggerGiftReveal(good: boolean, amount: number = GIFT_REWARD) {
+        setGiftReveal({kind: good ? 'win' : 'boom', amount});
         giftRevealOpacityAnim.setValue(1);
         giftRevealScaleAnim.setValue(0.4);
         Animated.parallel([
@@ -734,6 +856,16 @@ export default function Play() {
         setIsPlaying(false);
         setIsLoseModal(true);
         stopMusic();
+        // ❄️ A live freeze dies with the run. Its tint and FROZEN badge would
+        // otherwise sit on top of the lose modal until the wall-clock timer
+        // happened to expire, and the speed factor would still be in place if the
+        // player revived off the rewarded ad — a revive on a frozen field.
+        if (freezeTimerRef.current) {
+            clearTimeout(freezeTimerRef.current);
+            freezeTimerRef.current = null;
+        }
+        freezeSpeedRef.current = 1;
+        setFreezeActive(false);
     }
 
     async function handleWatchAd() {
@@ -743,7 +875,7 @@ export default function Play() {
         setEmptyHeartCount(prev => Math.max(0, prev - 1));
         setIsLoseModal(false);
         setIsPlaying(true);
-        setBoxesData([]);
+        clearField();
 
         // Revive on a slowed-down field (same dip as a bomb blast / boss defeat):
         // the duration drops and the animation loop walks it back up to the level's
@@ -792,7 +924,7 @@ export default function Play() {
         setShowBossDefeated(false);
         setIsPlaying(true);
         setIsLoseModal(false);
-        setBoxesData([]);
+        clearField();
         // startGameSession() reloads the helper stock from the server (with an
         // offline local (Realm) fallback).
         startGameSession();
@@ -811,9 +943,50 @@ export default function Play() {
         return true;
     }
 
-    function boomBox(id: string) {
-        setBoxesData(prev => prev.map(b => (b.id === id ? {...b, isBoom: true} : b)));
-        setTimeout(() => setBoxesData(prev => prev.filter(b => b.id !== id)), 1500);
+    // ─── Field mutations ──────────────────────────────────────────────────────
+    // Every add/remove goes through these three so `liveRef` and `boxesData`
+    // never drift apart: the array is replaced (React sees a new list), the box
+    // objects inside it are not (they're the entities the loop mutates, and a
+    // re-render of an unchanged box is a memo bail-out).
+
+    // Adds one box, unless the field is already at `limit`.
+    function addBox(box: any, limit: number = MAX_LIVE_BOXES): boolean {
+        if (liveRef.current.length >= limit) return false;
+        const next = [...liveRef.current, box];
+        liveRef.current = next;
+        setBoxesData(next);
+        return true;
+    }
+
+    // Wipes the arena: falling boxes and any aftermath still on screen.
+    function clearField() {
+        liveRef.current = [];
+        setBoxesData([]);
+        setTracks([]);
+    }
+
+    // Takes a box out of play. Cards and the two traps leave their aftermath
+    // behind for a beat (a hole marker / a blast); the pickups and the money bag
+    // simply vanish, which is what they always did — PlayBox drew nothing for a
+    // popped one.
+    function popBox(box: any) {
+        if (box.__dead) return;
+        box.__dead = true;
+        const next = liveRef.current.filter(b => b !== box);
+        liveRef.current = next;
+        setBoxesData(next);
+
+        if (box.isHeart || box.isFreeze || box.isGift || box.isGolden) return;
+
+        // A frozen copy: it keeps the position the box was popped at and is never
+        // touched again, so it renders once and stays put.
+        const track = {...box, isBoom: true, node: null};
+        setTracks(prev => [...prev, track]);
+        const timer = setTimeout(() => {
+            trackTimersRef.current.delete(timer);
+            setTracks(prev => prev.filter(t => t !== track));
+        }, TRACK_LINGER_MS);
+        trackTimersRef.current.add(timer);
     }
 
     // ─── Bomb helper ──────────────────────────────────────────────────────────
@@ -844,15 +1017,15 @@ export default function Play() {
         bombFlashAnim.setValue(1);
         Animated.timing(bombFlashAnim, {toValue: 0, duration: 700, useNativeDriver: true}).start();
 
-        setBoxesData(prev => {
-            // Hazard bombs and the life pickup are wiped by the blast too, but
-            // they score nothing — only the real cards on screen pay out.
-            const pts = prev.filter(b => !b.isBoom && !b.isBomb && !b.isBarrel && !b.isHeart && !b.isGift).length;
-            countRef.current += pts;
-            setCount(c => c + pts);
-            setLevelCount(c => c + pts);
-            return [];
-        });
+        // Hazard bombs and the life pickup are wiped by the blast too, but
+        // they score nothing — only the real cards on screen pay out.
+        const pts = liveRef.current.filter(
+            b => !b.isBomb && !b.isBarrel && !b.isHeart && !b.isGift,
+        ).length;
+        clearField();
+        countRef.current += pts;
+        setCount(c => c + pts);
+        setLevelCount(c => c + pts);
     }
 
     // ─── Shield helper ───────────────────────────────────────────────────────
@@ -981,7 +1154,7 @@ export default function Play() {
         setBossHP(maxHP);
         setBossMaxHP(maxHP);
         setIsBossFight(true);
-        setBoxesData([]);
+        clearField();
     }
 
     function handleBossTap() {
@@ -1027,13 +1200,16 @@ export default function Play() {
 
     // ─── Tap handler ─────────────────────────────────────────────────────────
     function handleTap(box: any) {
-        if (box.isBoom) return;
+        // `__dead` is set the moment a box is popped or falls off, so a second
+        // sample of the same box within one drag (or a Pressable firing after the
+        // swipe layer already got it) can't score it twice.
+        if (box.isBoom || box.__dead) return;
 
         // ❤️ Life pickup: gives back one lost heart. No points, no combo — the
         // reward is the heart itself.
         if (box.isHeart) {
             tapsRef.current += 1;
-            boomBox(box.id);
+            popBox(box);
             setEmptyHeartCount(prev => Math.max(0, prev - 1));
 
             deferFeedback(() => { playSfx('heart'); haptic('heart'); });
@@ -1047,7 +1223,7 @@ export default function Play() {
         if (box.isBomb || box.isBarrel) {
             const isBarrel = !!box.isBarrel;
             tapsRef.current += 1;
-            boomBox(box.id);
+            popBox(box);
 
             if (comboTimerRef.current) clearTimeout(comboTimerRef.current);
             comboCountRef.current = 0;
@@ -1079,7 +1255,7 @@ export default function Play() {
         // combo of its own; the reward is the slowdown it turns on.
         if (box.isFreeze) {
             tapsRef.current += 1;
-            boomBox(box.id);
+            popBox(box);
             triggerFreeze();
             deferFeedback(() => { playSfx('slow'); haptic('slow'); });
             return;
@@ -1091,7 +1267,7 @@ export default function Play() {
         // by the reveal overlay. Free to miss — the fall-off path costs nothing.
         if (box.isGift) {
             tapsRef.current += 1;
-            boomBox(box.id);
+            popBox(box);
 
             if (Math.random() < GIFT_BOOM_CHANCE) {
                 if (comboTimerRef.current) clearTimeout(comboTimerRef.current);
@@ -1108,13 +1284,13 @@ export default function Play() {
                 countRef.current += GIFT_REWARD;
                 setCount(c => c + GIFT_REWARD);
                 setLevelCount(c => c + GIFT_REWARD);
-                triggerGiftReveal(true);
+                triggerGiftReveal(true, GIFT_REWARD);
                 deferFeedback(() => { playSfx('coin'); haptic('coin'); });
             }
             return;
         }
 
-        // 💰 The money bag is worth 3 points, so it earns the coin jingle; plain
+        // 💰 The money bag is a bonus payout, so it earns the coin jingle; plain
         // cards get the blip.
         //
         // The hottest path in the game — this runs on every single card tap, so
@@ -1154,10 +1330,14 @@ export default function Play() {
             setCombo(0);
         }, COMBO_RESET_MS);
 
-        // Points: golden = 3 base, normal = 1, both × streak multiplier
-        const pts = box.isGolden ? 3 : 1;
+        // Points: golden = a fresh 1–5 roll, normal = 1, both × streak multiplier
+        const pts = box.isGolden ? rollMoneyBag() : 1;
 
-        boomBox(box.id);
+        // 💰 A bag is a payout like the gift, so it gets the same coin reveal —
+        // the player sees the exact number of coins the bag was worth.
+        if (box.isGolden) triggerGiftReveal(true, pts);
+
+        popBox(box);
         countRef.current += pts;
         setCount(c => c + pts);
         setLevelCount(c => c + pts);
@@ -1165,12 +1345,12 @@ export default function Play() {
 
     function levelUp() {
         durationRef.current += DURATION_STEP;
-        // Keep whatever bomb deficit is still recovering: shift the effective
-        // duration by the same step instead of snapping it to the new target.
-        durationEffRef.current = Math.min(
-            durationRef.current,
-            durationEffRef.current + DURATION_STEP,
-        );
+        // durationEff is deliberately NOT bumped along with it. It used to be, so
+        // every level-up snapped the whole field to the new speed on a single
+        // frame — a 33% jump at level 2, right on top of the level-up overlay.
+        // Left behind, the recovery ramp in the animation loop walks it up to the
+        // new target over about a second and a half, so the level gets faster
+        // without the field ever lurching.
         levelRef.current += 1;
         // Fresh level → a fresh batch of hazards, bombs and barrels alike, plus
         // the level's three money bags.
@@ -1191,16 +1371,13 @@ export default function Play() {
                 // Re-check on arrival — the hearts may already be full again
                 // (a boss defeat also restores one), and a boss fight blocks it.
                 if (emptyHeartCountRef.current <= 0 || isBossFightRef.current) return;
-                setBoxesData(prev => [
-                    ...prev,
-                    spawnBox(
-                        cardRef.current,
-                        durationEffRef.current,
-                        !!cardRef.current.fallFromBottom,
-                        false,
-                        true,
-                    ),
-                ]);
+                addBox(spawnBox(
+                    cardRef.current,
+                    durationEffRef.current,
+                    !!cardRef.current.fallFromBottom,
+                    false,
+                    true,
+                ));
             }, 1200);
         }
 
@@ -1216,20 +1393,17 @@ export default function Play() {
                 // A boss fight owns the arena — skip the drop rather than throw a
                 // gift into it (boss levels are every 10th, so a multiple of 2 too).
                 if (isBossFightRef.current) return;
-                setBoxesData(prev => [
-                    ...prev,
-                    ...Array.from({length: GIFTS_PER_DROP}, () =>
-                        spawnBox(
-                            cardRef.current,
-                            durationEffRef.current,
-                            !!cardRef.current.fallFromBottom,
-                            false,
-                            false,
-                            false,
-                            true, // isGift
-                        ),
-                    ),
-                ]);
+                for (let i = 0; i < GIFTS_PER_DROP; i++) {
+                    addBox(spawnBox(
+                        cardRef.current,
+                        durationEffRef.current,
+                        !!cardRef.current.fallFromBottom,
+                        false,
+                        false,
+                        false,
+                        true, // isGift
+                    ));
+                }
             }, 1200);
         }
 
@@ -1251,7 +1425,7 @@ export default function Play() {
             // boxes) and wipe every PlayBox now, so the boss intro plays on an
             // empty arena. startBossFight() then reveals the boss after 2s.
             isBossFightRef.current = true;
-            setBoxesData([]);
+            clearField();
             setTimeout(() => startBossFight(levelRef.current), 2000);
         }
 
@@ -1271,7 +1445,9 @@ export default function Play() {
             userService.grantHelper('shield').then(r => applyServerHelperCount('shield', r.count)).catch(() => {});
         }
 
-        setBoxesData(prev => prev.map(b => ({...b, duration: durationRef.current})));
+        // The boxes already in the air adopt the new level's speed on their own:
+        // the loop reads durationEff for the whole field rather than a per-box
+        // copy, so nothing has to be written onto them here.
     }
 
     // ─── App state (background → auto-pause & open menu) ─────────────────────
@@ -1338,6 +1514,7 @@ export default function Play() {
     // plays them. (It used to construct its own Sound objects here and release
     // them on blur, which left re-focused sessions silent.)
     useEffect(() => {
+        const trackTimers = trackTimersRef.current;
         return () => {
             if (slowIntervalRef.current) clearInterval(slowIntervalRef.current);
             // The combo timer is cleared on the next tap, so a player who taps
@@ -1347,7 +1524,25 @@ export default function Play() {
             // The ❄️ freeze timer is a wall-clock timeout that would otherwise
             // fire setFreezeActive on an unmounted tree.
             if (freezeTimerRef.current) clearTimeout(freezeTimerRef.current);
+            // Same for the aftermath timers: a player who taps and leaves within
+            // the linger window left one armed to setTracks on an unmounted tree.
+            trackTimers.forEach(clearTimeout);
+            trackTimers.clear();
         };
+    }, []);
+
+    // A screen reader restores the per-box Pressables (PlayBox drops them
+    // otherwise — the swipe layer is what ordinary play goes through).
+    useEffect(() => {
+        let alive = true;
+        AccessibilityInfo.isScreenReaderEnabled()
+            .then(on => { if (alive) setA11y(on); })
+            .catch(() => {});
+        const sub = AccessibilityInfo.addEventListener(
+            'screenReaderChanged',
+            on => setA11y(!!on),
+        );
+        return () => { alive = false; sub.remove(); };
     }, []);
 
     useEffect(() => {
@@ -1368,18 +1563,23 @@ export default function Play() {
     // or a fallback flash. randomColors/trackColor are included so the initial
     // boxes (created before the catalog fetch finished) actually render in random
     // colours instead of the SVG's authored colour.
+    //
+    // The one place a live box is *replaced* rather than mutated: its art is what
+    // changes, so React has to re-render it, and a memoised row only re-renders on
+    // a new object. Position rides along untouched (the copy carries the current
+    // x/y), and the aftermath already on screen keeps the art it popped with.
     useEffect(() => {
-        setBoxesData(prev => prev.map(b => (
-            b.isBoom ? b : {
-                ...b,
-                iconSvg: card.iconSvg,
-                width: card.width,
-                height: card.height,
-                randomColors: card.randomColors,
-                isRotation: card.isRotation,
-                trackColor: card.trackColor,
-            }
-        )));
+        const next = liveRef.current.map(b => ({
+            ...b,
+            iconSvg: card.iconSvg,
+            width: card.width,
+            height: card.height,
+            randomColors: card.randomColors,
+            isRotation: card.isRotation,
+            trackColor: card.trackColor,
+        }));
+        liveRef.current = next;
+        setBoxesData(next);
     }, [card.iconSvg, card.width, card.height, card.randomColors, card.isRotation, card.trackColor]);
 
     useEffect(() => {
@@ -1401,15 +1601,21 @@ export default function Play() {
         lastFrameTsRef.current = 0;
 
         const animate = (ts: number) => {
-            // Walk the effective duration back up to the level's duration after a
-            // dip (bomb / boss), covering the whole gap in DURATION_DIP_RECOVER_MS.
-            // dt is clamped so one stalled frame can't skip the recovery.
+            // How much wall-clock time this frame covers. Everything below is
+            // scaled by it, so the field runs at the same pace on a 60 Hz phone,
+            // a 120 Hz one, and a frame that arrived late. Clamped so a stall
+            // resumes the fall instead of teleporting it.
             const prevTs = lastFrameTsRef.current;
             lastFrameTsRef.current = ts;
-            const dt = prevTs ? Math.min(ts - prevTs, 100) : 16;
+            const dtMs = Math.min(prevTs ? ts - prevTs : 1000 / REF_FPS, MAX_FRAME_MS);
+            const dt = dtMs / 1000;
+
+            // Walk the effective duration back up to the level's duration after a
+            // dip (bomb / boss / revive) or a level-up, covering the whole gap in
+            // DURATION_DIP_RECOVER_MS.
             if (durationEffRef.current < durationRef.current) {
                 const step =
-                    (durationRef.current * (1 - DURATION_DIP_FACTOR) * dt) /
+                    (durationRef.current * (1 - DURATION_DIP_FACTOR) * dtMs) /
                     DURATION_DIP_RECOVER_MS;
                 durationEffRef.current = Math.min(
                     durationRef.current,
@@ -1422,72 +1628,113 @@ export default function Play() {
                 return;
             }
 
-            missHappenedRef.current = false;
-
             // Per-card travel direction (admin-managed). fromBottom → the box
-            // floats UP and is "missed" when its top edge leaves the screen top;
-            // otherwise it falls DOWN and is missed when its bottom passes the
-            // screen bottom. The leading edge crosses the far boundary in both.
+            // floats UP and is "missed" once it has cleared the screen top;
+            // otherwise it falls DOWN and is missed once it has cleared the
+            // screen bottom. The whole box leaves the arena in both.
             const fromBottom = !!cardRef.current.fallFromBottom;
+            // Field-wide factors, computed once per frame rather than per box.
+            // `field` is the slow-mo helper × the ❄️ freeze pickup.
+            const field = effSlow();
+            const fallPxPerSec = (durationEffRef.current + 10) * FALL_SPEED_SCALE * field;
+            const fallStep = fallPxPerSec * dt;
+            // Sideways ease, as a share of the remaining distance for THIS frame's
+            // length — the dt-correct form of the old flat 0.05 per frame.
+            const driftFactor = 1 - Math.exp(-DRIFT_RATE_PER_SEC * field * dt);
+            const driftCap = DRIFT_MAX_PX_PER_SEC * field * dt;
+            const spinStep = SPIN_DEG_PER_SEC * field * dt;
 
-            setBoxesData(prev =>
-                prev.filter((b: any) => {
-                    if (b.isBoom) return true;
+            // The frame's real work: walk the live boxes, advance each one and
+            // push its new style onto its own native view.
+            //
+            // Nothing here goes through React. The box objects ARE the game state
+            // and they're mutated in place, so a frame costs the arithmetic plus
+            // one native prop update per box — no per-box object, no new array, no
+            // render of this screen, no reconciliation. (This is the same channel
+            // Animated uses for a JS-driven animation; driving Animated values
+            // instead would cost one update *per value*, so the style is written
+            // whole.) React is only told when the LIST changes — a box spawns or
+            // leaves — which is what `dropped` collects below.
+            const list = liveRef.current;
+            let dropped = false;
+            let missed = false;
 
-                    const speed = 0.05 * effSlow();
-                    const newY = b.y + (b.ty - b.y) * speed;
-                    const missed = fromBottom ? newY < 0 : newY + b.size > height;
-                    if (!missed) return true;
+            for (let i = 0; i < list.length; i++) {
+                const b = list[i];
+                // Bombs (and the life pickup) travel faster than the cards; the
+                // mine barrel travels slower — it's the heavy one.
+                const boost = b.isBomb ? BOMB_FALL_BOOST
+                    : b.isBarrel ? BARREL_FALL_BOOST
+                        : b.isHeart ? HEART_FALL_BOOST : 1;
+                // What this box actually covers on screen — the barrel is drawn
+                // wider than its box, an admin SVG carries its own dimensions.
+                const {w, h} = boxBounds(b);
+                const oldX = b.x;
+                const oldY = b.y;
+                const newY = fromBottom
+                    ? oldY - fallStep * boost
+                    : oldY + fallStep * boost;
 
+                // Retired only once the WHOLE box has cleared the far edge. The
+                // old test fired the moment the leading edge touched it, so a box
+                // blinked out of existence while it was still fully on screen —
+                // and the heart for missing it was charged a beat before the
+                // player had run out of screen to tap it in.
+                if (fromBottom ? newY + h < 0 : newY > height) {
+                    // Off the far edge. Drop the box instead of teleporting it
+                    // back: the spawner feeds the next one on its own cadence, so
+                    // boxes keep arriving one at a time rather than in a re-synced
+                    // batch.
+                    b.__dead = true;
+                    dropped = true;
                     // A trap (bomb or mine barrel) that leaves the screen
-                    // untouched is the correct play — drop it silently, no
-                    // heart, no shake. A missed bonus
-                    // (money bag), the ❄️ freeze pickup or the life pickup is just
-                    // a missed chance, not a mistake: it disappears without costing
-                    // a heart either.
-                    if (b.isBomb || b.isBarrel || b.isHeart || b.isGolden || b.isFreeze || b.isGift) return false;
-
-                    // Deferred for a second reason on top of the frame budget:
-                    // this runs inside a setState updater, i.e. during React's
-                    // render phase, where a native side effect has no business
-                    // being fired synchronously.
+                    // untouched is the correct play — no heart, no shake. A missed
+                    // bonus (money bag), the ❄️ freeze pickup or the life pickup is
+                    // just a missed chance, not a mistake: it disappears without
+                    // costing a heart either.
+                    if (b.isBomb || b.isBarrel || b.isHeart || b.isGolden || b.isFreeze || b.isGift) continue;
+                    // Deferred so a native call doesn't land on the frame's budget.
                     if (loseHeart()) deferFeedback(() => haptic('loseHeart'));
-                    missHappenedRef.current = true;
-                    // Drop the box instead of teleporting it back to the far edge:
-                    // the spawner feeds the next one on its own cadence, so boxes
-                    // keep arriving one at a time rather than in a re-synced batch.
-                    return false;
-                }).map((b: any) => {
-                    if (b.isBoom) return b;
+                    missed = true;
+                    continue;
+                }
 
-                    const speed = 0.05 * effSlow();
-                    // Bombs (and the life pickup) reach further per frame than the
-                    // cards; the mine barrel reaches less — it's the heavy one.
-                    const boost = b.isBomb ? BOMB_FALL_BOOST
-                        : b.isBarrel ? BARREL_FALL_BOOST
-                            : b.isHeart ? HEART_FALL_BOOST : 1;
-                    const reach = (durationEffRef.current + 10) * boost;
-                    const newY = b.y + (b.ty - b.y) * speed;
+                // Sideways drift toward the current target, capped so a target
+                // picked across the screen eases in instead of lurching, and kept
+                // inside the arena using the box's real width (the old maths used
+                // b.size, which let a barrel or a wide admin card drift off the
+                // right edge).
+                const maxX = Math.max(0, width - w);
+                if (b.tx > maxX) b.tx = maxX;
+                let dx = (b.tx - oldX) * driftFactor;
+                if (dx > driftCap) dx = driftCap;
+                else if (dx < -driftCap) dx = -driftCap;
 
-                    return {
-                        ...b,
-                        x: b.x + (b.tx - b.x) * speed,
-                        y: newY,
-                        tx: Math.abs(b.tx - b.x) < 1 ? Math.random() * (width - b.size) : b.tx,
-                        ty: fromBottom ? b.y - reach : b.y + reach,
-                        // Traps never spin — they drop upright so their tell (the
-                        // lit fuse, the mine trigger) stays on top. The barrel is
-                        // the exception: it rocks side to side, derived from its
-                        // own height so the wobble is smooth and needs no extra
-                        // per-box state.
-                        rotation: b.isBarrel
-                            ? Math.sin(newY * BARREL_WOBBLE_SPEED) * BARREL_WOBBLE_DEG
-                            : (b.isRotation && !b.isBomb) ? (b.rotation + 2) % 360 : b.rotation,
-                    };
-                })
-            );
+                b.x = Math.min(maxX, Math.max(0, oldX + dx));
+                b.y = newY;
+                if (Math.abs(b.tx - b.x) < 1) b.tx = Math.random() * maxX;
+                // Traps never spin — they drop upright so their tell (the lit
+                // fuse, the mine trigger) stays on top. The barrel is the
+                // exception: it rocks side to side, derived from its own height so
+                // the wobble is smooth and needs no extra per-box state.
+                b.rotation = b.isBarrel
+                    ? Math.sin(newY * BARREL_WOBBLE_SPEED) * BARREL_WOBBLE_DEG
+                    : (b.isRotation && !b.isBomb) ? (b.rotation + spinStep) % 360 : b.rotation;
 
-            if (missHappenedRef.current) {
+                // Null until PlayBox has mounted the box (its first frame) and
+                // again after it unmounts. Style props have to travel nested
+                // under `style`, exactly as they were rendered — a bare
+                // `transform` is not a view attribute and would be dropped.
+                b.node?.setNativeProps({style: buildBoxStyle(b)});
+            }
+
+            if (dropped) {
+                const next = list.filter((b: any) => !b.__dead);
+                liveRef.current = next;
+                setBoxesData(next);
+            }
+
+            if (missed) {
                 streakRef.current = 0;
                 triggerMissShake();
             }
@@ -1519,10 +1766,11 @@ export default function Play() {
 
         const spawnOne = () => {
             if (!isBossFightRef.current) {
-                // No cap on how many are in the air: the stream is bounded only by
-                // how long a box takes to cross the screen versus the spawn gap.
-                setBoxesData(prev => [
-                    ...prev,
+                // The stream is normally bounded by how long a box takes to cross
+                // the screen versus the spawn gap; MAX_CARD_BOXES is the floor
+                // under that, and skipping the beat is the right answer — the next
+                // one comes along a gap later, on cadence.
+                addBox(
                     spawnBox(
                         cardRef.current,
                         durationEffRef.current,
@@ -1534,7 +1782,8 @@ export default function Play() {
                         // ❄️ freeze pickups only start rolling after level 4.
                         levelRef.current >= FREEZE_MIN_LEVEL,
                     ),
-                ]);
+                    MAX_CARD_BOXES,
+                );
             }
             timeoutId = setTimeout(spawnOne, nextDelay());
         };
@@ -1559,14 +1808,14 @@ export default function Play() {
             effSlow();
 
         const spawnBomb = () => {
-            const eligible = !isBossFightRef.current && bombsLeftRef.current > 0;
+            // A full field is checked here rather than left to addBox: the level's
+            // budget must not be spent on a box that never dropped.
+            const eligible = !isBossFightRef.current && bombsLeftRef.current > 0 &&
+                liveRef.current.length < MAX_LIVE_BOXES;
 
             if (eligible) {
                 bombsLeftRef.current -= 1;
-                setBoxesData(prev => [
-                    ...prev,
-                    spawnBox(cardRef.current, durationEffRef.current, !!cardRef.current.fallFromBottom, true),
-                ]);
+                addBox(spawnBox(cardRef.current, durationEffRef.current, !!cardRef.current.fallFromBottom, true));
             }
             // Keep ticking even when not eligible (boss fight, budget spent):
             // the next level refills the budget and the timer picks it up.
@@ -1595,21 +1844,19 @@ export default function Play() {
             const eligible =
                 !isBossFightRef.current &&
                 levelRef.current >= BARREL_MIN_LEVEL &&
-                barrelsLeftRef.current > 0;
+                barrelsLeftRef.current > 0 &&
+                liveRef.current.length < MAX_LIVE_BOXES;
 
             if (eligible) {
                 barrelsLeftRef.current -= 1;
-                setBoxesData(prev => [
-                    ...prev,
-                    spawnBox(
-                        cardRef.current,
-                        durationEffRef.current,
-                        !!cardRef.current.fallFromBottom,
-                        false,
-                        false,
-                        true,
-                    ),
-                ]);
+                addBox(spawnBox(
+                    cardRef.current,
+                    durationEffRef.current,
+                    !!cardRef.current.fallFromBottom,
+                    false,
+                    false,
+                    true,
+                ));
             }
             // Keeps ticking while ineligible (early levels, boss fight, budget
             // spent) so the next level-up picks straight back up.
@@ -1636,24 +1883,22 @@ export default function Play() {
             effSlow();
 
         const spawnBag = () => {
-            const eligible = !isBossFightRef.current && bagsLeftRef.current > 0;
+            const eligible = !isBossFightRef.current && bagsLeftRef.current > 0 &&
+                liveRef.current.length < MAX_LIVE_BOXES;
 
             if (eligible) {
                 bagsLeftRef.current -= 1;
-                setBoxesData(prev => [
-                    ...prev,
-                    spawnBox(
-                        cardRef.current,
-                        durationEffRef.current,
-                        !!cardRef.current.fallFromBottom,
-                        false,   // isBomb
-                        false,   // isHeart
-                        false,   // isBarrel
-                        false,   // isGift
-                        false,   // allowFreeze
-                        true,    // isBag
-                    ),
-                ]);
+                addBox(spawnBox(
+                    cardRef.current,
+                    durationEffRef.current,
+                    !!cardRef.current.fallFromBottom,
+                    false,   // isBomb
+                    false,   // isHeart
+                    false,   // isBarrel
+                    false,   // isGift
+                    false,   // allowFreeze
+                    true,    // isBag
+                ));
             }
             timeoutId = setTimeout(spawnBag, nextGap());
         };
@@ -1664,11 +1909,11 @@ export default function Play() {
     }, [isPlaying]);
 
     // ─── Stable handler identities ────────────────────────────────────────────
-    // The animation loop re-renders this screen ~60×/sec, so the plain function
-    // declarations above get a fresh identity every frame. Passing those
-    // straight to the (now memoised) children would defeat the memo and re-render
-    // every modal and helper button on every frame. These wrappers keep the prop
-    // identity fixed while still calling the latest closure.
+    // The plain function declarations above get a fresh identity on every render.
+    // Passing those straight to the memoised children would defeat the memo and
+    // re-render every modal and helper button whenever anything on this screen
+    // changes. These wrappers keep the prop identity fixed while still calling the
+    // latest closure.
     const onMenu = useStableCallback(menuHandler);
     const onBossTap = useStableCallback(handleBossTap);
     const onRetry = useStableCallback(handleRetry);
@@ -1718,25 +1963,45 @@ export default function Play() {
     // owns the touch and hit-tests the field itself, on press and on every move.
     //
     // It sits above the boxes (same zIndex, rendered last) but below the menu
-    // button, the helper row and the boss, so those keep their own presses. The
-    // Pressables inside PlayBox stay put: they're what a screen reader activates.
-    const boxesRef = useRef<any[]>([]);
-    boxesRef.current = boxesData;
-    // Boxes already popped by the current drag. handleTap ignores a box flagged
-    // isBoom, but that flag only lands on the next render — a fast finger can
-    // sample the same box twice before then, which would double-count the tap.
+    // button, the helper row and the boss, so those keep their own presses. With a
+    // screen reader on, PlayBox also brings back its per-box Pressable — that's
+    // what a reader activates.
+    //
+    // The hit-test reads `liveRef`, the loop's own array, so it tests where the
+    // boxes are *now* rather than a frame-old render snapshot.
+    //
+    // Boxes already popped by the current drag: a popped box leaves the live list
+    // immediately, so this only guards a second sample within the same move event.
     const swipeHitsRef = useRef<Set<string>>(new Set());
+    // Where each active finger landed, and whether it has popped anything yet.
+    // A plain tap on a box that overlaps another used to pop BOTH: the very next
+    // move sample — and a resting finger always jitters a pixel or two — found the
+    // box *behind* it at the same point. So until a finger has travelled
+    // SWIPE_MIN_DIST from where it landed the gesture is still a tap, and a tap
+    // pops exactly one box. Past that it's a swipe and pops everything it crosses.
+    const touchStartRef = useRef<Map<number, {x: number; y: number; popped: boolean}>>(new Map());
 
-    const hitSwipe = useCallback((px: number, py: number) => {
-        const list = boxesRef.current;
+    const hitSwipe = useCallback((id: number, px: number, py: number) => {
+        let start = touchStartRef.current.get(id);
+        if (!start) {
+            start = {x: px, y: py, popped: false};
+            touchStartRef.current.set(id, start);
+        } else if (start.popped) {
+            const dx = px - start.x;
+            const dy = py - start.y;
+            if (dx * dx + dy * dy < SWIPE_MIN_DIST * SWIPE_MIN_DIST) return;
+        }
+
+        const list = liveRef.current;
         // renderedBoxes walks the list backwards, so index 0 is drawn frontmost —
         // walking forwards here means the first match is the box on top.
         for (let i = 0; i < list.length; i++) {
             const b = list[i];
-            if (b.isBoom || swipeHitsRef.current.has(b.id)) continue;
+            if (b.__dead || swipeHitsRef.current.has(b.id)) continue;
             const {w, h} = boxBounds(b);
             if (px >= b.x && px <= b.x + w && py >= b.y && py <= b.y + h) {
                 swipeHitsRef.current.add(b.id);
+                start.popped = true;
                 handleTapRef.current(b);
                 return;
             }
@@ -1745,41 +2010,50 @@ export default function Play() {
 
     // Every active finger is tested, not just the one that started the gesture:
     // the layer is the sole responder now, so two-finger play has to come through
-    // nativeEvent.touches or it would quietly stop working.
+    // nativeEvent.touches or it would quietly stop working. Each is tracked by its
+    // own identifier so one finger's tap/swipe state never gates another's.
     const onSwipeTouch = useCallback((e: any) => {
         const touches = e.nativeEvent?.touches;
         if (touches?.length) {
             for (let i = 0; i < touches.length; i++) {
-                hitSwipe(touches[i].locationX, touches[i].locationY);
+                const t = touches[i];
+                hitSwipe(t.identifier ?? i, t.locationX, t.locationY);
             }
         } else {
-            hitSwipe(e.nativeEvent.locationX, e.nativeEvent.locationY);
+            const n = e.nativeEvent;
+            hitSwipe(n.identifier ?? 0, n.locationX, n.locationY);
         }
     }, [hitSwipe]);
+
+    const endSwipe = useCallback(() => {
+        swipeHitsRef.current.clear();
+        touchStartRef.current.clear();
+    }, []);
 
     const swipeResponder = useMemo(() => PanResponder.create({
         onStartShouldSetPanResponder: () => true,
         onMoveShouldSetPanResponder: () => true,
         onPanResponderGrant: onSwipeTouch,
         onPanResponderMove: onSwipeTouch,
-        onPanResponderRelease: () => swipeHitsRef.current.clear(),
-        onPanResponderTerminate: () => swipeHitsRef.current.clear(),
-    }), [onSwipeTouch]);
+        onPanResponderRelease: endSwipe,
+        onPanResponderTerminate: endSwipe,
+    }), [onSwipeTouch, endSwipe]);
 
     // ─── Render helpers ───────────────────────────────────────────────────────
     const comboLabel =
-        combo >= 5 ? '🔥 INSANE!' :
-            combo >= 4 ? '💥 MEGA!' :
-                combo >= 3 ? '⚡ COMBO x' + combo :
-                    '✨ COMBO x' + combo;
+        combo >= 5 ? t('comboInsane') :
+            combo >= 4 ? t('comboMega') :
+                combo >= 3 ? t('comboBig', {count: combo}) :
+                    t('comboSmall', {count: combo});
 
 
     const LevelUpIcon = level >= 10 ? FlameIcon : level >= 5 ? BoltIcon : StarBurstIcon;
     const levelUpColor = level >= 10 ? '#FF6B00' : level >= 5 ? '#FFD700' : '#ffffff';
 
-    // The modals mount their full trees (SVG art, gradients) whether or not they
-    // are visible, so rebuilding this block every frame was pure waste. It only
-    // depends on modal visibility and the values they display.
+    // Each modal returns null while hidden, so this block costs nothing to keep
+    // mounted — but it is memoised anyway: it only depends on modal visibility and
+    // the values they display, and the score/level state around it changes far
+    // more often than that.
     const modals = useMemo(() => (
         <>
             <LoseModal
@@ -1810,20 +2084,28 @@ export default function Play() {
         onWatchAdLose, onMenuClose, onMenuExit, onCountdownFinish, onBuyHelper,
         onWatchAdHelper, onBuyModalClose]);
 
-    // Boxes are drawn back-to-front (newest behind), which the old code got by
-    // allocating two throwaway arrays per frame. Walking the list backwards does
-    // the same with no allocation — this runs 60×/sec with a box per element.
+    // Boxes are drawn back-to-front (newest behind) — walking the list backwards
+    // gets that with no throwaway array. Rebuilt only when the list itself changes
+    // (a spawn or a departure), never while the boxes fall.
     const renderedBoxes = useMemo(() => {
         const out = [];
         for (let i = boxesData.length - 1; i >= 0; i--) {
             const box = boxesData[i];
-            out.push(<PlayBox key={box.id} box={box} handlePress={onBoxPress}/>);
+            out.push(<PlayBox key={box.id} box={box} handlePress={onBoxPress} a11y={a11y}/>);
         }
         return out;
-    }, [boxesData, onBoxPress]);
+    }, [boxesData, onBoxPress, a11y]);
+
+    // The aftermath of popped boxes — hole markers and blasts. Static art at a
+    // fixed spot, drawn under the live boxes so a falling card is never hidden
+    // behind the marker of the one before it.
+    const renderedTracks = useMemo(
+        () => tracks.map(t => <PlayBox key={t.id} box={t} handlePress={onBoxPress}/>),
+        [tracks, onBoxPress],
+    );
 
     // The three helper buttons carry SVG art and only change when a helper count
-    // or active state does — not 60×/sec with the falling boxes.
+    // or active state does.
     const helpersRow = useMemo(() => (
                 <View style={[styles.helpersRow, {bottom: insets.bottom + 22}, isBossFight && {opacity: 0.3, pointerEvents: 'none'}]}>
 
@@ -1967,7 +2249,7 @@ export default function Play() {
             {/* ❄️ Freeze badge */}
             {freezeActive && (
                 <View pointerEvents="none" style={styles.freezeBadge}>
-                    <Text allowFontScaling={false} style={styles.freezeText}>❄️ FROZEN</Text>
+                    <Text allowFontScaling={false} style={styles.freezeText}>{t('frozen')}</Text>
                 </View>
             )}
 
@@ -1975,22 +2257,22 @@ export default function Play() {
             {giftReveal && (
                 <Animated.View
                     pointerEvents="none"
-                    style={[styles.giftRevealOverlay, {
+                    style={[styles.giftRevealOverlay,{marginTop: 25}, {
                         opacity: giftRevealOpacityAnim,
                         transform: [{scale: giftRevealScaleAnim}],
                     }]}
                 >
-                    {giftReveal === 'win'
+                    {giftReveal.kind === 'win'
                         ? <Coin width={44} height={48}/>
                         : <BombBlast size={44}/>}
                     <Text
                         allowFontScaling={false}
                         style={[
                             styles.giftRevealText,
-                            {color: giftReveal === 'win' ? '#FFD24A' : '#FF1744'},
+                            {color: giftReveal.kind === 'win' ? '#FFD24A' : '#FF1744'},
                         ]}
                     >
-                        {giftReveal === 'win' ? `+${GIFT_REWARD}` : 'BOOM!'}
+                        {giftReveal.kind === 'win' ? `+${giftReveal.amount}` : t('boom')}
                     </Text>
                 </Animated.View>
             )}
@@ -2006,7 +2288,7 @@ export default function Play() {
                 >
                     <LevelUpIcon size={56}/>
                     <Text allowFontScaling={false} style={[styles.levelUpText, {color: levelUpColor}]}>
-                        LEVEL {level}!
+                        {t('levelUpBanner', {level})}
                     </Text>
                 </Animated.View>
             )}
@@ -2015,10 +2297,10 @@ export default function Play() {
             {isBossFight && (
                 <View pointerEvents="none" style={styles.bossFightBanner}>
                     <Text allowFontScaling={false} style={styles.bossFightText}>
-                        ⚔️ BOSS FIGHT ⚔️
+                        {t('bossFight')}
                     </Text>
                     <Text allowFontScaling={false} style={styles.bossFightSub}>
-                        {(boss?.name || getBossTier(level).name).toUpperCase()} • TAP TO DESTROY
+                        {t('tapToDestroy', {name: (boss?.name || getBossTier(level).name).toUpperCase()})}
                     </Text>
                 </View>
             )}
@@ -2039,10 +2321,10 @@ export default function Play() {
                 <View style={styles.bossDefeatedOverlay}>
                     <Text allowFontScaling={false} style={styles.bossDefeatedEmoji}>🏆</Text>
                     <Text allowFontScaling={false} style={styles.bossDefeatedText}>
-                        {(boss?.name || getBossTier(level).name).toUpperCase()} DEFEATED!
+                        {t('bossDefeated', {name: (boss?.name || getBossTier(level).name).toUpperCase()})}
                     </Text>
                     <Text allowFontScaling={false} style={styles.bossDefeatedReward}>
-                        +{bossRewardRef.current} coins • ❤️ restored
+                        {t('bossReward', {count: bossRewardRef.current})}
                     </Text>
                 </View>
             )}
@@ -2070,6 +2352,8 @@ export default function Play() {
                            style={[styles.flashOverlay, {opacity: hurtFlashAnim, backgroundColor: '#FF1744'}]}/>
 
             {modals}
+
+            {renderedTracks}
 
             {renderedBoxes}
 

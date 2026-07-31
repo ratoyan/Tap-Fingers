@@ -154,7 +154,7 @@ export default function LogoutModal({visible, onClose, onConfirm}: any) {
                                       accessible={true}
                                       accessibilityRole="button"
                                       accessibilityLabel={t('cancel')}
-                                      accessibilityHint={t('cancelExitHint') || "Cancel exiting the game"}
+                                      accessibilityHint={t('cancelExitHint')}
                     >
                         <Text allowFontScaling={false} style={[styles.buttonText, styles.cancelText]}
                               importantForAccessibility="no-hide-descendants"
@@ -169,7 +169,7 @@ export default function LogoutModal({visible, onClose, onConfirm}: any) {
                                       accessible={true}
                                       accessibilityRole="button"
                                       accessibilityLabel={t('yes')}
-                                      accessibilityHint={t('confirmExitHint') || "Confirm exiting the game"}
+                                      accessibilityHint={t('confirmExitHint')}
                     >
                         <LinearGradient
                             colors={[GRADIENT_LIGHT, GRADIENT_DARK]}

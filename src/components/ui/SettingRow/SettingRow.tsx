@@ -1,5 +1,6 @@
 ﻿import {Text, TouchableOpacity, View, ViewStyle} from "react-native";
 import React from "react";
+import {useTranslation} from "react-i18next";
 
 // components
 import GameSwitch from "../GameSwitch/GameSwitch.tsx";
@@ -26,6 +27,7 @@ interface PressRow {
 type SettingRowProps = ToggleRow | PressRow;
 
 function SettingRow(props: SettingRowProps) {
+    const {t} = useTranslation();
     const isPress = 'onPress' in props;
     const isToggle = 'value' in props;
 
@@ -45,9 +47,9 @@ function SettingRow(props: SettingRowProps) {
             accessibilityState={isToggle ? { checked: props.value } : undefined}
             accessibilityHint={
                 isToggle
-                    ? "Double tap to toggle"
+                    ? t('toggleHint')
                     : isPress
-                        ? "Double tap to open"
+                        ? t('openHint')
                         : undefined
             }
         >

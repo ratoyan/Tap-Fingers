@@ -1,5 +1,5 @@
-import React, {useCallback, useState} from 'react';
-import {BackHandler, Platform, ScrollView, Text, TouchableOpacity, View} from "react-native";
+import React, {useCallback, useRef, useState} from 'react';
+import {BackHandler, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View} from "react-native";
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {RootStackParamList} from '../../types/RootStackParamList';
 import {MenuType} from "../../types/menu.type.ts";
@@ -9,6 +9,7 @@ import {loadMusic, playMusic, releaseMusic} from "../../utils/helpers.ts";
 import {useFocusEffect, useNavigation} from "@react-navigation/core";
 import {menus} from "../../data/menu.ts";
 import {TOP_OFFSET} from "../../constants/uiConstants.ts";
+import {vs} from "../../utils/responsive.ts";
 import {useGlobalStore} from "../../store/globalStore.ts";
 import {useAuthStore} from "../../store/authStore.ts";
 import {useConfigStore} from "../../store/configStore.ts";
@@ -18,15 +19,18 @@ import {LuckyWheelSegment} from "../../services/types.ts";
 import {storage} from "../../db/kvStore.ts";
 import {STORAGE_KEYS} from "../../utils/storageKeys.ts";
 import InAppReview from 'react-native-in-app-review';
+import {useDeferredFocusEffect} from "../../hooks/useDeferredFocusEffect.ts";
 
 // components
-import MenuButton from "../../components/ui/MenuButton/MenuButton.tsx";
+import MenuButton, {MENU_ENTER_LEAD, MENU_ENTER_STAGGER} from "../../components/ui/MenuButton/MenuButton.tsx";
 import CoinCount from "../../components/ui/CoinCount/CoinCount.tsx";
 import Logo from "../../components/ui/Logo/Logo.tsx";
 import LuckyWheelModal from "../../components/ui/LuckyWheel/LuckyWheelModal.tsx";
 import LuckyWheelButton from "../../components/ui/LuckyWheelButton/LuckyWheelButton.tsx";
 import WatchAdModal from "../../components/ui/WatchAdModal/WatchAdModal.tsx";
+import CoinGain from "../../components/ui/CoinGain/CoinGain.tsx";
 import ExitModal from "../../components/ui/Play/ExitModal.tsx";
+import Entrance from "../../components/ui/Entrance/Entrance.tsx";
 
 // styles
 import styles from './Home.style.ts';
@@ -45,6 +49,11 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Home'>;
 const PROFILE_REFRESH_MS = 30_000;
 let lastProfileRefresh = 0;
 
+// The account hints bring up the rear: they wait for the last menu button to
+// have been dealt, so the eye isn't pulled below the menu mid-arrival. Derived
+// from MenuButton's own timings so the two can't drift apart.
+const HINT_DELAY = MENU_ENTER_LEAD + menus.length * MENU_ENTER_STAGGER + 120;
+
 const Home: React.FC<Props> = () => {
     const insets = useSafeAreaInsets();
     const {t} = useTranslation();
@@ -61,25 +70,68 @@ const Home: React.FC<Props> = () => {
     const patchStats = useAuthStore(s => s.patchStats);
     const [showWheel, setShowWheel] = useState(false);
     const [canSpin, setCanSpin] = useState(false);
+    // Seconds left of the wheel's 24h cooldown, as the server counted them. 0
+    // while a spin is available; drives the modal's "next spin in" countdown.
+    const [nextSpinInSeconds, setNextSpinInSeconds] = useState(0);
     // Wheel layout, prefetched here so the modal opens with its prizes already
     // drawn. null = still loading, [] = loaded but unusable.
     const [wheelSegments, setWheelSegments] = useState<LuckyWheelSegment[] | null>(null);
+    // The latest layout, readable from callbacks without making them depend on
+    // (and re-fire with) the state itself.
+    const wheelSegmentsRef = useRef<LuckyWheelSegment[] | null>(null);
+    wheelSegmentsRef.current = wheelSegments;
     const [wheelLoadError, setWheelLoadError] = useState(false);
     const [showAdModal, setShowAdModal] = useState(false);
     const [showExitModal, setShowExitModal] = useState(false);
-    const checkCanSpin = useCallback(async () => {
+    // Coins an ad just paid out, held only for as long as the "+N" pop plays.
+    const [coinGain, setCoinGain] = useState<number | null>(null);
+    // Offline fallback only. The server owns the cooldown (it enforces it on
+    // POST /player/lucky-wheel either way); this device-local date is what we
+    // fall back to when the state request doesn't land, and it is deliberately
+    // permissive — a spin the server refuses just comes back as a 429.
+    const checkCanSpinOffline = useCallback(async () => {
         const raw = await storage.getItem(STORAGE_KEYS.LUCKY_SPIN_DATE);
-        if (!raw) { setCanSpin(true); return; }
-        const last = new Date(raw);
-        const now = new Date();
-        setCanSpin(
-            last.getFullYear() !== now.getFullYear() ||
-            last.getMonth() !== now.getMonth() ||
-            last.getDate() !== now.getDate()
+        const last = raw ? new Date(raw).getTime() : NaN;
+        // Never spun on this device, or an unreadable value — let them tap and
+        // let the server decide.
+        if (!Number.isFinite(last)) { setCanSpin(true); setNextSpinInSeconds(0); return; }
+        const left = Math.max(
+            0,
+            Math.round(userService.SPIN_COOLDOWN_SECONDS - (Date.now() - last) / 1000),
         );
+        setCanSpin(left === 0);
+        setNextSpinInSeconds(left);
     }, []);
 
-    useFocusEffect(
+    // Pull the wheel layout + cooldown from the server. Shared by the focus
+    // prefetch and by the modal's 429 path, where the device thought a spin was
+    // available and the server disagreed — only it knows how long is left.
+    const refreshWheelState = useCallback(async (isStale: () => boolean = () => false) => {
+        try {
+            const state = await userService.getLuckyWheel();
+            if (isStale()) return;
+            setWheelSegments(state.segments);
+            setWheelLoadError(false);
+            setCanSpin(state.canSpin);
+            setNextSpinInSeconds(state.nextSpinInSeconds);
+        } catch {
+            if (isStale()) return;
+            // Keep a layout we already have — a failed refresh (e.g. the one
+            // after a 429, with the modal open) must not blank a working wheel.
+            const known = wheelSegmentsRef.current;
+            setWheelSegments(known ?? []);
+            setWheelLoadError(!known || known.length === 0);
+            // No verdict from the server — fall back to the device's own record
+            // so the button isn't stuck dead while offline.
+            checkCanSpinOffline();
+        }
+    }, [checkCanSpinOffline]);
+
+    // Deferred, like everything else below: `new Sound(...)` opens and decodes
+    // the mp3, and on a cold start the file isn't in the OS page cache yet — a
+    // solid frame's worth of work, previously landing mid-entrance along with
+    // playMusic's own 200ms timer.
+    useDeferredFocusEffect(
         React.useCallback(() => {
             // This runs every time the screen is focused
             releaseMusic();
@@ -97,36 +149,25 @@ const Home: React.FC<Props> = () => {
         }, [])
     );
 
-    useFocusEffect(useCallback(() => { checkCanSpin(); }, [checkCanSpin]));
-
-    // Prefetch the wheel layout on every Home focus. It used to be fetched when
-    // the modal opened, which put a network round-trip between the player's tap
-    // and a usable wheel — they got a grey disc and the word "loading". Doing it
-    // here still picks up admin edits without an app restart (the reason it was
-    // re-fetched per open), just before the player asks rather than after.
+    // Prefetch the wheel layout AND the spin cooldown on every Home focus. It
+    // used to be fetched when the modal opened, which put a network round-trip
+    // between the player's tap and a usable wheel — they got a grey disc and the
+    // word "loading". Doing it here still picks up admin edits without an app
+    // restart (the reason it was re-fetched per open), just before the player
+    // asks rather than after.
     //
     // Guarded against a late response landing after the player has navigated
     // away: without the flag this would setState on an unmounted screen every
     // time someone opened Home and left again inside the request window.
-    useFocusEffect(useCallback(() => {
+    useDeferredFocusEffect(useCallback(() => {
         let active = true;
-        userService.getLuckyWheelSegments()
-            .then(segments => {
-                if (!active) return;
-                setWheelSegments(segments);
-                setWheelLoadError(false);
-            })
-            .catch(() => {
-                if (!active) return;
-                setWheelSegments([]);
-                setWheelLoadError(true);
-            });
+        refreshWheelState(() => !active);
         return () => { active = false; };
-    }, []));
+    }, [refreshWheelState]));
 
     // Re-pull the admin global config (ad switch / level length) on every Home
     // focus so an admin toggle reflects without a full app restart.
-    useFocusEffect(useCallback(() => { syncGlobalConfig(); }, []));
+    useDeferredFocusEffect(useCallback(() => { syncGlobalConfig(); }, []));
 
     useFocusEffect(
         useCallback(() => {
@@ -144,7 +185,7 @@ const Home: React.FC<Props> = () => {
     // PROFILE_REFRESH_MS. Firing on *every* focus hammered /player/profile each
     // time the player bounced back to Home; coins/gems already update
     // optimistically via patchStats, so this is just a periodic safety reconcile.
-    useFocusEffect(
+    useDeferredFocusEffect(
         useCallback(() => {
             const now = Date.now();
             if (now - lastProfileRefresh < PROFILE_REFRESH_MS) return;
@@ -157,17 +198,24 @@ const Home: React.FC<Props> = () => {
         }, [refreshProfile])
     );
 
-    useFocusEffect(
+    useDeferredFocusEffect(
         useCallback(() => {
             const requestReviewIfNeeded = async () => {
                 if (!InAppReview.isAvailable()) return;
                 const raw = await storage.getItem(STORAGE_KEYS.LAST_REVIEW_DATE);
                 const now = new Date();
-                if (raw) {
-                    const last = new Date(raw);
-                    const diffDays = (now.getTime() - last.getTime()) / (1000 * 60 * 60 * 24);
-                    if (diffDays < 3) return;
+                // First ever visit: only stamp the clock. Asking someone who has
+                // not played a single round to rate the game is both a bad ask
+                // and, because it spins up Play Services and a native dialog,
+                // the single heaviest thing that used to happen on this screen —
+                // and it happened exactly once, on the first entrance.
+                if (!raw) {
+                    await storage.setItem(STORAGE_KEYS.LAST_REVIEW_DATE, now.toISOString());
+                    return;
                 }
+                const last = new Date(raw);
+                const diffDays = (now.getTime() - last.getTime()) / (1000 * 60 * 60 * 24);
+                if (diffDays < 3) return;
                 await storage.setItem(STORAGE_KEYS.LAST_REVIEW_DATE, now.toISOString());
                 await InAppReview.RequestInAppReview().catch(() => {});
             };
@@ -182,21 +230,34 @@ const Home: React.FC<Props> = () => {
             end={{x: 1, y: 1}}
             style={styles.container}
             accessible={true}
-            accessibilityLabel="Main menu screen"
+            accessibilityLabel={t('homeScreen')}
         >
             <ScreenStatusBar/>
 
             <ScrollView
                 style={styles.scroll}
-                contentContainerStyle={[styles.scrollContent, {paddingTop: insets.top + TOP_OFFSET}]}
+                // The safe-area/offset padding is *added* to the style's own top
+                // padding rather than replacing it, so the centred block still
+                // clears the coin counter and wheel button pinned up there when
+                // the content is tall enough to reach them.
+                contentContainerStyle={[styles.scrollContent, {paddingTop: insets.top + TOP_OFFSET + vs(10)}]}
                 showsVerticalScrollIndicator={false}
                 bounces={true}
             >
-                <Logo width={160} height={160} viewStyles={styles.logo}/>
+                {/* No fixed size — Logo derives one from the viewport so it
+                    scales on small phones and tablets alike. The zoom starts a
+                    whisker under 1 so it settles *into* the screen; any deeper
+                    and the logo reads as being thrown at the player. */}
+                <Entrance from="above" distance={16} scaleFrom={0.96} duration={640}>
+                    <Logo viewStyles={styles.logo}/>
+                </Entrance>
 
-                <View accessible={true} accessibilityLabel="Main menu options">
+                {/* The buttons run their own arrival (fly-in from alternating
+                    sides + icon pop + gloss sweep) off `index` — see
+                    MenuButton. Nothing to wrap here. */}
+                <View accessible={true} accessibilityLabel={t('homeMenuLabel')}>
                     {menus.map((menu: MenuType, index: number) => (
-                        <MenuButton menu={menu} key={index}/>
+                        <MenuButton menu={menu} index={index} key={index}/>
                     ))}
                 </View>
 
@@ -205,58 +266,99 @@ const Home: React.FC<Props> = () => {
                     email pending confirmation → confirm it. Both go to Profile,
                     which is otherwise buried in Settings. */}
                 {isGuestNoEmail && (
-                    <TouchableOpacity
-                        onPress={() => navigation.navigate('Profile')}
-                        activeOpacity={0.85}
-                        style={accountHint.wrap}
-                        accessibilityRole="button"
-                        accessibilityLabel={t('createYourAccount')}
-                    >
-                        <Text allowFontScaling={false} style={accountHint.icon}>👻</Text>
-                        <Text allowFontScaling={false} style={accountHint.label} numberOfLines={1}>
-                            {t('createYourAccount')}
-                        </Text>
-                        <Text allowFontScaling={false} style={accountHint.arrow}>›</Text>
-                    </TouchableOpacity>
+                    <Entrance delay={HINT_DELAY} distance={12} duration={480}>
+                        <TouchableOpacity
+                            onPress={() => navigation.navigate('Profile')}
+                            activeOpacity={0.85}
+                            style={accountHint.wrap}
+                            accessibilityRole="button"
+                            accessibilityLabel={t('createYourAccount')}
+                        >
+                            <Text allowFontScaling={false} style={accountHint.icon}>👻</Text>
+                            <Text allowFontScaling={false} style={accountHint.label} numberOfLines={1}>
+                                {t('createYourAccount')}
+                            </Text>
+                            <Text allowFontScaling={false} style={accountHint.arrow}>›</Text>
+                        </TouchableOpacity>
+                    </Entrance>
                 )}
 
                 {needsEmailVerify && (
-                    <TouchableOpacity
-                        onPress={() => navigation.navigate('Profile')}
-                        activeOpacity={0.85}
-                        style={[accountHint.wrap, verifyHint.wrap]}
-                        accessibilityRole="button"
-                        accessibilityLabel={t('confirmEmailBanner')}
-                    >
-                        <Text allowFontScaling={false} style={accountHint.icon}>📧</Text>
-                        <Text allowFontScaling={false} style={accountHint.label} numberOfLines={1}>
-                            {t('confirmEmailBanner')}
-                        </Text>
-                        <Text allowFontScaling={false} style={accountHint.arrow}>›</Text>
-                    </TouchableOpacity>
+                    <Entrance delay={HINT_DELAY} distance={12} duration={480}>
+                        <TouchableOpacity
+                            onPress={() => navigation.navigate('Profile')}
+                            activeOpacity={0.85}
+                            style={[accountHint.wrap, verifyHint.wrap]}
+                            accessibilityRole="button"
+                            accessibilityLabel={t('confirmEmailBanner')}
+                        >
+                            <Text allowFontScaling={false} style={accountHint.icon}>📧</Text>
+                            <Text allowFontScaling={false} style={accountHint.label} numberOfLines={1}>
+                                {t('confirmEmailBanner')}
+                            </Text>
+                            <Text allowFontScaling={false} style={accountHint.arrow}>›</Text>
+                        </TouchableOpacity>
+                    </Entrance>
                 )}
 
             </ScrollView>
 
-            <CoinCount
-                count={coins}
-                viewStyles={[globalStyles.coinView, {top: insets.top + TOP_OFFSET}]}
-                onPress={adsEnabled ? () => setShowAdModal(true) : undefined}
-            />
+            {/* The pill's absolute placement moves onto the wrapper — an
+                Animated.View can't be positioned by a child's own style. */}
+            <Entrance
+                from="above"
+                distance={18}
+                duration={520}
+                delay={50}
+                style={[globalStyles.coinView, {top: insets.top + TOP_OFFSET}]}
+            >
+                <CoinCount
+                    count={coins}
+                    onPress={adsEnabled ? () => setShowAdModal(true) : undefined}
+                />
+            </Entrance>
 
-            <LuckyWheelButton
-                canSpin={canSpin}
-                top={insets.top + TOP_OFFSET + 5}
-                onPress={() => setShowWheel(true)}
-            />
+            {/* A full-screen, touch-transparent layer: the wheel button pins
+                itself absolutely, so it needs a parent that still spans the
+                screen for its own top/left to mean what it did before. */}
+            <Entrance
+                from="left"
+                distance={26}
+                scaleFrom={0.94}
+                duration={560}
+                delay={120}
+                style={StyleSheet.absoluteFill}
+                pointerEvents="box-none"
+            >
+                <LuckyWheelButton
+                    canSpin={canSpin}
+                    top={insets.top + TOP_OFFSET + 5}
+                    onPress={() => setShowWheel(true)}
+                />
+            </Entrance>
 
             <LuckyWheelModal
                 visible={showWheel}
                 onClose={() => setShowWheel(false)}
-                onSpinComplete={() => setCanSpin(false)}
+                onSpinComplete={seconds => {
+                    setCanSpin(false);
+                    setNextSpinInSeconds(seconds);
+                }}
+                onSpinRejected={() => {
+                    // The server says the spin isn't ready (429) — the device
+                    // thought otherwise. Trust the server, and re-pull the state
+                    // for the real time left on the cooldown.
+                    setCanSpin(false);
+                    refreshWheelState();
+                }}
                 segments={wheelSegments}
+                canSpin={canSpin}
+                nextSpinInSeconds={nextSpinInSeconds}
                 loadError={wheelLoadError}
             />
+
+            {/* The reward the ad just paid, popping up under the coin pill. */}
+            <CoinGain amount={coinGain} onDone={() => setCoinGain(null)} style={styles.coinGain} />
 
             <WatchAdModal
                 visible={showAdModal}
@@ -265,6 +367,10 @@ const Home: React.FC<Props> = () => {
                         // Server grants the coins and enforces the daily ad cap.
                         const result = await userService.claimAdReward();
                         patchStats({coins: result.totalCoins});
+                        // Show what it actually paid: the amount is the server's
+                        // to decide, so it's read off the response rather than
+                        // repeating the "+10" the modal advertised.
+                        setCoinGain(result.coinsEarned);
                     } catch {
                         // Daily limit reached or offline — leave the balance as-is.
                     }

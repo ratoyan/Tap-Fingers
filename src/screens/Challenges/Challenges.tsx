@@ -270,7 +270,7 @@ function Challenges() {
             colors={[DARK_PURPLE, PURPLE]}
             style={styles.container}
             accessible={true}
-            accessibilityLabel="Challenges screen"
+            accessibilityLabel={t('challengesScreen')}
         >
             <ScreenStatusBar/>
 

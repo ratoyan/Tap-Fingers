@@ -37,7 +37,7 @@ import {isTablet} from "../../utils/responsive.ts";
 import {useKeyboardAwareScroll} from "../../hooks/useKeyboardAwareScroll.ts";
 
 // styles
-import styles from './Welcome.style.ts';
+import styles, {KEYBOARD_EXTRA_PADDING} from './Welcome.style.ts';
 import {
     DARK_PURPLE,
     GRADIENT_DARK,
@@ -69,7 +69,7 @@ function Welcome() {
 
     // Keyboard handling: keep the focused input above the keyboard. Needed
     // because edge-to-edge (Android SDK 36 / RN 0.84) disables native resize.
-    const {scrollRef, onScroll, onInputFocus, keyboardSpacerStyle} = useKeyboardAwareScroll();
+    const {scrollRef, keyboardHeight, onScroll, onInputFocus} = useKeyboardAwareScroll();
 
     function handleFieldFocus(field: 'name' | 'email' | 'password') {
         setFocusedField(field);
@@ -265,7 +265,7 @@ function Welcome() {
                 activeOpacity={0.8}
                 hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}
                 accessibilityRole="button"
-                accessibilityLabel={muted ? 'Turn sound on' : 'Turn sound off'}
+                accessibilityLabel={muted ? t('turnSoundOn') : t('turnSoundOff')}
             >
                 {muted
                     ? <SoundOffIcon size={24} color="#fff" />
@@ -280,7 +280,17 @@ function Welcome() {
                     ref={scrollRef}
                     onScroll={onScroll}
                     scrollEventThrottle={16}
-                    contentContainerStyle={[styles.scrollContent, keyboardSpacerStyle]}
+                    contentContainerStyle={[
+                        styles.scrollContent,
+                        // With the keyboard up the content is taller than the
+                        // viewport, so stop centering (centered overflow clips
+                        // the top and can't be scrolled back to) and pad below
+                        // the keyboard so the last fields scroll fully clear.
+                        keyboardHeight > 0 && {
+                            justifyContent: 'flex-start',
+                            paddingBottom: keyboardHeight + KEYBOARD_EXTRA_PADDING,
+                        },
+                    ]}
                     keyboardShouldPersistTaps="handled"
                     showsVerticalScrollIndicator={false}
                 >
@@ -383,7 +393,7 @@ function Welcome() {
                                     onPress={() => setShowPassword(v => !v)}
                                     hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}
                                     accessibilityRole="button"
-                                    accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
+                                    accessibilityLabel={showPassword ? t('hidePassword') : t('showPassword')}
                                 >
                                     <EyeIcon size={fieldIconSize} off={!showPassword} color={iconColor('password')} />
                                 </TouchableOpacity>

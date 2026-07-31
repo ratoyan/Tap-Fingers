@@ -212,8 +212,8 @@ export default function GuestAuthModal({
 
     // Signs the guest into a DIFFERENT, already-existing account. Unlike the
     // sign-up above (which upgrades this guest in place), this swaps to another
-    // account's session, so the guest's local progress is left behind on the
-    // server under its own guest_id.
+    // account's session — and since nobody could ever sign back into that guest,
+    // authService deletes it as part of the switch, progress included.
     async function handleEmailLogin() {
         if (busy) return;
         const trimmedEmail = email.trim();
@@ -339,7 +339,7 @@ export default function GuestAuthModal({
                                 onPressIn={() => setShowPassword(v => !v)}
                                 hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}
                                 accessibilityRole="button"
-                                accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
+                                accessibilityLabel={showPassword ? t('hidePassword') : t('showPassword')}
                             >
                                 <EyeIcon size={fieldIconSize} off={!showPassword} color={iconColor('password')} />
                             </TouchableOpacity>

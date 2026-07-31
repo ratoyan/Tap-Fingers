@@ -1,6 +1,7 @@
 import React, {useEffect, useRef} from 'react';
 import {Animated, Easing, Modal, Pressable, Text, TouchableOpacity, View} from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
+import {useTranslation} from 'react-i18next';
 
 import {useNoticeStore, NoticeType} from '../../../store/noticeStore.ts';
 import styles from './NoticeModal.style.ts';
@@ -62,6 +63,7 @@ const PALETTES: Record<NoticeType, Palette> = {
 };
 
 export default function NoticeModal() {
+    const {t} = useTranslation();
     const visible = useNoticeStore(s => s.visible);
     const type = useNoticeStore(s => s.type);
     const title = useNoticeStore(s => s.title);
@@ -156,7 +158,7 @@ export default function NoticeModal() {
                                 hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}
                                 style={styles.closeBtn}
                                 accessibilityRole="button"
-                                accessibilityLabel="Close"
+                                accessibilityLabel={t('closeLabel')}
                             >
                                 <Text allowFontScaling={false} style={styles.closeText}>✕</Text>
                             </TouchableOpacity>

@@ -9,6 +9,7 @@ import {playSfx} from '../../../utils/sfx.ts';
 import {haptic} from '../../../utils/haptics.ts';
 import {useAuthStore} from '../../../store/authStore.ts';
 import * as userService from '../../../services/userService.ts';
+import {ApiError} from '../../../services/api.ts';
 import {LuckyWheelSegment} from '../../../services/types';
 import styles from './LuckyWheelModal.style.ts';
 
@@ -124,10 +125,21 @@ function buildRingDots(slices: WheelSlice[]) {
     });
 }
 
+// "4h 12m" — the countdown next to the locked wheel. Seconds come from the
+// server, so this stays right even if the device clock or timezone doesn't
+// agree with it.
+function formatTimeLeft(seconds: number) {
+    const s = Math.max(0, seconds);
+    return `${Math.floor(s / 3600)}h ${Math.floor((s % 3600) / 60)}m`;
+}
+
 interface Props {
     visible: boolean;
     onClose: () => void;
-    onSpinComplete?: () => void;
+    /** Fired after a successful spin, with the server's seconds-until-reset. */
+    onSpinComplete?: (nextSpinInSeconds: number) => void;
+    /** Fired when the server refuses the spin as already used today (429). */
+    onSpinRejected?: () => void;
     /**
      * Wheel layout, fetched by Home on focus rather than here on open — by the
      * time the player taps the button it's already in hand, so the wheel draws
@@ -136,10 +148,28 @@ interface Props {
      * usable (see `loadError` for which of the two messages to show).
      */
     segments: LuckyWheelSegment[] | null;
+    /**
+     * Whether today's free spin is still available, as decided by the server
+     * (Home fetches it with the layout). This used to be worked out here from a
+     * date in device storage, which drifts from the server's own
+     * `last_lucky_spin_at` — see LuckyWheelState in services/types.
+     */
+    canSpin: boolean;
+    /** Seconds until the spin resets; only meaningful while `canSpin` is false. */
+    nextSpinInSeconds: number;
     loadError?: boolean;
 }
 
-export default function LuckyWheelModal({visible, onClose, onSpinComplete, segments, loadError = false}: Props) {
+export default function LuckyWheelModal({
+    visible,
+    onClose,
+    onSpinComplete,
+    onSpinRejected,
+    segments,
+    canSpin: canSpinProp,
+    nextSpinInSeconds,
+    loadError = false,
+}: Props) {
     const {t} = useTranslation();
     const patchStats = useAuthStore(s => s.patchStats);
 
@@ -179,8 +209,13 @@ export default function LuckyWheelModal({visible, onClose, onSpinComplete, segme
     // Array position of the winning slice — drives the highlight drawn on top of
     // the wheel, which rotates with it and so stays under the pointer.
     const [winnerPos, setWinnerPos] = useState<number | null>(null);
-    const [canSpin,  setCanSpin]  = useState(true);
-    const [timeLeft, setTimeLeft] = useState('');
+    // Mirrors the server's verdict, but can also be flipped locally the moment a
+    // spin lands (or comes back 429) so the hub locks without waiting for the
+    // next fetch. Re-synced from the prop whenever Home learns something newer.
+    const [canSpin,  setCanSpin]  = useState(canSpinProp);
+    const [timeLeft, setTimeLeft] = useState(formatTimeLeft(nextSpinInSeconds));
+    useEffect(() => { setCanSpin(canSpinProp); }, [canSpinProp]);
+    useEffect(() => { setTimeLeft(formatTimeLeft(nextSpinInSeconds)); }, [nextSpinInSeconds]);
     // The card is held back one frame after the modal opens. Everything in the
     // first commit — the ~70-node SVG wheel above all — has to be built before
     // the native dialog is up and the fade-in below can even start, which is
@@ -205,7 +240,6 @@ export default function LuckyWheelModal({visible, onClose, onSpinComplete, segme
             // A light tick the moment the wheel opens — a menu-open feel, distinct
             // from the heavy 'go' on spin and the 'claim' payoff on a win.
             haptic('equip');
-            checkCanSpin();
             setResult(null);
             setWinnerPos(null);
             resultScale.setValue(0);
@@ -357,19 +391,18 @@ export default function LuckyWheelModal({visible, onClose, onSpinComplete, segme
         });
     }
 
-    async function checkCanSpin() {
-        const raw = await storage.getItem(STORAGE_KEYS.LUCKY_SPIN_DATE);
-        if (!raw) { setCanSpin(true); return; }
-        const last = new Date(raw), now = new Date();
-        const same = last.getFullYear() === now.getFullYear() && last.getMonth() === now.getMonth() && last.getDate() === now.getDate();
-        if (same) {
-            setCanSpin(false);
-            const midnight = new Date(); midnight.setHours(24, 0, 0, 0);
-            const diff = midnight.getTime() - now.getTime();
-            setTimeLeft(`${Math.floor(diff / 3600000)}h ${Math.floor((diff % 3600000) / 60000)}m`);
-        } else {
-            setCanSpin(true);
-        }
+    // What's left of the 24h cooldown according to this device's own record of
+    // the last spin. Only a stop-gap for the bare 429 below — the server's exact
+    // figure lands a moment later via Home's re-fetch. Falls back to the full
+    // window when the device has no record (fresh install).
+    async function localSecondsLeft() {
+        const raw  = await storage.getItem(STORAGE_KEYS.LUCKY_SPIN_DATE);
+        const last = raw ? new Date(raw).getTime() : NaN;
+        if (!Number.isFinite(last)) return userService.SPIN_COOLDOWN_SECONDS;
+        return Math.max(
+            0,
+            Math.round(userService.SPIN_COOLDOWN_SECONDS - (Date.now() - last) / 1000),
+        );
     }
 
     async function spin() {
@@ -392,11 +425,17 @@ export default function LuckyWheelModal({visible, onClose, onSpinComplete, segme
         let serverResult;
         try {
             serverResult = await userService.spinLuckyWheel();
-        } catch {
-            // Already spun today (429) or offline — reflect that in the UI.
+        } catch (e) {
             setSpinning(false);
-            setCanSpin(false);
-            checkCanSpin();
+            // 429 is the one refusal that means "today's spin is gone" — lock
+            // the hub and start the countdown. Anything else (offline, timeout,
+            // a 5xx) took no spin away, so leave the button live to retry
+            // instead of locking the player out of a spin they still have.
+            if ((e as ApiError)?.status === 429) {
+                setCanSpin(false);
+                setTimeLeft(formatTimeLeft(await localSecondsLeft()));
+                onSpinRejected?.();
+            }
             return;
         }
 
@@ -434,6 +473,7 @@ export default function LuckyWheelModal({visible, onClose, onSpinComplete, segme
             setResult(slices[winnerIdx] ?? null);
             setWinnerPos(winnerIdx);
             setCanSpin(false);
+            setTimeLeft(formatTimeLeft(serverResult.nextSpinInSeconds));
             celebrateWin();
             // Server already applied the prize — just mirror it into the stores.
             patchStats({
@@ -442,8 +482,10 @@ export default function LuckyWheelModal({visible, onClose, onSpinComplete, segme
                 slowCount:   serverResult.stats.slowCount,
                 shieldCount: serverResult.stats.shieldCount,
             });
+            // Kept purely as the offline fallback Home reads when it can't reach
+            // the server for the real verdict — the gate itself is server-side.
             await storage.setItem(STORAGE_KEYS.LUCKY_SPIN_DATE, new Date().toISOString());
-            onSpinComplete?.();
+            onSpinComplete?.(serverResult.nextSpinInSeconds);
         });
     }
 

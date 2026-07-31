@@ -2,6 +2,7 @@
 import {Image, Text, TouchableOpacity, View, ViewStyle} from "react-native";
 import {useSafeAreaInsets} from "react-native-safe-area-context";
 import {useNavigation} from "@react-navigation/core";
+import {useTranslation} from "react-i18next";
 import LinearGradient from "react-native-linear-gradient";
 import {TOP_OFFSET} from "../../../constants/uiConstants.ts";
 
@@ -42,6 +43,7 @@ function BackHeader({
                     }: BackHeaderProps) {
     const insets = useSafeAreaInsets();
     const navigation = useNavigation();
+    const {t} = useTranslation();
 
     // Show the same profile picture the Profile screen uses: the server-stored
     // avatar if there is one, otherwise the stable per-user gradient avatar.
@@ -66,8 +68,8 @@ function BackHeader({
                 }}
                 accessible={true}
                 accessibilityRole="button"
-                accessibilityLabel="Go back"
-                accessibilityHint="Navigates to previous screen"
+                accessibilityLabel={t('goBack')}
+                accessibilityHint={t('goBackHint')}
             >
                 <Back/>
             </TouchableOpacity>

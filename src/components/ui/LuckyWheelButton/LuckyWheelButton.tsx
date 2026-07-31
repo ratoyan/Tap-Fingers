@@ -1,8 +1,17 @@
 import React, {useEffect, useRef} from 'react';
 import {Animated, Easing, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
+import {useTranslation} from 'react-i18next';
 import {ms, vs} from '../../../utils/responsive.ts';
 import {GOLD} from '../../../constants/colors.ts';
+import {FERRIS_ASPECT, FerrisWheelRim, FerrisWheelStand} from '../../../assets/icons/FerrisWheelIcon.tsx';
+
+// Diameter of the wheel art — roughly where the 🎡 glyph sat before.
+const WHEEL_SIZE = ms(34);
+
+// One turn, in ms: brisk when a free spin is waiting, idling otherwise.
+const SPIN_FAST = 3500;
+const SPIN_SLOW = 9000;
 
 interface LuckyWheelButtonProps {
     canSpin: boolean;
@@ -11,28 +20,57 @@ interface LuckyWheelButtonProps {
 }
 
 export default function LuckyWheelButton({canSpin, top, onPress}: LuckyWheelButtonProps) {
+    const {t} = useTranslation();
     const scaleAnim = useRef(new Animated.Value(1)).current;   // press feedback
     const glowAnim = useRef(new Animated.Value(0)).current;    // border glow
     const spinAnim = useRef(new Animated.Value(0)).current;    // wheel rotation
     const pulseAnim = useRef(new Animated.Value(1)).current;   // attention breathe
     const haloAnim = useRef(new Animated.Value(0)).current;    // halo pulse
 
+    // Where the running loop was, the last time the speed changed: the phase it
+    // started from and the wall-clock moment it started. A linear loop's position
+    // is pure arithmetic, so this recovers it without an Animated listener (which
+    // native-driven values only report back to JS at a cost).
+    const spinPhase = useRef({offset: 0, at: 0, duration: SPIN_SLOW});
+
     // The wheel always turns — quickly with a glowing halo when a free spin is
     // ready, slow and calm otherwise.
+    //
+    // `canSpin` arrives from the server a moment after Home mounts (first sign-in
+    // especially), so this effect re-runs while the wheel is mid-revolution.
+    // Restarting the loop outright would snap it back to 12 o'clock and read as a
+    // stutter, so instead we pick up at the phase it had reached and only finish
+    // *this* turn short, at the new speed. From the next turn on it's a plain loop.
     useEffect(() => {
-        const spin = Animated.loop(
+        const duration = canSpin ? SPIN_FAST : SPIN_SLOW;
+        const prev = spinPhase.current;
+        const now = Date.now();
+        const offset = prev.at
+            ? (prev.offset + (now - prev.at) / prev.duration) % 1
+            : 0;
+        spinPhase.current = {offset, at: now, duration};
+
+        spinAnim.setValue(offset);
+        const spin = Animated.sequence([
+            // The remainder of the turn already under way.
             Animated.timing(spinAnim, {
                 toValue: 1,
-                duration: canSpin ? 3500 : 9000,
+                duration: duration * (1 - offset),
                 easing: Easing.linear,
                 useNativeDriver: true,
             }),
-        );
+            // …then whole turns forever. The loop's reset to 0 lands on 360° = 0°.
+            Animated.loop(
+                Animated.timing(spinAnim, {
+                    toValue: 1,
+                    duration,
+                    easing: Easing.linear,
+                    useNativeDriver: true,
+                }),
+            ),
+        ]);
         spin.start();
-        return () => {
-            spin.stop();
-            spinAnim.setValue(0);
-        };
+        return () => spin.stop();
     }, [canSpin]);
 
     // Border glow + breathe + halo, only while a free spin is available.
@@ -93,7 +131,7 @@ export default function LuckyWheelButton({canSpin, top, onPress}: LuckyWheelButt
                     activeOpacity={0.9}
                     accessible={true}
                     accessibilityRole="button"
-                    accessibilityLabel={canSpin ? 'Lucky wheel, free spin available' : 'Lucky wheel'}
+                    accessibilityLabel={canSpin ? t('luckyWheelFreeLabel') : t('luckyWheelLabel')}
                     onPressIn={() =>
                         Animated.spring(scaleAnim, {toValue: 0.88, useNativeDriver: true}).start()
                     }
@@ -116,14 +154,18 @@ export default function LuckyWheelButton({canSpin, top, onPress}: LuckyWheelButt
                                 style={styles.sheen}
                                 pointerEvents="none"
                             />
-                            <Animated.Text
-                                allowFontScaling={false}
-                                style={[styles.emoji, {transform: [{rotate}]}]}
-                            >
-                                🎡
-                            </Animated.Text>
+                            {/* Only the wheel turns. The spinner layer is a
+                                square whose centre is the hub, so `rotate`
+                                pivots exactly there; the stand sits in flow on
+                                top of it and never moves. */}
+                            <View style={styles.wheelIcon}>
+                                <Animated.View style={[styles.wheelSpinner, {transform: [{rotate}]}]}>
+                                    <FerrisWheelRim size={WHEEL_SIZE}/>
+                                </Animated.View>
+                                <FerrisWheelStand size={WHEEL_SIZE}/>
+                            </View>
                             <View style={styles.divider}/>
-                            <Text allowFontScaling={false} style={styles.label}>SPIN</Text>
+                            <Text allowFontScaling={false} style={styles.label}>{t('spinShort')}</Text>
                         </LinearGradient>
                     </Animated.View>
 
@@ -139,7 +181,7 @@ export default function LuckyWheelButton({canSpin, top, onPress}: LuckyWheelButt
 
                     {canSpin && (
                         <View style={styles.freeBadge}>
-                            <Text allowFontScaling={false} style={styles.freeBadgeText}>★ FREE</Text>
+                            <Text allowFontScaling={false} style={styles.freeBadgeText}>{t('freeSpinBadge')}</Text>
                         </View>
                     )}
                 </TouchableOpacity>
@@ -197,9 +239,16 @@ const styles = StyleSheet.create({
         right: 0,
         height: '46%',
     },
-    emoji: {
-        fontSize: ms(32),
-        lineHeight: ms(38),
+    wheelIcon: {
+        width: WHEEL_SIZE,
+        height: WHEEL_SIZE * FERRIS_ASPECT,
+    },
+    wheelSpinner: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        width: WHEEL_SIZE,
+        height: WHEEL_SIZE,
     },
     divider: {
         width: '60%',

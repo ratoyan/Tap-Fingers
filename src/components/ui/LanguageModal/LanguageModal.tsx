@@ -7,12 +7,6 @@ import {GRADIENT_DARK, GRADIENT_LIGHT} from '../../../constants/colors.ts';
 import {vs} from '../../../utils/responsive.ts';
 import styles from './LanguageModal.style';
 
-const LANG_META: Record<string, {flag: string; native: string}> = {
-    am: {flag: '🇦🇲', native: 'Հայերեն'},
-    ru: {flag: '🇷🇺', native: 'Русский'},
-    en: {flag: '🇬🇧', native: 'English'},
-};
-
 interface LanguageModalProps {
     visible: boolean;
     onClose: () => void;
@@ -139,7 +133,7 @@ function LanguageModal({visible, onClose, onSelect, selectedLanguage}: LanguageM
 
                 {/* Language items */}
                 {languages.map((lang, index) => {
-                    const meta = LANG_META[lang.code] ?? {flag: '🌍', native: lang.name};
+                    const meta = {flag: lang.flag || '🌍', native: lang.native || lang.name};
                     const isSelected = selectedLanguage === lang.name;
                     const anim = itemAnims[index];
                     const translateY = anim.interpolate({inputRange: [0, 1], outputRange: [vs(16), 0]});

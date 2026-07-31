@@ -234,6 +234,15 @@ export interface AdRewardResult {
     adsRemaining: number;
 }
 
+// Result of crediting a claimed daily challenge (POST /player/daily-bonus).
+// `alreadyClaimed` means the server had already paid this exact claim — the
+// request was a retry, and `coinsEarned` is 0 rather than an error.
+export interface DailyBonusResult {
+    coinsEarned: number;
+    totalCoins: number;
+    alreadyClaimed: boolean;
+}
+
 export interface LuckyWheelPrize {
     type: 'coins' | HelperType;
     value: number;
@@ -245,10 +254,21 @@ export interface LuckyWheelSegment {
     value: number;
 }
 
+// The wheel layout together with the server's verdict on today's free spin.
+// `canSpin` is authoritative — the device's own last-spin date is only an
+// offline fallback, because the two drift apart (reinstall, server-side reset).
+export interface LuckyWheelState {
+    segments: LuckyWheelSegment[];
+    canSpin: boolean;
+    /** Seconds until the daily spin resets (server midnight); 0 when available. */
+    nextSpinInSeconds: number;
+}
+
 export interface LuckyWheelResult {
     index: number;
     prize: LuckyWheelPrize;
     stats: { coins: number; bombCount: number; slowCount: number; shieldCount: number };
+    nextSpinInSeconds: number;
 }
 
 export interface HelperPurchaseResult {

@@ -1,6 +1,7 @@
 ﻿import React from "react";
 import {Text} from "react-native";
 import {useSafeAreaInsets} from "react-native-safe-area-context";
+import {useTranslation} from "react-i18next";
 
 // styles
 import styles from './Play.style.ts';
@@ -14,6 +15,7 @@ interface LevelProps {
 
 function Level({level = 1}: LevelProps) {
     const insets = useSafeAreaInsets();
+    const {t} = useTranslation();
 
     return (
         <LinearGradient
@@ -23,7 +25,7 @@ function Level({level = 1}: LevelProps) {
             style={[styles.levelContainer, {top: insets.top + TOP_OFFSET + 30}]}
         >
             <Text allowFontScaling={false} style={styles.levelIcon}>⚡</Text>
-            <Text allowFontScaling={false} style={styles.levelLabel}>LVL</Text>
+            <Text allowFontScaling={false} style={styles.levelLabel}>{t('lvlShort')}</Text>
             <Text allowFontScaling={false} style={styles.level}>{level}</Text>
         </LinearGradient>
     );

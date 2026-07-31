@@ -2,10 +2,11 @@ import api from './api';
 import { API_ORIGIN } from './config';
 import {
     AdRewardResult,
+    DailyBonusResult,
     HelperPurchaseResult,
     HelperType,
     LuckyWheelResult,
-    LuckyWheelSegment,
+    LuckyWheelState,
     Player,
     Profile,
     ScoreEntry,
@@ -86,9 +87,30 @@ export async function claimAdReward(): Promise<AdRewardResult> {
     return data.data;
 }
 
-export async function getLuckyWheelSegments(): Promise<LuckyWheelSegment[]> {
+// Credits a claimed daily challenge's coins to the server balance. The daily
+// challenges are tracked on-device, so the server takes the challenge id and the
+// device's 24h cycle start as the claim's identity: replaying the same pair is
+// idempotent (see PlayerService::claimDailyBonus), which is what makes the
+// client's retry queue safe.
+export async function claimDailyBonus(challengeId: string, cycleStart: number): Promise<DailyBonusResult> {
+    const { data } = await api.post('/player/daily-bonus', { challengeId, cycleStart });
+    return data.data;
+}
+
+// Mirrors PlayerService::SPIN_COOLDOWN_SECONDS on the backend: one spin per
+// rolling 24h, counted from the last spin. Only used for the offline fallback —
+// whenever the server answers, its own countdown wins.
+export const SPIN_COOLDOWN_SECONDS = 86_400;
+
+// Layout + whether the spin is available right now. The cooldown is the
+// server's call (see LuckyWheelState), so it travels with the layout.
+export async function getLuckyWheel(): Promise<LuckyWheelState> {
     const { data } = await api.get('/player/lucky-wheel');
-    return data.data.segments;
+    return {
+        segments:          data.data.segments ?? [],
+        canSpin:           !!data.data.canSpin,
+        nextSpinInSeconds: data.data.nextSpinInSeconds ?? 0,
+    };
 }
 
 export async function spinLuckyWheel(): Promise<LuckyWheelResult> {

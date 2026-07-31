@@ -19,14 +19,25 @@ const PARTICLES = Array.from({length: 22}, (_, i) => ({
     dist:  80 + (i % 5) * 42,
 }));
 
-const STARS = Array.from({length: 44}, (_, i) => ({
+const ALL_STARS = Array.from({length: 44}, (_, i) => ({
     x:    5  + (i * 97.3)  % 90,
     y:    3  + (i * 63.7)  % 90,
     size: 1  + (i % 3),
     gold: i % 7 === 0,
     delay:(i * 173) % 2400,
     dur:  1200 + (i % 5) * 500,
+    // Brightness for the ones that don't twinkle — spread across the same range
+    // the twinkle sweeps, so a still star is indistinguishable from one caught
+    // mid-cycle.
+    still: 0.2 + ((i * 29) % 60) / 100,
 }));
+
+// Every star used to carry its own endless Animated.loop: 44 native nodes
+// writing to 44 views on every frame, for as long as the splash was up, and by
+// far its largest standing cost. A third of them twinkle now and the rest are
+// plain Views drawn once — at this size and density the field reads the same.
+const STARS       = ALL_STARS.filter((_, i) => i % 3 === 0);
+const STILL_STARS = ALL_STARS.filter((_, i) => i % 3 !== 0);
 
 const ORBS = [
     {left: -50,   top: '12%', size: 220, color: 'rgba(120,0,255,0.08)' },
@@ -232,7 +243,19 @@ export default function Splash({onFinish}: Props) {
                 );
             })}
 
-            {/* Stars */}
+            {/* Stars — the still majority first, then the twinkling third */}
+            {STILL_STARS.map((s, i) => (
+                <View key={`ss-${i}`} pointerEvents="none" style={{
+                    position:        'absolute',
+                    left:            `${s.x}%` as any,
+                    top:             `${s.y}%` as any,
+                    width:           s.size,
+                    height:          s.size,
+                    borderRadius:    s.size / 2,
+                    backgroundColor: s.gold ? GOLD : '#ffffff',
+                    opacity:         s.still,
+                }}/>
+            ))}
             {starAnims.map((anim, i) => (
                 <Animated.View key={`s-${i}`} pointerEvents="none" style={{
                     position:        'absolute',
@@ -307,8 +330,15 @@ export default function Splash({onFinish}: Props) {
                 </Animated.View>
             </View>
 
-            {/* Letter-by-letter title */}
-            <View style={styles.titleRow}>
+            {/* Letter-by-letter title. The glow pulse rides on the row, not on
+                each letter: opacity composes multiplicatively either way, so the
+                result is identical, but animating the ten letters individually
+                meant ten TextViews invalidating every frame — and a TextView
+                with textShadowRadius redraws its shadow through a BlurMaskFilter
+                on every invalidate. Ten blurs a frame for the splash's whole
+                life. On the row it's one alpha on a cached display list, and the
+                per-letter values go quiet once the cascade lands. */}
+            <Animated.View style={[styles.titleRow, {opacity: titleGlow}]}>
                 {charAnims.map((a, i) => (
                     <Animated.Text
                         key={`c-${i}`}
@@ -318,14 +348,14 @@ export default function Splash({onFinish}: Props) {
                             textShadowColor: i < 3 ? 'rgba(255,160,0,0.9)' : 'rgba(160,80,255,0.7)',
                             textShadowRadius: 14,
                             textShadowOffset: {width: 0, height: 0},
-                            opacity:         Animated.multiply(a.opacity, titleGlow) as any,
+                            opacity:         a.opacity,
                             transform:       [{translateY: a.y}],
                         }]}
                     >
                         {TITLE[i]}
                     </Animated.Text>
                 ))}
-            </View>
+            </Animated.View>
 
             {/* Underline sweep */}
             <Animated.View style={[styles.underline, {transform: [{scaleX: lineScale}]}]}/>

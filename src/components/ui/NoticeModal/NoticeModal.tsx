@@ -1,5 +1,5 @@
 import React, {useEffect, useRef} from 'react';
-import {Animated, Easing, Modal, Pressable, Text, TouchableOpacity, View} from 'react-native';
+import {Animated, Easing, Modal, Pressable, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import {useTranslation} from 'react-i18next';
 
@@ -134,12 +134,13 @@ export default function NoticeModal() {
                             {shadowColor: palette.glow, transform: [{scale: scaleAnim}], opacity: opacityAnim},
                         ]}
                     >
-                        <LinearGradient
-                            colors={palette.gradient}
-                            start={{x: 0, y: 0}}
-                            end={{x: 1, y: 1}}
-                            style={[styles.card, {borderColor: palette.border}]}
-                        >
+                        <View style={[styles.card, {borderColor: palette.border}]}>
+                            <LinearGradient
+                                colors={palette.gradient}
+                                start={{x: 0, y: 0}}
+                                end={{x: 1, y: 1}}
+                                style={StyleSheet.absoluteFill}
+                            />
                             {/* Glossy top sheen for depth */}
                             <LinearGradient
                                 pointerEvents="none"
@@ -229,7 +230,7 @@ export default function NoticeModal() {
                                     </Text>
                                 </LinearGradient>
                             </TouchableOpacity>
-                        </LinearGradient>
+                        </View>
                     </Animated.View>
                 </Pressable>
             </Pressable>

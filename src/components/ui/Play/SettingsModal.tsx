@@ -211,7 +211,7 @@ const styles = StyleSheet.create({
     closeGradient: {
         alignItems: 'center',
         justifyContent: 'center',
-        paddingVertical: vs(13),
+        height: vs(48),
     },
     closeText: {
         color: '#DDA0DD',

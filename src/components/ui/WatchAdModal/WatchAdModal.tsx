@@ -227,11 +227,11 @@ const styles = StyleSheet.create({
     confirmRewardText: {color: GOLD, fontSize: ms(26), fontWeight: '900'},
     confirmActions: {flexDirection: 'row', width: '100%', gap: ms(12)},
     noBtn: {
-        flex: 1, paddingVertical: vs(14), borderRadius: ms(16),
-        borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.2)', alignItems: 'center',
+        flex: 1, height: vs(50), borderRadius: ms(16),
+        borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center',
     },
     noBtnText: {color: WHITE_100, fontSize: ms(15), fontWeight: '600'},
     yesWrap: {flex: 2, borderRadius: ms(16), overflow: 'hidden', shadowColor: GOLD, shadowOffset: {width: 0, height: 4}, shadowOpacity: 0.5, shadowRadius: 10, elevation: 8},
-    yesBtn: {paddingVertical: vs(14), alignItems: 'center', borderRadius: ms(16)},
+    yesBtn: {height: vs(50), alignItems: 'center', justifyContent: 'center', borderRadius: ms(16)},
     yesBtnText: {color: DARK_PURPLE, fontSize: ms(15), fontWeight: '900'},
 });

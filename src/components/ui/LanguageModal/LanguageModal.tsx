@@ -1,5 +1,5 @@
 import React, {useEffect, useRef, useState} from 'react';
-import {Animated, Easing, Text, TouchableOpacity, View} from 'react-native';
+import {Animated, Easing, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import {languages} from '../../../data/language.ts';
 import {useTranslation} from 'react-i18next';
@@ -157,12 +157,13 @@ function LanguageModal({visible, onClose, onSelect, selectedLanguage}: LanguageM
                                 accessibilityLabel={lang.name}
                             >
                                 {isSelected ? (
-                                    <LinearGradient
-                                        colors={['rgba(142,45,226,0.5)', 'rgba(74,0,224,0.4)']}
-                                        start={{x: 0, y: 0}}
-                                        end={{x: 1, y: 0}}
-                                        style={styles.itemInner}
-                                    >
+                                    <View style={styles.itemInner}>
+                                        <LinearGradient
+                                            colors={['rgba(142,45,226,0.5)', 'rgba(74,0,224,0.4)']}
+                                            start={{x: 0, y: 0}}
+                                            end={{x: 1, y: 0}}
+                                            style={StyleSheet.absoluteFill}
+                                        />
                                         <Text allowFontScaling={false} style={styles.flag}>{meta.flag}</Text>
                                         <View style={styles.labelCol}>
                                             <Text allowFontScaling={false} style={[styles.nativeName, styles.nativeNameSelected]}>
@@ -173,7 +174,7 @@ function LanguageModal({visible, onClose, onSelect, selectedLanguage}: LanguageM
                                             </Text>
                                         </View>
                                         <Text allowFontScaling={false} style={styles.checkmark}>✓</Text>
-                                    </LinearGradient>
+                                    </View>
                                 ) : (
                                     <View style={styles.itemInner}>
                                         <Text allowFontScaling={false} style={styles.flag}>{meta.flag}</Text>

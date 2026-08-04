@@ -36,19 +36,26 @@ export default StyleSheet.create({
         flex: 1,
     },
     gradientButton: {
-        flexDirection: 'row',
+        // The label is the only in-flow child so it centres across the button's
+        // full width; the icon is pulled out of flow (absolute, below) so it
+        // sits on the left without shifting the text off-centre.
         alignItems: 'center',
         justifyContent: 'center',
-        paddingVertical: vs(isTablet ? 18 : 20),
+        height: vs(isTablet ? 60 : 62),
         paddingHorizontal: scale(24),
         borderRadius: ms(20),
     },
     icon: {
-        marginRight: scale(12),
+        position: 'absolute',
+        left: scale(24),
+        top: 0,
+        bottom: 0,
+        justifyContent: 'center',
     },
     title: {
         fontSize: ms(isTablet ? 20 : 18),
         fontWeight: '700',
         color: WHITE,
+        textAlign: 'center',
     },
 });

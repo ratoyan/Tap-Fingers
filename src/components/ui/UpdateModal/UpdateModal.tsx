@@ -67,12 +67,13 @@ export default function UpdateModal({visible, storeUrl}: UpdateModalProps) {
         <Modal visible={visible} transparent animationType="none" onRequestClose={() => {}}>
             <Animated.View style={[styles.backdrop, {opacity: opacityAnim}]}>
                 <Animated.View style={[styles.cardWrapper, {transform: [{scale: scaleAnim}]}]}>
-                    <LinearGradient
-                        colors={['#1e0040', '#0d0020', '#1a0038']}
-                        start={{x: 0, y: 0}}
-                        end={{x: 1, y: 1}}
-                        style={styles.card}
-                    >
+                    <View style={styles.card}>
+                        <LinearGradient
+                            colors={['#1e0040', '#0d0020', '#1a0038']}
+                            start={{x: 0, y: 0}}
+                            end={{x: 1, y: 1}}
+                            style={StyleSheet.absoluteFill}
+                        />
                         {/* Shine sweep */}
                         <Animated.View
                             pointerEvents="none"
@@ -113,7 +114,7 @@ export default function UpdateModal({visible, storeUrl}: UpdateModalProps) {
                                 </LinearGradient>
                             </TouchableOpacity>
                         </Animated.View>
-                    </LinearGradient>
+                    </View>
                 </Animated.View>
             </Animated.View>
         </Modal>
@@ -190,9 +191,10 @@ const styles = StyleSheet.create({
         overflow:     'hidden',
     },
     updateGradient: {
-        paddingVertical:   16,
+        height:            54,
         paddingHorizontal: 24,
         alignItems:        'center',
+        justifyContent:    'center',
         borderRadius:      18,
     },
     updateText: {

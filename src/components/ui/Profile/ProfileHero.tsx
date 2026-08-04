@@ -148,12 +148,13 @@ function ProfileHero({
     );
 
     return (
-        <LinearGradient
-            colors={['rgba(142,45,226,0.42)', 'rgba(74,0,224,0.20)', 'rgba(26,0,53,0.35)']}
-            start={{x: 0, y: 0}}
-            end={{x: 1, y: 1}}
-            style={styles.panel}
-        >
+        <View style={styles.panel}>
+            <LinearGradient
+                colors={['rgba(142,45,226,0.42)', 'rgba(74,0,224,0.20)', 'rgba(26,0,53,0.35)']}
+                start={{x: 0, y: 0}}
+                end={{x: 1, y: 1}}
+                style={StyleSheet.absoluteFill}
+            />
             {/* Raking highlight. Taller than the panel so the skew can't clip a
                 wedge out of the top and bottom corners. */}
             <Animated.View
@@ -254,7 +255,7 @@ function ProfileHero({
             )}
 
             {children}
-        </LinearGradient>
+        </View>
     );
 }
 

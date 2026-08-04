@@ -132,8 +132,9 @@ export default StyleSheet.create({
         elevation: 8,
     },
     buttonGradient: {
-        paddingVertical: vs(14),
+        height: vs(50),
         alignItems: 'center',
+        justifyContent: 'center',
         borderRadius: ms(16),
     },
     buttonText: {

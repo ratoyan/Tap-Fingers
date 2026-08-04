@@ -236,7 +236,7 @@ export default StyleSheet.create({
     },
     exitCancelBtn: {
         flex: 1,
-        paddingVertical: vs(13),
+        height: vs(48),
         borderRadius: ms(14),
         alignItems: 'center',
         justifyContent: 'center',
@@ -259,7 +259,7 @@ export default StyleSheet.create({
         elevation: 6,
     },
     exitConfirmBtn: {
-        paddingVertical: vs(13),
+        height: vs(48),
         borderRadius: ms(14),
         alignItems: 'center',
         justifyContent: 'center',
@@ -278,7 +278,7 @@ export default StyleSheet.create({
         left: '50%',
         transform: [{translateX: -50}],
         paddingHorizontal: ms(12),
-        paddingVertical: vs(6),
+        height: vs(32),
         borderRadius: 999,
         shadowOpacity: 0.8,
         shadowRadius: 10,

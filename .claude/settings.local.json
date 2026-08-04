@@ -118,7 +118,10 @@
       "Bash(perl -0pi -e \"s/accessibilityLabel=\\\\\"Progression screen\\\\\"/accessibilityLabel={t\\('progressionScreen'\\)}/;\" src/screens/Progression/Progression.tsx)",
       "Bash(perl -0pi -e \"s/accessibilityLabel=\\\\\"Challenges screen\\\\\"/accessibilityLabel={t\\('challengesScreen'\\)}/;\" src/screens/Challenges/Challenges.tsx)",
       "Bash(perl -0pi -e \"s/'Hide password' : 'Show password'/t\\('hidePassword'\\) : t\\('showPassword'\\)/; s/'Show password' : 'Hide password'/t\\('showPassword'\\) : t\\('hidePassword'\\)/;\" src/components/ui/GuestAuthModal/GuestAuthModal.tsx src/screens/Welcome/Welcome.tsx)",
-      "Bash(perl -0pi -e \"s/accessibilityLabel=\\\\{t\\\\\\('coinsGained', \\\\{count: amount\\\\}\\\\\\)\\\\}/accessibilityLabel={tr\\('coinsGained', {count: amount}\\)}/;\" src/components/ui/CoinGain/CoinGain.tsx)"
+      "Bash(perl -0pi -e \"s/accessibilityLabel=\\\\{t\\\\\\('coinsGained', \\\\{count: amount\\\\}\\\\\\)\\\\}/accessibilityLabel={tr\\('coinsGained', {count: amount}\\)}/;\" src/components/ui/CoinGain/CoinGain.tsx)",
+      "Bash(pod --version)",
+      "Bash(find . -path ./Pods -prune -o -name \"*.appiconset\" -print)",
+      "Bash(find . -path ./Pods -prune -o -name \"*.xcassets\" -type d -print)"
     ]
   }
 }

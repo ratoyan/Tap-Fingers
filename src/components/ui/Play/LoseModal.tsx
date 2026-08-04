@@ -208,17 +208,22 @@ function LoseModal({visible, score, onRetry, onBack, onWatchAd, canWatchAd = tru
                 {/* Subtitle */}
                 <Text allowFontScaling={false} style={styles.subtitle}>{t('lostLevel')}</Text>
 
-                {/* Score card */}
-                <LinearGradient
-                    colors={['rgba(255,255,255,0.12)', 'rgba(255,255,255,0.05)']}
-                    style={styles.scoreCard}
-                >
+                {/* Score card. The gradient is an absolute-fill background rather
+                    than the sizing container: on iOS's new architecture a
+                    react-native-linear-gradient sized by its own padding clips the
+                    tall score row, so a plain View owns the layout and the gradient
+                    just paints behind it. */}
+                <View style={styles.scoreCard}>
+                    <LinearGradient
+                        colors={['rgba(255,255,255,0.12)', 'rgba(255,255,255,0.05)']}
+                        style={StyleSheet.absoluteFill}
+                    />
                     <Text allowFontScaling={false} style={styles.scoreLabel}>{t('score')}</Text>
                     <View style={styles.scoreRow}>
                         <Text allowFontScaling={false} style={styles.scoreValue}>{score}</Text>
                         <Coin width={28} height={28}/>
                     </View>
-                </LinearGradient>
+                </View>
 
                 {/* Watch Ad button — entire block hidden when ads disabled by admin */}
                 {adsEnabled && (canWatchAd ? (
@@ -373,6 +378,7 @@ const styles = StyleSheet.create({
     scoreCard: {
         width: '100%',
         borderRadius: ms(18),
+        overflow: 'hidden',
         paddingVertical: vs(14),
         paddingHorizontal: ms(20),
         alignItems: 'center',
@@ -412,7 +418,8 @@ const styles = StyleSheet.create({
     adBtn: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingVertical: vs(14),
+        justifyContent: 'center',
+        height: vs(50),
         paddingHorizontal: ms(20),
         gap: ms(14),
         borderRadius: ms(18),
@@ -442,9 +449,10 @@ const styles = StyleSheet.create({
     adBtnDisabled: {
         width: '100%',
         borderRadius: ms(18),
-        paddingVertical: vs(14),
+        height: vs(50),
         paddingHorizontal: ms(20),
         alignItems: 'center',
+        justifyContent: 'center',
         marginBottom: vs(14),
         backgroundColor: 'rgba(255,255,255,0.07)',
         borderWidth: 1,
@@ -463,7 +471,7 @@ const styles = StyleSheet.create({
     backBtn: {
         flex: 1,
         flexDirection: 'row',
-        paddingVertical: vs(14),
+        height: vs(50),
         borderRadius: ms(16),
         borderWidth: 1.5,
         borderColor: PURPLE,
@@ -483,7 +491,7 @@ const styles = StyleSheet.create({
     },
     retryBtn: {
         flexDirection: 'row',
-        paddingVertical: vs(14),
+        height: vs(50),
         alignItems: 'center',
         justifyContent: 'center',
         gap: ms(8),

@@ -95,8 +95,7 @@ export default StyleSheet.create({
     submitGradient: {
         alignItems: 'center',
         justifyContent: 'center',
-        paddingVertical: vs(16),
-        minHeight: vs(54),
+        height: vs(54),
         borderRadius: ms(16),
     },
     submitText: {

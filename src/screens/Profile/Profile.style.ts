@@ -99,8 +99,7 @@ export default StyleSheet.create({
         elevation: 6,
     },
     actionGradient: {
-        minHeight: vs(46),
-        paddingVertical: vs(12),
+        height: vs(46),
         alignItems: 'center',
         justifyContent: 'center',
     },
@@ -187,9 +186,8 @@ export default StyleSheet.create({
     primaryAuthGradient: {
         alignItems: 'center',
         justifyContent: 'center',
-        paddingVertical: vs(16),
+        height: vs(54),
         paddingHorizontal: ms(18),
-        minHeight: vs(54),
     },
     primaryAuthText: {
         color: WHITE,

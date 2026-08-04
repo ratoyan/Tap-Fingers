@@ -87,9 +87,10 @@ export default StyleSheet.create({
     },
     button: {
         flex: 1,
-        paddingVertical: vs(13),
+        height: vs(48),
         borderRadius: ms(14),
         alignItems: 'center',
+        justifyContent: 'center',
     },
     cancelButton: {
         borderWidth: 1.5,
@@ -106,7 +107,7 @@ export default StyleSheet.create({
         elevation: 6,
     },
     confirmButton: {
-        paddingVertical: vs(13),
+        height: vs(48),
         borderRadius: ms(14),
         alignItems: 'center',
         justifyContent: 'center',

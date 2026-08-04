@@ -17,6 +17,13 @@ end
 target 'TapFingers' do
   config = use_native_modules!
 
+  # Google Sign-In pulls in AppCheckCore, which depends on GoogleUtilities and
+  # RecaptchaInterop. Those don't define modules, so they can't be imported from
+  # Swift when built as static libraries unless we opt them into modular headers.
+  pod 'GoogleUtilities', :modular_headers => true
+  pod 'RecaptchaInterop', :modular_headers => true
+  pod 'AppCheckCore', :modular_headers => true
+
   use_react_native!(
     :path => config[:reactNativePath],
     # An absolute path to your application root.

@@ -25,18 +25,19 @@ interface StatTileProps {
 
 function StatTile({icon, label, value, tint, delay = 0}: StatTileProps) {
     return (
-        <LinearGradient
-            colors={['rgba(255,255,255,0.14)', 'rgba(255,255,255,0.05)']}
-            start={{x: 0, y: 0}}
-            end={{x: 0.6, y: 1}}
-            style={[styles.tile, {borderColor: `${tint}55`}]}
-        >
+        <View style={[styles.tile, {borderColor: `${tint}55`}]}>
+            <LinearGradient
+                colors={['rgba(255,255,255,0.14)', 'rgba(255,255,255,0.05)']}
+                start={{x: 0, y: 0}}
+                end={{x: 0.6, y: 1}}
+                style={StyleSheet.absoluteFill}
+            />
             <View style={[styles.iconDisc, {backgroundColor: `${tint}26`, borderColor: `${tint}66`}]}>
                 <Text allowFontScaling={false} style={styles.icon}>{icon}</Text>
             </View>
             <CountUp value={value} delay={delay} style={[styles.value, {color: tint}]} />
             <Text allowFontScaling={false} style={styles.label} numberOfLines={1}>{label}</Text>
-        </LinearGradient>
+        </View>
     );
 }
 
@@ -48,6 +49,7 @@ const styles = StyleSheet.create({
         paddingVertical: vs(13),
         paddingHorizontal: ms(6),
         alignItems: 'center',
+        overflow: 'hidden',
     },
     iconDisc: {
         width: ms(38),

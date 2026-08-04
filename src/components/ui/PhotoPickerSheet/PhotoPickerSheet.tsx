@@ -198,7 +198,8 @@ const styles = StyleSheet.create({
     optionGradient: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingVertical: 16,
+        justifyContent: 'center',
+        height: 54,
         paddingHorizontal: 20,
         gap: 16,
     },

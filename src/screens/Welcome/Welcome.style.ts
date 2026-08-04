@@ -132,9 +132,8 @@ export default StyleSheet.create({
     primaryGradient: {
         alignItems: 'center',
         justifyContent: 'center',
-        paddingVertical: vs(16),
+        height: vs(54),
         borderRadius: ms(18),
-        minHeight: vs(54),
     },
     primaryText: {
         fontSize: ms(17),

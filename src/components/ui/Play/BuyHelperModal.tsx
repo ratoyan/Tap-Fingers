@@ -137,10 +137,11 @@ function BuyHelperModal({visible, helperType, coins, watchAdUsed, onBuy, onWatch
                     </View>
 
                     {/* Price row */}
-                    <LinearGradient
-                        colors={canAfford ? ['rgba(255,215,0,0.12)', 'rgba(255,215,0,0.04)'] : ['rgba(255,255,255,0.06)', 'rgba(255,255,255,0.02)']}
-                        style={styles.priceCard}
-                    >
+                    <View style={styles.priceCard}>
+                        <LinearGradient
+                            colors={canAfford ? ['rgba(255,215,0,0.12)', 'rgba(255,215,0,0.04)'] : ['rgba(255,255,255,0.06)', 'rgba(255,255,255,0.02)']}
+                            style={StyleSheet.absoluteFill}
+                        />
                         <Text allowFontScaling={false} style={styles.priceLabel}>{t('cost')}</Text>
                         <View style={styles.priceRow}>
                             <Coin width={22} height={22}/>
@@ -151,7 +152,7 @@ function BuyHelperModal({visible, helperType, coins, watchAdUsed, onBuy, onWatch
                         {!canAfford && (
                             <Text allowFontScaling={false} style={styles.insufficientText}>{t('notEnoughCoins')}</Text>
                         )}
-                    </LinearGradient>
+                    </View>
                 </View>
 
                 {/* Watch Ad button — hidden entirely when ads are disabled by admin */}
@@ -309,6 +310,7 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: 'rgba(255,255,255,0.08)',
         gap: vs(4),
+        overflow: 'hidden',
     },
     priceLabel: {
         color: PLUM,
@@ -350,8 +352,9 @@ const styles = StyleSheet.create({
     adBtn: {
         flexDirection: 'row',
         alignItems: 'center',
+        justifyContent: 'center',
         gap: ms(12),
-        paddingVertical: vs(13),
+        height: vs(48),
         paddingHorizontal: ms(18),
         borderRadius: ms(16),
     },
@@ -378,11 +381,12 @@ const styles = StyleSheet.create({
     },
     cancelBtn: {
         flex: 1,
-        paddingVertical: vs(13),
+        height: vs(48),
         borderRadius: ms(16),
         borderWidth: 1.5,
         borderColor: PURPLE,
         alignItems: 'center',
+        justifyContent: 'center',
     },
     cancelText: {
         color: WHITE_100,
@@ -395,7 +399,7 @@ const styles = StyleSheet.create({
         overflow: 'hidden',
     },
     buyBtn: {
-        paddingVertical: vs(13),
+        height: vs(48),
         borderRadius: ms(16),
         alignItems: 'center',
         flexDirection: 'row',

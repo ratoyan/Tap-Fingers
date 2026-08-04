@@ -349,7 +349,7 @@ const styles = StyleSheet.create({
     },
     btnGradient: {
         borderRadius: ms(14),
-        paddingVertical: vs(14),
+        height: vs(50),
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
@@ -366,8 +366,9 @@ const styles = StyleSheet.create({
         borderRadius: ms(14),
         borderWidth: 1,
         borderColor: 'rgba(221,160,221,0.25)',
-        paddingVertical: vs(14),
+        height: vs(50),
         alignItems: 'center',
+        justifyContent: 'center',
     },
     settingsText: {
         color: '#DDA0DD',
@@ -387,7 +388,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         gap: ms(8),
-        paddingVertical: vs(13),
+        height: vs(50),
     },
     exitText: {
         color: '#DDA0DD',

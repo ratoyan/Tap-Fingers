@@ -94,6 +94,7 @@ export default StyleSheet.create({
         paddingHorizontal: ms(14),
         gap: ms(14),
         borderRadius: ms(16),
+        overflow: 'hidden',
     },
     flag: {
         fontSize: ms(30),

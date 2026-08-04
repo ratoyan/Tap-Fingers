@@ -36,8 +36,8 @@ const PROD: Record<'android' | 'ios', AdUnits> = {
         banner: 'R-M-19683421-1',
     },
     ios: {
-        rewarded: 'R-M-YYYYYYY-2',
-        banner: 'R-M-YYYYYYY-1',
+        rewarded: 'R-M-19700981-2',
+        banner: 'R-M-19700981-1',
     },
 };
 

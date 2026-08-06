@@ -11,13 +11,18 @@ import {
     VIOLET_MEDIUM,
     WHITE
 } from '../../constants/colors.ts';
-import {HORIZONAL_OFFSET} from '../../constants/uiConstants.ts';
 import {ms, vs} from '../../utils/responsive.ts';
 
 export default StyleSheet.create({
+    // The gradient is a full-bleed background — no padding here, or on iOS
+    // (new arch) it sizes to its padded content and leaves white side gutters.
     container: {
         flex: 1,
-        paddingHorizontal: HORIZONAL_OFFSET,
+    },
+    // Side padding lives on an inner view so the gradient still fills the width.
+    content: {
+        flex: 1,
+        paddingHorizontal: ms(28),
     },
 
     // Section headers
@@ -55,10 +60,18 @@ export default StyleSheet.create({
         elevation: 10,
     },
 
-    // Exit button — premium pill, centered
+    // Exit button — premium pill, centered.
+    // The row layout (padding/gap) lives here on the plain TouchableOpacity so
+    // it measures reliably; the gradient below just fills it as a background.
+    // (A LinearGradient sizing itself to row content clips the text on iOS.)
     buttonWrapper: {
         alignSelf: 'center',
         marginTop: vs(32),
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: ms(11),
+        paddingVertical: vs(13),
+        paddingHorizontal: ms(26),
         borderRadius: ms(50),
         shadowColor: VIOLET_MEDIUM,
         shadowOffset: {width: 0, height: 8},
@@ -69,14 +82,8 @@ export default StyleSheet.create({
         borderColor: 'rgba(196, 145, 255, 0.55)',
         overflow: 'hidden',
     },
-    button: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: ms(11),
-        paddingVertical: vs(13),
-        paddingHorizontal: ms(26),
-        borderRadius: ms(50),
-        overflow: 'hidden',
+    buttonBg: {
+        ...StyleSheet.absoluteFillObject,
     },
     buttonSheen: {
         position: 'absolute',

@@ -141,6 +141,7 @@ function Settings() {
         >
             <ScreenStatusBar/>
 
+            <View style={styles.content}>
             <BackHeader
                 title={`⚙️ ${t('settings')}`}
                 isProfile={true}
@@ -223,23 +224,24 @@ function Settings() {
                 accessibilityRole="button"
                 accessibilityLabel={t('exitGame')}
             >
+                {/* Gradient fill — absolute so it never drives the pill's size */}
                 <LinearGradient
+                    pointerEvents="none"
                     colors={['#2a0845', '#6a1b9a', VIOLET_MEDIUM]}
                     start={{x: 0, y: 0}}
                     end={{x: 1, y: 1}}
-                    style={styles.button}
-                >
-                    {/* Glossy top sheen */}
-                    <LinearGradient
-                        pointerEvents="none"
-                        colors={['rgba(255,255,255,0.18)', 'rgba(255,255,255,0)']}
-                        style={styles.buttonSheen}
-                    />
-                    <View style={styles.buttonIconChip}>
-                        <ExitIcon size={18} color="#fff"/>
-                    </View>
-                    <Text allowFontScaling={false} style={styles.buttonText}>{t('exitGame')}</Text>
-                </LinearGradient>
+                    style={styles.buttonBg}
+                />
+                {/* Glossy top sheen */}
+                <LinearGradient
+                    pointerEvents="none"
+                    colors={['rgba(255,255,255,0.18)', 'rgba(255,255,255,0)']}
+                    style={styles.buttonSheen}
+                />
+                <View style={styles.buttonIconChip}>
+                    <ExitIcon size={18} color="#fff"/>
+                </View>
+                <Text allowFontScaling={false} style={styles.buttonText}>{t('exitGame')}</Text>
             </TouchableOpacity>
 
             <LanguageModal
@@ -258,6 +260,7 @@ function Settings() {
                 onConfirm={logOut}
             />
             </>}
+            </View>
         </LinearGradient>
     );
 }

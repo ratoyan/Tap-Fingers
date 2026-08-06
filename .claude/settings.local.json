@@ -121,7 +121,9 @@
       "Bash(perl -0pi -e \"s/accessibilityLabel=\\\\{t\\\\\\('coinsGained', \\\\{count: amount\\\\}\\\\\\)\\\\}/accessibilityLabel={tr\\('coinsGained', {count: amount}\\)}/;\" src/components/ui/CoinGain/CoinGain.tsx)",
       "Bash(pod --version)",
       "Bash(find . -path ./Pods -prune -o -name \"*.appiconset\" -print)",
-      "Bash(find . -path ./Pods -prune -o -name \"*.xcassets\" -type d -print)"
+      "Bash(find . -path ./Pods -prune -o -name \"*.xcassets\" -type d -print)",
+      "Skill(run)",
+      "Bash(xcrun simctl *)"
     ]
   }
 }

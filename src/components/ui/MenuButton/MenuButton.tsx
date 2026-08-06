@@ -195,21 +195,24 @@ function MenuButton({menu, index = 0}: MenuProps){
                 accessibilityRole="button"
                 accessibilityLabel={t(menu.title)}
             >
+                {/* Absolute-fill background so the row layout lives on the plain
+                    TouchableOpacity above — a LinearGradient owning the flex
+                    layout mis-centres its content on iOS Fabric. */}
                 <LinearGradient
+                    pointerEvents="none"
                     colors={[PURPLE, ORCHID]}
                     start={{x: 0, y: 0}}
                     end={{x: 1, y: 0}}
                     style={styles.gradientButton}
-                >
-                    {Icon ? (
-                        <Animated.View
-                            style={[styles.icon, {transform: [{scale: iconScale}, {rotate: iconSpin}]}]}
-                        >
-                            <Icon size={MENU_ICON_SIZE}/>
-                        </Animated.View>
-                    ) : null}
-                    <Text allowFontScaling={false} style={styles.title}>{t(menu.title)}</Text>
-                </LinearGradient>
+                />
+                {Icon ? (
+                    <Animated.View
+                        style={[styles.icon, {transform: [{scale: iconScale}, {rotate: iconSpin}]}]}
+                    >
+                        <Icon size={MENU_ICON_SIZE}/>
+                    </Animated.View>
+                ) : null}
+                <Text allowFontScaling={false} style={styles.title}>{t(menu.title)}</Text>
 
                 {/* Sibling of the gradient so it sits over both the label and
                     the icon, inside the clipped container. The band itself is

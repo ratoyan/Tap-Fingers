@@ -12,6 +12,7 @@ import {
     WHITE
 } from '../../constants/colors.ts';
 import {ms, vs} from '../../utils/responsive.ts';
+import {HORIZONAL_OFFSET} from "../../constants/uiConstants.ts";
 
 export default StyleSheet.create({
     // The gradient is a full-bleed background — no padding here, or on iOS
@@ -22,7 +23,7 @@ export default StyleSheet.create({
     // Side padding lives on an inner view so the gradient still fills the width.
     content: {
         flex: 1,
-        paddingHorizontal: ms(28),
+        paddingHorizontal: HORIZONAL_OFFSET,
     },
 
     // Section headers

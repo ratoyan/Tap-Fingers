@@ -29,6 +29,13 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
       launchOptions: launchOptions
     )
 
+    // Paint the window and root view the splash colour (#0C0021) so there is no
+    // white frame between the native launch screen and the first React Native
+    // frame — matches the Android windowBackground splash colour.
+    let splashColor = UIColor(red: 12.0 / 255.0, green: 0.0 / 255.0, blue: 33.0 / 255.0, alpha: 1.0)
+    window?.backgroundColor = splashColor
+    window?.rootViewController?.view.backgroundColor = splashColor
+
     return true
   }
 }

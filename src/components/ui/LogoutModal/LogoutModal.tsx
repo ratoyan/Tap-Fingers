@@ -172,17 +172,17 @@ export default function LogoutModal({visible, onClose, onConfirm}: any) {
                                       accessibilityHint={t('confirmExitHint')}
                     >
                         <LinearGradient
+                            pointerEvents="none"
                             colors={[GRADIENT_LIGHT, GRADIENT_DARK]}
                             start={{x: 0, y: 0}}
                             end={{x: 1, y: 1}}
                             style={styles.confirmButton}
+                        />
+                        <Text allowFontScaling={false} style={[styles.buttonText, styles.confirmText]}
+                              importantForAccessibility="no-hide-descendants"
                         >
-                            <Text allowFontScaling={false} style={[styles.buttonText, styles.confirmText]}
-                                  importantForAccessibility="no-hide-descendants"
-                            >
-                                {t('yes')}
-                            </Text>
-                        </LinearGradient>
+                            {t('yes')}
+                        </Text>
                     </TouchableOpacity>
                 </View>
             </Animated.View>

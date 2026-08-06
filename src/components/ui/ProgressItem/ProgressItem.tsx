@@ -69,15 +69,19 @@ function ProgressItem({item, trophy, index, topLevel, isMe}: ProgressItemProps) 
     const avatar = avatarForId(item.playerId);
 
     return (
-        <LinearGradient
-            colors={[GRADIENT_LIGHT, GRADIENT_DARK]}
-            start={{x: 0, y: 0}}
-            end={{x: 1, y: 1}}
+        <View
             style={[styles.progressItem, isMe && styles.progressItemMe]}
             accessible={true}
             accessibilityRole="summary"
             accessibilityLabel={`${levelText}. ${t('score')} ${item.score}. ${t('progress')} ${progressPercent}%`}
         >
+            <LinearGradient
+                pointerEvents="none"
+                colors={[GRADIENT_LIGHT, GRADIENT_DARK]}
+                start={{x: 0, y: 0}}
+                end={{x: 1, y: 1}}
+                style={styles.progressItemBg}
+            />
             {item.avatar ? (
                 <Image
                     source={{uri: item.avatar}}
@@ -125,7 +129,7 @@ function ProgressItem({item, trophy, index, topLevel, isMe}: ProgressItemProps) 
                     <Text allowFontScaling={false} style={styles.progressLabel}>{progressPercent}%</Text>
                 </View>
             </View>
-        </LinearGradient>
+        </View>
     );
 }
 

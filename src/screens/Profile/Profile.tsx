@@ -394,19 +394,19 @@ function Profile() {
                 accessibilityLabel={t('deleteAccount')}
             >
                 <LinearGradient
+                    pointerEvents="none"
                     colors={['rgba(229,72,77,0.30)', 'rgba(229,72,77,0.10)']}
                     start={{x: 0, y: 0}}
                     end={{x: 1, y: 1}}
                     style={styles.deleteGradient}
-                >
-                    <View style={styles.deleteIconBadge}>
-                        <Text allowFontScaling={false} style={styles.deleteIcon}>🗑</Text>
-                    </View>
-                    <Text allowFontScaling={false} style={styles.deleteButtonText} numberOfLines={2}>
-                        {t('deleteAccount')}
-                    </Text>
-                    <Text allowFontScaling={false} style={styles.deleteChevron}>›</Text>
-                </LinearGradient>
+                />
+                <View style={styles.deleteIconBadge}>
+                    <Text allowFontScaling={false} style={styles.deleteIcon}>🗑</Text>
+                </View>
+                <Text allowFontScaling={false} style={styles.deleteButtonText} numberOfLines={2}>
+                    {t('deleteAccount')}
+                </Text>
+                <Text allowFontScaling={false} style={styles.deleteChevron}>›</Text>
             </PressScale>
         );
     }
@@ -422,6 +422,7 @@ function Profile() {
         >
             <ScreenStatusBar/>
 
+            <View style={styles.content}>
             <BackHeader title={`👨‍🎓 ${t('profile')}`} />
 
             <KeyboardAvoidingView
@@ -478,15 +479,15 @@ function Profile() {
                                                 accessibilityLabel={t('createAccount')}
                                             >
                                                 <LinearGradient
+                                                    pointerEvents="none"
                                                     colors={[PURPLE_DARK, GRADIENT_LIGHT]}
                                                     start={{x: 0, y: 0}}
                                                     end={{x: 1, y: 1}}
                                                     style={styles.primaryAuthGradient}
-                                                >
-                                                    <Text allowFontScaling={false} style={styles.primaryAuthText}>
-                                                        ✨  {t('createAccount')}
-                                                    </Text>
-                                                </LinearGradient>
+                                                />
+                                                <Text allowFontScaling={false} style={styles.primaryAuthText}>
+                                                    ✨  {t('createAccount')}
+                                                </Text>
                                             </PressScale>
 
                                             <View style={styles.dividerRow}>
@@ -694,6 +695,7 @@ function Profile() {
 
                 </ScrollView>
             </KeyboardAvoidingView>
+            </View>
 
             {isGuest && (
                 <GuestAuthModal
@@ -803,15 +805,15 @@ function ActionButton({
             accessibilityLabel={label}
         >
             <LinearGradient
+                pointerEvents="none"
                 colors={[PURPLE_DARK, GRADIENT_LIGHT]}
                 start={{x: 0, y: 0}}
                 end={{x: 1, y: 1}}
                 style={styles.actionGradient}
-            >
-                {busy
-                    ? <ActivityIndicator size="small" color={WHITE} />
-                    : <Text allowFontScaling={false} style={styles.actionText}>{label}</Text>}
-            </LinearGradient>
+            />
+            {busy
+                ? <ActivityIndicator size="small" color={WHITE} />
+                : <Text allowFontScaling={false} style={styles.actionText}>{label}</Text>}
         </PressScale>
     );
 }

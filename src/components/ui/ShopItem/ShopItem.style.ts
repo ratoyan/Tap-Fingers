@@ -79,6 +79,13 @@ export default StyleSheet.create({
         paddingHorizontal: ms(14),
         paddingVertical: ms(6),
         borderRadius: ms(20),
+        overflow: 'hidden',
+    },
+    // Absolute-fill gradient background: a flow-positioned LinearGradient jumps to
+    // the card's top-left origin on iOS Fabric, so the pill is a plain View and
+    // the gradient just paints it.
+    priceBadgeBg: {
+        ...StyleSheet.absoluteFillObject,
     },
     priceText: {
         fontWeight: '800',

@@ -311,15 +311,17 @@ function ShopItem({item, index = 0, handlePress, selected = false, purchased = f
             );
         }
         return (
-            <LinearGradient
-                colors={[GRADIENT_LIGHT, GRADIENT_DARK]}
-                start={{x: 0, y: 0}}
-                end={{x: 1, y: 0}}
-                style={styles.priceBadge}
-            >
+            <View style={styles.priceBadge}>
+                <LinearGradient
+                    pointerEvents="none"
+                    colors={[GRADIENT_LIGHT, GRADIENT_DARK]}
+                    start={{x: 0, y: 0}}
+                    end={{x: 1, y: 0}}
+                    style={styles.priceBadgeBg}
+                />
                 <Text allowFontScaling={false} style={styles.priceText}>{item.coins}</Text>
                 <Coin width={18} height={16}/>
-            </LinearGradient>
+            </View>
         );
     };
 

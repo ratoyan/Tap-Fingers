@@ -274,6 +274,7 @@ function Challenges() {
         >
             <ScreenStatusBar/>
 
+            <View style={styles.content}>
             <BackHeader title={`🎯 ${t('challenges')}`}/>
 
             {/* Daily challenges live in the always-present list header, so they
@@ -310,6 +311,7 @@ function Challenges() {
                     )
                 }
             />}
+            </View>
         </LinearGradient>
     );
 }

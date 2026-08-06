@@ -178,11 +178,12 @@ function ChallengeCard({item, index = 0, onCollect}: ChallengeCardProps) {
             ]}
         >
             <LinearGradient
+                pointerEvents="none"
                 colors={cardColors}
                 start={{x: 0, y: 0}}
                 end={{x: 1, y: 1}}
                 style={styles.cardInner}
-            >
+            />
                 {/* Header */}
                 <View style={styles.header}>
                     <View style={styles.iconBox}>
@@ -284,7 +285,6 @@ function ChallengeCard({item, index = 0, onCollect}: ChallengeCardProps) {
                         </Animated.View>
                     </>
                 )}
-            </LinearGradient>
         </Animated.View>
     );
 }

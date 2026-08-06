@@ -124,7 +124,11 @@ export default StyleSheet.create({
     },
     button: {
         width: '100%',
+        height: vs(50),
+        alignItems: 'center',
+        justifyContent: 'center',
         borderRadius: ms(16),
+        overflow: 'hidden',
         // Coloured glow under the CTA (tint set per-palette inline).
         shadowOffset: {width: 0, height: 6},
         shadowOpacity: 0.5,
@@ -132,10 +136,7 @@ export default StyleSheet.create({
         elevation: 8,
     },
     buttonGradient: {
-        height: vs(50),
-        alignItems: 'center',
-        justifyContent: 'center',
-        borderRadius: ms(16),
+        ...StyleSheet.absoluteFillObject,
     },
     buttonText: {
         color: WHITE,

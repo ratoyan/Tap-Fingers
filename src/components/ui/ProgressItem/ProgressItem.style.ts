@@ -28,6 +28,13 @@ export default StyleSheet.create({
         shadowColor: GOLD,
         shadowOpacity: 0.6,
     },
+    // Absolute-fill gradient background: the row is a plain View so it grows to
+    // fit its content — a LinearGradient row collapses its height on iOS Fabric
+    // and clips the percent label at the bottom.
+    progressItemBg: {
+        ...StyleSheet.absoluteFillObject,
+        borderRadius: ms(24),
+    },
     youBadge: {
         marginLeft: ms(8),
         paddingHorizontal: ms(8),

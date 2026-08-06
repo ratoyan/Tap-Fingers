@@ -206,14 +206,14 @@ function GameMenuModal({visible, onClose, onExit}: GameMenuModalProps) {
                                 accessibilityLabel={t('play')}
                             >
                                 <LinearGradient
+                                    pointerEvents="none"
                                     colors={[GRADIENT_LIGHT, GRADIENT_DARK]}
                                     start={{x: 0, y: 0}}
                                     end={{x: 1, y: 1}}
                                     style={styles.btnGradient}
-                                >
-                                    <PlayIcon size={18} color={WHITE} />
-                                    <Text allowFontScaling={false} style={styles.resumeText}>{t('play')}</Text>
-                                </LinearGradient>
+                                />
+                                <PlayIcon size={18} color={WHITE} />
+                                <Text allowFontScaling={false} style={styles.resumeText}>{t('play')}</Text>
                             </TouchableOpacity>
                         </Animated.View>
 
@@ -242,14 +242,14 @@ function GameMenuModal({visible, onClose, onExit}: GameMenuModalProps) {
                                 accessibilityLabel={t('exitGame')}
                             >
                                 <LinearGradient
+                                    pointerEvents="none"
                                     colors={['#3a0060', '#6a0dad']}
                                     start={{x: 0, y: 0}}
                                     end={{x: 1, y: 1}}
                                     style={styles.exitGradient}
-                                >
-                                    <ExitIcon size={18} color="#DDA0DD" />
-                                    <Text allowFontScaling={false} style={styles.exitText}>{t('exitGame')}</Text>
-                                </LinearGradient>
+                                />
+                                <ExitIcon size={18} color="#DDA0DD" />
+                                <Text allowFontScaling={false} style={styles.exitText}>{t('exitGame')}</Text>
                             </TouchableOpacity>
                         </Animated.View>
 
@@ -346,14 +346,16 @@ const styles = StyleSheet.create({
     },
     btn: {
         width: '100%',
-    },
-    btnGradient: {
         borderRadius: ms(14),
         height: vs(50),
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
         gap: ms(8),
+        overflow: 'hidden',
+    },
+    btnGradient: {
+        ...StyleSheet.absoluteFillObject,
     },
     resumeText: {
         color: WHITE,
@@ -380,15 +382,16 @@ const styles = StyleSheet.create({
         width: '100%',
         borderRadius: ms(14),
         overflow: 'hidden',
-        borderWidth: 1,
-        borderColor: 'rgba(221,160,221,0.3)',
-    },
-    exitGradient: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
         gap: ms(8),
         height: vs(50),
+        borderWidth: 1,
+        borderColor: 'rgba(221,160,221,0.3)',
+    },
+    exitGradient: {
+        ...StyleSheet.absoluteFillObject,
     },
     exitText: {
         color: '#DDA0DD',

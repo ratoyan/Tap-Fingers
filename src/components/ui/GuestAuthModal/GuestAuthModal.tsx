@@ -352,17 +352,17 @@ export default function GuestAuthModal({
                             activeOpacity={0.85}
                         >
                             <LinearGradient
+                                pointerEvents="none"
                                 colors={[PURPLE_DARK, GRADIENT_LIGHT]}
                                 start={{x: 0, y: 0}}
                                 end={{x: 1, y: 1}}
                                 style={styles.submitGradient}
-                            >
-                                {busy
-                                    ? <ActivityIndicator color="#fff" />
-                                    : <Text allowFontScaling={false} style={styles.submitText}>
-                                        {authMode === 'register' ? t('createAccount') : t('signIn')}
-                                    </Text>}
-                            </LinearGradient>
+                            />
+                            {busy
+                                ? <ActivityIndicator color="#fff" />
+                                : <Text allowFontScaling={false} style={styles.submitText}>
+                                    {authMode === 'register' ? t('createAccount') : t('signIn')}
+                                </Text>}
                         </TouchableOpacity>
 
                         {/* Switch between "create account" and "sign in to another account" */}

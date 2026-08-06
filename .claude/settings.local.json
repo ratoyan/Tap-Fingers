@@ -123,7 +123,12 @@
       "Bash(find . -path ./Pods -prune -o -name \"*.appiconset\" -print)",
       "Bash(find . -path ./Pods -prune -o -name \"*.xcassets\" -type d -print)",
       "Skill(run)",
-      "Bash(xcrun simctl *)"
+      "Bash(xcrun simctl *)",
+      "Bash(idb list-targets *)",
+      "Bash(python3 -c \"import idb\")",
+      "Bash(osascript -e 'tell application \"System Events\" to tell process \"Simulator\" to get {position, size} of window 1')",
+      "Bash(osascript -e 'tell application \"Simulator\" to get bounds of window 1')",
+      "Bash(brew --version)"
     ]
   }
 }

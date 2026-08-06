@@ -251,7 +251,11 @@ export default StyleSheet.create({
     },
     exitConfirmTouchable: {
         flex: 1,
+        height: vs(48),
+        alignItems: 'center',
+        justifyContent: 'center',
         borderRadius: ms(14),
+        overflow: 'hidden',
         shadowColor: GRADIENT_LIGHT,
         shadowOffset: {width: 0, height: 4},
         shadowOpacity: 0.5,
@@ -259,10 +263,7 @@ export default StyleSheet.create({
         elevation: 6,
     },
     exitConfirmBtn: {
-        height: vs(48),
-        borderRadius: ms(14),
-        alignItems: 'center',
-        justifyContent: 'center',
+        ...StyleSheet.absoluteFillObject,
     },
     exitConfirmText: {
         color: WHITE,

@@ -175,14 +175,16 @@ export default StyleSheet.create({
     resultWrapper: {
         width:     '100%',
         marginTop: 4,
-    },
-    resultGradient: {
         borderRadius:      22,
         paddingVertical:   18,
         paddingHorizontal: 20,
         alignItems:        'center',
         borderWidth:       1.5,
         borderColor:       '#FFD700',
+        overflow:          'hidden',
+    },
+    resultGradient: {
+        ...StyleSheet.absoluteFillObject,
     },
     resultIconWrapper: {
         marginBottom: 8,

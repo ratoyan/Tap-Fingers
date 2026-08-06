@@ -231,25 +231,26 @@ function LoseModal({visible, score, onRetry, onBack, onWatchAd, canWatchAd = tru
                         <TouchableOpacity
                             onPressIn={onWatchAd}
                             activeOpacity={0.85}
+                            style={styles.adBtn}
                             accessible={true}
                             accessibilityRole="button"
                             accessibilityLabel={`${t('watchAd')}, ${t('getHeart')}`}
                         >
                             <LinearGradient
+                                pointerEvents="none"
                                 colors={['#f7971e', '#ffd200']}
                                 start={{x: 0, y: 0}}
                                 end={{x: 1, y: 0}}
-                                style={styles.adBtn}
-                            >
-                                <Text allowFontScaling={false} style={styles.adBtnIcon}>📺</Text>
-                                <View style={styles.adBtnTextWrap}>
-                                    <Text allowFontScaling={false} style={styles.adBtnTitle}>{t('watchAd')}</Text>
-                                    <View style={styles.adBtnBadge}>
-                                        <FullHeart size={14} color="#e74c3c"/>
-                                        <Text allowFontScaling={false} style={styles.adBtnBadgeText}> {t('getHeart')}</Text>
-                                    </View>
+                                style={styles.adGradient}
+                            />
+                            <Text allowFontScaling={false} style={styles.adBtnIcon}>📺</Text>
+                            <View style={styles.adBtnTextWrap}>
+                                <Text allowFontScaling={false} style={styles.adBtnTitle}>{t('watchAd')}</Text>
+                                <View style={styles.adBtnBadge}>
+                                    <FullHeart size={14} color="#e74c3c"/>
+                                    <Text allowFontScaling={false} style={styles.adBtnBadgeText}> {t('getHeart')}</Text>
                                 </View>
-                            </LinearGradient>
+                            </View>
                         </TouchableOpacity>
                     </Animated.View>
                 ) : (
@@ -281,16 +282,16 @@ function LoseModal({visible, score, onRetry, onBack, onWatchAd, canWatchAd = tru
                         accessibilityLabel={t('retry')}
                     >
                         <LinearGradient
+                            pointerEvents="none"
                             colors={[GRADIENT_LIGHT, GRADIENT_DARK]}
                             start={{x: 0, y: 0}}
                             end={{x: 1, y: 1}}
                             style={styles.retryBtn}
-                        >
-                            <Animated.View style={{transform: [{rotate: retrySpin}]}}>
-                                <RetryIcon size={ms(20)} color={WHITE}/>
-                            </Animated.View>
-                            <Text allowFontScaling={false} style={styles.retryBtnText}>{t('retry')}</Text>
-                        </LinearGradient>
+                        />
+                        <Animated.View style={{transform: [{rotate: retrySpin}]}}>
+                            <RetryIcon size={ms(20)} color={WHITE}/>
+                        </Animated.View>
+                        <Text allowFontScaling={false} style={styles.retryBtnText}>{t('retry')}</Text>
                     </TouchableOpacity>
                 </View>
 
@@ -423,6 +424,10 @@ const styles = StyleSheet.create({
         paddingHorizontal: ms(20),
         gap: ms(14),
         borderRadius: ms(18),
+        overflow: 'hidden',
+    },
+    adGradient: {
+        ...StyleSheet.absoluteFillObject,
     },
     adBtnIcon: {
         fontSize: ms(32),
@@ -486,16 +491,16 @@ const styles = StyleSheet.create({
     },
     retryWrap: {
         flex: 2,
-        borderRadius: ms(16),
-        overflow: 'hidden',
-    },
-    retryBtn: {
         flexDirection: 'row',
         height: vs(50),
         alignItems: 'center',
         justifyContent: 'center',
         gap: ms(8),
         borderRadius: ms(16),
+        overflow: 'hidden',
+    },
+    retryBtn: {
+        ...StyleSheet.absoluteFillObject,
     },
     retryBtnText: {
         color: WHITE,

@@ -103,15 +103,15 @@ export default function UpdateModal({visible, storeUrl}: UpdateModalProps) {
                                 accessibilityLabel={Platform.OS === 'ios' ? t('updateAppStore') : t('updatePlayStore')}
                             >
                                 <LinearGradient
+                                    pointerEvents="none"
                                     colors={['#FFE566', '#FFD700', '#cc8800']}
                                     start={{x: 0, y: 0}}
                                     end={{x: 1, y: 0}}
                                     style={styles.updateGradient}
-                                >
-                                    <Text allowFontScaling={false} style={styles.updateText}>
-                                        {Platform.OS === 'ios' ? `🍎  ${t('updateAppStore')}` : `▶  ${t('updatePlayStore')}`}
-                                    </Text>
-                                </LinearGradient>
+                                />
+                                <Text allowFontScaling={false} style={styles.updateText}>
+                                    {Platform.OS === 'ios' ? `🍎  ${t('updateAppStore')}` : `▶  ${t('updatePlayStore')}`}
+                                </Text>
                             </TouchableOpacity>
                         </Animated.View>
                     </View>
@@ -187,15 +187,15 @@ const styles = StyleSheet.create({
         marginBottom: 28,
     },
     updateBtn: {
-        borderRadius: 18,
-        overflow:     'hidden',
-    },
-    updateGradient: {
         height:            54,
         paddingHorizontal: 24,
         alignItems:        'center',
         justifyContent:    'center',
-        borderRadius:      18,
+        borderRadius: 18,
+        overflow:     'hidden',
+    },
+    updateGradient: {
+        ...StyleSheet.absoluteFillObject,
     },
     updateText: {
         color:         '#1a0033',

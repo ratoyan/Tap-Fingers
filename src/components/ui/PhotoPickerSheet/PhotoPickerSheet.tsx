@@ -99,16 +99,16 @@ export default function PhotoPickerSheet({
                     accessibilityLabel={t('camera')}
                 >
                     <LinearGradient
+                        pointerEvents="none"
                         colors={[GRADIENT_LIGHT, GRADIENT_DARK]}
                         start={{x: 0, y: 0}}
                         end={{x: 1, y: 0}}
                         style={styles.optionGradient}
-                    >
-                        <View style={styles.iconBubble}>
-                            <Text allowFontScaling={false} style={styles.optionIcon}>📸</Text>
-                        </View>
-                        <Text allowFontScaling={false} style={styles.optionLabel}>{t('camera')}</Text>
-                    </LinearGradient>
+                    />
+                    <View style={styles.iconBubble}>
+                        <Text allowFontScaling={false} style={styles.optionIcon}>📸</Text>
+                    </View>
+                    <Text allowFontScaling={false} style={styles.optionLabel}>{t('camera')}</Text>
                 </TouchableOpacity>
 
                 {/* Gallery option */}
@@ -121,16 +121,16 @@ export default function PhotoPickerSheet({
                     accessibilityLabel={t('gallery')}
                 >
                     <LinearGradient
+                        pointerEvents="none"
                         colors={['#8e44ad', '#6c3483']}
                         start={{x: 0, y: 0}}
                         end={{x: 1, y: 0}}
                         style={styles.optionGradient}
-                    >
-                        <View style={styles.iconBubble}>
-                            <Text allowFontScaling={false} style={styles.optionIcon}>🖼️</Text>
-                        </View>
-                        <Text allowFontScaling={false} style={styles.optionLabel}>{t('gallery')}</Text>
-                    </LinearGradient>
+                    />
+                    <View style={styles.iconBubble}>
+                        <Text allowFontScaling={false} style={styles.optionIcon}>🖼️</Text>
+                    </View>
+                    <Text allowFontScaling={false} style={styles.optionLabel}>{t('gallery')}</Text>
                 </TouchableOpacity>
 
                 {/* Cancel */}
@@ -191,17 +191,18 @@ const styles = StyleSheet.create({
         letterSpacing: 0.3,
     },
     optionBtn: {
-        borderRadius: 18,
-        marginBottom: 12,
-        overflow: 'hidden',
-    },
-    optionGradient: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
         height: 54,
         paddingHorizontal: 20,
         gap: 16,
+        borderRadius: 18,
+        marginBottom: 12,
+        overflow: 'hidden',
+    },
+    optionGradient: {
+        ...StyleSheet.absoluteFillObject,
     },
     iconBubble: {
         width: 44,

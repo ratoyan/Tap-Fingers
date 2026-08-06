@@ -721,18 +721,19 @@ export default function LuckyWheelModal({
                                     {translateY: resultBob.interpolate({inputRange: [0, 1], outputRange: [0, -4]})},
                                 ],
                                 shadowColor: glowColor,
+                                borderColor: glowColor,
                             }]}>
                                 <LinearGradient
+                                    pointerEvents="none"
                                     colors={RESULT_COLORS[result.type] ?? RESULT_COLORS.coins}
                                     start={{x: 0, y: 0}} end={{x: 1, y: 0}}
-                                    style={[styles.resultGradient, {borderColor: glowColor}]}
-                                >
-                                    <Text allowFontScaling={false} style={styles.resultYouWon}>✨  {t('youWon')}  ✨</Text>
-                                    <Text allowFontScaling={false} style={styles.resultIcon}>{result.icon}</Text>
-                                    <Text allowFontScaling={false} style={[styles.resultLabel, {color: glowColor, textShadowColor: glowColor}]}>
-                                        {rewardLabel}
-                                    </Text>
-                                </LinearGradient>
+                                    style={styles.resultGradient}
+                                />
+                                <Text allowFontScaling={false} style={styles.resultYouWon}>✨  {t('youWon')}  ✨</Text>
+                                <Text allowFontScaling={false} style={styles.resultIcon}>{result.icon}</Text>
+                                <Text allowFontScaling={false} style={[styles.resultLabel, {color: glowColor, textShadowColor: glowColor}]}>
+                                    {rewardLabel}
+                                </Text>
                             </Animated.View>
                         )}
 

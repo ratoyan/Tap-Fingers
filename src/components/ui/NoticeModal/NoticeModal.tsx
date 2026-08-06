@@ -220,15 +220,15 @@ export default function NoticeModal() {
                                 accessibilityLabel={confirmLabel}
                             >
                                 <LinearGradient
+                                    pointerEvents="none"
                                     colors={palette.buttonGradient}
                                     start={{x: 0, y: 0}}
                                     end={{x: 1, y: 0}}
                                     style={styles.buttonGradient}
-                                >
-                                    <Text allowFontScaling={false} style={styles.buttonText}>
-                                        {confirmLabel}
-                                    </Text>
-                                </LinearGradient>
+                                />
+                                <Text allowFontScaling={false} style={styles.buttonText}>
+                                    {confirmLabel}
+                                </Text>
                             </TouchableOpacity>
                         </View>
                     </Animated.View>

@@ -136,13 +136,13 @@ function ExitModal({visible, onConfirm, onCancel}: ExitModalProps) {
                         accessibilityLabel={t('no')}
                     >
                         <LinearGradient
+                            pointerEvents="none"
                             colors={[GRADIENT_LIGHT, GRADIENT_DARK]}
                             start={{x: 0, y: 0}}
                             end={{x: 1, y: 1}}
                             style={styles.exitConfirmBtn}
-                        >
-                            <Text allowFontScaling={false} style={styles.exitConfirmText}>{t('no')}</Text>
-                        </LinearGradient>
+                        />
+                        <Text allowFontScaling={false} style={styles.exitConfirmText}>{t('no')}</Text>
                     </TouchableOpacity>
                 </View>
             </Animated.View>

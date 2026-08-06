@@ -137,13 +137,13 @@ export default function SettingsModal({visible, onClose}: SettingsModalProps) {
                     accessibilityLabel={t('close')}
                 >
                     <LinearGradient
+                        pointerEvents="none"
                         colors={['#3a0060', '#6a0dad']}
                         start={{x: 0, y: 0}}
                         end={{x: 1, y: 1}}
                         style={styles.closeGradient}
-                    >
-                        <Text allowFontScaling={false} style={styles.closeText}>✕  {t('close')}</Text>
-                    </LinearGradient>
+                    />
+                    <Text allowFontScaling={false} style={styles.closeText}>✕  {t('close')}</Text>
                 </TouchableOpacity>
 
             </Animated.View>
@@ -203,15 +203,16 @@ const styles = StyleSheet.create({
     },
     closeBtn: {
         width: '100%',
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: vs(48),
         borderRadius: ms(14),
         overflow: 'hidden',
         borderWidth: 1,
         borderColor: 'rgba(221,160,221,0.3)',
     },
     closeGradient: {
-        alignItems: 'center',
-        justifyContent: 'center',
-        height: vs(48),
+        ...StyleSheet.absoluteFillObject,
     },
     closeText: {
         color: '#DDA0DD',

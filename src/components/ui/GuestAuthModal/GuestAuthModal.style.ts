@@ -86,6 +86,10 @@ export default StyleSheet.create({
         width: '100%',
         borderRadius: ms(16),
         marginTop: vs(6),
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: vs(54),
+        overflow: 'hidden',
         shadowColor: GRADIENT_LIGHT,
         shadowOffset: {width: 0, height: 6},
         shadowOpacity: 0.5,
@@ -93,10 +97,7 @@ export default StyleSheet.create({
         elevation: 8,
     },
     submitGradient: {
-        alignItems: 'center',
-        justifyContent: 'center',
-        height: vs(54),
-        borderRadius: ms(16),
+        ...StyleSheet.absoluteFillObject,
     },
     submitText: {
         color: WHITE,

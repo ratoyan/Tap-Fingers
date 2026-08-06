@@ -162,27 +162,28 @@ function BuyHelperModal({visible, helperType, coins, watchAdUsed, onBuy, onWatch
                         onPressIn={() => onWatchAd(helperType)}
                         activeOpacity={0.82}
                         disabled={adDisabled}
+                        style={styles.adBtn}
                         accessible={true}
                         accessibilityRole="button"
                         accessibilityLabel={adDisabled ? `${t('adLimitReached')}, ${t('adsUsed', {used: watchAdUsed})}` : t('getFreeHelper', {name: t(cfg.name)})}
                         accessibilityState={{disabled: adDisabled}}
                     >
                         <LinearGradient
+                            pointerEvents="none"
                             colors={adDisabled ? ['#555', '#333'] : ['#f7971e', '#ffd200']}
                             start={{x: 0, y: 0}}
                             end={{x: 1, y: 0}}
-                            style={styles.adBtn}
-                        >
-                            <Text allowFontScaling={false} style={styles.adIcon}>📺</Text>
-                            <View>
-                                <Text allowFontScaling={false} style={[styles.adTitle, adDisabled && {color: 'rgba(255,255,255,0.5)'}]}>
-                                    {adDisabled ? t('adLimitReached') : t('watchAd')}
-                                </Text>
-                                <Text allowFontScaling={false} style={[styles.adSub, adDisabled && {color: 'rgba(255,255,255,0.35)'}]}>
-                                    {adDisabled ? t('adsUsed', {used: watchAdUsed}) : t('getFreeHelper', {name: t(cfg.name)})}
-                                </Text>
-                            </View>
-                        </LinearGradient>
+                            style={styles.adGradient}
+                        />
+                        <Text allowFontScaling={false} style={styles.adIcon}>📺</Text>
+                        <View>
+                            <Text allowFontScaling={false} style={[styles.adTitle, adDisabled && {color: 'rgba(255,255,255,0.5)'}]}>
+                                {adDisabled ? t('adLimitReached') : t('watchAd')}
+                            </Text>
+                            <Text allowFontScaling={false} style={[styles.adSub, adDisabled && {color: 'rgba(255,255,255,0.35)'}]}>
+                                {adDisabled ? t('adsUsed', {used: watchAdUsed}) : t('getFreeHelper', {name: t(cfg.name)})}
+                            </Text>
+                        </View>
                     </TouchableOpacity>
                 </Animated.View>
                 )}
@@ -210,14 +211,14 @@ function BuyHelperModal({visible, helperType, coins, watchAdUsed, onBuy, onWatch
                         accessibilityState={{disabled: !canAfford}}
                     >
                         <LinearGradient
+                            pointerEvents="none"
                             colors={canAfford ? [GRADIENT_LIGHT, GRADIENT_DARK] : ['#555', '#333']}
                             start={{x: 0, y: 0}}
                             end={{x: 1, y: 0}}
                             style={styles.buyBtn}
-                        >
-                            <Coin width={16} height={16}/>
-                            <Text allowFontScaling={false} style={styles.buyBtnText}>{t('buy')}  {cfg.price}</Text>
-                        </LinearGradient>
+                        />
+                        <Coin width={16} height={16}/>
+                        <Text allowFontScaling={false} style={styles.buyBtnText}>{t('buy')}  {cfg.price}</Text>
                     </TouchableOpacity>
                 </View>
 
@@ -357,6 +358,10 @@ const styles = StyleSheet.create({
         height: vs(48),
         paddingHorizontal: ms(18),
         borderRadius: ms(16),
+        overflow: 'hidden',
+    },
+    adGradient: {
+        ...StyleSheet.absoluteFillObject,
     },
     adIcon: {
         fontSize: ms(28),
@@ -395,16 +400,16 @@ const styles = StyleSheet.create({
     },
     buyWrap: {
         flex: 2,
-        borderRadius: ms(16),
-        overflow: 'hidden',
-    },
-    buyBtn: {
         height: vs(48),
-        borderRadius: ms(16),
         alignItems: 'center',
         flexDirection: 'row',
         justifyContent: 'center',
         gap: ms(6),
+        borderRadius: ms(16),
+        overflow: 'hidden',
+    },
+    buyBtn: {
+        ...StyleSheet.absoluteFillObject,
     },
     buyBtnText: {
         color: WHITE,

@@ -3,9 +3,13 @@ import {DARK_PURPLE, GOLD} from '../../../constants/colors.ts';
 import {ms, vs} from '../../../utils/responsive.ts';
 
 export default StyleSheet.create({
+    // Full-width via the FlatList cell; padding lives here so the gradient can be
+    // an absolute-fill background — a LinearGradient sized by its padded content
+    // collapses to its intrinsic width and overflows the screen on iOS Fabric.
     card: {
-        marginHorizontal: ms(10),
+        width: '100%',
         marginBottom: ms(16),
+        padding: ms(18),
         borderRadius: ms(22),
         overflow: 'hidden',
         elevation: 10,
@@ -15,7 +19,7 @@ export default StyleSheet.create({
         shadowRadius: 10,
     },
     cardInner: {
-        padding: ms(18),
+        ...StyleSheet.absoluteFillObject,
     },
     header: {
         flexDirection: 'row',

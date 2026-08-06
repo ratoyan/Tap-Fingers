@@ -407,19 +407,19 @@ function Welcome() {
                                     activeOpacity={0.85}
                                 >
                                     <LinearGradient
+                                        pointerEvents="none"
                                         colors={[PURPLE_DARK, GRADIENT_LIGHT]}
                                         start={{x: 0, y: 0}}
                                         end={{x: 1, y: 1}}
                                         style={styles.primaryGradient}
-                                    >
-                                        {busy
-                                            ? <ActivityIndicator color="#fff" />
-                                            : (
-                                                <Text allowFontScaling={false} style={styles.primaryText}>
-                                                    {mode === 'register' ? t('createAccount') : t('signIn')}
-                                                </Text>
-                                            )}
-                                    </LinearGradient>
+                                    />
+                                    {busy
+                                        ? <ActivityIndicator color="#fff" />
+                                        : (
+                                            <Text allowFontScaling={false} style={styles.primaryText}>
+                                                {mode === 'register' ? t('createAccount') : t('signIn')}
+                                            </Text>
+                                        )}
                                 </TouchableOpacity>
                             </Animated.View>
 

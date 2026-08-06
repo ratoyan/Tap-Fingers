@@ -146,14 +146,14 @@ export default function WatchAdModal({visible, onClose, onCollect}: WatchAdModal
                                 accessibilityLabel={t('watchAd')}
                             >
                                 <LinearGradient
+                                    pointerEvents="none"
                                     colors={['#f7971e', '#ffd200']}
                                     start={{x: 0, y: 0}} end={{x: 1, y: 0}}
                                     style={styles.yesBtn}
-                                >
-                                    <Text allowFontScaling={false} style={styles.yesBtnText}>
-                                        {loading ? '…' : t('watchAd')}
-                                    </Text>
-                                </LinearGradient>
+                                />
+                                <Text allowFontScaling={false} style={styles.yesBtnText}>
+                                    {loading ? '…' : t('watchAd')}
+                                </Text>
                             </TouchableOpacity>
                         </View>
                     </>
@@ -231,7 +231,7 @@ const styles = StyleSheet.create({
         borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center',
     },
     noBtnText: {color: WHITE_100, fontSize: ms(15), fontWeight: '600'},
-    yesWrap: {flex: 2, borderRadius: ms(16), overflow: 'hidden', shadowColor: GOLD, shadowOffset: {width: 0, height: 4}, shadowOpacity: 0.5, shadowRadius: 10, elevation: 8},
-    yesBtn: {height: vs(50), alignItems: 'center', justifyContent: 'center', borderRadius: ms(16)},
+    yesWrap: {flex: 2, height: vs(50), alignItems: 'center', justifyContent: 'center', borderRadius: ms(16), overflow: 'hidden', shadowColor: GOLD, shadowOffset: {width: 0, height: 4}, shadowOpacity: 0.5, shadowRadius: 10, elevation: 8},
+    yesBtn: {...StyleSheet.absoluteFillObject},
     yesBtnText: {color: DARK_PURPLE, fontSize: ms(15), fontWeight: '900'},
 });

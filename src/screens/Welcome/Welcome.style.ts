@@ -122,18 +122,21 @@ export default StyleSheet.create({
     primaryButton: {
         width: '100%',
         marginTop: vs(6),
+        height: vs(54),
+        alignItems: 'center',
+        justifyContent: 'center',
         borderRadius: ms(18),
+        overflow: 'hidden',
         shadowColor: GRADIENT_LIGHT,
         shadowOffset: {width: 0, height: 6},
         shadowOpacity: 0.5,
         shadowRadius: 12,
         elevation: 8,
     },
+    // Absolute-fill background: a LinearGradient sized by its content collapses
+    // (clipping the label) on iOS Fabric, so layout lives on the button above.
     primaryGradient: {
-        alignItems: 'center',
-        justifyContent: 'center',
-        height: vs(54),
-        borderRadius: ms(18),
+        ...StyleSheet.absoluteFillObject,
     },
     primaryText: {
         fontSize: ms(17),

@@ -7,7 +7,13 @@ import {ms, vs} from '../../utils/responsive.ts';
 const BLOCK_GAP = vs(14);
 
 export default StyleSheet.create({
+    // Full-bleed gradient background — no padding here, or on iOS (new arch)
+    // it sizes to its padded content and leaves white side gutters.
     container: {
+        flex: 1,
+    },
+    // Side padding lives on an inner view so the gradient still fills the width.
+    content: {
         flex: 1,
         paddingHorizontal: HORIZONAL_OFFSET,
     },
@@ -87,9 +93,14 @@ export default StyleSheet.create({
     actionSpacer: {
         height: vs(10),
     },
+    // Layout lives on the touchable itself; the gradient is an absolute-fill
+    // background (a LinearGradient sized by its content collapses on iOS Fabric).
     actionButton: {
         width: '100%',
         marginTop: vs(2),
+        height: vs(46),
+        alignItems: 'center',
+        justifyContent: 'center',
         borderRadius: ms(14),
         overflow: 'hidden',
         shadowColor: GRADIENT_LIGHT,
@@ -99,9 +110,7 @@ export default StyleSheet.create({
         elevation: 6,
     },
     actionGradient: {
-        height: vs(46),
-        alignItems: 'center',
-        justifyContent: 'center',
+        ...StyleSheet.absoluteFillObject,
     },
     actionText: {
         color: WHITE,
@@ -175,6 +184,10 @@ export default StyleSheet.create({
     primaryAuthButton: {
         width: '100%',
         marginTop: vs(10),
+        height: vs(54),
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingHorizontal: ms(18),
         borderRadius: ms(16),
         overflow: 'hidden',
         shadowColor: GRADIENT_LIGHT,
@@ -184,10 +197,7 @@ export default StyleSheet.create({
         elevation: 8,
     },
     primaryAuthGradient: {
-        alignItems: 'center',
-        justifyContent: 'center',
-        height: vs(54),
-        paddingHorizontal: ms(18),
+        ...StyleSheet.absoluteFillObject,
     },
     primaryAuthText: {
         color: WHITE,
@@ -234,17 +244,18 @@ export default StyleSheet.create({
     },
     deleteButton: {
         width: '100%',
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: vs(13),
+        paddingHorizontal: ms(16),
+        minHeight: vs(58),
         borderRadius: ms(18),
         borderWidth: 1,
         borderColor: 'rgba(255,107,110,0.45)',
         overflow: 'hidden',
     },
     deleteGradient: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingVertical: vs(13),
-        paddingHorizontal: ms(16),
-        minHeight: vs(58),
+        ...StyleSheet.absoluteFillObject,
     },
     deleteIconBadge: {
         width: ms(34),

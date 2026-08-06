@@ -99,7 +99,11 @@ export default StyleSheet.create({
     },
     confirmTouchable: {
         flex: 1,
+        height: vs(48),
+        alignItems: 'center',
+        justifyContent: 'center',
         borderRadius: ms(14),
+        overflow: 'hidden',
         shadowColor: GRADIENT_LIGHT,
         shadowOffset: {width: 0, height: 4},
         shadowOpacity: 0.5,
@@ -107,10 +111,7 @@ export default StyleSheet.create({
         elevation: 6,
     },
     confirmButton: {
-        height: vs(48),
-        borderRadius: ms(14),
-        alignItems: 'center',
-        justifyContent: 'center',
+        ...StyleSheet.absoluteFillObject,
     },
     buttonText: {
         fontSize: ms(15),

@@ -224,7 +224,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#0a0018',
         // Layout moved here off the gradient (see JSX): a content-sized gradient
         // collapses its height on iOS Fabric and clips the label.
-        width: ms(72),
+        width: ms(80),
         paddingTop: vs(11),
         paddingBottom: vs(9),
         alignItems: 'center',

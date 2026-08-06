@@ -277,7 +277,9 @@ export default StyleSheet.create({
         position: 'absolute',
         top: 0,
         left: '50%',
-        transform: [{translateX: -50}],
+        // Percentage translate centres the pill regardless of the number's
+        // width (a fixed -50 assumed a ~100px pill and left it off-centre).
+        transform: [{translateX: '-50%'}],
         paddingHorizontal: ms(12),
         height: vs(32),
         borderRadius: 999,
@@ -285,6 +287,12 @@ export default StyleSheet.create({
         shadowRadius: 10,
         elevation: 8,
         zIndex: 1,
+    },
+    // Absolute-fill gradient background so the level number isn't clipped by a
+    // content-sized LinearGradient on iOS Fabric.
+    levelBg: {
+        ...StyleSheet.absoluteFillObject,
+        borderRadius: 999,
     },
     levelIcon: {
         fontSize: ms(16),

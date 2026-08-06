@@ -1,5 +1,5 @@
 ﻿import React from "react";
-import {Text} from "react-native";
+import {Text, View} from "react-native";
 import {useSafeAreaInsets} from "react-native-safe-area-context";
 import {useTranslation} from "react-i18next";
 
@@ -18,16 +18,18 @@ function Level({level = 1}: LevelProps) {
     const {t} = useTranslation();
 
     return (
-        <LinearGradient
-            colors={[PURPLE_DARK, GRADIENT_LIGHT]}
-            start={{x: 0, y: 0}}
-            end={{x: 1, y: 1}}
-            style={[styles.levelContainer, {top: insets.top + TOP_OFFSET + 30}]}
-        >
+        <View style={[styles.levelContainer, {top: insets.top + TOP_OFFSET + 30}]}>
+            <LinearGradient
+                pointerEvents="none"
+                colors={[PURPLE_DARK, GRADIENT_LIGHT]}
+                start={{x: 0, y: 0}}
+                end={{x: 1, y: 1}}
+                style={styles.levelBg}
+            />
             <Text allowFontScaling={false} style={styles.levelIcon}>⚡</Text>
             <Text allowFontScaling={false} style={styles.levelLabel}>{t('lvlShort')}</Text>
             <Text allowFontScaling={false} style={styles.level}>{level}</Text>
-        </LinearGradient>
+        </View>
     );
 }
 

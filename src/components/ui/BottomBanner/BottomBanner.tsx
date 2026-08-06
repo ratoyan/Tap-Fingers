@@ -1,9 +1,20 @@
 import React, {useEffect, useState} from 'react';
 import {StyleSheet, useWindowDimensions, View} from 'react-native';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {BannerAdSize, BannerView} from 'yandex-mobile-ads';
 import {AD_UNIT_BANNER} from '../../../utils/ads.ts';
 import {useConfigStore} from '../../../store/configStore.ts';
-import {DARK_PURPLE} from '../../../constants/colors.ts';
+import {DARK_PURPLE, PURPLE} from '../../../constants/colors.ts';
+import {vs} from '../../../utils/responsive.ts';
+
+// Screens that need the full area — the banner hides itself here.
+const HIDDEN_ROUTES = ['Play'];
+
+interface BottomBannerProps {
+    // Current route name (from App's NavigationContainer) so the banner can
+    // hide on the Play screen. Undefined until the navigator is ready.
+    currentRoute?: string;
+}
 
 // Persistent anchored banner pinned to the bottom of the app. Rendered once in
 // App.tsx as a sibling of the navigator, so it stays put across screen changes.
@@ -19,12 +30,13 @@ import {DARK_PURPLE} from '../../../constants/colors.ts';
 
 // Max banner height in dp. 50 is the smallest height Yandex serves for an
 // adaptive inline banner; raise it if the ad strip looks too cramped.
-const BANNER_MAX_HEIGHT = 50;
+const BANNER_MAX_HEIGHT = 60;
 
-export default function BottomBanner() {
+export default function BottomBanner({currentRoute}: BottomBannerProps) {
     const [loaded, setLoaded] = useState(false);
     const [adSize, setAdSize] = useState<BannerAdSize | null>(null);
     const {width} = useWindowDimensions();
+    const insets = useSafeAreaInsets();
     // Respect the admin global ad switch — same flag that hides the "watch ad"
     // buttons. When ads are off, render nothing at all.
     const adsEnabled = useConfigStore(s => s.adsEnabled);
@@ -49,9 +61,15 @@ export default function BottomBanner() {
     }, [adsEnabled, width]);
 
     if (!adsEnabled || !adSize) return null;
+    // No banner on the game screen — it needs the whole play area.
+    if (currentRoute && HIDDEN_ROUTES.includes(currentRoute)) return null;
 
     return (
-        <View style={loaded ? styles.wrap : styles.hidden}>
+        <View
+            style={loaded
+                ? [styles.wrap, {paddingTop: vs(8), paddingBottom: insets.bottom + vs(6)}]
+                : styles.hidden}
+        >
             <BannerView
                 size={adSize}
                 adRequest={{adUnitId: AD_UNIT_BANNER}}
@@ -64,7 +82,7 @@ export default function BottomBanner() {
 
 const styles = StyleSheet.create({
     wrap: {
-        backgroundColor: DARK_PURPLE,
+        backgroundColor: PURPLE,
         alignItems: 'center',
         justifyContent: 'center',
     },

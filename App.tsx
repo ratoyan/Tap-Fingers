@@ -1,6 +1,7 @@
 import React, {useEffect, useState} from 'react';
 import {ActivityIndicator, AppState, Platform, View} from 'react-native';
 import {NavigationContainer} from "@react-navigation/native";
+import {SafeAreaProvider} from "react-native-safe-area-context";
 // @ts-ignore
 import VersionCheck from 'react-native-version-check';
 
@@ -31,6 +32,8 @@ function App() {
     const [splashDone, setSplashDone] = useState(false);
     const [showUpdate, setShowUpdate] = useState(false);
     const [storeUrl,   setStoreUrl]   = useState(STORE_URL);
+    // Current route name, so the bottom banner can hide itself on Play.
+    const [currentRoute, setCurrentRoute] = useState<string | undefined>(undefined);
 
     const authStatus = useAuthStore(s => s.status);
     const bootstrap  = useAuthStore(s => s.bootstrap);
@@ -132,14 +135,20 @@ function App() {
         // Column layout: the navigator fills the screen and BottomBanner sits
         // below it, so the banner never overlaps screen content — it reserves
         // its own strip at the very bottom (and collapses when there's no ad).
-        <View style={{flex: 1, backgroundColor: DARK_PURPLE}}>
-            <NavigationContainer ref={navigationRef}>
-                <StackNavigator initialRouteName={authStatus === 'authed' ? 'Home' : 'Welcome'}/>
-                <UpdateModal visible={showUpdate} storeUrl={storeUrl}/>
-                <NoticeModal/>
-            </NavigationContainer>
-            <BottomBanner/>
-        </View>
+        <SafeAreaProvider>
+            <View style={{flex: 1, backgroundColor: DARK_PURPLE}}>
+                <NavigationContainer
+                    ref={navigationRef}
+                    onReady={() => setCurrentRoute(navigationRef.getCurrentRoute()?.name)}
+                    onStateChange={() => setCurrentRoute(navigationRef.getCurrentRoute()?.name)}
+                >
+                    <StackNavigator initialRouteName={authStatus === 'authed' ? 'Home' : 'Welcome'}/>
+                    <UpdateModal visible={showUpdate} storeUrl={storeUrl}/>
+                    <NoticeModal/>
+                </NavigationContainer>
+                <BottomBanner currentRoute={currentRoute}/>
+            </View>
+        </SafeAreaProvider>
     );
 }
 

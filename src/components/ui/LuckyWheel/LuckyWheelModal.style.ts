@@ -24,6 +24,11 @@ export default StyleSheet.create({
         borderColor:       'rgba(255,215,0,0.4)',
         overflow:          'hidden',
     },
+    // Absolute-fill gradient background for the card (see LuckyWheelModal.tsx).
+    cardBg: {
+        ...StyleSheet.absoluteFillObject,
+        borderRadius: 32,
+    },
 
     // ── Header ────────────────────────────────────────────────────────────────
     title: {
@@ -233,16 +238,17 @@ export default StyleSheet.create({
     // ── Close button ──────────────────────────────────────────────────────────
     closeButton: {
         marginTop:   18,
+        paddingVertical:   11,
+        paddingHorizontal: 48,
+        alignItems:        'center',
         borderRadius: 24,
         borderWidth:  1,
         borderColor:  'rgba(255,215,0,0.35)',
         overflow:     'hidden',
     },
+    // Absolute-fill background so the label isn't clipped by a collapsed gradient.
     closeGradient: {
-        paddingVertical:   11,
-        paddingHorizontal: 48,
-        borderRadius:      24,
-        alignItems:        'center',
+        ...StyleSheet.absoluteFillObject,
     },
     closeText: {
         color:         'rgba(255,215,0,0.75)',

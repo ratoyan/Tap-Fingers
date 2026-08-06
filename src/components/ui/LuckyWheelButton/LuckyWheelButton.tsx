@@ -142,31 +142,35 @@ export default function LuckyWheelButton({canSpin, top, onPress}: LuckyWheelButt
                 >
                     <View>
                     <Animated.View style={styles.outerRing}>
+                        {/* Absolute-fill background: the layout (width/padding)
+                            lives on outerRing so the gradient can't collapse its
+                            own height and clip the SPIN label off the bottom on
+                            iOS Fabric. */}
                         <LinearGradient
+                            pointerEvents="none"
                             colors={['#3a0072', '#1e0040', '#0a0018']}
                             start={{x: 0, y: 0}}
                             end={{x: 1, y: 1}}
                             style={styles.gradient}
-                        >
-                            {/* Glossy top sheen for a polished, glassy finish. */}
-                            <LinearGradient
-                                colors={['rgba(255,255,255,0.20)', 'rgba(255,255,255,0)']}
-                                style={styles.sheen}
-                                pointerEvents="none"
-                            />
-                            {/* Only the wheel turns. The spinner layer is a
-                                square whose centre is the hub, so `rotate`
-                                pivots exactly there; the stand sits in flow on
-                                top of it and never moves. */}
-                            <View style={styles.wheelIcon}>
-                                <Animated.View style={[styles.wheelSpinner, {transform: [{rotate}]}]}>
-                                    <FerrisWheelRim size={WHEEL_SIZE}/>
-                                </Animated.View>
-                                <FerrisWheelStand size={WHEEL_SIZE}/>
-                            </View>
-                            <View style={styles.divider}/>
-                            <Text allowFontScaling={false} style={styles.label}>{t('spinShort')}</Text>
-                        </LinearGradient>
+                        />
+                        {/* Glossy top sheen for a polished, glassy finish. */}
+                        <LinearGradient
+                            colors={['rgba(255,255,255,0.20)', 'rgba(255,255,255,0)']}
+                            style={styles.sheen}
+                            pointerEvents="none"
+                        />
+                        {/* Only the wheel turns. The spinner layer is a
+                            square whose centre is the hub, so `rotate`
+                            pivots exactly there; the stand sits in flow on
+                            top of it and never moves. */}
+                        <View style={styles.wheelIcon}>
+                            <Animated.View style={[styles.wheelSpinner, {transform: [{rotate}]}]}>
+                                <FerrisWheelRim size={WHEEL_SIZE}/>
+                            </Animated.View>
+                            <FerrisWheelStand size={WHEEL_SIZE}/>
+                        </View>
+                        <View style={styles.divider}/>
+                        <Text allowFontScaling={false} style={styles.label}>{t('spinShort')}</Text>
                     </Animated.View>
 
                     {/* Sibling, not a child: outerRing is overflow:hidden, so an
@@ -218,6 +222,13 @@ const styles = StyleSheet.create({
         borderColor: 'rgba(255,215,0,0.45)',
         overflow: 'hidden',
         backgroundColor: '#0a0018',
+        // Layout moved here off the gradient (see JSX): a content-sized gradient
+        // collapses its height on iOS Fabric and clips the label.
+        width: ms(72),
+        paddingTop: vs(11),
+        paddingBottom: vs(9),
+        alignItems: 'center',
+        gap: vs(4),
     },
     glowRing: {
         ...StyleSheet.absoluteFillObject,
@@ -226,11 +237,7 @@ const styles = StyleSheet.create({
         borderColor: 'rgba(255,215,0,1)',
     },
     gradient: {
-        width: ms(72),
-        paddingTop: vs(11),
-        paddingBottom: vs(9),
-        alignItems: 'center',
-        gap: vs(4),
+        ...StyleSheet.absoluteFillObject,
     },
     sheen: {
         position: 'absolute',

@@ -128,7 +128,8 @@
       "Bash(python3 -c \"import idb\")",
       "Bash(osascript -e 'tell application \"System Events\" to tell process \"Simulator\" to get {position, size} of window 1')",
       "Bash(osascript -e 'tell application \"Simulator\" to get bounds of window 1')",
-      "Bash(brew --version)"
+      "Bash(brew --version)",
+      "Bash(python3 -c \"from PIL import Image; Image.open\\('home_spin.png'\\).crop\\(\\(20,200,320,560\\)\\).save\\('crop_spin2.png'\\)\")"
     ]
   }
 }

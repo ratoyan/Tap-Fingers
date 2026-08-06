@@ -516,11 +516,17 @@ export default function LuckyWheelModal({
                 ))}
 
                 {contentReady && <Animated.View style={[styles.cardWrapper, {transform: [{scale: modalScale}]}]}>
-                    <LinearGradient
-                        colors={['#1e0040', '#0a0018', '#1a0038']}
-                        start={{x: 0, y: 0}} end={{x: 1, y: 1}}
-                        style={styles.card}
-                    >
+                    <View style={styles.card}>
+                        {/* Absolute-fill background: a content-sized LinearGradient
+                            collapses on iOS Fabric — its paint/height came out
+                            smaller than the card, leaving a mismatched inner frame
+                            and clipping the close button off the bottom. */}
+                        <LinearGradient
+                            pointerEvents="none"
+                            colors={['#1e0040', '#0a0018', '#1a0038']}
+                            start={{x: 0, y: 0}} end={{x: 1, y: 1}}
+                            style={styles.cardBg}
+                        />
                         {/* Glossy shine sweep across the card. */}
                         <Animated.View
                             pointerEvents="none"
@@ -762,15 +768,15 @@ export default function LuckyWheelModal({
                             accessibilityLabel={t('close')}
                         >
                             <LinearGradient
+                                pointerEvents="none"
                                 colors={['rgba(255,215,0,0.18)', 'rgba(255,215,0,0.06)']}
                                 start={{x: 0, y: 0}} end={{x: 1, y: 1}}
                                 style={styles.closeGradient}
-                            >
-                                <Text allowFontScaling={false} style={styles.closeText}>{t('close')}</Text>
-                            </LinearGradient>
+                            />
+                            <Text allowFontScaling={false} style={styles.closeText}>{t('close')}</Text>
                         </TouchableOpacity>
 
-                    </LinearGradient>
+                    </View>
                 </Animated.View>}
             </Animated.View>
         </Modal>

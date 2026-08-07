@@ -34,6 +34,7 @@ const StackNavigator = ({initialRouteName = 'Welcome'}: StackNavigatorProps) => 
                 component={Play}
                 options={{
                     animation: 'simple_push',
+                    gestureEnabled: false
                 }}
             />
             <Stack.Screen

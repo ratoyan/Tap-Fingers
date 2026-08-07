@@ -1,6 +1,5 @@
 import React, {useEffect, useState} from 'react';
 import {StyleSheet, useWindowDimensions, View} from 'react-native';
-import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {BannerAdSize, BannerView} from 'yandex-mobile-ads';
 import {AD_UNIT_BANNER} from '../../../utils/ads.ts';
 import {useConfigStore} from '../../../store/configStore.ts';
@@ -30,13 +29,12 @@ interface BottomBannerProps {
 
 // Max banner height in dp. 50 is the smallest height Yandex serves for an
 // adaptive inline banner; raise it if the ad strip looks too cramped.
-const BANNER_MAX_HEIGHT = 60;
+const BANNER_MAX_HEIGHT = 80;
 
 export default function BottomBanner({currentRoute}: BottomBannerProps) {
     const [loaded, setLoaded] = useState(false);
     const [adSize, setAdSize] = useState<BannerAdSize | null>(null);
     const {width} = useWindowDimensions();
-    const insets = useSafeAreaInsets();
     // Respect the admin global ad switch — same flag that hides the "watch ad"
     // buttons. When ads are off, render nothing at all.
     const adsEnabled = useConfigStore(s => s.adsEnabled);
@@ -67,7 +65,7 @@ export default function BottomBanner({currentRoute}: BottomBannerProps) {
     return (
         <View
             style={loaded
-                ? [styles.wrap, {paddingTop: vs(8), paddingBottom: insets.bottom + vs(6)}]
+                ? [styles.wrap, {paddingTop: vs(8)}]
                 : styles.hidden}
         >
             <BannerView

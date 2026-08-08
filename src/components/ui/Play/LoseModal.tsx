@@ -47,11 +47,13 @@ interface LoseModalProps {
     onBack: () => void;
     onWatchAd: () => void;
     canWatchAd?: boolean;
-    // Admin global ad switch — when false the whole watch-ad-for-heart block is hidden.
+    // Admin global ad switch — when false the whole watch-ad-for-heart block is
+    // hidden. Off unless a caller passes the flag, matching the store default:
+    // ads are shown only once the backend has said so.
     adsEnabled?: boolean;
 }
 
-function LoseModal({visible, score, onRetry, onBack, onWatchAd, canWatchAd = true, adsEnabled = true}: LoseModalProps) {
+function LoseModal({visible, score, onRetry, onBack, onWatchAd, canWatchAd = true, adsEnabled = false}: LoseModalProps) {
     const {t} = useTranslation();
 
     const scaleAnim = useRef(new Animated.Value(0)).current;

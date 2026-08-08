@@ -9,8 +9,12 @@ interface ConfigState {
     levelLength: number;
     setLevelLength: (value: number) => void;
     // Admin-controlled global ad switch (from /game/config). When false the app
-    // hides every "watch ad" affordance. Defaults to true so behaviour is
-    // unchanged until the real config loads.
+    // hides every "watch ad" affordance and the bottom banner. Defaults to
+    // FALSE and is only ever turned on by the backend: until /game/config has
+    // actually answered, the app shows no ads at all. Starting from `true` meant
+    // a cold start (or an offline one, or a config request that never lands)
+    // showed ad buttons the admin may have switched off, then took them away
+    // once the real value arrived — off-by-default can only err the safe way.
     adsEnabled: boolean;
     setAdsEnabled: (value: boolean) => void;
 }
@@ -23,6 +27,6 @@ export const useConfigStore = create<ConfigState>((set) => ({
         set({levelLength: Math.round(value)});
     },
 
-    adsEnabled: true,
+    adsEnabled: false,
     setAdsEnabled: (value: boolean) => set({adsEnabled: !!value}),
 }));

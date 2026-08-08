@@ -73,11 +73,12 @@ interface BuyHelperModalProps {
     onWatchAd: (type: HelperType) => void;
     onClose: () => void;
     // Admin global ad switch — when false the "watch ad" button is hidden
-    // (the coin-purchase option stays available).
+    // (the coin-purchase option stays available). Off unless a caller passes the
+    // flag, matching the store default: ads show only once the backend says so.
     adsEnabled?: boolean;
 }
 
-function BuyHelperModal({visible, helperType, coins, watchAdUsed, onBuy, onWatchAd, onClose, adsEnabled = true}: BuyHelperModalProps) {
+function BuyHelperModal({visible, helperType, coins, watchAdUsed, onBuy, onWatchAd, onClose, adsEnabled = false}: BuyHelperModalProps) {
     const {t} = useTranslation();
     const scaleAnim   = useRef(new Animated.Value(0.8)).current;
     const fadeAnim    = useRef(new Animated.Value(0)).current;

@@ -30,6 +30,13 @@ export interface EndSessionPayload {
     durationSecs: number;
     livesLost: number;
     maxCombo: number;
+    // The level the player actually reached in-game. The server used to derive
+    // this from `taps` alone, which under-counted every run that leaned on bombs
+    // and golden boxes — those advance the on-screen level without a tap each.
+    // Reported, not trusted: /game/end floors it at the taps-derived level and
+    // caps it at the score-derived one, so it can raise a level the tap count
+    // can't explain but not invent one the score can't either.
+    level: number;
     // Helper counts are server-owned now (changed via /player/helpers/*), so the
     // client no longer reports a snapshot here.
 }

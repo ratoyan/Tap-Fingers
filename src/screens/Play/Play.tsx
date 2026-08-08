@@ -620,6 +620,10 @@ export default function Play() {
         // mirrors the live `count` so this stale-closure cleanup reads it too.
         const score = countRef.current;
         const maxCombo = maxComboRef.current;
+        // The level actually reached on screen. The server can only floor this
+        // at what `taps` proves and cap it at what `score` allows — it has no
+        // other way to know a bomb clear or a golden box moved the player up.
+        const level = levelRef.current;
         const livesLost = Math.min(7, emptyHeartCountRef.current);
         const durationSecs = Math.max(
             5,
@@ -634,7 +638,7 @@ export default function Play() {
         // from refs so it's correct even in the stale-closure cleanup path.
         useDailyChallengesStore.getState().recordGame({
             coins: score,
-            level: levelRef.current,
+            level,
         });
 
         // `score` is the real in-game score (≥ taps); `taps` is the honest tap
@@ -654,6 +658,7 @@ export default function Play() {
                 durationSecs,
                 livesLost,
                 maxCombo,
+                level,
             }),
         )
             .then(result => patchStats({coins: result.totalCoins}))

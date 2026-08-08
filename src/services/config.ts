@@ -14,7 +14,7 @@ const DEV_HOST = Platform.OS === 'android' ? '10.0.2.2' : 'localhost';
 // TEMP: no local backend is running on :8000, so the dev build talks to
 // production too. Flip this back to `false` to restore normal local dev
 // (http://<DEV_HOST>:8000/api).
-const USE_PROD_IN_DEV = true;
+const USE_PROD_IN_DEV = false;
 
 export const API_BASE_URL =
     __DEV__ && !USE_PROD_IN_DEV

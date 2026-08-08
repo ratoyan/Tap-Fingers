@@ -353,10 +353,12 @@ const styles = StyleSheet.create({
         fontSize: ms(18),
         letterSpacing: 4,
         marginBottom: vs(6),
+        textAlign: 'center',
     },
     mainEmoji: {
         fontSize: ms(64),
         marginBottom: vs(8),
+        textAlign: 'center',
     },
     title: {
         fontSize: ms(34),
@@ -367,6 +369,7 @@ const styles = StyleSheet.create({
         textShadowColor: PURPLE_LIGHT,
         textShadowOffset: {width: 0, height: 0},
         textShadowRadius: 12,
+        textAlign: 'center',
     },
     subtitle: {
         color: WHITE_100,
@@ -393,6 +396,7 @@ const styles = StyleSheet.create({
         letterSpacing: 2,
         textTransform: 'uppercase',
         marginBottom: vs(4),
+        textAlign: 'center',
     },
     scoreRow: {
         flexDirection: 'row',
@@ -403,6 +407,7 @@ const styles = StyleSheet.create({
         color: GOLD,
         fontSize: ms(36),
         fontWeight: '900',
+        textAlign: 'center',
     },
     adBtnWrap: {
         width: '100%',
@@ -430,15 +435,18 @@ const styles = StyleSheet.create({
     },
     adBtnIcon: {
         fontSize: ms(32),
+        textAlign: 'center',
     },
     adBtnTextWrap: {
         flex: 1,
+        alignItems: 'center',
     },
     adBtnTitle: {
         color: DARK_PURPLE,
         fontSize: ms(17),
         fontWeight: '800',
         letterSpacing: 0.3,
+        textAlign: 'center',
     },
     adBtnBadge: {
         flexDirection: 'row',
@@ -449,6 +457,7 @@ const styles = StyleSheet.create({
         color: DARK_PURPLE,
         fontSize: ms(13),
         fontWeight: '700',
+        textAlign: 'center',
     },
     adBtnDisabled: {
         width: '100%',
@@ -466,6 +475,7 @@ const styles = StyleSheet.create({
         color: 'rgba(255,255,255,0.3)',
         fontSize: ms(15),
         fontWeight: '700',
+        textAlign: 'center',
     },
     actions: {
         flexDirection: 'row',
@@ -487,6 +497,7 @@ const styles = StyleSheet.create({
         color: WHITE,
         fontSize: ms(15),
         fontWeight: '600',
+        textAlign: 'center',
     },
     retryWrap: {
         flex: 2,
@@ -506,6 +517,7 @@ const styles = StyleSheet.create({
         fontSize: ms(16),
         fontWeight: '800',
         letterSpacing: 0.3,
+        textAlign: 'center',
     },
     shareWrap: {
         width: '100%',
@@ -538,6 +550,7 @@ const styles = StyleSheet.create({
         fontSize: ms(15),
         fontWeight: '800',
         letterSpacing: 0.4,
+        textAlign: 'center',
     },
 });
 

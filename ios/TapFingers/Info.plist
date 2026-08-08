@@ -35,6 +35,8 @@
 	</dict>
 	<key>NSCameraUsageDescription</key>
 	<string>Used to take a profile photo</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Location may be used by our advertising provider to show more relevant ads. The app itself does not track or store your location.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>Used to save photos</string>
 	<key>NSPhotoLibraryUsageDescription</key>

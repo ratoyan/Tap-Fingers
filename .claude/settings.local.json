@@ -137,7 +137,8 @@
       "Read(//Users/luizamuradyan/Library/Developer/Xcode/DerivedData/**)",
       "Bash(python3 -c \"import Quartz; print\\('quartz ok'\\)\")",
       "Bash(curl -s -X POST \"http://localhost:8081/reload\" -o /dev/null -w \"reload:%{http_code}\\\\n\")",
-      "Bash(grep -iE '\\\\.\\(js|jsx|ts|tsx\\)$')"
+      "Bash(grep -iE '\\\\.\\(js|jsx|ts|tsx\\)$')",
+      "Bash(plutil *)"
     ]
   }
 }

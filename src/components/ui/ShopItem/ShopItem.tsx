@@ -468,14 +468,15 @@ function ShopItem({item, index = 0, handlePress, selected = false, purchased = f
                                 <Text allowFontScaling={false} style={styles.comingSoonPillText}>{t('comingSoonUpper')}</Text>
                             </View>
                         </View>
-                        <LinearGradient
-                            colors={[GRADIENT_LIGHT, GRADIENT_DARK]}
-                            start={{x: 0, y: 0}}
-                            end={{x: 1, y: 0}}
-                            style={styles.comingSoonRibbon}
-                        >
+                        <View style={styles.comingSoonRibbon}>
+                            <LinearGradient
+                                colors={[GRADIENT_LIGHT, GRADIENT_DARK]}
+                                start={{x: 0, y: 0}}
+                                end={{x: 1, y: 0}}
+                                style={styles.comingSoonRibbonBg}
+                            />
                             <Text allowFontScaling={false} style={styles.comingSoonRibbonText}>{t('soon')}</Text>
-                        </LinearGradient>
+                        </View>
                     </>
                 )}
             </TouchableOpacity>

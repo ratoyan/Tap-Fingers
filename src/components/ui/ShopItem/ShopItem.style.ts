@@ -243,10 +243,15 @@ export default StyleSheet.create({
         top: ms(12),
         right: -ms(28),
         width: ms(110),
-        paddingVertical: ms(4),
+        height: ms(22),
         transform: [{rotate: '45deg'}],
         alignItems: 'center',
+        justifyContent: 'center',
+        overflow: 'hidden',
         zIndex: 9,
+    },
+    comingSoonRibbonBg: {
+        ...StyleSheet.absoluteFillObject,
     },
     comingSoonRibbonText: {
         color: '#1a0533',

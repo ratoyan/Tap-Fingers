@@ -129,7 +129,14 @@
       "Bash(osascript -e 'tell application \"System Events\" to tell process \"Simulator\" to get {position, size} of window 1')",
       "Bash(osascript -e 'tell application \"Simulator\" to get bounds of window 1')",
       "Bash(brew --version)",
-      "Bash(python3 -c \"from PIL import Image; Image.open\\('home_spin.png'\\).crop\\(\\(20,200,320,560\\)\\).save\\('crop_spin2.png'\\)\")"
+      "Bash(python3 -c \"from PIL import Image; Image.open\\('home_spin.png'\\).crop\\(\\(20,200,320,560\\)\\).save\\('crop_spin2.png'\\)\")",
+      "Bash(lsof -iTCP:8081 -sTCP:LISTEN -n)",
+      "Bash(/usr/libexec/PlistBuddy -c \"Print CFBundleIdentifier\" ios/TapFingers/Info.plist)",
+      "Bash(curl -s -X POST \"http://localhost:8081/reload\" -o /dev/null -w \"reload_http:%{http_code}\\\\n\")",
+      "Bash(echo \"idb_exit:$?\")",
+      "Read(//Users/luizamuradyan/Library/Developer/Xcode/DerivedData/**)",
+      "Bash(python3 -c \"import Quartz; print\\('quartz ok'\\)\")",
+      "Bash(curl -s -X POST \"http://localhost:8081/reload\" -o /dev/null -w \"reload:%{http_code}\\\\n\")"
     ]
   }
 }

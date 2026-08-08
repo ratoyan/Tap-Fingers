@@ -3,6 +3,7 @@ import { Platform } from 'react-native';
 import { API_BASE_URL } from './config';
 import { tokenManager } from './tokenManager';
 import { emitUnauthorized } from './sessionEvents';
+import { useNetworkStore } from '../store/networkStore';
 
 const api = axios.create({
     baseURL: API_BASE_URL,
@@ -40,10 +41,27 @@ function processQueue(error: any, token: string | null = null) {
 // "No refresh token" instead of the actual error.
 const AUTH_NO_REFRESH = /\/auth\/(login|register|guest|google|apple|refresh)/;
 
+// ── Reachability ──────────────────────────────────────────────────────────────
+// Every request doubles as a connectivity probe, which is why the app needs no
+// polling to notice it went offline: an answer of any kind — even a 500 — proves
+// the connection works, while a rejection carrying no `response` never reached
+// the server at all (no route, DNS failure, or the 12s timeout).
+//
+// A cancelled request says nothing either way: the caller walked away, so it
+// must not be read as a dropped connection.
+function reportReachability(error: any) {
+    if (axios.isCancel?.(error) || error?.code === 'ERR_CANCELED') return;
+    useNetworkStore.getState().setOnline(!!error?.response);
+}
+
 api.interceptors.response.use(
-    res => res,
+    res => {
+        useNetworkStore.getState().setOnline(true);
+        return res;
+    },
     async (error: any) => {
         const original = error.config;
+        reportReachability(error);
 
         const isAuthRoute = AUTH_NO_REFRESH.test(original?.url || '');
         if (error.response?.status !== 401 || original._retry || isAuthRoute) {

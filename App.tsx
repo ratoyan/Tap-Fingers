@@ -14,12 +14,14 @@ import {initAds} from "./src/utils/ads.ts";
 import ScreenStatusBar from "./src/components/ui/ScreenStatusBar/ScreenStatusBar.tsx";
 import UpdateModal from "./src/components/ui/UpdateModal/UpdateModal.tsx";
 import NoticeModal from "./src/components/ui/NoticeModal/NoticeModal.tsx";
+import OfflineModal from "./src/components/ui/OfflineModal/OfflineModal.tsx";
 import Splash from "./src/screens/Splash/Splash.tsx";
 import BottomBanner from "./src/components/ui/BottomBanner/BottomBanner.tsx";
 import {useAuthStore} from "./src/store/authStore.ts";
 import {useGlobalStore} from "./src/store/globalStore.ts";
 import {useDailyChallengesStore} from "./src/store/dailyChallengesStore.ts";
 import {syncGlobalConfig} from "./src/services/configSync.ts";
+import {startConnectivityWatch} from "./src/services/connectivity.ts";
 import {navigationRef} from "./src/navigation/navigationRef.ts";
 import {DARK_PURPLE} from "./src/constants/colors.ts";
 
@@ -91,6 +93,11 @@ function App() {
         return () => sub.remove();
     }, []);
 
+    // Connection watch, for the app's lifetime: NetInfo's native event raises
+    // OfflineModal the instant the device drops the network, and a confirming
+    // request decides when it's safe to take the modal away again.
+    useEffect(startConnectivityWatch, []);
+
     // Also deferred past the splash: needUpdate() hits the store listing over
     // the network and reads the installed package info natively. The modal it
     // raises sits on top of the navigator, so nothing about it needs to be
@@ -145,6 +152,7 @@ function App() {
                     <StackNavigator initialRouteName={authStatus === 'authed' ? 'Home' : 'Welcome'}/>
                     <UpdateModal visible={showUpdate} storeUrl={storeUrl}/>
                     <NoticeModal/>
+                    <OfflineModal/>
                 </NavigationContainer>
                 <BottomBanner currentRoute={currentRoute}/>
             </View>

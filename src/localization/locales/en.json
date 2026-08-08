@@ -250,5 +250,12 @@
   "tapSnowflake": "Tap snowflake for slow motion",
   "tapHeart": "Tap to regain a life",
   "dontTapBomb": "Bomb — do not tap",
-  "dontTapBarrel": "Mine barrel — do not tap"
+  "dontTapBarrel": "Mine barrel — do not tap",
+
+  "offlineTitle": "NO CONNECTION",
+  "offlineMessage": "We can't reach the game right now. Check your Wi-Fi or mobile data — we'll pick up right where you left off.",
+  "offlineAutoRetry": "Reconnecting automatically…",
+  "offlineRetry": "TRY AGAIN",
+  "offlineChecking": "CHECKING…",
+  "offlineDismiss": "Continue offline"
 }

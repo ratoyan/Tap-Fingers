@@ -225,8 +225,9 @@ function LoseModal({visible, score, onRetry, onBack, onWatchAd, canWatchAd = tru
                     </View>
                 </View>
 
-                {/* Watch Ad button — entire block hidden when ads disabled by admin */}
-                {adsEnabled && (canWatchAd ? (
+                {/* Watch Ad button — hidden when ads disabled by admin or the
+                    one-per-game revive has already been spent (canWatchAd false) */}
+                {adsEnabled && canWatchAd && (
                     <Animated.View style={[styles.adBtnWrap, {transform: [{scale: adPulseAnim}]}]}>
                         <TouchableOpacity
                             onPressIn={onWatchAd}
@@ -253,11 +254,7 @@ function LoseModal({visible, score, onRetry, onBack, onWatchAd, canWatchAd = tru
                             </View>
                         </TouchableOpacity>
                     </Animated.View>
-                ) : (
-                    <View style={styles.adBtnDisabled}>
-                        <Text allowFontScaling={false} style={styles.adBtnDisabledText}>📺 {t('watchAd')} (0/2)</Text>
-                    </View>
-                ))}
+                )}
 
                 {/* Retry + Back row */}
                 <View style={styles.actions}>

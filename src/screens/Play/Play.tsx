@@ -519,6 +519,9 @@ export default function Play() {
     const [bombCount, setBombCount] = useState(INITIAL_BOMBS);
     const [combo, setCombo] = useState(0);
     const [watchAdUsed, setWatchAdUsed] = useState(0);
+    // The lose-screen revive ad is offered only once per game: once the player
+    // watches it to continue, losing again shows no "Watch ad" button.
+    const [reviveAdUsed, setReviveAdUsed] = useState(false);
     const [showLevelUp, setShowLevelUp] = useState(false);
     const [shieldCount, setShieldCount] = useState(0);
     const [slowCount, setSlowCount] = useState(0);
@@ -872,6 +875,8 @@ export default function Play() {
         // Revive with a heart only after the rewarded ad is watched to the end.
         const earned = await showRewardedAd();
         if (!earned) return;
+        // Spend the one-per-game revive: no more "Watch ad" on later losses.
+        setReviveAdUsed(true);
         setEmptyHeartCount(prev => Math.max(0, prev - 1));
         setIsLoseModal(false);
         setIsPlaying(true);
@@ -917,6 +922,7 @@ export default function Play() {
         setSlowActive(false);
         setFreezeActive(false);
         setWatchAdUsed(0);
+        setReviveAdUsed(false);
         setIsBossFight(false);
         setBossHP(0);
         setBossMaxHP(0);
@@ -2062,7 +2068,7 @@ export default function Play() {
                 onRetry={onRetry}
                 onBack={onExitConfirm}
                 onWatchAd={onWatchAdLose}
-                canWatchAd={watchAdUsed < 2}
+                canWatchAd={watchAdUsed < 2 && !reviveAdUsed}
                 adsEnabled={adsEnabled}
             />
             <ExitModal visible={isExitModal} onConfirm={onExitConfirm} onCancel={onExitCancel}/>
@@ -2079,7 +2085,7 @@ export default function Play() {
                 onClose={onBuyModalClose}
             />
         </>
-    ), [isLoseModal, count, watchAdUsed, adsEnabled, isExitModal, isMenuModal,
+    ), [isLoseModal, count, watchAdUsed, reviveAdUsed, adsEnabled, isExitModal, isMenuModal,
         isCountdown, buyModal, coins, onRetry, onExitConfirm, onExitCancel,
         onWatchAdLose, onMenuClose, onMenuExit, onCountdownFinish, onBuyHelper,
         onWatchAdHelper, onBuyModalClose]);

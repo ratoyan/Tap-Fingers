@@ -15,32 +15,25 @@ interface NetworkState {
      * before the app has even tried anything.
      */
     online: boolean;
-    /** A probe is in flight — the modal spins its retry button on this. */
-    checking: boolean;
     /**
-     * The player chose to carry on without a connection. Suppresses the modal
-     * until we reconnect, so a dropped signal is reported once rather than
-     * re-interrupting them every time a background request fails.
+     * A confirmation request is in flight. Only guards connectivity.ts against
+     * probing on top of itself — the modal has nothing to press, so it doesn't
+     * read this.
      */
-    dismissed: boolean;
+    checking: boolean;
 
     setOnline: (value: boolean) => void;
     setChecking: (value: boolean) => void;
-    dismiss: () => void;
 }
 
 export const useNetworkStore = create<NetworkState>((set, get) => ({
     online: true,
     checking: false,
-    dismissed: false,
 
     setOnline: (value: boolean) => {
         if (get().online === value) return;   // no-op writes would wake every subscriber
-        // Coming back up also clears the dismissal: the next drop is news again.
-        set(value ? {online: true, dismissed: false} : {online: false});
+        set({online: value});
     },
 
     setChecking: (value: boolean) => set({checking: value}),
-
-    dismiss: () => set({dismissed: true}),
 }));

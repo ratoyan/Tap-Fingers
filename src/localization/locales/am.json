@@ -254,8 +254,5 @@
 
   "offlineTitle": "ԿԱՊ ՉԿԱ",
   "offlineMessage": "Չենք կարողանում կապվել խաղի հետ։ Ստուգեք Wi-Fi-ը կամ բջջային ինտերնետը — կշարունակենք նույն տեղից։",
-  "offlineAutoRetry": "Ավտոմատ վերամիացում…",
-  "offlineRetry": "ԿՐԿԻՆ ՓՈՐՁԵԼ",
-  "offlineChecking": "ՍՏՈՒԳՈՒՄ Է…",
-  "offlineDismiss": "Շարունակել առանց կապի"
+  "offlineAutoRetry": "Ավտոմատ վերամիացում…"
 }

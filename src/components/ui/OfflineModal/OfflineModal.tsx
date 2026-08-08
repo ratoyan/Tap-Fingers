@@ -1,11 +1,10 @@
-import React, {useCallback, useEffect, useRef, useState} from 'react';
-import {Animated, Easing, Modal, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import React, {useEffect, useMemo, useRef} from 'react';
+import {Animated, Easing, Modal, StyleSheet, Text, View} from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import {useTranslation} from 'react-i18next';
 
-import {WIFI_ARC_COUNT, WifiArc, WifiBase} from '../../../assets/icons/WifiOffIcon.tsx';
+import WifiOffIcon, {WIFI_ARC_COUNT} from '../../../assets/icons/WifiOffIcon.tsx';
 import {useNetworkStore} from '../../../store/networkStore.ts';
-import {probeConnection} from '../../../services/connectivity.ts';
 import {playSfx} from '../../../utils/sfx.ts';
 import {haptic} from '../../../utils/haptics.ts';
 import {ms} from '../../../utils/responsive.ts';
@@ -14,31 +13,30 @@ import styles from './OfflineModal.style.ts';
 // Raised whenever the app can't reach the backend (see store/networkStore).
 // Mounted once in App.tsx, above the navigator, so it covers whichever screen
 // the player happens to be on.
+//
+// There is nothing to press. The connection isn't something the player can fix
+// from in here, and services/connectivity.ts is already watching for it to come
+// back — so the modal simply states what's happening and takes itself away the
+// moment the store says we're through again.
 
 const ICON_SIZE = ms(74);
 
-// How long the retry button keeps spinning at minimum. A hard offline fails in
-// about a millisecond — without this the press would look like it did nothing.
-const MIN_SPIN_MS = 700;
+// The signal arcs sit back in a muted lilac and the slash comes forward in a
+// saturated one, so the "blocked" stroke stays the loudest thing in the mark
+// even while the arcs sweep up to full brightness behind it.
+const MARK_COLOR  = '#C79BE3';
+const SLASH_COLOR = '#E45BFF';
 
 export default function OfflineModal() {
     const {t} = useTranslation();
 
-    const online    = useNetworkStore(s => s.online);
-    const dismissed = useNetworkStore(s => s.dismissed);
-    const dismiss   = useNetworkStore(s => s.dismiss);
-
-    const visible = !online && !dismissed;
-
-    const [retrying, setRetrying] = useState(false);
-    const retryTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const online = useNetworkStore(s => s.online);
 
     const scaleAnim   = useRef(new Animated.Value(0.7)).current;
     const opacityAnim = useRef(new Animated.Value(0)).current;
     const shineAnim   = useRef(new Animated.Value(-1)).current;
     const haloAnim    = useRef(new Animated.Value(1)).current;
     const dotAnim     = useRef(new Animated.Value(0)).current;
-    const spinAnim    = useRef(new Animated.Value(0)).current;
     // One value per signal arc — they light up from the inside out, so the mark
     // reads as "still searching" rather than as a dead icon.
     const arcAnims    = useRef(
@@ -49,10 +47,9 @@ export default function OfflineModal() {
     const haloLoop  = useRef<Animated.CompositeAnimation | null>(null);
     const dotLoop   = useRef<Animated.CompositeAnimation | null>(null);
     const arcLoop   = useRef<Animated.CompositeAnimation | null>(null);
-    const spinLoop  = useRef<Animated.CompositeAnimation | null>(null);
 
     useEffect(() => {
-        if (!visible) {
+        if (online) {
             scaleAnim.setValue(0.7);
             opacityAnim.setValue(0);
             shineLoop.current?.stop();
@@ -96,51 +93,38 @@ export default function OfflineModal() {
         dotLoop.current.start();
 
         // Inside-out sweep: each arc brightens a beat after the one below it.
+        // These drive an SVG prop rather than a View style, which the native
+        // driver can't take — three values on a screen where the game is
+        // stopped anyway, so the JS thread carries it comfortably.
         arcLoop.current = Animated.loop(
             Animated.stagger(210, arcAnims.map(a => Animated.sequence([
-                Animated.timing(a, {toValue: 1, duration: 420, easing: Easing.out(Easing.quad), useNativeDriver: true}),
-                Animated.timing(a, {toValue: 0, duration: 640, easing: Easing.in(Easing.quad),  useNativeDriver: true}),
+                Animated.timing(a, {toValue: 1, duration: 420, easing: Easing.out(Easing.quad), useNativeDriver: false}),
+                Animated.timing(a, {toValue: 0, duration: 640, easing: Easing.in(Easing.quad),  useNativeDriver: false}),
             ]))),
         );
         arcLoop.current.start();
-        // Everything past `visible` is a useRef value and so never changes
+        // Everything past `online` is a useRef value and so never changes
         // identity — listed only to keep the exhaustive-deps rule quiet.
-    }, [visible, arcAnims, dotAnim, haloAnim, opacityAnim, scaleAnim, shineAnim]);
-
-    // Retry spinner, only while a probe the player asked for is in flight.
-    useEffect(() => {
-        spinLoop.current?.stop();
-        if (!retrying) {
-            spinAnim.setValue(0);
-            return;
-        }
-        spinAnim.setValue(0);
-        spinLoop.current = Animated.loop(
-            Animated.timing(spinAnim, {toValue: 1, duration: 750, easing: Easing.linear, useNativeDriver: true}),
-        );
-        spinLoop.current.start();
-    }, [retrying, spinAnim]);
-
-    useEffect(() => () => {
-        if (retryTimer.current) clearTimeout(retryTimer.current);
-    }, []);
-
-    const onRetry = useCallback(async () => {
-        if (retrying) return;
-        haptic('equip');
-        setRetrying(true);
-        const startedAt = Date.now();
-        await probeConnection();
-        const left = Math.max(0, MIN_SPIN_MS - (Date.now() - startedAt));
-        retryTimer.current = setTimeout(() => setRetrying(false), left);
-    }, [retrying]);
+    }, [online, arcAnims, dotAnim, haloAnim, opacityAnim, scaleAnim, shineAnim]);
 
     const shineTranslate = shineAnim.interpolate({inputRange: [-1, 2], outputRange: [-320, 320]});
-    const spinRotate     = spinAnim.interpolate({inputRange: [0, 1], outputRange: ['0deg', '360deg']});
     const dotOpacity     = dotAnim.interpolate({inputRange: [0, 1], outputRange: [0.25, 1]});
+    // Built once: re-interpolating on every render would hand the SVG a new
+    // node each frame the modal re-renders.
+    const arcOpacities   = useMemo(
+        () => arcAnims.map(a => a.interpolate({inputRange: [0, 1], outputRange: [0.16, 0.9]})),
+        [arcAnims],
+    );
 
     return (
-        <Modal visible={visible} transparent animationType="none" onRequestClose={dismiss}>
+        <Modal
+            visible={!online}
+            transparent
+            animationType="none"
+            // Nothing dismisses this but the connection itself, so the Android
+            // back button is deliberately a no-op rather than a way out.
+            onRequestClose={() => {}}
+        >
             <View style={styles.backdrop}>
                 <View style={styles.cardPress}>
                     <Animated.View
@@ -149,7 +133,7 @@ export default function OfflineModal() {
                         <View style={styles.card}>
                             <LinearGradient
                                 pointerEvents="none"
-                                colors={['#2b0630', '#150320', '#2a0a34']}
+                                colors={['#1e0040', '#0d0020', '#1a0038']}
                                 start={{x: 0, y: 0}}
                                 end={{x: 1, y: 1}}
                                 style={StyleSheet.absoluteFill}
@@ -170,31 +154,16 @@ export default function OfflineModal() {
                                     pointerEvents="none"
                                     style={[styles.iconHalo, {transform: [{scale: haloAnim}]}]}
                                 />
-                                <View style={styles.iconRing}>
-                                    {arcAnims.map((anim, i) => (
-                                        <Animated.View
-                                            key={`arc-${i}`}
-                                            pointerEvents="none"
-                                            style={[styles.iconLayer, {
-                                                opacity: anim.interpolate({
-                                                    inputRange: [0, 1],
-                                                    outputRange: [0.16, 0.9],
-                                                }),
-                                            }]}
-                                        >
-                                            <WifiArc index={i} size={ICON_SIZE} color="#FFB3C4"/>
-                                        </Animated.View>
-                                    ))}
-                                    <View pointerEvents="none" style={styles.iconLayer}>
-                                        <WifiBase
-                                            size={ICON_SIZE}
-                                            color="#FFB3C4"
-                                            slashColor="#ff4d6d"
-                                            // Matches the ring behind the mark, so the slash
-                                            // cuts a clean gap through the arcs.
-                                            cutColor="#340c27"
-                                        />
-                                    </View>
+                                <View style={styles.iconRing} pointerEvents="none">
+                                    <WifiOffIcon
+                                        size={ICON_SIZE}
+                                        color={MARK_COLOR}
+                                        slashColor={SLASH_COLOR}
+                                        // Matches the ring behind the mark, so the slash
+                                        // cuts a clean gap through the arcs.
+                                        cutColor="#2a0a45"
+                                        arcOpacities={arcOpacities}
+                                    />
                                 </View>
                             </View>
 
@@ -203,7 +172,7 @@ export default function OfflineModal() {
                             </Text>
 
                             <LinearGradient
-                                colors={['rgba(255,255,255,0)', 'rgba(255,105,140,0.55)', 'rgba(255,255,255,0)']}
+                                colors={['rgba(255,255,255,0)', 'rgba(218,112,214,0.55)', 'rgba(255,255,255,0)']}
                                 start={{x: 0, y: 0}}
                                 end={{x: 1, y: 0}}
                                 style={styles.divider}
@@ -219,51 +188,6 @@ export default function OfflineModal() {
                                     {t('offlineAutoRetry')}
                                 </Text>
                             </View>
-
-                            <TouchableOpacity
-                                onPress={onRetry}
-                                activeOpacity={0.85}
-                                disabled={retrying}
-                                style={styles.button}
-                                accessible={true}
-                                accessibilityRole="button"
-                                accessibilityLabel={t('offlineRetry')}
-                                accessibilityState={{disabled: retrying, busy: retrying}}
-                            >
-                                <LinearGradient
-                                    pointerEvents="none"
-                                    colors={retrying ? ['#7a2440', '#4d1226'] : ['#ff4d6d', '#c9184a']}
-                                    start={{x: 0, y: 0}}
-                                    end={{x: 1, y: 0}}
-                                    style={styles.buttonGradient}
-                                />
-                                <View style={styles.buttonRow}>
-                                    {retrying && (
-                                        <Animated.Text
-                                            allowFontScaling={false}
-                                            style={[styles.spinner, {transform: [{rotate: spinRotate}]}]}
-                                        >
-                                            ⟳
-                                        </Animated.Text>
-                                    )}
-                                    <Text allowFontScaling={false} style={styles.buttonText}>
-                                        {retrying ? t('offlineChecking') : t('offlineRetry')}
-                                    </Text>
-                                </View>
-                            </TouchableOpacity>
-
-                            <TouchableOpacity
-                                onPress={dismiss}
-                                activeOpacity={0.7}
-                                style={styles.dismissButton}
-                                accessible={true}
-                                accessibilityRole="button"
-                                accessibilityLabel={t('offlineDismiss')}
-                            >
-                                <Text allowFontScaling={false} style={styles.dismissText}>
-                                    {t('offlineDismiss')}
-                                </Text>
-                            </TouchableOpacity>
                         </View>
                     </Animated.View>
                 </View>

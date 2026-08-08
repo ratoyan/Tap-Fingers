@@ -1,13 +1,18 @@
 import * as React from 'react';
+import {Animated} from 'react-native';
 import Svg, {Circle, Line, Path} from 'react-native-svg';
 
-// "No connection" mark, drawn in a 100×100 box: three signal arcs rising out of
-// a dot, struck through by a slash.
+// "No connection" mark: three signal arcs rising out of a dot, struck through
+// by a slash. Drawn in a 100×100 box.
 //
-// Split into pieces on purpose. react-native-svg's own props can't be driven by
-// the native animation thread, so giving each arc its own <Svg> lets a plain
-// <Animated.View> fade it — which is how OfflineModal runs its "searching"
-// sweep up the arcs without touching the JS thread every frame.
+// Everything lives in ONE <Svg>. An earlier version gave each arc its own so a
+// wrapping <Animated.View> could fade it on the native thread; on Android those
+// stacked SVG views each painted an opaque backing, which showed up on device as
+// a dark octagon behind the mark (the square backing, chamfered by the round
+// icon ring). One canvas has no such seam — and the arcs are animated directly
+// instead, which is what AnimatedPath is for.
+
+const AnimatedPath = Animated.createAnimatedComponent(Path);
 
 const CX = 50;
 // Chosen so the mark is centred in its box: it runs from the top of the widest
@@ -16,7 +21,7 @@ const CX = 50;
 const CY = 70;
 const ARC_RADII = [18, 32, 46];
 
-/** How many arcs there are — the modal staggers one animation per arc. */
+/** How many arcs there are — the modal drives one opacity per arc. */
 export const WIFI_ARC_COUNT = ARC_RADII.length;
 
 // A 90° cap over the top of the dot: 45° either side of straight up.
@@ -25,30 +30,9 @@ function arcPath(r: number) {
     return `M ${CX - k} ${CY - k} A ${r} ${r} 0 0 1 ${CX + k} ${CY - k}`;
 }
 
-interface ArcProps {
-    /** 0 = innermost. */
-    index: number;
+interface Props {
     size: number;
-    color: string;
-}
-
-export function WifiArc({index, size, color}: ArcProps) {
-    return (
-        <Svg width={size} height={size} viewBox="0 0 100 100">
-            <Path
-                d={arcPath(ARC_RADII[index])}
-                stroke={color}
-                strokeWidth={9}
-                strokeLinecap="round"
-                fill="none"
-            />
-        </Svg>
-    );
-}
-
-interface BaseProps {
-    size: number;
-    /** The dot at the foot of the arcs. */
+    /** The arcs and the dot at their foot. */
     color: string;
     slashColor: string;
     /**
@@ -57,11 +41,24 @@ interface BaseProps {
      * rather than a line resting on top of them.
      */
     cutColor: string;
+    /** One opacity per arc, innermost first. WIFI_ARC_COUNT of them. */
+    arcOpacities: Animated.AnimatedInterpolation<number>[];
 }
 
-export function WifiBase({size, color, slashColor, cutColor}: BaseProps) {
+export default function WifiOffIcon({size, color, slashColor, cutColor, arcOpacities}: Props) {
     return (
-        <Svg width={size} height={size} viewBox="0 0 100 100">
+        <Svg width={size} height={size} viewBox="0 0 100 100" fill="none">
+            {ARC_RADII.map((r, i) => (
+                <AnimatedPath
+                    key={`arc-${i}`}
+                    d={arcPath(r)}
+                    stroke={color}
+                    strokeWidth={9}
+                    strokeLinecap="round"
+                    fill="none"
+                    opacity={arcOpacities[i]}
+                />
+            ))}
             <Circle cx={CX} cy={CY} r={6} fill={color}/>
             {/* Corner to corner through the middle of the box — the diagonal
                 crosses all three arcs and clears the dot. */}

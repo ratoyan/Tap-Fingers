@@ -35,9 +35,10 @@ const SERVER_RETRY_MS = 5000;
 
 /**
  * One connection attempt. Never throws; resolves to the state it found.
- * Safe to call from a button — the store's `checking` flag drives the spinner.
+ * Module-private: nothing outside asks for a check, because the modal it feeds
+ * has no retry button — recovery is entirely this file's job.
  */
-export async function probeConnection(): Promise<boolean> {
+async function probeConnection(): Promise<boolean> {
     const store = useNetworkStore.getState();
     if (store.checking) return store.online;
 

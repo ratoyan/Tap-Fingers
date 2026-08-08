@@ -1,9 +1,8 @@
 import {StyleSheet} from 'react-native';
-import {WHITE} from '../../../constants/colors.ts';
 import {isTablet, ms, SW, vs} from '../../../utils/responsive.ts';
 
-// Sized against NoticeModal so the two read as the same family of dialog —
-// same card radius, same icon block, same CTA height.
+// Sized and coloured against NoticeModal's 'info' palette so the two read as
+// the same family of dialog — same card radius, same icon block, same purples.
 
 export default StyleSheet.create({
     backdrop: {
@@ -20,7 +19,7 @@ export default StyleSheet.create({
     },
     cardWrapper: {
         width: '100%',
-        shadowColor: '#ff4d6d',
+        shadowColor: '#8e2de2',
         shadowOffset: {width: 0, height: 12},
         shadowOpacity: 0.5,
         shadowRadius: 28,
@@ -29,11 +28,11 @@ export default StyleSheet.create({
     card: {
         borderRadius: ms(28),
         paddingTop: vs(30),
-        paddingBottom: vs(20),
+        paddingBottom: vs(28),
         paddingHorizontal: ms(22),
         alignItems: 'center',
         borderWidth: 1.5,
-        borderColor: 'rgba(255,120,150,0.42)',
+        borderColor: 'rgba(218,112,214,0.45)',
         overflow: 'hidden',
     },
     sheen: {
@@ -65,7 +64,7 @@ export default StyleSheet.create({
         height: ms(112),
         borderRadius: ms(56),
         borderWidth: 1.5,
-        borderColor: 'rgba(255,120,150,0.5)',
+        borderColor: 'rgba(218,112,214,0.5)',
         opacity: 0.5,
     },
     iconRing: {
@@ -75,29 +74,28 @@ export default StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         borderWidth: 2,
-        backgroundColor: 'rgba(255,70,90,0.15)',
-        borderColor: 'rgba(255,120,150,0.55)',
-        shadowColor: '#ff4d6d',
+        backgroundColor: 'rgba(142,45,226,0.18)',
+        borderColor: 'rgba(218,112,214,0.55)',
+        shadowColor: '#8e2de2',
         shadowOffset: {width: 0, height: 0},
         shadowOpacity: 0.7,
         shadowRadius: 14,
-        elevation: 10,
+        // No `elevation` here, deliberately. It was meant as the Android
+        // stand-in for the glow above, but elevation on a view with a
+        // TRANSLUCENT background makes Android render it through a layer that
+        // paints an opaque backing over the content's bounds — on device that
+        // showed up as a dark chamfered rectangle sitting behind the wifi mark,
+        // eating the ring's tint. The glow is an iOS-only nicety; the ring
+        // already reads on Android from its border and fill.
     },
-    // Every arc and the base share this square so they stack in register.
-    iconLayer: {
-        position: 'absolute',
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-
     // ── Copy ─────────────────────────────────────────────────────────────────
     title: {
-        color: '#FF8FA8',
+        color: '#DA70D6',
         fontSize: ms(22),
         fontWeight: '900',
         letterSpacing: 1,
         textAlign: 'center',
-        textShadowColor: 'rgba(255,70,90,0.85)',
+        textShadowColor: 'rgba(255,0,255,0.85)',
         textShadowOffset: {width: 0, height: 0},
         textShadowRadius: 12,
     },
@@ -113,71 +111,27 @@ export default StyleSheet.create({
         textAlign: 'center',
         color: 'rgba(255,255,255,0.82)',
         paddingHorizontal: ms(4),
-        marginBottom: vs(14),
+        marginBottom: vs(16),
     },
 
     // ── "Reconnecting automatically…" ────────────────────────────────────────
+    // The last row in the card now that there are no buttons: the modal closes
+    // itself when the connection returns, so this line is the whole call to
+    // action.
     autoRow: {
         flexDirection: 'row',
         alignItems: 'center',
         gap: ms(8),
-        marginBottom: vs(18),
     },
     autoDot: {
         width: ms(7),
         height: ms(7),
         borderRadius: ms(4),
-        backgroundColor: '#FF8FA8',
+        backgroundColor: '#DA70D6',
     },
     autoText: {
         color: 'rgba(255,255,255,0.5)',
         fontSize: ms(12),
         letterSpacing: 0.6,
-    },
-
-    // ── Buttons ──────────────────────────────────────────────────────────────
-    button: {
-        width: '100%',
-        height: vs(50),
-        alignItems: 'center',
-        justifyContent: 'center',
-        borderRadius: ms(16),
-        overflow: 'hidden',
-        shadowColor: '#ff4d6d',
-        shadowOffset: {width: 0, height: 6},
-        shadowOpacity: 0.5,
-        shadowRadius: 14,
-        elevation: 8,
-    },
-    buttonGradient: {
-        ...StyleSheet.absoluteFillObject,
-    },
-    buttonRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: ms(10),
-    },
-    buttonText: {
-        color: WHITE,
-        fontSize: ms(15),
-        fontWeight: '800',
-        letterSpacing: 1.2,
-    },
-    spinner: {
-        color: WHITE,
-        fontSize: ms(18),
-        fontWeight: '900',
-        lineHeight: ms(20),
-    },
-    dismissButton: {
-        marginTop: vs(12),
-        paddingVertical: vs(8),
-        paddingHorizontal: ms(18),
-    },
-    dismissText: {
-        color: 'rgba(255,255,255,0.45)',
-        fontSize: ms(13),
-        fontWeight: '600',
-        letterSpacing: 0.8,
     },
 });

@@ -293,7 +293,6 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
     },
-
     freeBadgeText: {
         color: '#fff',
         fontSize: ms(8),

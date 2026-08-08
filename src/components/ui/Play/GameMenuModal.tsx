@@ -1,5 +1,5 @@
 import React, {useEffect, useRef, useState} from 'react';
-import {Animated, Easing, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import {Animated, Easing, Platform, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import {useTranslation} from 'react-i18next';
 import {ms, vs} from '../../../utils/responsive.ts';
@@ -23,6 +23,10 @@ interface GameMenuModalProps {
 const ROW_STAGGER = 70;
 const ROW_COUNT = 3;
 
+// iOS shows the pause menu with NO animation (it appears/disappears instantly);
+// Android keeps the spring/fade entrance, breathing glow and exit animation.
+const IS_IOS = Platform.OS === 'ios';
+
 function GameMenuModal({visible, onClose, onExit}: GameMenuModalProps) {
     const {t} = useTranslation();
     const [settingsVisible, setSettingsVisible] = useState(false);
@@ -33,42 +37,47 @@ function GameMenuModal({visible, onClose, onExit}: GameMenuModalProps) {
     // animation never had anything to play on.
     const [mounted, setMounted] = useState(visible);
 
-    const backdrop = useRef(new Animated.Value(0)).current;
-    const card = useRef(new Animated.Value(0)).current;
-    const rows = useRef(Array.from({length: ROW_COUNT}, () => new Animated.Value(0))).current;
-    const glow = useRef(new Animated.Value(0)).current;
+    // On iOS these are pinned at their final values (static, no animation); on
+    // Android they start at 0 and animate in.
+    const backdrop = useRef(new Animated.Value(IS_IOS ? 1 : 0)).current;
+    const card = useRef(new Animated.Value(IS_IOS ? 1 : 0)).current;
+    const rows = useRef(Array.from({length: ROW_COUNT}, () => new Animated.Value(IS_IOS ? 1 : 0))).current;
+    const glow = useRef(new Animated.Value(IS_IOS ? 0.5 : 0)).current;
 
     useEffect(() => {
         if (visible) {
-            // Only reset to the "from" state and mount here. The entrance is
-            // deliberately NOT started in this pass: `mounted` is still false
-            // right now, so the component is returning null and none of the
-            // card's views exist yet. Starting the animation against a subtree
-            // that hasn't mounted meant its first frames played against nothing
-            // and the card snapped in partway through — the jank on open.
-            backdrop.setValue(0);
-            card.setValue(0);
-            rows.forEach(r => r.setValue(0));
+            if (!IS_IOS) {
+                // Android: reset to the "from" state; the entrance effect (below)
+                // starts on the next commit, once the card's views exist. (iOS
+                // leaves the values pinned at their final state — no animation.)
+                backdrop.setValue(0);
+                card.setValue(0);
+                rows.forEach(r => r.setValue(0));
+            }
             setMounted(true);
         } else if (mounted) {
-            // Leaving is faster than arriving and doesn't bounce — a spring on the
-            // way out makes a dismissal feel hesitant.
-            Animated.parallel([
-                Animated.timing(backdrop, {
-                    toValue: 0,
-                    duration: 180,
-                    easing: Easing.in(Easing.quad),
-                    useNativeDriver: true,
-                }),
-                Animated.timing(card, {
-                    toValue: 0,
-                    duration: 180,
-                    easing: Easing.in(Easing.cubic),
-                    useNativeDriver: true,
-                }),
-            ]).start(({finished}) => {
-                if (finished) setMounted(false);
-            });
+            if (IS_IOS) {
+                // iOS: no exit animation — hide instantly.
+                setMounted(false);
+            } else {
+                // Android: a quick, bounce-free exit.
+                Animated.parallel([
+                    Animated.timing(backdrop, {
+                        toValue: 0,
+                        duration: 180,
+                        easing: Easing.in(Easing.quad),
+                        useNativeDriver: true,
+                    }),
+                    Animated.timing(card, {
+                        toValue: 0,
+                        duration: 180,
+                        easing: Easing.in(Easing.cubic),
+                        useNativeDriver: true,
+                    }),
+                ]).start(({finished}) => {
+                    if (finished) setMounted(false);
+                });
+            }
         }
     }, [visible]);
 
@@ -76,7 +85,7 @@ function GameMenuModal({visible, onClose, onExit}: GameMenuModalProps) {
     // that mounted the card — by now the views are real and the animation has
     // something to drive from frame one.
     useEffect(() => {
-        if (!mounted || !visible) return;
+        if (!mounted || !visible || IS_IOS) return;
 
         const entrance = Animated.parallel([
             // The dim comes in on its own timing: a spring on the backdrop
@@ -109,7 +118,7 @@ function GameMenuModal({visible, onClose, onExit}: GameMenuModalProps) {
     // Slow breathing halo behind the card. It's the only thing moving while the
     // menu sits open, which keeps a paused screen from looking frozen.
     useEffect(() => {
-        if (!mounted) return;
+        if (!mounted || IS_IOS) return;
         const loop = Animated.loop(
             Animated.sequence([
                 Animated.timing(glow, {
@@ -130,7 +139,9 @@ function GameMenuModal({visible, onClose, onExit}: GameMenuModalProps) {
         return () => loop.stop();
     }, [mounted]);
 
-    if (!mounted) return null;
+    // iOS renders while `visible` (instant show/hide, no animation); Android
+    // keeps rendering through the exit animation via `mounted`.
+    if (IS_IOS ? !visible : !mounted) return null;
 
     // The card tilts back on the X axis as it drops in, so it reads as a panel
     // swinging up to face the player rather than a rectangle being scaled.

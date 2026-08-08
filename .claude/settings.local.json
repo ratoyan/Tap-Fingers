@@ -138,7 +138,12 @@
       "Bash(python3 -c \"import Quartz; print\\('quartz ok'\\)\")",
       "Bash(curl -s -X POST \"http://localhost:8081/reload\" -o /dev/null -w \"reload:%{http_code}\\\\n\")",
       "Bash(grep -iE '\\\\.\\(js|jsx|ts|tsx\\)$')",
-      "Bash(plutil *)"
+      "Bash(plutil *)",
+      "Read(//c/Program Files/Google/Chrome/Application/**)",
+      "Read(//c/Program Files \\\\\\(x86\\\\\\)/Microsoft/Edge/Application/**)",
+      "Bash(\"/c/Program Files/Google/Chrome/Application/chrome.exe\" --headless=new --disable-gpu --force-device-scale-factor=2 --hide-scrollbars --screenshot=wheel.png --window-size=980,800 \"file:///C:/Users/gorat/AppData/Local/Temp/claude/C--rob-project-mobile-TapFingers/77a08daa-56bb-48f8-87b8-c7f0e00ed7f0/scratchpad/wheel.html\")",
+      "Bash(\"/c/Program Files/Google/Chrome/Application/chrome.exe\" --headless=new --disable-gpu --no-sandbox --force-device-scale-factor=2 --hide-scrollbars --user-data-dir=\"C:\\\\Users\\\\gorat\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\C--rob-project-mobile-TapFingers\\\\77a08daa-56bb-48f8-87b8-c7f0e00ed7f0\\\\scratchpad\\\\cud\" --screenshot=\"C:\\\\Users\\\\gorat\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\C--rob-project-mobile-TapFingers\\\\77a08daa-56bb-48f8-87b8-c7f0e00ed7f0\\\\scratchpad\\\\wheel.png\" --window-size=980,800 \"file:///C:/Users/gorat/AppData/Local/Temp/claude/C--rob-project-mobile-TapFingers/77a08daa-56bb-48f8-87b8-c7f0e00ed7f0/scratchpad/wheel.html\")",
+      "Bash(grep -c '\\\\\\\\r')"
     ]
   }
 }

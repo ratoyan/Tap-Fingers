@@ -4,6 +4,7 @@ import {useTranslation} from 'react-i18next';
 import {storage} from '../../../db/kvStore.ts';
 import LinearGradient from 'react-native-linear-gradient';
 import Svg, {Circle, G, Line, Path, Text as SvgText} from 'react-native-svg';
+import Coin, {COIN_ART, CoinShape} from '../../../assets/icons/Coin.tsx';
 import {STORAGE_KEYS} from '../../../utils/storageKeys.ts';
 import {playSfx} from '../../../utils/sfx.ts';
 import {haptic} from '../../../utils/haptics.ts';
@@ -18,12 +19,25 @@ const CENTER        = WHEEL_SIZE / 2;
 const RADIUS        = CENTER - 6;
 const NUM_SPINS     = 6;
 
+// Coin prizes are drawn with the game's own coin artwork rather than the glyph
+// the other prize types use, so a coin slice reads as the same currency the
+// counter and the shop show. Sized to what the glyphs they replace occupied:
+// ~24pt on the wheel, 50pt in the prize card.
+const WHEEL_COIN_H     = 28;
+const WHEEL_COIN_SCALE = WHEEL_COIN_H / COIN_ART.height;
+const WHEEL_COIN_W     = COIN_ART.width * WHEEL_COIN_SCALE;
+const RESULT_COIN_H    = 54;
+const RESULT_COIN_W    = COIN_ART.width * (RESULT_COIN_H / COIN_ART.height);
+
 // Visual styling per prize type. Segments returned by the server only carry
 // {type, value} — colours/icons live here so the admin doesn't need to edit
 // hex codes. Alternating fills give the wheel its striped look (one per type).
 type SegType = 'coins' | 'bomb' | 'shield' | 'slow';
 
 const TYPE_VISUALS: Record<SegType, {icon: string; textColor: string; fills: string[]}> = {
+    // `coins` renders the Coin artwork instead of this glyph — it's kept because
+    // a type the app doesn't know falls back to these visuals but not to the
+    // artwork, and so still gets a sensible icon.
     coins:  {icon: '🪙',  textColor: '#FFD700', fills: ['#9c4d00', '#7a3b00', '#5c1000', '#2a2a2a']},
     bomb:   {icon: '💣',  textColor: '#FF8C42', fills: ['#6b1200']},
     shield: {icon: '🛡️', textColor: '#00E5FF', fills: ['#003d5c']},
@@ -605,7 +619,15 @@ export default function LuckyWheelModal({
                                         const lp = sliceTextPos(i, RADIUS * 0.35, segmentAngle);
                                         return (
                                             <G key={`t-${i}`}>
-                                                <SvgText x={ip.x} y={ip.y + 7} textAnchor="middle" fontSize={24} fill={seg.textColor}>{seg.icon}</SvgText>
+                                                {seg.type === 'coins' ? (
+                                                    // Dropped straight into the wheel's own canvas and
+                                                    // centred on the point the glyph was drawn around,
+                                                    // so it rotates with the slice and the icon/label
+                                                    // spacing is unchanged.
+                                                    <CoinShape transform={`translate(${ip.x - WHEEL_COIN_W / 2}, ${ip.y - WHEEL_COIN_H / 2}) scale(${WHEEL_COIN_SCALE})`}/>
+                                                ) : (
+                                                    <SvgText x={ip.x} y={ip.y + 7} textAnchor="middle" fontSize={24} fill={seg.textColor}>{seg.icon}</SvgText>
+                                                )}
                                                 <SvgText x={lp.x} y={lp.y + 5} textAnchor="middle" fontSize={11} fontWeight="bold" fill={seg.textColor} fillOpacity={0.9}>{seg.label}</SvgText>
                                             </G>
                                         );
@@ -736,7 +758,13 @@ export default function LuckyWheelModal({
                                     style={styles.resultGradient}
                                 />
                                 <Text allowFontScaling={false} style={styles.resultYouWon}>✨  {t('youWon')}  ✨</Text>
-                                <Text allowFontScaling={false} style={styles.resultIcon}>{result.icon}</Text>
+                                {result.type === 'coins' ? (
+                                    <View style={styles.resultIconWrapper}>
+                                        <Coin width={RESULT_COIN_W} height={RESULT_COIN_H}/>
+                                    </View>
+                                ) : (
+                                    <Text allowFontScaling={false} style={styles.resultIcon}>{result.icon}</Text>
+                                )}
                                 <Text allowFontScaling={false} style={[styles.resultLabel, {color: glowColor, textShadowColor: glowColor}]}>
                                     {rewardLabel}
                                 </Text>

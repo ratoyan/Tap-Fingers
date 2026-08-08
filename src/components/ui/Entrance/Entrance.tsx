@@ -1,12 +1,16 @@
-import React, {useCallback, useRef} from 'react';
+import React, {useEffect, useRef} from 'react';
 import {Animated, Easing, StyleProp, ViewStyle} from 'react-native';
-import {useFocusEffect} from '@react-navigation/core';
 
-// ── Focus-driven entrance wrapper ───────────────────────────────────────────
-// Wraps any subtree in a fade + slide (+ optional zoom) that replays every time
-// the screen regains focus, so coming back from a round feels like arriving on
-// the menu rather than a static jump cut. Stagger a group by handing each child
-// an increasing `delay`.
+// ── Mount-driven entrance wrapper ───────────────────────────────────────────
+// Wraps any subtree in a fade + slide (+ optional zoom) that plays once, when
+// the subtree mounts. Stagger a group by handing each child an increasing
+// `delay`.
+//
+// Deliberately NOT focus-driven: on a stack screen that stays mounted behind a
+// push (Home), replaying on every focus meant the whole menu re-dealt itself
+// each time the player came back from a round — an arrival animation for a
+// screen that never left. Screens that are popped on the way out (Profile,
+// Shop) unmount anyway, so for them mount and focus are the same moment.
 //
 // Everything runs on the native driver (opacity + transform only), so the
 // animation keeps its frame rate while Home does its focus work — profile
@@ -45,8 +49,8 @@ function Entrance({
 }: EntranceProps) {
     const t = useRef(new Animated.Value(0)).current;      // 0 → 1 entrance
 
-    useFocusEffect(
-        useCallback(() => {
+    useEffect(
+        () => {
             t.setValue(0);
 
             const anim = Animated.timing(t, {
@@ -68,7 +72,9 @@ function Entrance({
             anim.start();
 
             return () => anim.stop();
-        }, [t, delay, duration]),
+        },
+        // Mount only — every call site passes literals, so these never change.
+        [t, delay, duration],
     );
 
     // Fades a little behind the travel rather than ahead of it — with no

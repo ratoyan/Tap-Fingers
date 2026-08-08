@@ -22,6 +22,10 @@ import {useFocusEffect} from '@react-navigation/core';
  * Entrance and MenuButton. Looping/idle animations must NOT do that, or the
  * queue would never drain.
  *
+ * The entrances are mount-only, so this defers on the screen's first focus and
+ * runs straight away on every later one — which is exactly right: there is no
+ * animation left to protect once the screen is already sitting there.
+ *
  * `maxWaitMs` is the backstop: if something holds a handle open (a long drag, an
  * animation that never lands), the work runs anyway rather than never.
  *

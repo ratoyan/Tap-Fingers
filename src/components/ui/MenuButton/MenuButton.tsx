@@ -1,8 +1,8 @@
-import React, {useCallback, useRef} from "react";
+import React, {useEffect, useRef} from "react";
 import {Animated, Easing, Text, TouchableOpacity} from "react-native";
 import {MenuType} from "../../../types/menu.type.ts";
 import {useTranslation} from "react-i18next";
-import {useFocusEffect, useNavigation} from "@react-navigation/core";
+import {useNavigation} from "@react-navigation/core";
 import {haptic} from "../../../utils/haptics.ts";
 import {playSfxVaried} from "../../../utils/sfx.ts";
 
@@ -63,12 +63,14 @@ function MenuButton({menu, index = 0}: MenuProps){
     // Odd rows come from the right, even from the left.
     const dir = index % 2 === 0 ? -1 : 1;
 
-    // Replays on every focus, so returning from a round re-deals the menu
-    // instead of dropping the player onto a static screen. All three values
-    // drive transforms/opacity only, so the whole thing stays on the native
-    // thread while Home does its focus work (profile, wheel, config) on JS.
-    useFocusEffect(
-        useCallback(() => {
+    // Plays once, on mount. Home is a stack root that stays mounted behind a
+    // push, so a focus-driven version re-dealt the whole menu every time the
+    // player came back from a round or the shop — an arrival animation for a
+    // screen that never actually left. All three values drive
+    // transforms/opacity only, so the whole thing stays on the native thread
+    // while Home does its focus work (profile, wheel, config) on JS.
+    useEffect(
+        () => {
             enter.setValue(0);
             iconPop.setValue(0);
             sweep.setValue(0);
@@ -118,7 +120,9 @@ function MenuButton({menu, index = 0}: MenuProps){
 
             anim.start();
             return () => anim.stop();
-        }, [enter, iconPop, sweep, index]),
+        },
+        // Mount only — `index` is the button's fixed seat in the menu.
+        [enter, iconPop, sweep, index],
     );
 
     // Feedback for a page switch from the menu: a light buzz plus the browsing

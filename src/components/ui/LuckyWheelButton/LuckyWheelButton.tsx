@@ -287,11 +287,20 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.9,
         shadowRadius: 6,
         elevation: 8,
+        alignSelf: 'flex-start',
+        flexShrink: 0,
+        minWidth: ms(48),
+        alignItems: 'center',
+        justifyContent: 'center',
     },
+
     freeBadgeText: {
         color: '#fff',
         fontSize: ms(8),
         fontWeight: '900',
         letterSpacing: 0.5,
+        flexShrink: 0,
+        includeFontPadding: false,
+        textAlign: 'center',
     },
 });

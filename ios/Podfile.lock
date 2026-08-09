@@ -1558,6 +1558,28 @@ PODS:
     - Yoga
   - react-native-in-app-review (4.4.2):
     - React-Core
+  - react-native-netinfo (12.0.1):
+    - hermes-engine
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Core
+    - React-Core-prebuilt
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-jsi
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-renderercss
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - ReactNativeDependencies
+    - Yoga
   - react-native-safe-area-context (5.7.0):
     - hermes-engine
     - RCTRequired
@@ -2303,6 +2325,7 @@ DEPENDENCIES:
   - React-microtasksnativemodule (from `../node_modules/react-native/ReactCommon/react/nativemodule/microtasks`)
   - react-native-image-picker (from `../node_modules/react-native-image-picker`)
   - react-native-in-app-review (from `../node_modules/react-native-in-app-review`)
+  - "react-native-netinfo (from `../node_modules/@react-native-community/netinfo`)"
   - react-native-safe-area-context (from `../node_modules/react-native-safe-area-context`)
   - react-native-version-check (from `../node_modules/react-native-version-check`)
   - React-NativeModulesApple (from `../node_modules/react-native/ReactCommon/react/nativemodule/core/platform/ios`)
@@ -2469,6 +2492,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-image-picker"
   react-native-in-app-review:
     :path: "../node_modules/react-native-in-app-review"
+  react-native-netinfo:
+    :path: "../node_modules/@react-native-community/netinfo"
   react-native-safe-area-context:
     :path: "../node_modules/react-native-safe-area-context"
   react-native-version-check:
@@ -2635,6 +2660,7 @@ SPEC CHECKSUMS:
   React-microtasksnativemodule: ab9d1a05fe1f58ea44a97d307ef1b53463f45a3f
   react-native-image-picker: 7793e84ad7b802351cf687c18bb42ad30150b29b
   react-native-in-app-review: bb863fb300f2c716479c4285201df746cf5e20a2
+  react-native-netinfo: 13886ae458c33dbb849592dcd75e1795e3d70842
   react-native-safe-area-context: 29044d05d61f2c60d0828c373bd0ebe17eed58d0
   react-native-version-check: 54a471d70dadf0f72fc142e70f16e4bf473a91a5
   React-NativeModulesApple: b94faa2dce6d8c0a9d722ed7ee27b996d28b62d1
@@ -2686,6 +2712,6 @@ SPEC CHECKSUMS:
   YandexMobileAds: 7637543c1578e2aa712767c1d9439597592ea36d
   Yoga: 7c1c3b93e408ac46c7ed64b5641ca7161747378d
 
-PODFILE CHECKSUM: ab891dde45239958cf4d73e33a084f0883ff2b7a
+PODFILE CHECKSUM: 3468b1337eb8886132ed42994ecdf59dd999f5b9
 
-COCOAPODS: 1.15.2
+COCOAPODS: 1.13.0

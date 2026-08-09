@@ -6,6 +6,12 @@ require Pod::Executable.execute_command('node', ['-p',
   )', __dir__]).strip
 
 platform :ios, min_ios_version_supported
+
+# Use RN's prebuilt React core frameworks (faster builds) by default. Persisted
+# here so a plain `pod install` doesn't silently fall back to building from source.
+# Override with `RCT_USE_PREBUILT_RNCORE=0 pod install` to build from source.
+ENV['RCT_USE_PREBUILT_RNCORE'] ||= '1'
+
 prepare_react_native_project!
 
 linkage = ENV['USE_FRAMEWORKS']
@@ -37,5 +43,39 @@ target 'TapFingers' do
       :mac_catalyst_enabled => false,
       # :ccache_enabled => true
     )
+
+    # --- Guard against the RN "React-Core-prebuilt" Debug/Release flavor mismatch ---
+    # RN 0.84 ships separate Debug/Release prebuilt frameworks and swaps them at
+    # build time (scripts/replace-rncore-version.js), tracked by a
+    # `React-Core-prebuilt/.last_build_configuration` state file. That swap has no
+    # error handling, so a failed/stale swap -- or hand-editing Pods/ (e.g. a stray
+    # "React 3.xcframework") -- can leave the Release framework in place for a Debug
+    # build. The app then fails to link with "Undefined symbols for architecture
+    # arm64" (DebugStringConvertible / Sealable / getDebugProps), because the Debug
+    # source pods reference debug symbols the Release framework never exported.
+    #
+    # After each `pod install` we reset to a known-good Debug state. A later Release
+    # build still swaps to Release correctly (last=Debug != Release -> swap runs).
+    prebuilt_dir = File.join(installer.sandbox.root, 'React-Core-prebuilt')
+    if Dir.exist?(prebuilt_dir)
+      # Drop stray Finder-style duplicates like "React 3.xcframework".
+      Dir.glob(File.join(prebuilt_dir, 'React *.xcframework')).each { |d| FileUtils.rm_rf(d) }
+
+      debug_tarball = Dir.glob(
+        File.join(installer.sandbox.root, 'ReactNativeCore-artifacts', 'reactnative-core-*-debug.tar.gz')
+      ).reject { |f| f.include?('-dSYM') }.first
+
+      if debug_tarball && File.exist?(debug_tarball)
+        FileUtils.rm_rf(File.join(prebuilt_dir, 'React.xcframework'))
+        # Tarball's top-level entry is `React.xcframework/`, so extract into prebuilt_dir.
+        if system('tar', '-xf', debug_tarball, '-C', prebuilt_dir)
+          # Keep the build-time swap script's state consistent with what we installed.
+          File.write(File.join(prebuilt_dir, '.last_build_configuration'), 'Debug')
+          Pod::UI.puts '[TapFingers] Ensured Debug React-Core-prebuilt is installed.'.green
+        else
+          Pod::UI.puts '[TapFingers] WARNING: failed to extract Debug React-Core-prebuilt tarball.'.red
+        end
+      end
+    end
   end
 end

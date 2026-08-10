@@ -38,13 +38,21 @@ interface SectionCardProps {
 
 function SectionCard({icon, title, tone = 'default', style, children}: SectionCardProps) {
     const t = TONES[tone];
+    // A plain View carries the border, radius and padding; the gradient is an
+    // absolute-fill background behind the content. Using the LinearGradient as the
+    // padded container itself renders a second, inset frame on iOS new arch (the
+    // gradient lays down its fill box inside the border box) — so the whole card
+    // read as a card-in-a-card. This is the same pattern ProfileHero and the
+    // action buttons already use.
     return (
-        <LinearGradient
-            colors={t.fill}
-            start={{x: 0, y: 0}}
-            end={{x: 0.8, y: 1}}
-            style={[styles.card, {borderColor: t.border}, style]}
-        >
+        <View style={[styles.card, {borderColor: t.border}, style]}>
+            <LinearGradient
+                pointerEvents="none"
+                colors={t.fill}
+                start={{x: 0, y: 0}}
+                end={{x: 0.8, y: 1}}
+                style={StyleSheet.absoluteFill}
+            />
             <View style={styles.header}>
                 <Text allowFontScaling={false} style={styles.icon}>{icon}</Text>
                 <Text allowFontScaling={false} style={[styles.title, {color: t.title}]} numberOfLines={1}>
@@ -53,7 +61,7 @@ function SectionCard({icon, title, tone = 'default', style, children}: SectionCa
             </View>
             <View style={[styles.rule, {backgroundColor: t.border}]} />
             {children}
-        </LinearGradient>
+        </View>
     );
 }
 
@@ -62,6 +70,8 @@ const styles = StyleSheet.create({
         width: '100%',
         borderRadius: ms(22),
         borderWidth: 1,
+        // Clip the absolute-fill gradient background to the rounded corners.
+        overflow: 'hidden',
         paddingHorizontal: ms(16),
         paddingTop: vs(14),
         paddingBottom: vs(16),

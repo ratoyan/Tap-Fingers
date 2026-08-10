@@ -200,7 +200,18 @@
       "Bash(break)",
       "Bash(git log *)",
       "Bash(curl -s -o /dev/null -w \"HTTP %{http_code} in %{time_total}s\\\\n\" --max-time 12 https://tapfingers.webixworld.com/api/game/config)",
-      "Bash(curl -s -o /dev/null -w \"HTTP %{http_code}\\\\n\" --max-time 4 http://localhost:8000/api/game/config)"
+      "Bash(curl -s -o /dev/null -w \"HTTP %{http_code}\\\\n\" --max-time 4 http://localhost:8000/api/game/config)",
+      "Bash(which magick *)",
+      "Bash(sips --cropToHeightWidth 700 1320 --cropOffset 880 0 profile_now.png --out name_card.png)",
+      "Bash(sips --cropToHeightWidth 780 1320 --cropOffset 850 0 profile_now.png --out name_full.png)",
+      "Bash(sips -g pixelWidth -g pixelHeight profile_now.png)",
+      "Bash(curl -s \"http://localhost:8081/reload\" -X POST)",
+      "Bash(python3 -)",
+      "Bash(git -C /Users/luizamuradyan/Desktop/Tap-Fingers log --oneline -5 -- src/components/ui/Profile/SectionCard.tsx)",
+      "Bash(git -C /Users/luizamuradyan/Desktop/Tap-Fingers log -1 --format=\"%H %ci\" -- src/screens/Profile/Profile.tsx)",
+      "Bash(osascript *)",
+      "Bash(sips --cropToHeightWidth 130 200 --cropOffset 890 70 profile_now.png --out corner.png)",
+      "Bash(sips --resampleWidth 600 corner.png --out corner_big.png)"
     ]
   }
 }

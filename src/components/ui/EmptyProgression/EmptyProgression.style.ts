@@ -4,11 +4,14 @@ import {GOLD, PLUM, PURPLE_LIGHT, WHITE} from '../../../constants/colors.ts';
 
 export default StyleSheet.create({
     container: {
-        flex: 1,
+        // No `flex: 1` here: the FlatList's empty content container centers this
+        // (flexGrow + justifyContent). Letting it size to its own content means
+        // that when the column is taller than the viewport it grows the scroll
+        // area instead of clipping the CTA button off the bottom.
         alignItems: 'center',
         justifyContent: 'center',
         paddingTop: vs(40),
-        paddingBottom: vs(60),
+        paddingBottom: vs(40),
         paddingHorizontal: ms(20),
     },
     illustrationWrap: {
@@ -94,36 +97,54 @@ export default StyleSheet.create({
         marginBottom: vs(28),
     },
     ctaWrap: {
-        borderRadius: ms(18),
-        overflow: 'hidden',
+        borderRadius: ms(28),
         shadowColor: PURPLE_LIGHT,
-        shadowOffset: {width: 0, height: 8},
-        shadowOpacity: 0.45,
-        shadowRadius: 14,
-        elevation: 10,
-        marginBottom: vs(20),
+        shadowOffset: {width: 0, height: 10},
+        shadowOpacity: 0.55,
+        shadowRadius: 18,
+        elevation: 12,
+        marginBottom: vs(22),
     },
     ctaButton: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        paddingVertical: vs(13),
-        paddingHorizontal: ms(28),
-        borderRadius: ms(18),
-        gap: ms(8),
-        minWidth: ms(200),
+        height: vs(54),
+        paddingLeft: ms(14),
+        paddingRight: ms(26),
+        // Pill shape (radius ≈ height / 2) reads as a friendlier game CTA.
+        borderRadius: ms(28),
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.28)',
+        gap: ms(11),
+        minWidth: ms(210),
+        // Clip the absolute-fill gradient below to the pill's rounded corners.
+        overflow: 'hidden',
+    },
+    ctaGradientFill: {
+        ...StyleSheet.absoluteFillObject,
+    },
+    // Translucent white disc holding the play glyph — gives the button a focal
+    // point and balances the label so it no longer looks like a bare bar.
+    ctaIcon: {
+        width: ms(30),
+        height: ms(30),
+        borderRadius: ms(15),
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: 'rgba(255,255,255,0.20)',
+    },
+    ctaIconText: {
+        color: WHITE,
+        fontSize: ms(12),
+        fontWeight: '700',
+        marginLeft: ms(1), // optical centring of the triangle
     },
     ctaText: {
         color: WHITE,
-        fontSize: ms(15),
+        fontSize: ms(16),
         fontWeight: '800',
         letterSpacing: 0.6,
-    },
-    ctaArrow: {
-        color: WHITE,
-        fontSize: ms(17),
-        fontWeight: '700',
-        marginTop: -1,
     },
     tipRow: {
         flexDirection: 'row',

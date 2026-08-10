@@ -228,19 +228,27 @@ function EmptyProgression({onPressCta}: EmptyProgressionProps) {
                     accessibilityRole="button"
                     accessibilityLabel={t('startPlaying')}
                 >
-                    <LinearGradient
-                        colors={[GRADIENT_LIGHT, GRADIENT_DARK]}
-                        start={{x: 0, y: 0}}
-                        end={{x: 1, y: 1}}
-                        style={styles.ctaButton}
-                    >
+                    <View style={styles.ctaButton}>
+                        {/* Gradient sits behind the content as an absolute fill so
+                            the button measures from its real children (icon + label)
+                            and never clips them — a LinearGradient laid out *around*
+                            content mis-sizes on iOS's new architecture.
+                            See linear-gradient-ios-clip. */}
+                        <LinearGradient
+                            colors={[GRADIENT_LIGHT, GRADIENT_DARK]}
+                            start={{x: 0, y: 0}}
+                            end={{x: 1, y: 1}}
+                            style={styles.ctaGradientFill}
+                        />
+                        <View style={styles.ctaIcon}>
+                            <Text allowFontScaling={false} style={styles.ctaIconText}>
+                                ▶
+                            </Text>
+                        </View>
                         <Text allowFontScaling={false} style={styles.ctaText}>
                             {t('startPlaying')}
                         </Text>
-                        <Text allowFontScaling={false} style={styles.ctaArrow}>
-                            →
-                        </Text>
-                    </LinearGradient>
+                    </View>
                 </TouchableOpacity>
             </Animated.View>
 

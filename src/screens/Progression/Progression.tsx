@@ -180,7 +180,10 @@ function Progression() {
                     ListFooterComponent={renderFooter}
                     contentContainerStyle={
                         entries.length === 0
-                            ? {flexGrow: 1}
+                            // Center the empty state, but let it scroll (grow past
+                            // the viewport) instead of clipping the CTA button when
+                            // the column is taller than the list on short screens.
+                            ? {flexGrow: 1, justifyContent: 'center'}
                             // Leave room so the last rows can scroll clear of the
                             // pinned "your rank" footer when it's shown.
                             : {paddingBottom: myRank?.entry ? 120 : 40}

@@ -21,6 +21,7 @@ import ScreenStatusBar from "../../components/ui/ScreenStatusBar/ScreenStatusBar
 // components
 import BackHeader from "../../components/ui/BackHeader/BackHeader.tsx";
 import ShopItem from "../../components/ui/ShopItem/ShopItem.tsx";
+import EmptyShop from "../../components/ui/EmptyShop/EmptyShop.tsx";
 import {ShopSkeleton} from "../../components/ui/Shimmer/Skeletons.tsx";
 import WatchAdModal from "../../components/ui/WatchAdModal/WatchAdModal.tsx";
 import CoinGain from "../../components/ui/CoinGain/CoinGain.tsx";
@@ -380,6 +381,11 @@ function Shop() {
             {/* Content */}
             {loading ? (
                 <ShopSkeleton/>
+            ) : cardItems.length === 0 && bgItems.length === 0 ? (
+                // Nothing loaded (offline / server error left both grids empty).
+                // Show the animated empty state with a Try Again that re-fetches
+                // behind the skeleton.
+                <EmptyShop onRetry={() => { setLoading(true); loadShop(); }}/>
             ) : (
                 // Both grids stay mounted once visited and the inactive one is
                 // hidden, instead of one keyed ScrollView that tore the whole

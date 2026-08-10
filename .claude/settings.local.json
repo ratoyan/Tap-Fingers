@@ -213,7 +213,8 @@
       "Bash(sips --cropToHeightWidth 130 200 --cropOffset 890 70 profile_now.png --out corner.png)",
       "Bash(sips --resampleWidth 600 corner.png --out corner_big.png)",
       "Bash(sed -i.bak \"s/initialRouteName={initialRouteName}/initialRouteName={'Profile'}/\" src/navigation/StackNavigator.tsx)",
-      "Bash(rm -f src/navigation/StackNavigator.tsx.bak)"
+      "Bash(rm -f src/navigation/StackNavigator.tsx.bak)",
+      "Bash(curl -s -m 5 http://localhost:8081/reload)"
     ]
   }
 }

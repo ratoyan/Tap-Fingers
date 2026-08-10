@@ -47,6 +47,10 @@
   "startPlaying": "Սկսել խաղալ",
   "progressionHint": "Ամեն հպումը ձեզ մոտեցնում է գագաթին",
 
+  "shopEmptyTitle": "Դարակները դատարկ են",
+  "shopEmptySubtitle": "Չհաջողվեց բեռնել խանութը։ Ստուգեք կապը և փորձեք նորից։",
+  "shopRetry": "Փորձել կրկին",
+
   "tapFast": "ՀՊԻՐ ԱՐԱԳ · ՀԱՎԱՔԻՐ ՇԱՏ",
   "welcomeBack": "Բարի վերադարձ",
   "createYourAccount": "Ստեղծեք ձեր հաշիվը",

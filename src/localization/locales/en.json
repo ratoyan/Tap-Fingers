@@ -47,6 +47,10 @@
   "startPlaying": "Start Playing",
   "progressionHint": "Every tap brings you closer to the top",
 
+  "shopEmptyTitle": "The shelves are empty",
+  "shopEmptySubtitle": "We couldn't load the shop right now. Check your connection and try again.",
+  "shopRetry": "Try Again",
+
   "tapFast": "TAP FAST · SCORE HIGH",
   "welcomeBack": "Welcome back",
   "createYourAccount": "Create your account",

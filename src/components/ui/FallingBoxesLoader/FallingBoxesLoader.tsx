@@ -1,5 +1,6 @@
 import React, {useEffect, useMemo, useRef} from 'react';
 import {Animated, Dimensions, Easing, View} from 'react-native';
+import Svg, {Defs, Ellipse, RadialGradient, Stop} from 'react-native-svg';
 import uuId from 'react-native-uuid';
 
 import {useShopStore} from '../../../store/shopStore.ts';
@@ -143,6 +144,29 @@ function FallingBoxesLoader() {
                         ],
                     }}
                 >
+                    {/* Soft radial shadow beneath the card — dark in the middle,
+                        fading to fully transparent at the edges, so it reads as a
+                        gentle blur rather than a hard grey blob. */}
+                    <Svg
+                        width={f.size}
+                        height={f.size * 0.4}
+                        style={{position: 'absolute', top: f.size * 0.66, left: 0}}
+                    >
+                        <Defs>
+                            <RadialGradient id={`sh-${f.key}`} cx="50%" cy="50%" rx="50%" ry="50%">
+                                <Stop offset="0%" stopColor="#000" stopOpacity={0.4}/>
+                                <Stop offset="55%" stopColor="#000" stopOpacity={0.2}/>
+                                <Stop offset="100%" stopColor="#000" stopOpacity={0}/>
+                            </RadialGradient>
+                        </Defs>
+                        <Ellipse
+                            cx={f.size / 2}
+                            cy={f.size * 0.2}
+                            rx={f.size * 0.42}
+                            ry={f.size * 0.18}
+                            fill={`url(#sh-${f.key})`}
+                        />
+                    </Svg>
                     <PlayBox box={f.box} handlePress={() => {}}/>
                 </Animated.View>
             ))}

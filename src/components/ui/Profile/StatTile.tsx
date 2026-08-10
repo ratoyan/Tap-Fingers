@@ -15,7 +15,8 @@ import {ms, vs} from '../../../utils/responsive.ts';
 // stays legible at a glance instead of being three identical purple boxes.
 
 interface StatTileProps {
-    icon: string;
+    /** An emoji string (rendered as text) or a ready-made icon element (e.g. an SVG). */
+    icon: React.ReactNode;
     label: string;
     value: number;
     tint: string;
@@ -33,7 +34,9 @@ function StatTile({icon, label, value, tint, delay = 0}: StatTileProps) {
                 style={StyleSheet.absoluteFill}
             />
             <View style={[styles.iconDisc, {backgroundColor: `${tint}26`, borderColor: `${tint}66`}]}>
-                <Text allowFontScaling={false} style={styles.icon}>{icon}</Text>
+                {typeof icon === 'string'
+                    ? <Text allowFontScaling={false} style={styles.icon}>{icon}</Text>
+                    : icon}
             </View>
             <CountUp value={value} delay={delay} style={[styles.value, {color: tint}]} />
             <Text allowFontScaling={false} style={styles.label} numberOfLines={1}>{label}</Text>

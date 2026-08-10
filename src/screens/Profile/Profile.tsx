@@ -37,6 +37,8 @@ import StatTile from '../../components/ui/Profile/StatTile.tsx';
 // data
 import {avatarForId} from '../../data/avatars.ts';
 import {useKeyboardAwareScroll} from '../../hooks/useKeyboardAwareScroll.ts';
+import Coin from '../../assets/icons/Coin.tsx';
+import {ms} from '../../utils/responsive.ts';
 
 // styles
 import styles from './Profile.style.ts';
@@ -557,7 +559,7 @@ function Profile() {
                                         delay={TILE_STEP}
                                     />
                                     <StatTile
-                                        icon="🪙"
+                                        icon={<Coin width={ms(22)} height={ms(24)} />}
                                         label={t('coins')}
                                         value={stats?.coins ?? 0}
                                         tint={ORCHID}

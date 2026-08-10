@@ -150,6 +150,7 @@ const styles = StyleSheet.create({
         borderColor: GOLD,
     },
     number: {
+        padding: 20,
         color: WHITE,
         fontSize: ms(120),
         fontWeight: '900',

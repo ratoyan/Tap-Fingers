@@ -1,5 +1,5 @@
 ﻿import React, {useCallback, useRef, useState} from "react";
-import {Animated, InteractionManager, ScrollView, Text, TouchableOpacity, View} from "react-native";
+import {Animated, InteractionManager, ScrollView, StyleSheet, Text, TouchableOpacity, View} from "react-native";
 import {useTranslation} from "react-i18next";
 import {useFocusEffect} from "@react-navigation/core";
 import {useGlobalStore} from "../../store/globalStore.ts";
@@ -23,6 +23,7 @@ import BackHeader from "../../components/ui/BackHeader/BackHeader.tsx";
 import ShopItem from "../../components/ui/ShopItem/ShopItem.tsx";
 import EmptyShop from "../../components/ui/EmptyShop/EmptyShop.tsx";
 import {ShopSkeleton} from "../../components/ui/Shimmer/Skeletons.tsx";
+import FallingBoxesLoader from "../../components/ui/FallingBoxesLoader/FallingBoxesLoader.tsx";
 import WatchAdModal from "../../components/ui/WatchAdModal/WatchAdModal.tsx";
 import CoinGain from "../../components/ui/CoinGain/CoinGain.tsx";
 
@@ -456,6 +457,14 @@ function Shop() {
                 onClose={() => setShowAdModal(false)}
             />
             </>}
+
+            {/* Equipped card raining down over the whole screen while the shop
+                loads (matches the Progression / Challenges loading state). */}
+            {contentReady && loading && (
+                <View style={StyleSheet.absoluteFill} pointerEvents="none">
+                    <FallingBoxesLoader/>
+                </View>
+            )}
         </LinearGradient>
     );
 }

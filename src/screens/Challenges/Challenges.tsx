@@ -1,5 +1,5 @@
 import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
-import {ActivityIndicator, FlatList, Text, View} from 'react-native';
+import {ActivityIndicator, FlatList, StyleSheet, Text, View} from 'react-native';
 import {useFocusEffect} from '@react-navigation/core';
 import {useTranslation} from "react-i18next";
 import LinearGradient from 'react-native-linear-gradient';
@@ -17,6 +17,7 @@ import {haptic} from "../../utils/haptics.ts";
 import BackHeader from "../../components/ui/BackHeader/BackHeader.tsx";
 import ChallengeCard from "../../components/ui/ChallengeCard/ChallengeCard.tsx";
 import {ChallengesSkeleton} from "../../components/ui/Shimmer/Skeletons.tsx";
+import FallingBoxesLoader from "../../components/ui/FallingBoxesLoader/FallingBoxesLoader.tsx";
 import ScreenStatusBar from "../../components/ui/ScreenStatusBar/ScreenStatusBar.tsx";
 import DailyChallengeIcon from "../../assets/icons/DailyChallengeIcon.tsx";
 
@@ -312,6 +313,14 @@ function Challenges() {
                 }
             />}
             </View>
+
+            {/* Equipped card raining down over the whole screen while the server
+                catalog loads (matches the Progression loading state). */}
+            {contentReady && loading && (
+                <View style={StyleSheet.absoluteFill} pointerEvents="none">
+                    <FallingBoxesLoader/>
+                </View>
+            )}
         </LinearGradient>
     );
 }

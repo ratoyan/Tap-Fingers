@@ -1,5 +1,5 @@
 import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
-import {ActivityIndicator, FlatList, View} from 'react-native';
+import {ActivityIndicator, FlatList, StyleSheet, View} from 'react-native';
 import {useFocusEffect} from '@react-navigation/core';
 import {getTrophyEmoji} from "../../utils/helpers.ts";
 import {useTranslation} from "react-i18next";
@@ -17,6 +17,7 @@ import {useAuthStore} from "../../store/authStore.ts";
 import BackHeader from "../../components/ui/BackHeader/BackHeader.tsx";
 import ProgressItem from "../../components/ui/ProgressItem/ProgressItem.tsx";
 import EmptyProgression from "../../components/ui/EmptyProgression/EmptyProgression.tsx";
+import FallingBoxesLoader from "../../components/ui/FallingBoxesLoader/FallingBoxesLoader.tsx";
 import {ProgressionSkeleton} from "../../components/ui/Shimmer/Skeletons.tsx";
 
 // styles
@@ -194,6 +195,14 @@ function Progression() {
                     }
                     ListEmptyComponent={<EmptyProgression/>}
                 />
+            )}
+
+            {/* Equipped card raining down over the whole screen while it loads,
+                measured from the very top (see FallingBoxesLoader's TOP_OFFSET). */}
+            {contentReady && loading && (
+                <View style={StyleSheet.absoluteFill} pointerEvents="none">
+                    <FallingBoxesLoader/>
+                </View>
             )}
             {
                 !loading && myRank?.entry && (

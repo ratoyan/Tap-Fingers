@@ -23,6 +23,7 @@ import {ProgressionSkeleton} from "../../components/ui/Shimmer/Skeletons.tsx";
 import styles from './Progression.style.ts';
 import {WHITE} from "../../constants/colors.ts";
 import ScreenStatusBar from "../../components/ui/ScreenStatusBar/ScreenStatusBar.tsx";
+import {HORIZONAL_OFFSET} from "../../constants/uiConstants.ts";
 
 // Rows fetched per page. The backend caps `limit` at 100; 10 keeps each
 // scroll-triggered request small so new rows stream in smoothly.
@@ -149,7 +150,9 @@ function Progression() {
         >
             <ScreenStatusBar/>
 
-            <BackHeader title={`🏆 ${t('progression')}`}/>
+            <View style={{paddingHorizontal: HORIZONAL_OFFSET}}>
+                <BackHeader title={`🏆 ${t('progression')}`}/>
+            </View>
 
             {!contentReady ? null : loading ? (
                 <ProgressionSkeleton/>

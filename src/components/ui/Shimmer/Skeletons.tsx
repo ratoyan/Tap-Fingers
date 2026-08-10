@@ -44,14 +44,14 @@ export function ShopSkeleton() {
  */
 export function ProgressionSkeleton() {
     return (
-        <View style={{marginTop: 20, paddingHorizontal: ms(10)}}>
+        <View style={{marginTop: 20, marginHorizontal: ms(10)}}>
             {Array.from({length: 10}, (_, i) => (
                 <View
                     key={i}
                     style={{
                         flexDirection: 'row',
                         alignItems: 'center',
-                        paddingVertical: vs(20),
+                        paddingVertical: vs(25),
                         paddingHorizontal: ms(18),
                         borderRadius: ms(24),
                         marginBottom: ms(16),

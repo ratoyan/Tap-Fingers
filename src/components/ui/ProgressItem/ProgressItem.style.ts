@@ -1,11 +1,13 @@
 import {StyleSheet} from 'react-native';
 import {GOLD, ORCHID, PURPLE_LIGHT, WHITE} from '../../../constants/colors.ts';
 import {ms, scale, vs} from '../../../utils/responsive.ts';
+import {HORIZONAL_OFFSET} from "../../../constants/uiConstants.ts";
 
 export default StyleSheet.create({
     progressItem: {
         flexDirection: 'row',
         alignItems: 'center',
+        marginHorizontal: HORIZONAL_OFFSET,
         paddingVertical: vs(14),
         paddingHorizontal: ms(18),
         borderRadius: ms(24),

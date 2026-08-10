@@ -24,6 +24,7 @@ import styles from './Progression.style.ts';
 import {WHITE} from "../../constants/colors.ts";
 import ScreenStatusBar from "../../components/ui/ScreenStatusBar/ScreenStatusBar.tsx";
 import {HORIZONAL_OFFSET} from "../../constants/uiConstants.ts";
+import {ms} from "../../utils/responsive.ts";
 
 // Rows fetched per page. The backend caps `limit` at 100; 10 keeps each
 // scroll-triggered request small so new rows stream in smoothly.
@@ -150,7 +151,7 @@ function Progression() {
         >
             <ScreenStatusBar/>
 
-            <View style={{paddingHorizontal: HORIZONAL_OFFSET}}>
+            <View style={{paddingHorizontal: ms(HORIZONAL_OFFSET)}}>
                 <BackHeader title={`🏆 ${t('progression')}`}/>
             </View>
 

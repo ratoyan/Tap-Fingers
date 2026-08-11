@@ -241,18 +241,23 @@ function LoseModal({visible, score, onRetry, onBack, onWatchAd, canWatchAd = tru
                         >
                             <LinearGradient
                                 pointerEvents="none"
-                                colors={['#f7971e', '#ffd200']}
+                                colors={['#ff8f1f', '#ffd200']}
                                 start={{x: 0, y: 0}}
-                                end={{x: 1, y: 0}}
+                                end={{x: 1, y: 1}}
                                 style={styles.adGradient}
                             />
-                            <Text allowFontScaling={false} style={styles.adBtnIcon}>📺</Text>
+                            <View style={styles.adBtnIconChip}>
+                                <Text allowFontScaling={false} style={styles.adBtnIcon}>📺</Text>
+                            </View>
                             <View style={styles.adBtnTextWrap}>
                                 <Text allowFontScaling={false} style={styles.adBtnTitle}>{t('watchAd')}</Text>
                                 <View style={styles.adBtnBadge}>
                                     <FullHeart size={14} color="#e74c3c"/>
                                     <Text allowFontScaling={false} style={styles.adBtnBadgeText}> {t('getHeart')}</Text>
                                 </View>
+                            </View>
+                            <View style={styles.adBtnChevron}>
+                                <Text allowFontScaling={false} style={styles.adBtnChevronText}>›</Text>
                             </View>
                         </TouchableOpacity>
                     </Animated.View>
@@ -423,30 +428,41 @@ const styles = StyleSheet.create({
     adBtn: {
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'center',
-        height: vs(50),
-        paddingHorizontal: ms(20),
-        gap: ms(14),
+        height: vs(56),
+        paddingHorizontal: ms(12),
+        gap: ms(12),
         borderRadius: ms(18),
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.35)',
         overflow: 'hidden',
     },
     adGradient: {
         ...StyleSheet.absoluteFillObject,
     },
+    // 📺 sits in a soft translucent chip — a leading badge rather than a loose
+    // glyph. Matches the buy-a-helper dialog's watch-ad button for consistency.
+    adBtnIconChip: {
+        width: ms(38),
+        height: ms(38),
+        borderRadius: ms(19),
+        backgroundColor: 'rgba(0,0,0,0.14)',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
     adBtnIcon: {
-        fontSize: ms(32),
+        fontSize: ms(22),
+        lineHeight: ms(28),
         textAlign: 'center',
     },
     adBtnTextWrap: {
         flex: 1,
-        alignItems: 'center',
+        alignItems: 'flex-start',
     },
     adBtnTitle: {
         color: DARK_PURPLE,
-        fontSize: ms(17),
-        fontWeight: '800',
+        fontSize: ms(16),
+        fontWeight: '900',
         letterSpacing: 0.3,
-        textAlign: 'center',
     },
     adBtnBadge: {
         flexDirection: 'row',
@@ -457,7 +473,22 @@ const styles = StyleSheet.create({
         color: DARK_PURPLE,
         fontSize: ms(13),
         fontWeight: '700',
-        textAlign: 'center',
+    },
+    // Trailing chevron chip — balances the leading icon and hints "tap to go".
+    adBtnChevron: {
+        width: ms(26),
+        height: ms(26),
+        borderRadius: ms(13),
+        backgroundColor: 'rgba(0,0,0,0.12)',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    adBtnChevronText: {
+        color: DARK_PURPLE,
+        fontSize: ms(20),
+        fontWeight: '900',
+        lineHeight: ms(24),
+        marginTop: -vs(2),
     },
     adBtnDisabled: {
         width: '100%',

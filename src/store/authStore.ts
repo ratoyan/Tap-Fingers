@@ -11,6 +11,7 @@ import {useShopStore} from './shopStore';
 import {useDailyChallengesStore} from './dailyChallengesStore';
 import {setUnauthorizedHandler} from '../services/sessionEvents';
 import {setServerCoinsHandler} from '../services/statsEvents';
+import {setCoinSyncArmed} from '../services/coinSync';
 import {resetToWelcome} from '../navigation/navigationRef';
 import {seedHelperDefaults} from '../utils/helpers';
 import {withRetry} from '../utils/withRetry';
@@ -63,6 +64,9 @@ export const useAuthStore = create<AuthState>((set, get) => {
             stats: profile.stats,
             inventory: profile.inventory ?? [],
         });
+        // There's an account to push a balance to now (this runs on the cached
+        // path too, which is the launch that never touches the network).
+        setCoinSyncArmed(true);
     }
 
     // The ONE place that fetches the profile from the backend: pull it, mirror
@@ -183,6 +187,9 @@ export const useAuthStore = create<AuthState>((set, get) => {
         logout: async () => {
             await authService.logout();
             profileRepo.clearProfile();
+            // Before the zeroing below, so the coin push can't fire with a 0
+            // balance and wipe the account that just signed out.
+            setCoinSyncArmed(false);
             // Drop the device-local daily state/bonus before zeroing coins, so
             // the next account in this session doesn't inherit them.
             useDailyChallengesStore.getState().clear();
@@ -199,6 +206,7 @@ export const useAuthStore = create<AuthState>((set, get) => {
             // server logout to call — just wipe the local caches/state and reset
             // navigation to the sign-in screen.
             profileRepo.clearProfile();
+            setCoinSyncArmed(false);
             useDailyChallengesStore.getState().clear();
             useGlobalStore.getState().clearBonusCoins();
             useGlobalStore.getState().setCoins(0);

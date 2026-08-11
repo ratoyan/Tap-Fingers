@@ -29,6 +29,7 @@ import {withRetry} from '../../utils/withRetry.ts';
 import * as userService from '../../services/userService.ts';
 import * as shopService from '../../services/shopService.ts';
 import * as bossService from '../../services/bossService.ts';
+import {setCoinSyncPaused} from '../../services/coinSync.ts';
 import {Boss} from '../../services/types.ts';
 import {registerShopIcons, resolveCardEntry} from '../../data/shopVisuals.ts';
 import {storage} from '../../db/kvStore.ts';
@@ -591,6 +592,11 @@ export default function Play() {
         sessionStartRef.current = Date.now();
         sessionTokenRef.current = null;
         setLevelLength(20);
+        // Hold the device→server coin push for the length of the run. The boss
+        // bonus below is added optimistically AND banked again as part of the
+        // score on /game/end, so a push landing in between would leave the
+        // server adding the run's score on top of an already-bumped balance.
+        setCoinSyncPaused(true);
 
         try {
             // The token returned here is what lets submitGameSession() report the
@@ -631,7 +637,11 @@ export default function Play() {
         );
 
         // Nothing to report: no server session, or the player never tapped.
-        if (!token || taps <= 0) return;
+        // Nothing is owed by the backend either, so the coin push can resume.
+        if (!token || taps <= 0) {
+            setCoinSyncPaused(false);
+            return;
+        }
 
         // Advance the device-local daily challenges from this finished run: +1
         // game, the run's banked coins (score), and the best level reached. Read
@@ -666,7 +676,11 @@ export default function Play() {
                 // Still failing after retries (anti-cheat rejection or a longer
                 // outage) — coins won't update this round; the next profile
                 // refresh reconciles.
-            });
+            })
+            // Either way the server owes nothing more for this run: on success
+            // the balance is already the server's own total, and on failure the
+            // device's number is the one worth pushing.
+            .finally(() => setCoinSyncPaused(false));
     }
 
     // ─── Storage helpers ──────────────────────────────────────────────────────

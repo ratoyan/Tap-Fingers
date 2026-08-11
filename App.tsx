@@ -21,6 +21,7 @@ import {useAuthStore} from "./src/store/authStore.ts";
 import {useGlobalStore} from "./src/store/globalStore.ts";
 import {useDailyChallengesStore} from "./src/store/dailyChallengesStore.ts";
 import {syncGlobalConfig} from "./src/services/configSync.ts";
+import {pushCoins} from "./src/services/coinSync.ts";
 import {startConnectivityWatch} from "./src/services/connectivity.ts";
 import {navigationRef} from "./src/navigation/navigationRef.ts";
 import {DARK_PURPLE} from "./src/constants/colors.ts";
@@ -85,10 +86,15 @@ function App() {
     // startup AND every time the app returns to the foreground, so an admin
     // toggle of the ad switch reaches an already-running app — not just on a
     // fresh launch. (Home also re-syncs on focus for in-session navigation.)
+    // Leaving the app is also the last chance to push the coin balance the
+    // player has been looking at, so it survives a kill from the task switcher —
+    // the one exit the app gets no callback for. Safe here: pushCoins() no-ops
+    // mid-run and while the daily-bonus queue is unsettled.
     useEffect(() => {
         syncGlobalConfig();
         const sub = AppState.addEventListener('change', state => {
             if (state === 'active') syncGlobalConfig();
+            else pushCoins();
         });
         return () => sub.remove();
     }, []);

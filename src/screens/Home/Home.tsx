@@ -14,6 +14,7 @@ import {useGlobalStore} from "../../store/globalStore.ts";
 import {useAuthStore} from "../../store/authStore.ts";
 import {useConfigStore} from "../../store/configStore.ts";
 import {syncGlobalConfig} from "../../services/configSync.ts";
+import {pushCoins} from "../../services/coinSync.ts";
 import * as userService from "../../services/userService.ts";
 import {LuckyWheelSegment} from "../../services/types.ts";
 import {storage} from "../../db/kvStore.ts";
@@ -185,12 +186,18 @@ const Home: React.FC<Props> = () => {
     // PROFILE_REFRESH_MS. Firing on *every* focus hammered /player/profile each
     // time the player bounced back to Home; coins/gems already update
     // optimistically via patchStats, so this is just a periodic safety reconcile.
+    //
+    // The coin push goes FIRST and the reconcile waits for it. refreshProfile
+    // overwrites the balance with the server's number, so a drifted local total
+    // has to reach the backend before it's read back — the other order would
+    // erase exactly the drift the push exists to carry. pushCoins never rejects
+    // and no-ops when it isn't safe, so the reconcile runs either way.
     useDeferredFocusEffect(
         useCallback(() => {
             const now = Date.now();
             if (now - lastProfileRefresh < PROFILE_REFRESH_MS) return;
             lastProfileRefresh = now;
-            refreshProfile().catch(() => {
+            pushCoins().then(refreshProfile).catch(() => {
                 // Offline / transient error — keep showing the last known state,
                 // and let the next focus retry right away.
                 lastProfileRefresh = 0;

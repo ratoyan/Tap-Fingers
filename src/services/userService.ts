@@ -18,6 +18,7 @@ import {
 //   PUT  /player/profile          — update username
 //   GET  /player/scores           — this player's recent scores
 //   POST /player/ad-reward        — rewarded-ad coins (server rate-limited)
+//   POST /player/coins            — push the app's displayed balance (see coinSync)
 //   GET  /player/lucky-wheel      — admin-configured wheel segments
 //   POST /player/lucky-wheel      — daily spin (server picks the prize)
 //   POST /player/helpers/purchase — spend coins on a gameplay helper
@@ -84,6 +85,18 @@ export async function getMyScores(): Promise<ScoreEntry[]> {
 
 export async function claimAdReward(): Promise<AdRewardResult> {
     const { data } = await api.post('/player/ad-reward');
+    return data.data;
+}
+
+// The balance the server had before this push, and the one it has now.
+export interface CoinSyncResult { coins: number; previousCoins: number; }
+
+// Pushes the coin total the app is DISPLAYING; the server overwrites its own
+// with it. This is the one coin endpoint the server doesn't decide the value
+// for, so it must only be called when nothing is still owed by the backend —
+// services/coinSync.ts owns those guards, call it through there, not directly.
+export async function syncCoins(coins: number): Promise<CoinSyncResult> {
+    const { data } = await api.post('/player/coins', { coins });
     return data.data;
 }
 

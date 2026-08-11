@@ -36,7 +36,10 @@ interface GlobalState {
     grantBonusCoins: (amount: number) => void;
     // Drops a now-server-credited reward from the offset WITHOUT touching the
     // displayed balance: the caller applies the server's new total in the same
-    // tick, and that total already includes these coins.
+    // tick, and that total already includes these coins. Also how the coin push
+    // (services/coinSync.ts) retires an offset it has just written into the
+    // server total — which is why a negative amount is allowed through: the
+    // legacy negative offset is settled the same way, as a whole.
     settleBonusCoins: (amount: number) => void;
     // Loads the persisted bonus once on app start and layers it onto the
     // currently displayed balance. Safe to call before or after the first
@@ -89,7 +92,7 @@ export const useGlobalStore = create<GlobalState>((set, get) => ({
     },
 
     settleBonusCoins: (amount: number) => {
-        if (amount <= 0) return;
+        if (!amount) return;
         const nextBonus = get().bonusCoins - amount;
         // `coins` is deliberately untouched — the caller immediately calls
         // patchStats/setCoins with the server total, which recomputes the

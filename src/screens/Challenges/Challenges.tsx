@@ -292,12 +292,16 @@ function Challenges() {
             <ScreenStatusBar/>
 
             <View style={styles.content}>
-            <BackHeader
-                title={`🎯 ${t('challenges')}`}
-                isShowCoin={true}
-                textStyle={{marginRight: 25}}
-                coins={coins}
-            />
+            {/* The gap that used to sit on the list's contentContainer now lives
+                under the header, so it holds even while the list is unmounted. */}
+            <View style={styles.header}>
+                <BackHeader
+                    title={`🎯 ${t('challenges')}`}
+                    isShowCoin={true}
+                    textStyle={{marginRight: 25}}
+                    coins={coins}
+                />
+            </View>
 
             {/* Daily challenges live in the always-present list header, so they
                 stay visible while the server catalog (re)loads on every focus —
@@ -313,7 +317,7 @@ function Challenges() {
                         onCollect={() => handleClaim(item.id)}
                     />
                 )}
-                contentContainerStyle={{paddingBottom: 40, marginTop: 20}}
+                contentContainerStyle={{paddingBottom: 40}}
                 showsVerticalScrollIndicator={false}
                 accessibilityRole="list"
                 onEndReached={handleEndReached}

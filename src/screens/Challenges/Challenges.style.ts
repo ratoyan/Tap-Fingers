@@ -12,4 +12,8 @@ export default StyleSheet.create({
         flex: 1,
         paddingHorizontal: HORIZONAL_OFFSET,
     },
+    // Breathing room between the header row and the daily challenges below it.
+    header: {
+        paddingBottom: 20,
+    },
 });

@@ -214,7 +214,12 @@
       "Bash(sips --resampleWidth 600 corner.png --out corner_big.png)",
       "Bash(sed -i.bak \"s/initialRouteName={initialRouteName}/initialRouteName={'Profile'}/\" src/navigation/StackNavigator.tsx)",
       "Bash(rm -f src/navigation/StackNavigator.tsx.bak)",
-      "Bash(curl -s -m 5 http://localhost:8081/reload)"
+      "Bash(curl -s -m 5 http://localhost:8081/reload)",
+      "Bash(lsof -iTCP:8081 -sTCP:LISTEN -n -P)",
+      "Bash(sips -c 1000 1100 --cropOffset 710 130 current.png --out crop_header.png)",
+      "Bash(sips -c 1000 1120 --cropOffset 1400 130 current.png --out crop_cost.png)",
+      "Bash(sips -c 780 1060 --cropOffset 1680 130 ad2.png --out ad2_btn.png)",
+      "Bash(sips -c 900 1100 --cropOffset 1600 130 ad3.png --out ad3_btn.png)"
     ]
   }
 }

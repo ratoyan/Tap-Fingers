@@ -113,15 +113,21 @@ function BuyHelperModal({visible, helperType, coins, watchAdUsed, onBuy, onWatch
         <Animated.View style={[styles.overlay, {opacity: fadeAnim}]}>
             <Animated.View style={[styles.modal, {transform: [{scale: scaleAnim}]}]}>
 
-                {/* Icon header */}
-                <LinearGradient
-                    colors={cfg.gradient}
-                    start={{x: 0, y: 0}}
-                    end={{x: 1, y: 0}}
-                    style={styles.iconHeader}
-                >
+                {/* Icon header — a plain View owns the (fixed) height; the gradient
+                    drops to an absoluteFill background. A <LinearGradient> that both
+                    sizes itself (here, only by paddingVertical) AND wraps content
+                    collapses its height on iOS new arch and clips the emoji at the
+                    bottom. See linear-gradient-ios-clip. */}
+                <View style={styles.iconHeader}>
+                    <LinearGradient
+                        pointerEvents="none"
+                        colors={cfg.gradient}
+                        start={{x: 0, y: 0}}
+                        end={{x: 1, y: 0}}
+                        style={StyleSheet.absoluteFill}
+                    />
                     <Text allowFontScaling={false} style={styles.mainIcon}>{cfg.icon}</Text>
-                </LinearGradient>
+                </View>
 
                 {/* Title + desc */}
                 <View style={styles.body}>
@@ -171,13 +177,15 @@ function BuyHelperModal({visible, helperType, coins, watchAdUsed, onBuy, onWatch
                     >
                         <LinearGradient
                             pointerEvents="none"
-                            colors={adDisabled ? ['#555', '#333'] : ['#f7971e', '#ffd200']}
+                            colors={adDisabled ? ['#555', '#333'] : ['#ff8f1f', '#ffd200']}
                             start={{x: 0, y: 0}}
-                            end={{x: 1, y: 0}}
+                            end={{x: 1, y: 1}}
                             style={styles.adGradient}
                         />
-                        <Text allowFontScaling={false} style={styles.adIcon}>📺</Text>
-                        <View>
+                        <View style={styles.adIconChip}>
+                            <Text allowFontScaling={false} style={styles.adIcon}>📺</Text>
+                        </View>
+                        <View style={styles.adTextCol}>
                             <Text allowFontScaling={false} style={[styles.adTitle, adDisabled && {color: 'rgba(255,255,255,0.5)'}]}>
                                 {adDisabled ? t('adLimitReached') : t('watchAd')}
                             </Text>
@@ -185,6 +193,11 @@ function BuyHelperModal({visible, helperType, coins, watchAdUsed, onBuy, onWatch
                                 {adDisabled ? t('adsUsed', {used: watchAdUsed}) : t('getFreeHelper', {name: t(cfg.name)})}
                             </Text>
                         </View>
+                        {!adDisabled && (
+                            <View style={styles.adChevron}>
+                                <Text allowFontScaling={false} style={styles.adChevronText}>›</Text>
+                            </View>
+                        )}
                     </TouchableOpacity>
                 </Animated.View>
                 )}
@@ -251,11 +264,17 @@ const styles = StyleSheet.create({
         elevation: 22,
     },
     iconHeader: {
+        height: vs(90),
         alignItems: 'center',
-        paddingVertical: vs(18),
+        justifyContent: 'center',
+        overflow: 'hidden',
     },
     mainIcon: {
         fontSize: ms(52),
+        // Explicit lineHeight > fontSize gives the emoji glyph vertical room so
+        // its bottom isn't clipped by the text line box on iOS new arch.
+        lineHeight: ms(60),
+        textAlign: 'center',
     },
     body: {
         paddingHorizontal: ms(20),
@@ -341,43 +360,76 @@ const styles = StyleSheet.create({
         letterSpacing: 0.5,
     },
     adWrap: {
+        marginTop: vs(6),
         marginHorizontal: ms(16),
         marginBottom: vs(10),
-        borderRadius: ms(16),
+        borderRadius: ms(18),
         overflow: 'hidden',
         shadowColor: GOLD,
         shadowOffset: {width: 0, height: 4},
-        shadowOpacity: 0.45,
-        shadowRadius: 10,
+        shadowOpacity: 0.5,
+        shadowRadius: 12,
         elevation: 8,
     },
     adBtn: {
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'center',
         gap: ms(12),
-        height: vs(48),
-        paddingHorizontal: ms(18),
-        borderRadius: ms(16),
+        height: vs(56),
+        paddingHorizontal: ms(12),
+        borderRadius: ms(18),
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.35)',
         overflow: 'hidden',
     },
     adGradient: {
         ...StyleSheet.absoluteFillObject,
     },
+    // 📺 sits in a soft translucent chip so it reads as a leading badge rather
+    // than a loose glyph — gives the row structure and a more polished feel.
+    adIconChip: {
+        width: ms(38),
+        height: ms(38),
+        borderRadius: ms(19),
+        backgroundColor: 'rgba(0,0,0,0.14)',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
     adIcon: {
-        fontSize: ms(28),
+        fontSize: ms(22),
+        lineHeight: ms(28),
+    },
+    adTextCol: {
+        flex: 1,
     },
     adTitle: {
         color: '#1a0533',
         fontSize: ms(15),
-        fontWeight: '800',
+        fontWeight: '900',
         letterSpacing: 0.3,
     },
     adSub: {
         color: '#3a1a00',
         fontSize: ms(11),
-        fontWeight: '600',
+        fontWeight: '700',
         marginTop: vs(1),
+        opacity: 0.85,
+    },
+    // Trailing chevron chip — balances the leading icon and hints "tap to go".
+    adChevron: {
+        width: ms(26),
+        height: ms(26),
+        borderRadius: ms(13),
+        backgroundColor: 'rgba(0,0,0,0.12)',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    adChevronText: {
+        color: '#1a0533',
+        fontSize: ms(20),
+        fontWeight: '900',
+        lineHeight: ms(24),
+        marginTop: -vs(2),
     },
     actions: {
         flexDirection: 'row',

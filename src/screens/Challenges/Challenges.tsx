@@ -8,6 +8,7 @@ import LinearGradient from 'react-native-linear-gradient';
 import * as challengeService from "../../services/challengeService.ts";
 import {ChallengeWithProgress} from "../../services/types.ts";
 import {useAuthStore} from "../../store/authStore.ts";
+import {useGlobalStore} from "../../store/globalStore.ts";
 import {useDailyChallengesStore} from "../../store/dailyChallengesStore.ts";
 import {DAILY_CHALLENGES} from "../../data/dailyChallenges.ts";
 import {playSfx} from "../../utils/sfx.ts";
@@ -16,6 +17,7 @@ import {haptic} from "../../utils/haptics.ts";
 // components
 import BackHeader from "../../components/ui/BackHeader/BackHeader.tsx";
 import ChallengeCard from "../../components/ui/ChallengeCard/ChallengeCard.tsx";
+import CoinGain from "../../components/ui/CoinGain/CoinGain.tsx";
 import {ChallengesSkeleton} from "../../components/ui/Shimmer/Skeletons.tsx";
 import FallingBoxesLoader from "../../components/ui/FallingBoxesLoader/FallingBoxesLoader.tsx";
 import ScreenStatusBar from "../../components/ui/ScreenStatusBar/ScreenStatusBar.tsx";
@@ -24,6 +26,7 @@ import DailyChallengeIcon from "../../assets/icons/DailyChallengeIcon.tsx";
 // styles
 import styles from './Challenges.style.ts';
 import {DARK_PURPLE, PURPLE, WHITE} from "../../constants/colors.ts";
+import {HORIZONAL_OFFSET} from "../../constants/uiConstants.ts";
 
 // Challenges fetched per page; the backend caps `limit` at 100.
 const PAGE_SIZE = 15;
@@ -72,8 +75,13 @@ function sortByRank(list: ChallengeWithProgress[]): ChallengeWithProgress[] {
 function Challenges() {
     const {t} = useTranslation();
     const refreshProfile = useAuthStore(s => s.refreshProfile);
+    // Displayed balance (server coins + not-yet-credited daily bonus), same
+    // source the Shop's header pill reads.
+    const coins = useGlobalStore(s => s.coins);
 
     const [items, setItems] = useState<ChallengeWithProgress[]>([]);
+    // Coins a claim just paid, held only for as long as the "+N" pop plays.
+    const [coinGain, setCoinGain] = useState<number | null>(null);
     const [loading, setLoading] = useState(true);          // first page only
     const [loadingMore, setLoadingMore] = useState(false); // footer spinner
     const [claimingId, setClaimingId] = useState<number | null>(null);
@@ -131,12 +139,12 @@ function Challenges() {
     }, [dailyResetAt, nowTick, t]);
 
     // Claiming is synchronous (device-local): grant the coins, mark it claimed,
-    // and play the same fanfare the server challenges use.
+    // and pop the "+N" toward the header pill. The claim sound and haptic fire
+    // from CoinGain, with the visible pop, so the payoff stays one event.
     function handleClaimDaily(id: string) {
         const reward = useDailyChallengesStore.getState().claim(id);
         if (reward != null) {
-            playSfx('claim');
-            haptic('claim');
+            setCoinGain(reward);
         } else {
             playSfx('denied');
             haptic('denied');
@@ -194,8 +202,16 @@ function Challenges() {
             await challengeService.claimChallenge(challengeId);
             // After the server confirms, not on press — the fanfare is the
             // receipt for the coins, and it would be a lie if the claim failed.
-            playSfx('claim');
-            haptic('claim');
+            // CoinGain plays the claim sound and haptic as it pops.
+            const reward = items.find(c => c.id === challengeId)?.rewardCoins;
+            if (reward) {
+                setCoinGain(reward);
+            } else {
+                // No amount to show (shouldn't happen for a rendered card) —
+                // still give the claim its cue.
+                playSfx('claim');
+                haptic('claim');
+            }
             // Mark this challenge claimed in place (and pull the new coin balance)
             // rather than reloading from page 1 — keeps scroll position and the
             // already-loaded pages intact.
@@ -276,7 +292,12 @@ function Challenges() {
             <ScreenStatusBar/>
 
             <View style={styles.content}>
-            <BackHeader title={`🎯 ${t('challenges')}`}/>
+            <BackHeader
+                title={`🎯 ${t('challenges')}`}
+                isShowCoin={true}
+                textStyle={{marginRight: 25}}
+                coins={coins}
+            />
 
             {/* Daily challenges live in the always-present list header, so they
                 stay visible while the server catalog (re)loads on every focus —
@@ -313,6 +334,14 @@ function Challenges() {
                 }
             />}
             </View>
+
+            {/* The reward a claim just paid, popping up under the header's pill.
+                Outside the padded content view so it lines up with the pill. */}
+            <CoinGain
+                amount={coinGain}
+                onDone={() => setCoinGain(null)}
+                style={{right: HORIZONAL_OFFSET + 4}}
+            />
 
             {/* Equipped card raining down over the whole screen while the server
                 catalog loads (matches the Progression loading state). */}

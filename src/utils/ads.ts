@@ -13,6 +13,7 @@
 
 import {MobileAds, RewardedAdLoader} from 'yandex-mobile-ads';
 import {AD_UNIT_REWARDED} from './adUnits.ts';
+import {pauceMusic, playMusic} from './helpers.ts';
 
 // Re-exported so BottomBanner keeps its single ads-module import.
 export {AD_UNIT_BANNER} from './adUnits.ts';
@@ -66,7 +67,20 @@ export async function showRewardedAd(): Promise<boolean> {
         const finish = (value: boolean) => {
             if (settled) return;
             settled = true;
+            // The ad is closing (dismissed, or it never managed to show) — hand
+            // the foreground back to the game and let its music resume. playMusic
+            // reads the mute setting itself, so a player who muted stays muted.
+            // On Android the ad backgrounds the app and useMusicAppState already
+            // pauses/resumes; on iOS it's shown in-process without an AppState
+            // change, so this is the only thing that turns the music back on.
+            playMusic();
             resolve(value);
+        };
+
+        // Kill the music the moment the ad actually takes the screen, so it
+        // doesn't play under the ad's own audio. Resumed in finish() on dismiss.
+        rewarded.onAdShown = () => {
+            pauceMusic();
         };
 
         rewarded.onRewarded = () => {

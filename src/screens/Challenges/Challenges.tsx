@@ -1,5 +1,5 @@
 import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
-import {ActivityIndicator, FlatList, StyleSheet, Text, View} from 'react-native';
+import {ActivityIndicator, Animated, StyleSheet, Text, View} from 'react-native';
 import {useFocusEffect} from '@react-navigation/core';
 import {useTranslation} from "react-i18next";
 import LinearGradient from 'react-native-linear-gradient';
@@ -17,6 +17,7 @@ import {haptic} from "../../utils/haptics.ts";
 // components
 import BackHeader from "../../components/ui/BackHeader/BackHeader.tsx";
 import ChallengeCard from "../../components/ui/ChallengeCard/ChallengeCard.tsx";
+import CoinCount from "../../components/ui/CoinCount/CoinCount.tsx";
 import CoinGain from "../../components/ui/CoinGain/CoinGain.tsx";
 import {ChallengesSkeleton} from "../../components/ui/Shimmer/Skeletons.tsx";
 import FallingBoxesLoader from "../../components/ui/FallingBoxesLoader/FallingBoxesLoader.tsx";
@@ -25,7 +26,7 @@ import DailyChallengeIcon from "../../assets/icons/DailyChallengeIcon.tsx";
 
 // styles
 import styles from './Challenges.style.ts';
-import {DARK_PURPLE, PURPLE, WHITE} from "../../constants/colors.ts";
+import {DARK_PURPLE, PURPLE, PURPLE_DARK, WHITE} from "../../constants/colors.ts";
 import {HORIZONAL_OFFSET} from "../../constants/uiConstants.ts";
 
 // Challenges fetched per page; the backend caps `limit` at 100.
@@ -230,15 +231,37 @@ function Challenges() {
         }
     }
 
+    // The coin on the sticky "🏆 Challenges" bar stays hidden until the Daily
+    // section has scrolled away, so the balance is never shown twice at once — it
+    // "arrives" on the catalog title exactly as the Daily coin leaves. Driven by
+    // the scroll offset measured against the Daily section's own height.
+    const scrollY = useRef(new Animated.Value(0)).current;
+    const [dailyHeight, setDailyHeight] = useState(0);
+    const catalogCoinOpacity = dailyHeight > 0
+        ? scrollY.interpolate({
+            inputRange: [dailyHeight - 40, dailyHeight - 8],
+            outputRange: [0, 1],
+            extrapolate: 'clamp',
+        })
+        : 0;
+
     // Daily challenges + section titles, pinned above the server catalog.
     const listHeader = (
-        <View>
+        <View onLayout={e => {
+            const h = e.nativeEvent.layout.height;
+            setDailyHeight(prev => (Math.abs(prev - h) > 1 ? h : prev));
+        }}>
             <View style={{paddingHorizontal: 4, marginBottom: 10}}>
-                <View style={{flexDirection: 'row', alignItems: 'center'}}>
-                    <DailyChallengeIcon size={26}/>
-                    <Text allowFontScaling={false} style={{color: WHITE, fontSize: 18, fontWeight: '700', marginLeft: 8}}>
-                        {t('dailyChallenges')}
-                    </Text>
+                <View style={{flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between'}}>
+                    <View style={{flexDirection: 'row', alignItems: 'center', flexShrink: 1}}>
+                        <DailyChallengeIcon size={26}/>
+                        <Text allowFontScaling={false} numberOfLines={1} style={{color: WHITE, fontSize: 18, fontWeight: '700', marginLeft: 8}}>
+                            {t('dailyChallenges')}
+                        </Text>
+                    </View>
+                    {/* Coin balance now lives on the daily row instead of the header,
+                        keeping the same restyled pill (gold hairline border). */}
+                    <CoinCount count={coins} viewStyles={styles.coinPill}/>
                 </View>
                 <Text allowFontScaling={false} style={{color: 'rgba(255,255,255,0.6)', fontSize: 12, marginTop: 2}}>
                     {resetLabel}
@@ -263,13 +286,29 @@ function Challenges() {
                     onCollect={() => handleClaimDaily(v.def.id)}
                 />
             ))}
+        </View>
+    );
 
+    // Sticky "🏆 Challenges" section title. The coin balance rides on it, so once
+    // the Daily section scrolls up and away, this row pins to the top of the list
+    // and the balance stays in view next to the catalog title — not in the header.
+    const sectionHeader = (
+        <View style={styles.sectionHeader}>
+            {/* Background + gold underline fade in only while the bar is pinned to
+                the top (transparent while it's still inline under the Daily cards),
+                so the solid fill appears exactly when it needs to hide the catalog
+                cards scrolling behind it. */}
+            <Animated.View style={[StyleSheet.absoluteFill, {opacity: catalogCoinOpacity},{backgroundColor: '#500082'}]} pointerEvents="none"/>
             <Text
                 allowFontScaling={false}
-                style={{color: WHITE, fontSize: 18, fontWeight: '700', marginTop: 18, marginBottom: 6, paddingHorizontal: 4}}
+                numberOfLines={1}
+                style={{color: WHITE, fontSize: 18, fontWeight: '700', flexShrink: 1}}
             >
                 🏆 {t('challenges')}
             </Text>
+            <Animated.View style={{opacity: catalogCoinOpacity}} pointerEvents="none">
+                <CoinCount count={coins} viewStyles={styles.coinPill}/>
+            </Animated.View>
         </View>
     );
 
@@ -297,9 +336,6 @@ function Challenges() {
             <View style={styles.header}>
                 <BackHeader
                     title={`🎯 ${t('challenges')}`}
-                    isShowCoin={true}
-                    textStyle={{marginRight: 25}}
-                    coins={coins}
                 />
             </View>
 
@@ -307,9 +343,14 @@ function Challenges() {
                 stay visible while the server catalog (re)loads on every focus —
                 the skeleton only stands in for the server rows via the empty
                 slot below. */}
-            {contentReady && <FlatList
-                data={items}
+            {contentReady && <Animated.SectionList
+                sections={[{data: items}]}
                 keyExtractor={(item) => item.id.toString()}
+                onScroll={Animated.event(
+                    [{nativeEvent: {contentOffset: {y: scrollY}}}],
+                    {useNativeDriver: true},
+                )}
+                scrollEventThrottle={16}
                 renderItem={({item, index}) => (
                     <ChallengeCard
                         item={toCardItem(item)}
@@ -317,6 +358,8 @@ function Challenges() {
                         onCollect={() => handleClaim(item.id)}
                     />
                 )}
+                renderSectionHeader={() => sectionHeader}
+                stickySectionHeadersEnabled={true}
                 contentContainerStyle={{paddingBottom: 40}}
                 showsVerticalScrollIndicator={false}
                 accessibilityRole="list"
@@ -344,6 +387,7 @@ function Challenges() {
             <CoinGain
                 amount={coinGain}
                 onDone={() => setCoinGain(null)}
+                offsetY={72}
                 style={{right: HORIZONAL_OFFSET + 4}}
             />
 

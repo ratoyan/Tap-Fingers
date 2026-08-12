@@ -219,7 +219,16 @@
       "Bash(sips -c 1000 1100 --cropOffset 710 130 current.png --out crop_header.png)",
       "Bash(sips -c 1000 1120 --cropOffset 1400 130 current.png --out crop_cost.png)",
       "Bash(sips -c 780 1060 --cropOffset 1680 130 ad2.png --out ad2_btn.png)",
-      "Bash(sips -c 900 1100 --cropOffset 1600 130 ad3.png --out ad3_btn.png)"
+      "Bash(sips -c 900 1100 --cropOffset 1600 130 ad3.png --out ad3_btn.png)",
+      "Bash(curl -s -m 5 \"http://localhost:8081/status\")",
+      "Read(//Users/luizamuradyan/Library/Developer/Xcode/**)",
+      "Bash(python3 -c \"import fbsimctl\")",
+      "Bash(osascript -e 'tell application \"Simulator\" to activate' -e 'delay 0.3' -e 'tell application \"System Events\" to tell process \"Simulator\" to get {position, size} of window 1')",
+      "Bash(brew install *)",
+      "Bash(pkill -9 -f \"TapFingers.app/TapFingers\")",
+      "Bash(python3 -c \"import Quartz; print\\('Quartz OK'\\)\")",
+      "Bash(python3 -c \"import Quartz; print\\('scroll api', hasattr\\(Quartz,'CGEventCreateScrollWheelEvent'\\)\\)\")",
+      "Bash(grep -n \"sectionHeaderBg\\\\|LinearGradient colors={\\\\[DARK_PURPLE, PURPLE_DARK\\\\]\" src/screens/Challenges/Challenges.tsx)"
     ]
   }
 }

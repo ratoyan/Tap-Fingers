@@ -242,7 +242,10 @@
       "Bash(curl -s -b __TRACKED_VAR__/c.txt -o __TRACKED_VAR__/edit8b.html -w 'edit page -> %{http_code}\\\\n' http://127.0.0.1:8000/admin/shop/8/edit)",
       "Bash(curl -s -b /c/Users/gorat/AppData/Local/Temp/claude/C--rob-project-mobile-TapFingers/d358fa88-027f-4aaf-9921-317dfc4f7068/scratchpad/c.txt -o /c/Users/gorat/AppData/Local/Temp/claude/C--rob-project-mobile-TapFingers/d358fa88-027f-4aaf-9921-317dfc4f7068/scratchpad/edit8c.html http://127.0.0.1:8000/admin/shop/8/edit)",
       "Bash(php -l app/Support/CitySkyline.php)",
-      "Bash(curl -s -b __TRACKED_VAR__/c.txt -o __TRACKED_VAR__/edit_sun.html -w 'edit page -> %{http_code}\\\\n' http://127.0.0.1:8000/admin/shop/8/edit)"
+      "Bash(curl -s -b __TRACKED_VAR__/c.txt -o __TRACKED_VAR__/edit_sun.html -w 'edit page -> %{http_code}\\\\n' http://127.0.0.1:8000/admin/shop/8/edit)",
+      "Bash(php -r ' *)",
+      "Bash(curl -s -b /c/Users/gorat/AppData/Local/Temp/claude/C--rob-project-mobile-TapFingers/d358fa88-027f-4aaf-9921-317dfc4f7068/scratchpad/c.txt -o /dev/null -w 'admin shop page -> %{http_code}\\\\n' http://127.0.0.1:8000/admin/shop)",
+      "Bash(curl -s -o /dev/null -w \"api shop -> %{http_code}\\\\n\" http://127.0.0.1:8000/api/shop)"
     ]
   }
 }

@@ -1,6 +1,6 @@
 import React, {useMemo} from 'react';
 import {StyleSheet} from 'react-native';
-import Svg, {Circle, Defs, G, LinearGradient, Path, RadialGradient, Rect, Stop} from 'react-native-svg';
+import Svg, {Circle, Defs, LinearGradient, Path, RadialGradient, Rect, Stop} from 'react-native-svg';
 import {CitySkyline} from '../../../services/types';
 
 type Tower = CitySkyline['towers'][number];
@@ -102,15 +102,75 @@ interface Win {
     wakesAt: number;
 }
 
+// How much darker/lighter a tower is drawn than its neighbours. The front row
+// used to be one filled path, so wherever two towers of similar height met they
+// merged into a single blob and the city read as a wall with notches. Giving
+// each its own opacity over the sky separates them — the further-back ones let
+// a little sky through, which is exactly how a real skyline reads.
+const TOWER_SHADE = [1, 0.9, 0.96, 0.86, 0.99, 0.92];
+
+// The band of light down the edge facing the sun. Thin and faint on purpose: it
+// only has to suggest that towers have two sides.
+const TOWER_EDGE_W = 3.5;
+const TOWER_EDGE_OPACITY = 0.14;
+
+// Roof masts, on the taller towers only. A skyline of flat tops is what makes a
+// generated one look generated; a few verticals breaking the roofline is most of
+// what separates it from a bar chart.
+const MAST_MIN_HEIGHT = 170;
+const MAST_W = 3;
+const MAST_BEACON_R = 3.5;
+
 function clamp01(v: number): number {
     return v < 0 ? 0 : v > 1 ? 1 : v;
 }
 
-// Walks the tower list into a closed silhouette sitting on the ground line.
-function skylinePath(towers: Tower[], ground: number, sy: number): string {
-    let d = `M0 ${ground}`;
-    for (const t of towers) d += ` V${t.top * sy} H${t.x + t.w}`;
-    return `${d} V${ground} Z`;
+interface TowerArt {
+    key: string;
+    x: number;
+    w: number;
+    top: number;
+    h: number;
+    shade: number;
+    // x of the narrow lit strip, or null when the tower is too slim to carry one.
+    edgeX: number | null;
+    // Mast height above the roof, 0 for none.
+    mast: number;
+}
+
+// Turns the catalog's bare towers into what actually gets drawn. Everything here
+// is a pure function of the tower's own numbers, so a city looks the same on
+// every launch and no state has to travel with the shape.
+function towerArt(towers: Tower[], ground: number, sy: number, sunCx: number): TowerArt[] {
+    return towers.map((t, i) => {
+        const top = t.top * sy;
+        // Measured in authored space, NOT against `ground`. `ground` is the
+        // viewBox height, which the shop preview shortens to 430 — mixing it
+        // with an unscaled `top` gave a negative height for every real tower
+        // there, so the shop cards lost their masts and beacons while Play,
+        // where the two happen to be equal, kept them.
+        const height = AUTHORED_H - t.top;
+        // Lit edge faces the sun. A tower directly under it gets none — light
+        // from straight on wouldn't pick out either side.
+        const centre = t.x + t.w / 2;
+        const facesRight = sunCx > centre;
+        const nearlyUnderSun = Math.abs(sunCx - centre) < t.w;
+
+        return {
+            key: `t${i}`,
+            x: t.x,
+            w: t.w,
+            top,
+            h: ground - top,
+            shade: TOWER_SHADE[i % TOWER_SHADE.length],
+            edgeX: t.w < TOWER_EDGE_W * 3 || nearlyUnderSun
+                ? null
+                : (facesRight ? t.x + t.w - TOWER_EDGE_W : t.x),
+            mast: height >= MAST_MIN_HEIGHT && (i * 3 + 1) % 4 !== 0
+                ? (24 + ((i * 37) % 22)) * sy
+                : 0,
+        };
+    });
 }
 
 function farPath(row: {x: number; top: number}[], ground: number, sy: number): string {
@@ -228,7 +288,7 @@ function CityBackground({
         const far = skyline?.far?.length ? skyline.far : FAR_ROW;
         return {
             sy,
-            near: skylinePath(towers, height, sy),
+            towers,
             far: farPath(far, height, sy),
             windows: towers.flatMap((t, i) => windowsFor(t, i, height, sy)),
         };
@@ -238,6 +298,10 @@ function CityBackground({
     const sunCx = ((sunX ?? DEFAULT_SUN_X_PCT) / 100) * VB_W;
     // Rest position minus what's left of the climb down.
     const sunCy = (((sunY ?? DEFAULT_SUN_Y_PCT) / 100) * AUTHORED_H - SUN_RISE * (1 - evening)) * scene.sy;
+
+    // Built here rather than inside the memo because the lit edge depends on
+    // where the sun is, which moves through a run.
+    const art = towerArt(scene.towers, height, scene.sy, sunCx);
 
     const skyId = `citySky-${id}`;
     const glowId = `cityGlow-${id}`;
@@ -314,25 +378,85 @@ function CityBackground({
             {/* Back row. */}
             <Path d={scene.far} fill={`url(#${buildingId})`} opacity={FAR_ROW_OPACITY} />
 
-            {/* Front row + its lit windows. */}
-            <Path d={scene.near} fill={`url(#${buildingId})`} />
-            <G fill={windowFill}>
-                {scene.windows.map(w => (
-                    <Rect
-                        key={w.key}
-                        x={w.x}
-                        y={w.y}
-                        width={WINDOW_W}
-                        height={WINDOW_H * scene.sy}
-                        rx={1}
-                        opacity={
-                            w.wakesAt < evening
-                                ? (w.bright ? 0.85 : 0.45)
-                                : WINDOW_DARK_OPACITY
-                        }
-                    />
-                ))}
-            </G>
+            {/* Front row, a tower at a time rather than one filled path, so each
+                building can be shaded slightly differently and stop merging into
+                its neighbours. */}
+            {art.map(t => (
+                <Rect
+                    key={t.key}
+                    x={t.x}
+                    y={t.top}
+                    width={t.w}
+                    height={t.h}
+                    fill={`url(#${buildingId})`}
+                    opacity={t.shade}
+                />
+            ))}
+
+            {/* Roof masts, with a light at the tip. */}
+            {art.filter(t => t.mast > 0).map(t => (
+                <Rect
+                    key={`${t.key}m`}
+                    x={t.x + t.w / 2 - MAST_W / 2}
+                    y={t.top - t.mast}
+                    width={MAST_W}
+                    height={t.mast}
+                    fill={`url(#${buildingId})`}
+                />
+            ))}
+
+            {/* Every element below sets its own `fill`.
+
+                They used to be wrapped in a group that carried the colour for
+                them, which is how SVG inheritance works in a browser but is not
+                something react-native-svg can be relied on for. They were the
+                only elements in the scene depending on it — which is exactly why
+                the window lights and the beacons were the only things that never
+                appeared on a device while the towers, sky and sun all did. */}
+
+            {/* The side of each tower the sun is on. */}
+            {art.filter(t => t.edgeX !== null).map(t => (
+                <Rect
+                    key={`${t.key}e`}
+                    x={t.edgeX!}
+                    y={t.top}
+                    width={TOWER_EDGE_W}
+                    height={t.h}
+                    fill={glow}
+                    opacity={TOWER_EDGE_OPACITY}
+                />
+            ))}
+
+            {/* Mast beacons, the same light as the windows — a city that is
+                otherwise dark still has these on. */}
+            {art.filter(t => t.mast > 0).map(t => (
+                <Circle
+                    key={`${t.key}b`}
+                    cx={t.x + t.w / 2}
+                    cy={t.top - t.mast}
+                    r={MAST_BEACON_R}
+                    fill={windowFill}
+                    opacity={0.9}
+                />
+            ))}
+
+            {/* Window lights. */}
+            {scene.windows.map(w => (
+                <Rect
+                    key={w.key}
+                    x={w.x}
+                    y={w.y}
+                    width={WINDOW_W}
+                    height={WINDOW_H * scene.sy}
+                    rx={1}
+                    fill={windowFill}
+                    opacity={
+                        w.wakesAt < evening
+                            ? (w.bright ? 0.85 : 0.45)
+                            : WINDOW_DARK_OPACITY
+                    }
+                />
+            ))}
         </Svg>
     );
 }

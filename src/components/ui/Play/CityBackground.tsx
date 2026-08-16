@@ -85,10 +85,6 @@ const WINDOW_DARK_OPACITY = 0.09;
 const DEFAULT_SUN_X_PCT = 71.5;
 const DEFAULT_SUN_Y_PCT = 51.9;
 
-// How far above its resting place the sun starts, in authored y. The run's
-// evening closes this gap (see `lit`), which is what makes a good run look like
-// the hours passing rather than like a brightness slider.
-const SUN_RISE = 183;
 const SUN_R = 54;
 const SUN_GLOW_R = 170;
 
@@ -229,23 +225,21 @@ interface CityBackgroundProps {
     // that's the same light reaching the horizon, and letting the two differ
     // only ever produced a city lit by two suns.
     glowColor?: string;
-    // 0–1: how far into the city's evening this is. Play raises it as the player
-    // climbs levels, so a good run visibly turns dusk into night — the windows
-    // come on and the sun sinks toward the rooftops. Progress you feel rather
-    // than read off a counter.
+    // 0–1: how much of the city has its lights on. Play raises it as the player
+    // climbs levels, so a good run visibly wakes the city up — progress you feel
+    // rather than read off a counter.
     //
-    // Only these two move. The palette is what the player bought, so nothing
-    // here recolours the sky: the same city at a later hour, not a different
-    // one. Everywhere else (the shop, above all) the default shows the city
-    // fully lit, which is what the shop is selling.
+    // Windows are all it touches. The palette and the sun's place are what the
+    // player bought, so nothing here recolours or rearranges the scene.
+    // Everywhere else (the shop, above all) the default shows the city fully
+    // lit, which is what the shop is selling.
     lit?: number;
     // The city's own silhouette from the catalog. Falls back to the bundled one
     // above when the server hasn't sent a shape for this background.
     skyline?: CitySkyline | null;
-    // Where the sun sits, as percentages of the frame. `sunY` is its *resting*
-    // place — where it ends up at full evening, which is what the shop and the
-    // admin preview show. Play starts it SUN_RISE higher and sinks it to here,
-    // so the number an admin types is the position they are looking at.
+    // Where the sun sits, as percentages of the frame. Fixed: the shop card, the
+    // admin preview and the game all draw it in the same spot, so the numbers an
+    // admin types are the position they are looking at.
     sunX?: number | null;
     sunY?: number | null;
     // viewBox height. The default suits a portrait phone; the shop preview
@@ -295,12 +289,13 @@ function CityBackground({
     }, [height, skyline]);
 
     const evening = clamp01(lit);
+    // Straight from the catalog. The sun does not move: it sits where the admin
+    // put it, in the game exactly as in the shop card.
     const sunCx = ((sunX ?? DEFAULT_SUN_X_PCT) / 100) * VB_W;
-    // Rest position minus what's left of the climb down.
-    const sunCy = (((sunY ?? DEFAULT_SUN_Y_PCT) / 100) * AUTHORED_H - SUN_RISE * (1 - evening)) * scene.sy;
+    const sunCy = ((sunY ?? DEFAULT_SUN_Y_PCT) / 100) * AUTHORED_H * scene.sy;
 
     // Built here rather than inside the memo because the lit edge depends on
-    // where the sun is, which moves through a run.
+    // where this city's sun is, which the memo doesn't see.
     const art = towerArt(scene.towers, height, scene.sy, sunCx);
 
     const skyId = `citySky-${id}`;
@@ -366,7 +361,7 @@ function CityBackground({
             {/* Sky. */}
             <Rect width={VB_W} height={height} fill={`url(#${skyId})`} />
 
-            {/* Sun. Sinks toward the rooftops as the run's evening comes on. */}
+            {/* Sun, where the catalog places it. */}
             <Circle cx={sunCx} cy={sunCy} r={SUN_GLOW_R} fill={`url(#${glowId})`} />
             <Circle cx={sunCx} cy={sunCy} r={SUN_R} fill={`url(#${sunId})`} />
 

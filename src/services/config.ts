@@ -11,10 +11,14 @@ const DEV_HOST = Platform.OS === 'android' ? '10.0.2.2' : 'localhost';
 // weight in it anyway: 10.0.2.2 only resolves inside an Android emulator, and the
 // release manifest sets usesCleartextTraffic="false", which blocks plain http://
 // outright.
-// TEMP: no local backend is running on :8000, so the dev build talks to
-// production too. Flip this back to `false` to restore normal local dev
-// (http://<DEV_HOST>:8000/api).
-const USE_PROD_IN_DEV = true;
+// Set this to `true` only while no local backend is running — it points the dev
+// build at production, which is fine for reading but means local backend work is
+// invisible to the app. It is `false` again because the city backgrounds live
+// entirely in the catalog now: production still serves the pre-city rows with no
+// bg_colors at all, so every background there falls back to CityBackground's
+// built-in palette and the whole shop tab renders as the same city. Local dev
+// needs the local server until the city migrations + seeder are deployed.
+const USE_PROD_IN_DEV = false;
 
 export const API_BASE_URL =
     __DEV__ && !USE_PROD_IN_DEV

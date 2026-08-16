@@ -105,11 +105,33 @@ export interface ShopItem {
     // When true, the item is shown in the shop as a locked "coming soon" teaser
     // and cannot be purchased or equipped (also enforced server-side).
     comingSoon: boolean;
-    // Background-only: admin-defined appearance. bgColors is a gradient (2–6 hex
-    // stops); bgAnimation is one of the app's built-in animation keys and, when
-    // set, overrides the gradient. Both null → fall back to the bundled visual.
+    // Background-only: the city's whole palette, which is all a background is —
+    // the app owns the skyline shapes and nothing else (see CityBackground).
+    // bgColors is the sky, 2–6 stops top → horizon; bgBuildingColors is the
+    // towers, 2–4 stops roof → street; bgWindowColor lights the windows;
+    // bgSunColors is the disc, 2–4 stops top → bottom; bgGlowColor is the light
+    // around it (and the haze on the horizon, which is the same light). Any of
+    // them null → the app's built-in fallback for that part.
     bgColors?: string[] | null;
-    bgAnimation?: string | null;
+    bgBuildingColors?: string[] | null;
+    bgWindowColor?: string | null;
+    bgSunColors?: string[] | null;
+    bgGlowColor?: string | null;
+    // Where the sun rests, as percentages of the frame (0–100).
+    bgSunX?: number | null;
+    bgSunY?: number | null;
+    // The city's silhouette, generated server-side (CitySkyline) in the app's
+    // authored 400×800 space so it can be drawn verbatim. This is what stops the
+    // set from being one skyline in twenty-three colours. Null → the app's
+    // built-in skyline, so a catalog from before this existed still renders.
+    bgSkyline?: CitySkyline | null;
+}
+
+// Front row towers are contiguous and span the full width; the back row is
+// corner points. Both are walked into a single closed path — see CityBackground.
+export interface CitySkyline {
+    towers: {x: number; w: number; top: number}[];
+    far: {x: number; top: number}[];
 }
 
 export interface InventoryEntry {

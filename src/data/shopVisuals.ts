@@ -1,17 +1,19 @@
-import { ShopItem } from '../services/types';
+import { CitySkyline, ShopItem } from '../services/types';
+import { loadShopArt, saveShopArt } from '../db/shopArtRepo';
 
 // ── Shop visual registry ──────────────────────────────────────────────────────
 // The backend owns the shop *catalog* (keys, prices, ownership, what is
 // equipped). The mobile app owns how each key *looks*. This file is the bridge:
 // every shop-item `key` the server can return maps to an on-device visual.
 //
+// Backgrounds are the exception, and deliberately so: every one of them is the
+// same city scene (see CityBackground) and differs only in its palette, which
+// comes from the catalog as `bgColors`. So there is nothing per-background to
+// declare here — a background the server invents tomorrow renders correctly on
+// a build shipped today, and recolouring one never needs an app release.
+//
 // Keys here must stay in sync with the backend seeder:
-//   back-ends/tapfingers-server/src/database/seeders/001-shop-items.js
-
-const bg1 = require('../assets/images/background1.jpg');
-const bg2 = require('../assets/images/background2.jpg');
-const bg3 = require('../assets/images/background3.jpg');
-const bg4 = require('../assets/images/background4.jpg');
+//   tabfingers-server/database/seeders/ShopItemsSeeder.php
 
 export interface ShopVisual {
     // Drives <ShopItem> previews and <Play> falling-box rendering.
@@ -19,11 +21,6 @@ export interface ShopVisual {
     // Card pixel size used by the Play screen.
     size?: number;
     isRotation?: boolean;
-    // Background variants — exactly one of these is set per background.
-    images?: any[];
-    colors?: string[];
-    animationType?: string;
-    isRare?: boolean;
 }
 
 // A backend ShopItem merged with its on-device visual. Shaped to stay
@@ -39,10 +36,21 @@ export interface ShopEntry {
     typeName: string;
     size?: number;
     isRotation?: boolean;
-    images?: any[];
+    // Backgrounds only: the city's palette, straight from the catalog — sky,
+    // towers, window light, sun and its glow. This is the entire difference
+    // between one background and the next.
     colors?: string[];
-    animationType?: string;
-    isRare?: boolean;
+    buildingColors?: string[];
+    windowColor?: string;
+    sunColors?: string[];
+    glowColor?: string;
+    // Where the sun rests, as percentages of the frame.
+    sunX?: number | null;
+    sunY?: number | null;
+    // The city's own silhouette, generated server-side. Shape, not just paint,
+    // is what makes two backgrounds different places rather than one place
+    // repainted — so this travels with the palette.
+    skyline?: CitySkyline | null;
     isPremium: boolean;
     // Admin-authored inline SVG artwork (backend shop_items.icon_svg). When set,
     // the Shop renders this instead of the on-device card component.
@@ -83,39 +91,15 @@ export const SHOP_VISUALS: Record<string, ShopVisual> = {
     card_crown: { typeName: 'card', size: 100, isRotation: false },
     card_lightning: { typeName: 'card', size: 100, isRotation: false },
 
-    // ── Image backgrounds ─────────────────────────────────────────────────────
-    bg_default: { typeName: 'background', images: [bg1, bg2, bg3, bg4, bg1] },
-    bg_classic2: { typeName: 'background', images: [bg2, bg3, bg4, bg1, bg2] },
-    bg_classic3: { typeName: 'background', images: [bg3, bg4, bg1, bg2, bg3] },
-    bg_classic4: { typeName: 'background', images: [bg4, bg1, bg2, bg3, bg4] },
-
-    // ── Colour-gradient backgrounds ───────────────────────────────────────────
-    bg_night: { typeName: 'background', colors: ['#03001C', '#06003a', '#090058', '#0c0076', '#0f0094'] },
-    bg_forest: { typeName: 'background', colors: ['#0a2e12', '#0d3a16', '#10461a', '#13521e', '#165e22'] },
-    bg_ice: { typeName: 'background', colors: ['#001a33', '#003d66', '#005f99', '#0080cc', '#00a3ff'] },
-    bg_ocean: { typeName: 'background', colors: ['#000d1a', '#001a33', '#00264d', '#003366', '#004080'] },
-    bg_sunset: { typeName: 'background', colors: ['#1a0533', '#6b1a4a', '#b23a2e', '#d4622a', '#e8872a'] },
-    bg_volcano: { typeName: 'background', colors: ['#2e0a03', '#3d0d04', '#4c1005', '#5b1306', '#6a1607'] },
-    bg_fire: { typeName: 'background', colors: ['#1a0000', '#4d0000', '#800000', '#b33000', '#cc5200'] },
-    bg_galaxy: { typeName: 'background', colors: ['#04001a', '#0d0033', '#1a004d', '#280066', '#360080'] },
-    bg_neon: { typeName: 'background', colors: ['#0d001a', '#1a0033', '#33004d', '#4d0066', '#660080'] },
-
-    // ── Coming-soon backgrounds (premium gradients) ───────────────────────────
-    bg_rainbow: { typeName: 'background', colors: ['#ff0040', '#ff8c00', '#ffe000', '#00d26a', '#0088ff', '#8a2be2'] },
-    bg_nebula: { typeName: 'background', colors: ['#0b0033', '#2a0a5e', '#5e1a8a', '#b13aa6', '#ff6ec7'] },
-    bg_mirage: { typeName: 'background', colors: ['#1a0d00', '#5e3a00', '#a86a1a', '#e0a850', '#ffe0a0'] },
-
-    // ── Animated backgrounds ──────────────────────────────────────────────────
-    bg_starfield: { typeName: 'background', animationType: 'stars', isRare: true },
-    bg_matrix: { typeName: 'background', animationType: 'matrix', isRare: true },
-    bg_inferno: { typeName: 'background', animationType: 'inferno', isRare: true },
-    bg_aurora: { typeName: 'background', animationType: 'aurora', isRare: true },
+    // ── Backgrounds ───────────────────────────────────────────────────────────
+    // Not listed one by one on purpose — see the note at the top of the file.
+    // Every background is the same city; its palette arrives from the server.
 };
 
 // Fallback visuals for keys the server knows but this build doesn't (e.g. a
 // freshly-added catalog item shipped ahead of an app update).
 const FALLBACK_CARD: ShopVisual = SHOP_VISUALS[DEFAULT_CARD_KEY];
-const FALLBACK_BG: ShopVisual = SHOP_VISUALS[DEFAULT_BG_KEY];
+const BACKGROUND_VISUAL: ShopVisual = { typeName: 'background' };
 
 // Admin-authored artwork (SVG + optional render size), keyed by shop-item key.
 // Populated from the shop catalog via registerShopIcons() so the key-only
@@ -129,46 +113,83 @@ interface ShopArt {
     rotateAnimation?: boolean;
     fallFromBottom?: boolean;
     trackColor?: string | null;
-    // Admin-defined background appearance (see mergeShopItem / entryFromKey).
+    // This background's whole city, as the backend defines it: palette
+    // (bg_colors / bg_building_colors / bg_window_color / bg_sun_colors /
+    // bg_glow_color) and silhouette (bg_skyline).
     bgColors?: string[] | null;
-    bgAnimation?: string | null;
+    bgBuildingColors?: string[] | null;
+    bgWindowColor?: string | null;
+    bgSunColors?: string[] | null;
+    bgGlowColor?: string | null;
+    bgSunX?: number | null;
+    bgSunY?: number | null;
+    bgSkyline?: CitySkyline | null;
 }
 let shopArtByKey: Record<string, ShopArt> = {};
+// True once a live catalog has been registered this session, so a late cache
+// read can't overwrite fresher server data.
+let shopArtIsLive = false;
 
 export function registerShopIcons(items: ShopItem[]): void {
     const next: Record<string, ShopArt> = {};
     for (const it of items) {
-        next[it.key] = { iconSvg: it.iconSvg, width: it.width, height: it.height, randomColors: it.randomColors, rotateAnimation: it.rotateAnimation, fallFromBottom: it.fallFromBottom, trackColor: it.trackColor, bgColors: it.bgColors, bgAnimation: it.bgAnimation };
+        next[it.key] = { iconSvg: it.iconSvg, width: it.width, height: it.height, randomColors: it.randomColors, rotateAnimation: it.rotateAnimation, fallFromBottom: it.fallFromBottom, trackColor: it.trackColor, bgColors: it.bgColors, bgBuildingColors: it.bgBuildingColors, bgWindowColor: it.bgWindowColor, bgSunColors: it.bgSunColors, bgGlowColor: it.bgGlowColor, bgSunX: it.bgSunX, bgSunY: it.bgSunY, bgSkyline: it.bgSkyline };
     }
     shopArtByKey = next;
+    shopArtIsLive = true;
+    saveShopArt(next);
 }
 
-// Resolves a background's images/colors/animationType. Admin-defined values win
-// over the bundled visual so an admin-created background looks the way it was
-// configured; an animation overrides a gradient. A no-op for cards.
-function resolveBgVisual(
-    isCard: boolean,
-    bgColors: string[] | null | undefined,
-    bgAnimation: string | null | undefined,
-    visual: ShopVisual,
-): { images?: any[]; colors?: string[]; animationType?: string } {
-    if (!isCard && bgAnimation) {
-        return { animationType: bgAnimation };
-    }
-    if (!isCard && bgColors && bgColors.length >= 2) {
-        return { colors: bgColors };
-    }
-    return { images: visual.images, colors: visual.colors, animationType: visual.animationType };
+// Restores the last-seen catalog artwork at launch. The equipped background is
+// resolved from the cached profile before anything fetches the shop, and its
+// colours live on the server — without this the first paint would use the
+// fallback sky and then jump once Play or the Shop refreshed the catalog.
+export async function hydrateShopArt(): Promise<void> {
+    if (shopArtIsLive) return;
+    const cached = await loadShopArt<ShopArt>();
+    if (cached && !shopArtIsLive) shopArtByKey = cached;
+}
+
+// A colour ramp the catalog defined, or undefined so CityBackground falls back
+// to its built-in one. Two stops is the minimum a gradient can be drawn from,
+// and a one-colour list is far more likely to be a half-finished admin edit than
+// an intentional flat fill.
+function ramp(colors: string[] | null | undefined): string[] | undefined {
+    return colors && colors.length >= 2 ? colors : undefined;
+}
+
+// The city an entry paints — palette and silhouette. Cards have none: the fields
+// exist on ShopEntry for the whole shop grid, and a card carrying a sky would be
+// nonsense.
+function cityPalette(isCard: boolean, art: {
+    bgColors?: string[] | null;
+    bgBuildingColors?: string[] | null;
+    bgWindowColor?: string | null;
+    bgSunColors?: string[] | null;
+    bgGlowColor?: string | null;
+    bgSunX?: number | null;
+    bgSunY?: number | null;
+    bgSkyline?: CitySkyline | null;
+}) {
+    if (isCard) return {};
+    return {
+        colors: ramp(art.bgColors),
+        buildingColors: ramp(art.bgBuildingColors),
+        windowColor: art.bgWindowColor ?? undefined,
+        sunColors: ramp(art.bgSunColors),
+        glowColor: art.bgGlowColor ?? undefined,
+        sunX: art.bgSunX ?? undefined,
+        sunY: art.bgSunY ?? undefined,
+        skyline: art.bgSkyline ?? undefined,
+    };
 }
 
 // Merges a backend ShopItem with its visual into a UI-ready ShopEntry.
 export function mergeShopItem(item: ShopItem): ShopEntry {
     const isCard = item.type === 'card';
-    const visual = SHOP_VISUALS[item.key] ?? (isCard ? FALLBACK_CARD : FALLBACK_BG);
-    // Background appearance: admin-defined values (gradient or animation) win
-    // over the bundled visual, so a background created from the admin actually
-    // looks the way the admin set it. Animation overrides a gradient.
-    const bg = resolveBgVisual(isCard, item.bgColors, item.bgAnimation, visual);
+    // Backgrounds all share one visual — they're the same city, and the catalog
+    // palette below is what tells them apart.
+    const visual = isCard ? (SHOP_VISUALS[item.key] ?? FALLBACK_CARD) : BACKGROUND_VISUAL;
     return {
         id: item.key,
         key: item.key,
@@ -182,10 +203,7 @@ export function mergeShopItem(item: ShopItem): ShopEntry {
         // Admin "rotate animation" flag is the sole authority for the falling-card
         // spin — a card rotates only when the admin has enabled it.
         isRotation: item.rotateAnimation,
-        images: bg.images,
-        colors: bg.colors,
-        animationType: bg.animationType,
-        isRare: visual.isRare,
+        ...cityPalette(isCard, item),
         isPremium: item.isPremium,
         iconSvg: item.iconSvg ?? null,
         width: item.width ?? null,
@@ -206,17 +224,17 @@ function entryFromKey(
     type: 'card' | 'background',
     defaultKey: string,
 ): ShopEntry {
+    const isCard = type === 'card';
     const resolvedKey = key && SHOP_VISUALS[key] ? key : defaultKey;
-    const visual = SHOP_VISUALS[resolvedKey];
+    const visual = isCard ? SHOP_VISUALS[resolvedKey] : BACKGROUND_VISUAL;
     // Admin-created skins aren't in SHOP_VISUALS, so `resolvedKey` falls back to
     // the default for the on-device visual — but the backend still has their
     // artwork (SVG + size), keyed by the *real* equipped key. Prefer that so a
     // custom card shows its own SVG/dimensions instead of the starter skin's.
+    // For a background this registry IS its whole appearance: the equipped key
+    // is looked up as-is, so a city the server added is coloured correctly even
+    // though this build has never heard of the key.
     const art = (key && shopArtByKey[key]) || shopArtByKey[resolvedKey] || {};
-    // Admin-created backgrounds aren't in SHOP_VISUALS, so prefer the artwork the
-    // backend registered for the *real* equipped key (gradient/animation) over
-    // the default skin's look.
-    const bg = resolveBgVisual(type === 'card', art.bgColors, art.bgAnimation, visual);
     return {
         id: key || resolvedKey,
         key: key || resolvedKey,
@@ -230,10 +248,7 @@ function entryFromKey(
         // Admin "rotate animation" flag (registered by key) is the sole authority
         // for the spin — a card rotates only when the admin has enabled it.
         isRotation: art.rotateAnimation ?? false,
-        images: bg.images,
-        colors: bg.colors,
-        animationType: bg.animationType,
-        isRare: visual.isRare,
+        ...cityPalette(isCard, art),
         isPremium: false,
         iconSvg: art.iconSvg ?? null,
         width: art.width ?? null,

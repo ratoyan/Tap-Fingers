@@ -5,7 +5,7 @@ import * as userService from '../services/userService';
 import * as profileRepo from '../db/profileRepo';
 import * as equippedRepo from '../db/equippedRepo';
 import {InventoryEntry, Player, Profile, PlayerStats} from '../services/types';
-import {resolveBackgroundEntry, resolveCardEntry} from '../data/shopVisuals';
+import {hydrateShopArt, resolveBackgroundEntry, resolveCardEntry} from '../data/shopVisuals';
 import {useGlobalStore} from './globalStore';
 import {useShopStore} from './shopStore';
 import {useDailyChallengesStore} from './dailyChallengesStore';
@@ -107,6 +107,12 @@ export const useAuthStore = create<AuthState>((set, get) => {
 
         bootstrap: async () => {
             set({status: 'loading'});
+
+            // Before any profile is applied: the equipped city's sky comes from
+            // the backend catalog, and fanOutStats resolves it below. Restoring
+            // the cached catalog first is what lets that first paint use the
+            // real palette instead of the built-in fallback sky.
+            await hydrateShopArt();
 
             // If the player has logged in before, their profile is cached in
             // Realm. Its presence means "logged in" (it's only written after a

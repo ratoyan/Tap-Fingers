@@ -1,5 +1,5 @@
 ﻿import React, {useEffect, useRef, useState} from "react";
-import {Animated, Easing, Image, StyleSheet, Text, TouchableOpacity, View} from "react-native";
+import {Animated, Easing, StyleSheet, Text, TouchableOpacity, View} from "react-native";
 import {useTranslation} from "react-i18next";
 import {SvgXml} from "react-native-svg";
 
@@ -16,6 +16,9 @@ import FlameIcon from "../../../assets/icons/FlameIcon.tsx";
 import BoltIcon from "../../../assets/icons/BoltIcon.tsx";
 import SuccessIcon from "../../../assets/icons/SuccessIcon.tsx";
 
+// components
+import CityBackground from "../Play/CityBackground.tsx";
+
 // styles
 import styles from './ShopItem.style.ts';
 import {DARK_PURPLE, GRADIENT_DARK, GRADIENT_LIGHT, MEDIUM_PURPLE, PURPLE_DARK} from "../../../constants/colors.ts";
@@ -26,6 +29,12 @@ import {ms} from "../../../utils/responsive.ts";
 // How many items still get a staggered entrance. The grid is two columns, so
 // this is roughly the first three rows — everything a phone shows at once.
 const STAGGER_CAP = 5;
+
+// viewBox height for the city in a background card. The scene is authored for a
+// portrait phone (400×800); at that ratio a preview tile this squat would crop
+// away either the sun or the skyline, so the preview asks for a shorter box and
+// gets the whole scene, just stockier.
+const BG_PREVIEW_VB_HEIGHT = 430;
 
 interface ShopItemProps {
     item: any;
@@ -238,51 +247,24 @@ function ShopItem({item, index = 0, handlePress, selected = false, purchased = f
                     </View>
                 );
             case 'background':
-                if (item.animationType === 'stars') {
-                    return (
-                        <LinearGradient colors={['#020012', '#090040']} style={{width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center'}}>
-                            <Text allowFontScaling={false} style={{fontSize: 32}}>✨</Text>
-                            <Text allowFontScaling={false} style={{color: '#aaaaff', fontSize: 10, marginTop: 4}}>{t('animated')}</Text>
-                        </LinearGradient>
-                    );
-                }
-                if (item.animationType === 'aurora') {
-                    return (
-                        <LinearGradient colors={['#010008', '#0d2040', '#1a0030']} style={{width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center'}}>
-                            <Text allowFontScaling={false} style={{fontSize: 32}}>🌌</Text>
-                            <Text allowFontScaling={false} style={{color: '#80ffb0', fontSize: 10, marginTop: 4}}>{t('animated')}</Text>
-                        </LinearGradient>
-                    );
-                }
-                if (item.animationType === 'inferno') {
-                    return (
-                        <LinearGradient colors={['#0d0000', '#4d0000', '#ff3300']} style={{width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center'}}>
-                            <Text allowFontScaling={false} style={{fontSize: 32}}>🔥</Text>
-                            <Text allowFontScaling={false} style={{color: '#ffaa44', fontSize: 10, marginTop: 4}}>{t('animated')}</Text>
-                        </LinearGradient>
-                    );
-                }
-                if (item.animationType === 'matrix') {
-                    return (
-                        <LinearGradient colors={['#000900', '#001a00']} style={{width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center'}}>
-                            <Text allowFontScaling={false} style={{fontSize: 32}}>💚</Text>
-                            <Text allowFontScaling={false} style={{color: '#00ff41', fontSize: 10, marginTop: 4}}>{t('animated')}</Text>
-                        </LinearGradient>
-                    );
-                }
-                if (item.images?.length) {
-                    return (
-                        <Image
-                            source={item.images[0]}
-                            style={{width: '100%', height: '100%'}}
-                            resizeMode="cover"
-                        />
-                    );
-                }
-                if (item.colors?.length) {
-                    return <View style={{width: '100%', height: '100%', backgroundColor: item.colors[0]}}/>;
-                }
-                return null;
+                // Every background is the same city in a different palette, so
+                // the preview is the real thing rather than a swatch: what the
+                // card shows is exactly what Play will render. Sky, towers,
+                // window light and sun all come from the backend catalog.
+                return (
+                    <CityBackground
+                        colors={item.colors}
+                        buildingColors={item.buildingColors}
+                        windowColor={item.windowColor}
+                        sunColors={item.sunColors}
+                        glowColor={item.glowColor}
+                        sunX={item.sunX}
+                        sunY={item.sunY}
+                        skyline={item.skyline}
+                        height={BG_PREVIEW_VB_HEIGHT}
+                        id={item.key}
+                    />
+                );
             default:
                 return null;
         }

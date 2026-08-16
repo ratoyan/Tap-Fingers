@@ -1,6 +1,5 @@
 ﻿import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import {useStableCallback} from '../../hooks/useStableCallback.ts';
-import LinearGradient from 'react-native-linear-gradient';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {useFocusEffect, useNavigation} from '@react-navigation/core';
 import {useTranslation} from 'react-i18next';
@@ -13,7 +12,6 @@ import {
     AccessibilityInfo,
     Animated,
     Dimensions,
-    ImageBackground,
     PanResponder,
     Text,
     TouchableOpacity,
@@ -31,7 +29,7 @@ import * as shopService from '../../services/shopService.ts';
 import * as bossService from '../../services/bossService.ts';
 import {setCoinSyncPaused} from '../../services/coinSync.ts';
 import {Boss} from '../../services/types.ts';
-import {registerShopIcons, resolveCardEntry} from '../../data/shopVisuals.ts';
+import {registerShopIcons, resolveBackgroundEntry, resolveCardEntry} from '../../data/shopVisuals.ts';
 import {storage} from '../../db/kvStore.ts';
 import uuId from 'react-native-uuid';
 import useMusicAppState from '../../hooks/useMusicAppState.tsx';
@@ -49,7 +47,7 @@ import Coin from '../../assets/icons/Coin.tsx';
 import {BombBlast} from '../../assets/icons/FallingBomb.tsx';
 
 // components
-import AnimatedBackground from '../../components/ui/Play/AnimatedBackground.tsx';
+import CityBackground from '../../components/ui/Play/CityBackground.tsx';
 import BossBox, {getBossTier} from '../../components/ui/Play/BossBox.tsx';
 import CoinCount from '../../components/ui/CoinCount/CoinCount.tsx';
 import PlayBox, {buildBoxStyle} from '../../components/ui/Play/PlayBox.tsx';
@@ -258,11 +256,19 @@ const CARD_SIZE = boxScale(CARD_BASE);
 // per-frame travel, so swipe-to-pop still pops everything the finger crosses.
 const SWIPE_MIN_DIST = Math.round(BOMB_SIZE * 0.25);
 
-function getDefaultBackground(level: number) {
-    if (level > 4) return require('../../assets/images/background4.jpg');
-    if (level > 3) return require('../../assets/images/background3.jpg');
-    if (level > 2) return require('../../assets/images/background2.jpg');
-    return require('../../assets/images/background1.jpg');
+// How lit the city behind the arena is at a given level (see CityBackground).
+//
+// Level 1 already starts past halfway rather than in a blackout: the backdrop
+// has to look finished from the first second, and a city that begins dark reads
+// as a bug, not as a reward. From there every level brings more of the skyline
+// on, filling up around level 12 — far enough that a good run keeps earning it,
+// close enough that most players get to see the city fully awake.
+const CITY_LIT_AT_START = 0.55;
+const CITY_LIT_FULL_AT_LEVEL = 12;
+
+function cityLit(level: number): number {
+    const progress = Math.min(Math.max(level - 1, 0) / (CITY_LIT_FULL_AT_LEVEL - 1), 1);
+    return CITY_LIT_AT_START + (1 - CITY_LIT_AT_START) * progress;
 }
 
 function spawnBox(
@@ -538,9 +544,6 @@ export default function Play() {
     // 🎁 What the reveal overlay is showing: a win (with the coin amount that was
     // just earned — the gift's payout or a money bag's) or a boom. null = hidden.
     const [giftReveal, setGiftReveal] = useState<{kind: 'win' | 'boom'; amount: number} | null>(null);
-
-    const levelIndex = Math.min(level - 1, 4);
-
 
     // ─── Bomb pulse loop ──────────────────────────────────────────────────────
     useEffect(() => {
@@ -1496,14 +1499,16 @@ export default function Play() {
             // a local (Realm) fallback (loadBombCount/loadHelperCounts) on error.
             startGameSession();
 
-            // Fetch the latest card art and refresh the equipped card so the
-            // falling boxes render the admin SVG (best-effort — falls back to
-            // the bundled component if the catalog can't be reached).
+            // Fetch the latest catalog art and refresh both equipped skins, so
+            // the falling boxes render the admin SVG and the city is painted in
+            // the sky the server currently defines for it (best-effort — falls
+            // back to the cached palette if the catalog can't be reached).
             shopService.getItems()
                 .then(items => {
                     registerShopIcons(items);
-                    const key = useAuthStore.getState().stats?.activeCardKey;
-                    useShopStore.getState().setCard(resolveCardEntry(key));
+                    const stats = useAuthStore.getState().stats;
+                    useShopStore.getState().setCard(resolveCardEntry(stats?.activeCardKey));
+                    useShopStore.getState().setBackground(resolveBackgroundEntry(stats?.activeBackgroundKey));
                 })
                 .catch(() => {});
 
@@ -2392,35 +2397,29 @@ export default function Play() {
         </Animated.View>
     );
 
-    if (background?.animationType) {
-        return (
-            <View style={styles.container}>
-                <AnimatedBackground type={background.animationType}/>
-                {gameContent}
-            </View>
-        );
-    }
-
-    if (background?.colors?.length) {
-        return (
-            <LinearGradient
-                colors={background.colors}
-                start={{x: 0, y: 0}}
-                end={{x: 0, y: 1}}
-                style={styles.container}
-            >
-                {gameContent}
-            </LinearGradient>
-        );
-    }
-
+    // The arena always stands in the city: sun above, skyline below. What the
+    // equipped background picks is its palette — sky, towers, window light and
+    // sun, all defined server-side — so buying one changes how the city looks.
+    //
+    // The city also wakes up as the run goes: `lit` climbs with the level, so
+    // windows keep coming on behind the arena for as long as the player keeps
+    // clearing levels. It's the same progress the level banner announces for one
+    // second, except this stays on screen — and it only re-renders on a level
+    // change, so the backdrop still costs nothing per frame.
     return (
-        // @ts-ignore
-        <ImageBackground
-            source={background?.images?.[levelIndex] ?? getDefaultBackground(level)}
-            style={styles.container}
-        >
+        <View style={styles.container}>
+            <CityBackground
+                colors={background?.colors}
+                buildingColors={background?.buildingColors}
+                windowColor={background?.windowColor}
+                sunColors={background?.sunColors}
+                glowColor={background?.glowColor}
+                sunX={background?.sunX}
+                sunY={background?.sunY}
+                skyline={background?.skyline}
+                lit={cityLit(level)}
+            />
             {gameContent}
-        </ImageBackground>
+        </View>
     );
 }

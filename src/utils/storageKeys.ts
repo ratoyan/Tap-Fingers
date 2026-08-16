@@ -27,4 +27,10 @@ export const STORAGE_KEYS = {
     // reached the backend. Read-only now — the Shop still unions these into the
     // owned set so those purchases aren't lost, but nothing writes new ones.
     LOCAL_OWNED_ITEMS: 'local_owned_items', // string[] of shop item keys
+    // Last-seen shop artwork from the backend catalog, keyed by shop-item key:
+    // card SVG/size flags and — the reason it's cached — every background city's
+    // palette. The equipped skins are resolved at launch, long before the shop
+    // catalog is fetched, so without this the first screens would paint the
+    // city in the wrong sky.
+    SHOP_ART: 'shop_art',  // {[key]: {iconSvg, width, height, bgColors, ...}}
 };

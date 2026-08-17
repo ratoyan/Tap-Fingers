@@ -13,11 +13,10 @@ const DEV_HOST = Platform.OS === 'android' ? '10.0.2.2' : 'localhost';
 // outright.
 // Set this to `true` only while no local backend is running — it points the dev
 // build at production, which is fine for reading but means local backend work is
-// invisible to the app. It is `false` again because the city backgrounds live
-// entirely in the catalog now: production still serves the pre-city rows with no
-// bg_colors at all, so every background there falls back to CityBackground's
-// built-in palette and the whole shop tab renders as the same city. Local dev
-// needs the local server until the city migrations + seeder are deployed.
+// invisible to the app. It is `false` because background artwork now lives on
+// the server (shop_items.bg_image_path, streamed from /api/shop/background/{id}):
+// production has neither the column nor the uploaded files until this is
+// deployed, so every background there would fall back to flat colours.
 const USE_PROD_IN_DEV = false;
 
 export const API_BASE_URL =
@@ -28,3 +27,9 @@ export const API_BASE_URL =
 // Same host without the trailing /api — used to turn the relative media URLs
 // the backend returns (e.g. player.avatarUrl) into absolute, loadable URLs.
 export const API_ORIGIN = API_BASE_URL.replace(/\/api\/?$/, '');
+
+// The backend returns media paths without a host so the same value works from an
+// emulator, a LAN device and production; this is where they become loadable.
+export function mediaUrl(relative?: string | null): string | null {
+    return relative ? `${API_ORIGIN}${relative}` : null;
+}

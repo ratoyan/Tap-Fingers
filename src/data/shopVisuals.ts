@@ -1,4 +1,5 @@
-import { CitySkyline, ShopItem } from '../services/types';
+import { ShopItem } from '../services/types';
+import { mediaUrl } from '../services/config';
 import { loadShopArt, saveShopArt } from '../db/shopArtRepo';
 
 // ── Shop visual registry ──────────────────────────────────────────────────────
@@ -6,11 +7,11 @@ import { loadShopArt, saveShopArt } from '../db/shopArtRepo';
 // equipped). The mobile app owns how each key *looks*. This file is the bridge:
 // every shop-item `key` the server can return maps to an on-device visual.
 //
-// Backgrounds are the exception, and deliberately so: every one of them is the
-// same city scene (see CityBackground) and differs only in its palette, which
-// comes from the catalog as `bgColors`. So there is nothing per-background to
-// declare here — a background the server invents tomorrow renders correctly on
-// a build shipped today, and recolouring one never needs an app release.
+// Backgrounds are the exception, and deliberately so: a background is a picture
+// an admin uploaded, plus the colours drawn under it while that picture loads —
+// both from the catalog. So there is nothing per-background to declare here. A
+// background the server invents tomorrow renders correctly on a build shipped
+// today, and replacing one's artwork never needs an app release.
 //
 // Keys here must stay in sync with the backend seeder:
 //   tabfingers-server/database/seeders/ShopItemsSeeder.php
@@ -36,21 +37,11 @@ export interface ShopEntry {
     typeName: string;
     size?: number;
     isRotation?: boolean;
-    // Backgrounds only: the city's palette, straight from the catalog — sky,
-    // towers, window light, sun and its glow. This is the entire difference
-    // between one background and the next.
+    // Backgrounds only, straight from the catalog: the uploaded picture as an
+    // absolute URL, and the colours painted under it. Together they are the
+    // entire difference between one background and the next.
+    imageUrl?: string | null;
     colors?: string[];
-    buildingColors?: string[];
-    windowColor?: string;
-    sunColors?: string[];
-    glowColor?: string;
-    // Where the sun rests, as percentages of the frame.
-    sunX?: number | null;
-    sunY?: number | null;
-    // The city's own silhouette, generated server-side. Shape, not just paint,
-    // is what makes two backgrounds different places rather than one place
-    // repainted — so this travels with the palette.
-    skyline?: CitySkyline | null;
     isPremium: boolean;
     // Admin-authored inline SVG artwork (backend shop_items.icon_svg). When set,
     // the Shop renders this instead of the on-device card component.
@@ -93,7 +84,7 @@ export const SHOP_VISUALS: Record<string, ShopVisual> = {
 
     // ── Backgrounds ───────────────────────────────────────────────────────────
     // Not listed one by one on purpose — see the note at the top of the file.
-    // Every background is the same city; its palette arrives from the server.
+    // A background's artwork arrives from the server, not from this build.
 };
 
 // Fallback visuals for keys the server knows but this build doesn't (e.g. a
@@ -113,17 +104,14 @@ interface ShopArt {
     rotateAnimation?: boolean;
     fallFromBottom?: boolean;
     trackColor?: string | null;
-    // This background's whole city, as the backend defines it: palette
-    // (bg_colors / bg_building_colors / bg_window_color / bg_sun_colors /
-    // bg_glow_color) and silhouette (bg_skyline).
+    // This background's whole appearance, as the backend defines it: the
+    // uploaded picture (bg_image_path, served as bgImageUrl) and the colours
+    // drawn under it (bg_colors). Cached as the *relative* URL the server
+    // returns — the API origin differs between a dev build and a release, so
+    // resolving it at write time would leave a cache that points at the wrong
+    // host after a rebuild.
+    bgImageUrl?: string | null;
     bgColors?: string[] | null;
-    bgBuildingColors?: string[] | null;
-    bgWindowColor?: string | null;
-    bgSunColors?: string[] | null;
-    bgGlowColor?: string | null;
-    bgSunX?: number | null;
-    bgSunY?: number | null;
-    bgSkyline?: CitySkyline | null;
 }
 let shopArtByKey: Record<string, ShopArt> = {};
 // True once a live catalog has been registered this session, so a late cache
@@ -133,7 +121,7 @@ let shopArtIsLive = false;
 export function registerShopIcons(items: ShopItem[]): void {
     const next: Record<string, ShopArt> = {};
     for (const it of items) {
-        next[it.key] = { iconSvg: it.iconSvg, width: it.width, height: it.height, randomColors: it.randomColors, rotateAnimation: it.rotateAnimation, fallFromBottom: it.fallFromBottom, trackColor: it.trackColor, bgColors: it.bgColors, bgBuildingColors: it.bgBuildingColors, bgWindowColor: it.bgWindowColor, bgSunColors: it.bgSunColors, bgGlowColor: it.bgGlowColor, bgSunX: it.bgSunX, bgSunY: it.bgSunY, bgSkyline: it.bgSkyline };
+        next[it.key] = { iconSvg: it.iconSvg, width: it.width, height: it.height, randomColors: it.randomColors, rotateAnimation: it.rotateAnimation, fallFromBottom: it.fallFromBottom, trackColor: it.trackColor, bgImageUrl: it.bgImageUrl, bgColors: it.bgColors };
     }
     shopArtByKey = next;
     shopArtIsLive = true;
@@ -142,53 +130,40 @@ export function registerShopIcons(items: ShopItem[]): void {
 
 // Restores the last-seen catalog artwork at launch. The equipped background is
 // resolved from the cached profile before anything fetches the shop, and its
-// colours live on the server — without this the first paint would use the
-// fallback sky and then jump once Play or the Shop refreshed the catalog.
+// picture lives on the server — without this the first paint would use the
+// fallback colours and then jump once Play or the Shop refreshed the catalog.
 export async function hydrateShopArt(): Promise<void> {
     if (shopArtIsLive) return;
     const cached = await loadShopArt<ShopArt>();
     if (cached && !shopArtIsLive) shopArtByKey = cached;
 }
 
-// A colour ramp the catalog defined, or undefined so CityBackground falls back
-// to its built-in one. Two stops is the minimum a gradient can be drawn from,
-// and a one-colour list is far more likely to be a half-finished admin edit than
-// an intentional flat fill.
-function ramp(colors: string[] | null | undefined): string[] | undefined {
-    return colors && colors.length >= 2 ? colors : undefined;
-}
-
-// The city an entry paints — palette and silhouette. Cards have none: the fields
-// exist on ShopEntry for the whole shop grid, and a card carrying a sky would be
-// nonsense.
-function cityPalette(isCard: boolean, art: {
+// What an entry paints: the uploaded picture, and the colours under it. Cards
+// have neither — the fields exist on ShopEntry for the whole shop grid, and a
+// card carrying a backdrop would be nonsense.
+//
+// The relative URL becomes absolute here, at the last moment, so the cache keeps
+// holding the server's own value and a dev build and a release resolve the same
+// cached entry against their own host.
+//
+// An empty list is dropped so BackgroundView's own ramp stands in; a single
+// colour is passed through, because that is how the admin panel says "flat".
+function backgroundArt(isCard: boolean, art: {
+    bgImageUrl?: string | null;
     bgColors?: string[] | null;
-    bgBuildingColors?: string[] | null;
-    bgWindowColor?: string | null;
-    bgSunColors?: string[] | null;
-    bgGlowColor?: string | null;
-    bgSunX?: number | null;
-    bgSunY?: number | null;
-    bgSkyline?: CitySkyline | null;
 }) {
     if (isCard) return {};
     return {
-        colors: ramp(art.bgColors),
-        buildingColors: ramp(art.bgBuildingColors),
-        windowColor: art.bgWindowColor ?? undefined,
-        sunColors: ramp(art.bgSunColors),
-        glowColor: art.bgGlowColor ?? undefined,
-        sunX: art.bgSunX ?? undefined,
-        sunY: art.bgSunY ?? undefined,
-        skyline: art.bgSkyline ?? undefined,
+        imageUrl: mediaUrl(art.bgImageUrl),
+        colors: art.bgColors?.length ? art.bgColors : undefined,
     };
 }
 
 // Merges a backend ShopItem with its visual into a UI-ready ShopEntry.
 export function mergeShopItem(item: ShopItem): ShopEntry {
     const isCard = item.type === 'card';
-    // Backgrounds all share one visual — they're the same city, and the catalog
-    // palette below is what tells them apart.
+    // Backgrounds all share one visual — the catalog artwork below is what tells
+    // them apart.
     const visual = isCard ? (SHOP_VISUALS[item.key] ?? FALLBACK_CARD) : BACKGROUND_VISUAL;
     return {
         id: item.key,
@@ -203,7 +178,7 @@ export function mergeShopItem(item: ShopItem): ShopEntry {
         // Admin "rotate animation" flag is the sole authority for the falling-card
         // spin — a card rotates only when the admin has enabled it.
         isRotation: item.rotateAnimation,
-        ...cityPalette(isCard, item),
+        ...backgroundArt(isCard, item),
         isPremium: item.isPremium,
         iconSvg: item.iconSvg ?? null,
         width: item.width ?? null,
@@ -232,8 +207,8 @@ function entryFromKey(
     // artwork (SVG + size), keyed by the *real* equipped key. Prefer that so a
     // custom card shows its own SVG/dimensions instead of the starter skin's.
     // For a background this registry IS its whole appearance: the equipped key
-    // is looked up as-is, so a city the server added is coloured correctly even
-    // though this build has never heard of the key.
+    // is looked up as-is, so a background the server added shows its own picture
+    // even though this build has never heard of the key.
     const art = (key && shopArtByKey[key]) || shopArtByKey[resolvedKey] || {};
     return {
         id: key || resolvedKey,
@@ -248,7 +223,7 @@ function entryFromKey(
         // Admin "rotate animation" flag (registered by key) is the sole authority
         // for the spin — a card rotates only when the admin has enabled it.
         isRotation: art.rotateAnimation ?? false,
-        ...cityPalette(isCard, art),
+        ...backgroundArt(isCard, art),
         isPremium: false,
         iconSvg: art.iconSvg ?? null,
         width: art.width ?? null,

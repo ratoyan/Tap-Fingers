@@ -3,15 +3,14 @@ import {STORAGE_KEYS} from '../utils/storageKeys';
 
 // ── Cached shop artwork ───────────────────────────────────────────────────────
 // The backend catalog owns how every skin looks: a card's SVG and render flags,
-// and every background's palette — which, since backgrounds became one shared
-// city scene, is the whole of what a background is. The app resolves the
-// equipped card/background at launch from the cached profile, long before
-// anything calls GET /shop, so the last-seen catalog artwork is mirrored here
-// and read back on the next start.
+// and every background's uploaded picture plus the colours drawn under it. The
+// app resolves the equipped card/background at launch from the cached profile,
+// long before anything calls GET /shop, so the last-seen catalog artwork is
+// mirrored here and read back on the next start.
 //
 // Purely a cache: a successful catalog fetch always overwrites it, and losing it
-// costs one launch's worth of correct colours (the city falls back to its
-// built-in sky). Wiped with the rest of the KV store on logout.
+// costs one launch's worth of correct artwork (the background falls back to the
+// app's built-in ramp). Wiped with the rest of the KV store on logout.
 
 export function saveShopArt(art: Record<string, unknown>): void {
     // Fire-and-forget — the in-memory registry is already updated, and a storage

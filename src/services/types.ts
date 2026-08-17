@@ -105,33 +105,15 @@ export interface ShopItem {
     // When true, the item is shown in the shop as a locked "coming soon" teaser
     // and cannot be purchased or equipped (also enforced server-side).
     comingSoon: boolean;
-    // Background-only: the city's whole palette, which is all a background is —
-    // the app owns the skyline shapes and nothing else (see CityBackground).
-    // bgColors is the sky, 2–6 stops top → horizon; bgBuildingColors is the
-    // towers, 2–4 stops roof → street; bgWindowColor lights the windows;
-    // bgSunColors is the disc, 2–4 stops top → bottom; bgGlowColor is the light
-    // around it (and the haze on the horizon, which is the same light). Any of
-    // them null → the app's built-in fallback for that part.
+    // Background-only: the picture an admin uploaded for it, as a URL relative
+    // to the API origin (same shape as player.avatarUrl). It carries a version
+    // query so replacing the artwork actually reloads on devices that cached the
+    // old file. Null → this background has no picture yet.
+    bgImageUrl?: string | null;
+    // Background-only: the flat colours drawn under that picture — what fills
+    // the screen while it downloads, and the whole look until one is uploaded.
+    // 1–6 stops, top → bottom; one stop fills flat. Null → the built-in ramp.
     bgColors?: string[] | null;
-    bgBuildingColors?: string[] | null;
-    bgWindowColor?: string | null;
-    bgSunColors?: string[] | null;
-    bgGlowColor?: string | null;
-    // Where the sun rests, as percentages of the frame (0–100).
-    bgSunX?: number | null;
-    bgSunY?: number | null;
-    // The city's silhouette, generated server-side (CitySkyline) in the app's
-    // authored 400×800 space so it can be drawn verbatim. This is what stops the
-    // set from being one skyline in twenty-three colours. Null → the app's
-    // built-in skyline, so a catalog from before this existed still renders.
-    bgSkyline?: CitySkyline | null;
-}
-
-// Front row towers are contiguous and span the full width; the back row is
-// corner points. Both are walked into a single closed path — see CityBackground.
-export interface CitySkyline {
-    towers: {x: number; w: number; top: number}[];
-    far: {x: number; top: number}[];
 }
 
 export interface InventoryEntry {

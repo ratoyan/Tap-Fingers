@@ -17,7 +17,7 @@ import BoltIcon from "../../../assets/icons/BoltIcon.tsx";
 import SuccessIcon from "../../../assets/icons/SuccessIcon.tsx";
 
 // components
-import CityBackground from "../Play/CityBackground.tsx";
+import BackgroundView from "../Play/BackgroundView.tsx";
 
 // styles
 import styles from './ShopItem.style.ts';
@@ -29,12 +29,6 @@ import {ms} from "../../../utils/responsive.ts";
 // How many items still get a staggered entrance. The grid is two columns, so
 // this is roughly the first three rows — everything a phone shows at once.
 const STAGGER_CAP = 5;
-
-// viewBox height for the city in a background card. The scene is authored for a
-// portrait phone (400×800); at that ratio a preview tile this squat would crop
-// away either the sun or the skyline, so the preview asks for a shorter box and
-// gets the whole scene, just stockier.
-const BG_PREVIEW_VB_HEIGHT = 430;
 
 interface ShopItemProps {
     item: any;
@@ -247,22 +241,13 @@ function ShopItem({item, index = 0, handlePress, selected = false, purchased = f
                     </View>
                 );
             case 'background':
-                // Every background is the same city in a different palette, so
-                // the preview is the real thing rather than a swatch: what the
-                // card shows is exactly what Play will render. Sky, towers,
-                // window light and sun all come from the backend catalog.
+                // The preview is the real thing rather than a swatch: the same
+                // component Play uses, given the same catalog artwork, so what
+                // the card shows is what buying it gives you.
                 return (
-                    <CityBackground
+                    <BackgroundView
+                        imageUrl={item.imageUrl}
                         colors={item.colors}
-                        buildingColors={item.buildingColors}
-                        windowColor={item.windowColor}
-                        sunColors={item.sunColors}
-                        glowColor={item.glowColor}
-                        sunX={item.sunX}
-                        sunY={item.sunY}
-                        skyline={item.skyline}
-                        height={BG_PREVIEW_VB_HEIGHT}
-                        id={item.key}
                     />
                 );
             default:

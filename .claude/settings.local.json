@@ -245,7 +245,11 @@
       "Bash(curl -s -b __TRACKED_VAR__/c.txt -o __TRACKED_VAR__/edit_sun.html -w 'edit page -> %{http_code}\\\\n' http://127.0.0.1:8000/admin/shop/8/edit)",
       "Bash(php -r ' *)",
       "Bash(curl -s -b /c/Users/gorat/AppData/Local/Temp/claude/C--rob-project-mobile-TapFingers/d358fa88-027f-4aaf-9921-317dfc4f7068/scratchpad/c.txt -o /dev/null -w 'admin shop page -> %{http_code}\\\\n' http://127.0.0.1:8000/admin/shop)",
-      "Bash(curl -s -o /dev/null -w \"api shop -> %{http_code}\\\\n\" http://127.0.0.1:8000/api/shop)"
+      "Bash(curl -s -o /dev/null -w \"api shop -> %{http_code}\\\\n\" http://127.0.0.1:8000/api/shop)",
+      "Bash(php -r 'echo \"getimagesize: \", \\(function_exists\\(\"getimagesize\"\\)?\"yes\":\"no\"\\), \"\\\\n\"; echo \"gd: \", \\(extension_loaded\\(\"gd\"\\)?\"yes\":\"no\"\\), \"\\\\n\";')",
+      "Bash(curl -s \"http://127.0.0.1:8899/api/shop\")",
+      "Bash(pkill -f \"artisan serve\")",
+      "Bash(php -l app/Http/Controllers/Admin/ParsesAdminForms.php)"
     ]
   }
 }

@@ -47,7 +47,7 @@ import Coin from '../../assets/icons/Coin.tsx';
 import {BombBlast} from '../../assets/icons/FallingBomb.tsx';
 
 // components
-import CityBackground from '../../components/ui/Play/CityBackground.tsx';
+import BackgroundView from '../../components/ui/Play/BackgroundView.tsx';
 import BossBox, {getBossTier} from '../../components/ui/Play/BossBox.tsx';
 import CoinCount from '../../components/ui/CoinCount/CoinCount.tsx';
 import PlayBox, {buildBoxStyle} from '../../components/ui/Play/PlayBox.tsx';
@@ -255,21 +255,6 @@ const CARD_SIZE = boxScale(CARD_BASE);
 // resting finger's jitter comfortably while staying well inside a real swipe's
 // per-frame travel, so swipe-to-pop still pops everything the finger crosses.
 const SWIPE_MIN_DIST = Math.round(BOMB_SIZE * 0.25);
-
-// How lit the city behind the arena is at a given level (see CityBackground).
-//
-// Level 1 already starts past halfway rather than in a blackout: the backdrop
-// has to look finished from the first second, and a city that begins dark reads
-// as a bug, not as a reward. From there every level brings more of the skyline
-// on, filling up around level 12 — far enough that a good run keeps earning it,
-// close enough that most players get to see the city fully awake.
-const CITY_LIT_AT_START = 0.55;
-const CITY_LIT_FULL_AT_LEVEL = 12;
-
-function cityLit(level: number): number {
-    const progress = Math.min(Math.max(level - 1, 0) / (CITY_LIT_FULL_AT_LEVEL - 1), 1);
-    return CITY_LIT_AT_START + (1 - CITY_LIT_AT_START) * progress;
-}
 
 function spawnBox(
     card: any,
@@ -2397,27 +2382,19 @@ export default function Play() {
         </Animated.View>
     );
 
-    // The arena always stands in the city: sun above, skyline below. What the
-    // equipped background picks is its palette — sky, towers, window light and
-    // sun, all defined server-side — so buying one changes how the city looks.
+    // The equipped background stands behind the whole arena: the picture an
+    // admin uploaded for it, over the colours that fill the screen until that
+    // picture has loaded. Both come from the server, so buying a background —
+    // or an admin swapping its artwork — changes this with no app release.
     //
-    // The city also wakes up as the run goes: `lit` climbs with the level, so
-    // windows keep coming on behind the arena for as long as the player keeps
-    // clearing levels. It's the same progress the level banner announces for one
-    // second, except this stays on screen — and it only re-renders on a level
-    // change, so the backdrop still costs nothing per frame.
+    // It takes no props that move during a run, so it renders once and then
+    // costs nothing per frame, which is the point of keeping it outside
+    // gameContent.
     return (
         <View style={styles.container}>
-            <CityBackground
+            <BackgroundView
+                imageUrl={background?.imageUrl}
                 colors={background?.colors}
-                buildingColors={background?.buildingColors}
-                windowColor={background?.windowColor}
-                sunColors={background?.sunColors}
-                glowColor={background?.glowColor}
-                sunX={background?.sunX}
-                sunY={background?.sunY}
-                skyline={background?.skyline}
-                lit={cityLit(level)}
             />
             {gameContent}
         </View>

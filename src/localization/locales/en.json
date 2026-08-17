@@ -258,5 +258,15 @@
 
   "offlineTitle": "NO CONNECTION",
   "offlineMessage": "We can't reach the game right now. Check your Wi-Fi or mobile data — we'll pick up right where you left off.",
-  "offlineAutoRetry": "Reconnecting automatically…"
+  "offlineAutoRetry": "Reconnecting automatically…",
+
+  "effectSnow": "Snow",
+  "effectEmbers": "Embers",
+  "effectRain": "Rain",
+  "effectStars": "Stars",
+  "effectFireflies": "Fireflies",
+  "effectPetals": "Petals",
+  "effectWind": "Wind",
+  "effectBubbles": "Bubbles",
+  "effectLightning": "Lightning"
 }

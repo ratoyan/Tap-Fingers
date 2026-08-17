@@ -173,6 +173,41 @@ export default StyleSheet.create({
         letterSpacing: 0.3,
         textAlign: 'center',
     },
+    // Weather pill tucked into the top-left of a background card. maxWidth keeps
+    // a long translated label from running under the coming-soon ribbon on the
+    // opposite corner; the label truncates instead.
+    effectBadge: {
+        position: 'absolute',
+        top: ms(9),
+        left: ms(9),
+        maxWidth: '72%',
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: ms(4),
+        paddingHorizontal: ms(8),
+        paddingVertical: ms(4),
+        borderRadius: ms(14),
+        backgroundColor: 'rgba(10,0,25,0.55)',
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.24)',
+        zIndex: 8,
+    },
+    // Locked card: the lock owns the corner, so the pill starts just past it and
+    // lines up with its centre (lockCorner is ms(26) tall at top ms(10)).
+    effectBadgeBesideLock: {
+        top: ms(11),
+        left: ms(42),
+        maxWidth: '58%',
+    },
+    effectBadgeIcon: {
+        fontSize: ms(11),
+    },
+    effectBadgeText: {
+        color: 'rgba(255,255,255,0.92)',
+        fontSize: ms(10),
+        fontWeight: '800',
+        letterSpacing: 0.3,
+    },
     randomBadge: {
         position: 'absolute',
         top: ms(9),

@@ -38,10 +38,12 @@ export interface ShopEntry {
     size?: number;
     isRotation?: boolean;
     // Backgrounds only, straight from the catalog: the uploaded picture as an
-    // absolute URL, and the colours painted under it. Together they are the
-    // entire difference between one background and the next.
+    // absolute URL, the colours painted under it, and the weather drawn over it.
+    // Together they are the entire difference between one background and the
+    // next.
     imageUrl?: string | null;
     colors?: string[];
+    effect?: string | null;
     isPremium: boolean;
     // Admin-authored inline SVG artwork (backend shop_items.icon_svg). When set,
     // the Shop renders this instead of the on-device card component.
@@ -105,13 +107,14 @@ interface ShopArt {
     fallFromBottom?: boolean;
     trackColor?: string | null;
     // This background's whole appearance, as the backend defines it: the
-    // uploaded picture (bg_image_path, served as bgImageUrl) and the colours
-    // drawn under it (bg_colors). Cached as the *relative* URL the server
-    // returns — the API origin differs between a dev build and a release, so
-    // resolving it at write time would leave a cache that points at the wrong
-    // host after a rebuild.
+    // uploaded picture (bg_image_path, served as bgImageUrl), the colours drawn
+    // under it (bg_colors) and the weather over it (bg_effect). The picture is
+    // cached as the *relative* URL the server returns — the API origin differs
+    // between a dev build and a release, so resolving it at write time would
+    // leave a cache that points at the wrong host after a rebuild.
     bgImageUrl?: string | null;
     bgColors?: string[] | null;
+    bgEffect?: string | null;
 }
 let shopArtByKey: Record<string, ShopArt> = {};
 // True once a live catalog has been registered this session, so a late cache
@@ -121,7 +124,7 @@ let shopArtIsLive = false;
 export function registerShopIcons(items: ShopItem[]): void {
     const next: Record<string, ShopArt> = {};
     for (const it of items) {
-        next[it.key] = { iconSvg: it.iconSvg, width: it.width, height: it.height, randomColors: it.randomColors, rotateAnimation: it.rotateAnimation, fallFromBottom: it.fallFromBottom, trackColor: it.trackColor, bgImageUrl: it.bgImageUrl, bgColors: it.bgColors };
+        next[it.key] = { iconSvg: it.iconSvg, width: it.width, height: it.height, randomColors: it.randomColors, rotateAnimation: it.rotateAnimation, fallFromBottom: it.fallFromBottom, trackColor: it.trackColor, bgImageUrl: it.bgImageUrl, bgColors: it.bgColors, bgEffect: it.bgEffect };
     }
     shopArtByKey = next;
     shopArtIsLive = true;
@@ -151,11 +154,13 @@ export async function hydrateShopArt(): Promise<void> {
 function backgroundArt(isCard: boolean, art: {
     bgImageUrl?: string | null;
     bgColors?: string[] | null;
+    bgEffect?: string | null;
 }) {
     if (isCard) return {};
     return {
         imageUrl: mediaUrl(art.bgImageUrl),
         colors: art.bgColors?.length ? art.bgColors : undefined,
+        effect: art.bgEffect ?? undefined,
     };
 }
 

@@ -2395,6 +2395,7 @@ export default function Play() {
             <BackgroundView
                 imageUrl={background?.imageUrl}
                 colors={background?.colors}
+                effect={background?.effect}
             />
             {gameContent}
         </View>

@@ -258,5 +258,15 @@
 
   "offlineTitle": "ԿԱՊ ՉԿԱ",
   "offlineMessage": "Չենք կարողանում կապվել խաղի հետ։ Ստուգեք Wi-Fi-ը կամ բջջային ինտերնետը — կշարունակենք նույն տեղից։",
-  "offlineAutoRetry": "Ավտոմատ վերամիացում…"
+  "offlineAutoRetry": "Ավտոմատ վերամիացում…",
+
+  "effectSnow": "Ձյուն",
+  "effectEmbers": "Կայծեր",
+  "effectRain": "Անձրև",
+  "effectStars": "Աստղեր",
+  "effectFireflies": "Լուսատտիկներ",
+  "effectPetals": "Ծաղկաթերթեր",
+  "effectWind": "Քամի",
+  "effectBubbles": "Պղպջակներ",
+  "effectLightning": "Կայծակ"
 }

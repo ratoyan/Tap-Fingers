@@ -32,5 +32,5 @@ export const STORAGE_KEYS = {
     // picture URL and fallback colours. The equipped skins are resolved at
     // launch, long before the shop catalog is fetched, so without this the first
     // screens would paint the wrong backdrop.
-    SHOP_ART: 'shop_art',  // {[key]: {iconSvg, width, height, bgImageUrl, bgColors, ...}}
+    SHOP_ART: 'shop_art',  // {[key]: {iconSvg, width, height, bgImageUrl, bgColors, bgEffect, ...}}
 };

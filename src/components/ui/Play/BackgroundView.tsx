@@ -2,12 +2,15 @@ import React from 'react';
 import {Image, StyleSheet, ViewStyle} from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 
+import BackgroundEffect from './BackgroundEffect';
+
 // ── Equipped background ───────────────────────────────────────────────────────
-// A picture an admin uploaded, over the flat colours the catalog names for it.
+// Three layers, bottom to top: the flat colours the catalog names, the picture
+// an admin uploaded, and whatever weather they gave it (see BackgroundEffect).
 //
-// Both layers come from the backend (shop_items.bg_image_path / bg_colors), so a
-// new background — or new artwork for an existing one — needs no app release.
-// The app owns none of it beyond the fallback below.
+// All three come from the backend (shop_items.bg_colors / bg_image_path /
+// bg_effect), so a new background — new artwork, new weather — needs no app
+// release. The app owns none of it beyond the fallback below.
 //
 // The colours are not decoration: they are what fills the screen for the moment
 // the picture is still downloading, and the whole of the look for a background
@@ -58,12 +61,15 @@ interface BackgroundViewProps {
     // Catalog colours, top → bottom. One is allowed and fills flat — a
     // background whose artwork is a single colour has nothing to ramp between.
     colors?: string[] | null;
+    // Weather over the picture, by key (see BackgroundEffect). Null, or a key
+    // this build doesn't know, draws nothing.
+    effect?: string | null;
     // Extra positioning for the container. Play fills the screen behind the
     // arena; the shop fills its card.
     style?: ViewStyle;
 }
 
-function BackgroundView({imageUrl, colors, style}: BackgroundViewProps) {
+function BackgroundView({imageUrl, colors, effect, style}: BackgroundViewProps) {
     const stops = toStops(colors);
 
     return (
@@ -84,6 +90,9 @@ function BackgroundView({imageUrl, colors, style}: BackgroundViewProps) {
                     resizeMode="cover"
                 />
             ) : null}
+            {/* Above the picture: weather falls in front of the scene, not
+                behind it. */}
+            <BackgroundEffect effect={effect}/>
         </LinearGradient>
     );
 }

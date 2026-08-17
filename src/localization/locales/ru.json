@@ -258,5 +258,15 @@
 
   "offlineTitle": "НЕТ СОЕДИНЕНИЯ",
   "offlineMessage": "Не удаётся связаться с игрой. Проверьте Wi-Fi или мобильный интернет — мы продолжим с того же места.",
-  "offlineAutoRetry": "Переподключаемся автоматически…"
+  "offlineAutoRetry": "Переподключаемся автоматически…",
+
+  "effectSnow": "Снег",
+  "effectEmbers": "Искры",
+  "effectRain": "Дождь",
+  "effectStars": "Звёзды",
+  "effectFireflies": "Светлячки",
+  "effectPetals": "Лепестки",
+  "effectWind": "Ветер",
+  "effectBubbles": "Пузырьки",
+  "effectLightning": "Молния"
 }

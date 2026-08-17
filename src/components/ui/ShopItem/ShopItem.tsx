@@ -18,6 +18,7 @@ import SuccessIcon from "../../../assets/icons/SuccessIcon.tsx";
 
 // components
 import BackgroundView from "../Play/BackgroundView.tsx";
+import {effectBadge} from "../Play/BackgroundEffect.tsx";
 
 // styles
 import styles from './ShopItem.style.ts';
@@ -65,8 +66,14 @@ function ShopItem({item, index = 0, handlePress, selected = false, purchased = f
     const [cardWidth, setCardWidth] = useState(0);
 
     const isBackground = item.typeName === 'background';
+    // The card names the weather in its top-left corner rather than running it
+    // over the preview — see effectBadge.
+    const bgEffect = isBackground ? effectBadge(item.effect) : null;
     // Admin-flagged teaser: shown but locked — can't be bought or equipped.
     const comingSoon = item.comingSoon === true;
+    // Locked for want of coins. Teasers are locked too, but show their own
+    // coming-soon overlay instead of the lock.
+    const showLock = disabled && !comingSoon;
 
     // Random-colors badge: a slowly sweeping rainbow disc with a gentle pulse,
     // so the indicator feels alive and signals "colourful" at a glance.
@@ -244,6 +251,9 @@ function ShopItem({item, index = 0, handlePress, selected = false, purchased = f
                 // The preview is the real thing rather than a swatch: the same
                 // component Play uses, given the same catalog artwork, so what
                 // the card shows is what buying it gives you.
+                //
+                // The effect is the one thing the preview leaves out: it is
+                // announced by the corner badge instead (see bgEffect above).
                 return (
                     <BackgroundView
                         imageUrl={item.imageUrl}
@@ -388,6 +398,19 @@ function ShopItem({item, index = 0, handlePress, selected = false, purchased = f
                     )}
                 </LinearGradient>
 
+                {/* Background weather (top-left) — drawn and named, so the card
+                    says what the background does in Play without the preview
+                    having to run it. A locked card puts its lock in that same
+                    corner, so the pill steps aside and sits next to it. */}
+                {bgEffect && (
+                    <View style={[styles.effectBadge, showLock && styles.effectBadgeBesideLock]}>
+                        <Text allowFontScaling={false} style={styles.effectBadgeIcon}>{bgEffect.icon}</Text>
+                        <Text allowFontScaling={false} style={styles.effectBadgeText} numberOfLines={1}>
+                            {t(bgEffect.labelKey)}
+                        </Text>
+                    </View>
+                )}
+
                 {/* Random-colors indicator (top-left) — falling cards of this
                     skin render in random colours in Play. */}
                 {item.randomColors && !comingSoon && (
@@ -406,7 +429,7 @@ function ShopItem({item, index = 0, handlePress, selected = false, purchased = f
 
                 {/* Lock overlay (insufficient coins) — suppressed for teasers,
                     which show their own coming-soon overlay instead. */}
-                {disabled && !comingSoon && (
+                {showLock && (
                     <LinearGradient
                         colors={['rgba(10,0,25,0.60)', 'rgba(10,0,25,0.5)']}
                         start={{x: 0, y: 0}}

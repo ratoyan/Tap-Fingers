@@ -249,7 +249,8 @@
       "Bash(php -r 'echo \"getimagesize: \", \\(function_exists\\(\"getimagesize\"\\)?\"yes\":\"no\"\\), \"\\\\n\"; echo \"gd: \", \\(extension_loaded\\(\"gd\"\\)?\"yes\":\"no\"\\), \"\\\\n\";')",
       "Bash(curl -s \"http://127.0.0.1:8899/api/shop\")",
       "Bash(pkill -f \"artisan serve\")",
-      "Bash(php -l app/Http/Controllers/Admin/ParsesAdminForms.php)"
+      "Bash(php -l app/Http/Controllers/Admin/ParsesAdminForms.php)",
+      "Bash(php -l database/migrations/2026_08_17_000003_add_bg_effect_to_shop_items.php)"
     ]
   }
 }

@@ -114,6 +114,11 @@ export interface ShopItem {
     // the screen while it downloads, and the whole look until one is uploaded.
     // 1–6 stops, top → bottom; one stop fills flat. Null → the built-in ramp.
     bgColors?: string[] | null;
+    // Background-only: the weather drawn over the picture ('snow', 'embers',
+    // 'rain', …). Kept as a plain string rather than a union so a key the server
+    // adds before this build shipped is simply ignored instead of failing to
+    // parse — see BackgroundEffect. Null → no effect.
+    bgEffect?: string | null;
 }
 
 export interface InventoryEntry {
